@@ -4,6 +4,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Analytics } from '@vercel/analytics/react';
 import { SITE_CONFIG } from '@/lib/constants';
+import BackToTop from '@/components/ui/BackToTop';
 
 export const metadata: Metadata = {
   title: {
@@ -41,6 +42,7 @@ export default function RootLayout({
       <body className="flex min-h-full flex-col bg-[var(--color-bg)] text-[var(--color-text)] font-sans">
         <Header />
         <main className="flex-1">{children}</main>
+        <BackToTop />
         <Analytics />
         <Footer />
       </body>

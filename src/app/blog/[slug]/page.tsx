@@ -8,6 +8,7 @@ import { getPostBySlug, getAllPostSlugs, getAdjacentPosts } from '@/lib/posts';
 import { formatDate, slugifyTag } from '@/lib/utils';
 import { SITE_CONFIG } from '@/lib/constants';
 import Link from 'next/link';
+import Giscus from '@/components/comments/Giscus';
 
 export async function generateStaticParams() {
   return getAllPostSlugs().map((slug) => ({ slug }));
@@ -60,6 +61,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           </header>
 
           <MdxContent source={post.content} />
+
+          <Giscus />
 
           <nav className="mt-16 flex items-center justify-between border-t border-zinc-200 pt-8 dark:border-zinc-700">
             <div>
