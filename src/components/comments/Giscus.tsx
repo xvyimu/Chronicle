@@ -14,9 +14,9 @@ interface GiscusProps {
 }
 
 export default function Giscus({
-  repoId = '',
+  repoId = 'R_kgDOTBAmxA',
   category = 'Announcements',
-  categoryId = '',
+  categoryId = 'DIC_kwDOTBAmxM4C_mwW',
   mapping = 'pathname',
   reactionsEnabled = '1',
   inputPosition = 'bottom',
