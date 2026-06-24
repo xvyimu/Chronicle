@@ -3,6 +3,5 @@
   "buildCommand": "pnpm build",
   "outputDirectory": ".next",
   "installCommand": "pnpm install",
-  "nodeVersion": "22.x",
   "regions": ["hkg1"]
 }
