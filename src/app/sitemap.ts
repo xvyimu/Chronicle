@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { getAllPosts } from '@/lib/posts';
 import { getAllTags } from '@/lib/tags';
+import { getAllCategories } from '@/lib/categories';
 import { SITE_CONFIG } from '@/lib/constants';
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -9,6 +10,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages: MetadataRoute.Sitemap = [
     { url: baseUrl, lastModified: new Date(), changeFrequency: 'weekly', priority: 1 },
     { url: `${baseUrl}/blog`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
+    { url: `${baseUrl}/categories`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.7 },
     { url: `${baseUrl}/projects`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
     { url: `${baseUrl}/tags`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.6 },
     { url: `${baseUrl}/about`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.5 },
@@ -28,5 +30,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.4,
   }));
 
-  return [...staticPages, ...postPages, ...tagPages];
+  const categoryPages: MetadataRoute.Sitemap = getAllCategories().map((cat) => ({
+    url: `${baseUrl}/categories/${encodeURIComponent(cat.slug)}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.5,
+  }));
+
+  return [...staticPages, ...postPages, ...tagPages, ...categoryPages];
 }

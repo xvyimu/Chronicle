@@ -35,3 +35,10 @@ export interface TagInfo {
   slug: string;  // URL slug，如 "next-js"
   count: number;
 }
+
+export interface CategoryInfo {
+  name: string;     // 分类名，如 "前端开发"
+  slug: string;     // URL slug，如 "前端开发"
+  count: number;    // 文章数
+  tags: string[];   // 该分类包含的标签列表
+}

@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "analyze": "ANALYZE=true next build"
+    "analyze": "ANALYZE=true next build",
+    "lhci": "lhci autorun"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
@@ -31,6 +32,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@lhci/cli": "^0.15.1",
     "@next/bundle-analyzer": "^16.2.9",
     "@playwright/test": "^1.61.0",
     "@tailwindcss/postcss": "^4",

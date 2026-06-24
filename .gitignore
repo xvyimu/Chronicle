@@ -34,6 +34,9 @@
 # pipeline artifacts
 .pipeline/
 
+# lighthouse reports
+.lighthouse/
+
 # tooling caches
 .agents/
 .workbuddy/

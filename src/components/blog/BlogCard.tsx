@@ -1,13 +1,19 @@
 import Link from 'next/link';
 import { PostMeta } from '@/types';
 import { formatDate } from '@/lib/utils';
+import { inferCategory } from '@/lib/categories';
 import MagneticCard from '@/components/ui/MagneticCard';
 
 export default function BlogCard({ post }: { post: PostMeta }) {
+  const category = inferCategory(post.tags);
+
   return (
     <MagneticCard className="blog__item group">
       <div className="blog__meta">
         <time className="blog__date" dateTime={post.date}>{formatDate(post.date)}</time>
+        {category && (
+          <span className="blog__category">{category}</span>
+        )}
         {post.tags.length > 0 && (
           <span className="blog__tag">{post.tags[0]}</span>
         )}

@@ -1,0 +1,59 @@
+/**
+ * Lighthouse CI 配置
+ *
+ * 用于在 CI 中自动审计关键页面，防止性能回归。
+ * 阈值基于当前站点已知的优秀指标设定。
+ *
+ * 本地运行：npx lhci autorun
+ */
+module.exports = {
+  ci: {
+    collect: {
+      // 只审计关键页面，避免 CI 时间过长
+      url: [
+        'http://localhost:3000/',
+        'http://localhost:3000/blog',
+        'http://localhost:3000/blog/nextjs-app-router',
+        'http://localhost:3000/projects',
+        'http://localhost:3000/about',
+      ],
+      startServerCommand: 'pnpm start',
+      startServerReadyPattern: 'ready',
+      startServerReadyTimeout: 30000,
+      numberOfRuns: 2, // 跑 2 次取中位数，减少噪音
+      settings: {
+        preset: 'desktop', // 桌面端视角
+      },
+    },
+    assert: {
+      assertions: {
+        // 性能 — 宽松阈值，基于 SSG 静态站预期
+        'categories:performance': ['error', { minScore: 0.85 }],
+        'categories:accessibility': ['error', { minScore: 0.9 }],
+        'categories:best-practices': ['error', { minScore: 0.9 }],
+        'categories:seo': ['error', { minScore: 0.9 }],
+
+        // 关键指标
+        'first-contentful-paint': ['warn', { maxNumericValue: 2000 }],
+        'largest-contentful-paint': ['error', { maxNumericValue: 3500 }],
+        'cumulative-layout-shift': ['error', { maxNumericValue: 0.1 }],
+        'total-blocking-time': ['warn', { maxNumericValue: 300 }],
+        'interactive': ['warn', { maxNumericValue: 5000 }],
+
+        // 最佳实践 — 无阻塞
+        'errors-in-console': ['error', { maxLength: 0 }],
+        'valid-source-maps': ['warn'],
+
+        // SEO — 基本要求
+        'canonical': ['error'],
+        'meta-description': ['error'],
+        'document-title': ['error'],
+        'crawlable-anchors': ['warn'],
+      },
+    },
+    upload: {
+      target: 'filesystem', // 不上传到 LHCI server，存为本地报告
+      outputDir: '.lighthouse',
+    },
+  },
+};

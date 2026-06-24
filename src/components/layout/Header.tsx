@@ -24,6 +24,7 @@ export default function Header() {
   const navItems = [
     { href: '/', label: '首页' },
     { href: '/blog', label: '博客' },
+    { href: '/categories', label: '分类' },
     { href: '/projects', label: '作品' },
     { href: '/about', label: '关于' },
   ];

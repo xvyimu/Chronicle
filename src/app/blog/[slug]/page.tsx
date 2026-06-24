@@ -6,6 +6,7 @@ import ReadingProgress from '@/components/blog/ReadingProgress';
 import ReadingPreferences from '@/components/blog/ReadingPreferences';
 import TagLink from '@/components/blog/TagLink';
 import { getPostBySlug, getAllPostSlugs, getAdjacentPosts } from '@/lib/posts';
+import { inferCategory } from '@/lib/categories';
 import { formatDate, slugifyTag } from '@/lib/utils';
 import { SITE_CONFIG } from '@/lib/constants';
 import { blogPostingSchema, breadcrumbSchema, toJsonLd } from '@/lib/jsonld';
@@ -44,6 +45,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   if (!post) notFound();
 
   const { prev, next } = getAdjacentPosts(slug);
+  const category = inferCategory(post.tags);
 
   const articleLd = toJsonLd(blogPostingSchema(post));
   const breadcrumbLd = toJsonLd(breadcrumbSchema([
@@ -81,6 +83,11 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               </div>
               {post.tags.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-2">
+                  {category && (
+                    <Link href={`/categories/${encodeURIComponent(category)}`} className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] px-3 py-1 text-xs font-medium text-[var(--text-soft)] hover:text-[var(--brand)] hover:border-[var(--brand)] transition-colors">
+                      {category}
+                    </Link>
+                  )}
                   {post.tags.map((tag) => (
                     <TagLink key={tag} tag={tag} slug={slugifyTag(tag)} />
                   ))}
