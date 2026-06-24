@@ -1,0 +1,259 @@
+---
+title: 'Cloudflare Workers 实战：构建无服务器应用'
+description: '从 Workers 基础概念到完整项目实战，涵盖路由、KV 存储、环境变量、定时触发器、Cron Triggers 和部署策略，带你搭建一个真正的可运行应用。'
+date: '2026-06-22'
+tags: ['Cloudflare', 'Workers', 'Serverless', '无服务器']
+published: true
+featured: true
+---
+
+> 参考 [domain-check](https://github.com/yutian81/domain-check) 项目的实践经验。
+
+## 什么是 Cloudflare Workers
+
+Cloudflare Workers 是一个在 Cloudflare 全球边缘网络上运行的无服务器计算平台。简单理解：你写一段 JavaScript/TypeScript 代码，提交到 Cloudflare，它在全球 300+ 个节点上自动部署。用户请求时会从距离最近的节点响应，延迟极低。
+
+相比传统的 VPS + Nginx 部署方式，Workers 的优势很明显：
+
+- **无需管理服务器**——只管写代码，Cloudflare 负责运行
+- **全球部署**——一个指令，分布到 300+ 节点
+- **冷启动极快**——基于 V8 Isolate，比传统 Serverless 运行时（如 AWS Lambda）启动快得多
+- **免费额度慷慨**——每天 10 万次请求免费
+
+## 第一个 Worker
+
+用 `wrangler` CLI 创建一个新项目：
+
+```bash
+# 安装 wrangler
+npm install -g wrangler
+
+# 登录（需要 Cloudflare 账号）
+npx wrangler login
+
+# 创建项目
+npx wrangler init my-worker
+cd my-worker
+```
+
+框架生成的 `src/index.ts`：
+
+```typescript
+export default {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    return new Response('Hello from Cloudflare Workers!');
+  },
+};
+```
+
+部署：
+
+```bash
+npx wrangler deploy
+```
+
+就是这么简单——一个运行在全球边缘网络的 HTTP 服务就上线了。
+
+## 路由分发
+
+实际项目不会只有一个端点。用 `itty-router` 这类轻量路由库可以让代码结构清晰：
+
+```bash
+npm install itty-router
+```
+
+```typescript
+import { Router } from 'itty-router';
+
+const router = Router();
+
+router.get('/', () => new Response('Home Page'));
+router.get('/api/status', () => {
+  return Response.json({ status: 'ok', timestamp: Date.now() });
+});
+router.get('/api/hello/:name', ({ params }) => {
+  return new Response(`Hello, ${params.name}!`);
+});
+
+export default {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext) {
+    return router.handle(request);
+  },
+};
+```
+
+## 接入 KV 存储
+
+KV（Key-Value）存储是 Workers 生态中最常用的持久化方案。它是个全球复制的键值数据库，适合存储配置信息、缓存数据、用户状态等。
+
+在 `wrangler.toml` 中绑定 KV 命名空间：
+
+```toml
+[[kv_namespaces]]
+binding = "MY_KV"
+id = "your-kv-namespace-id"
+```
+
+然后就可以在代码中使用：
+
+```typescript
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    // 读取
+    const value = await env.MY_KV.get('config');
+
+    // 写入
+    await env.MY_KV.put('config', JSON.stringify({ theme: 'dark' }));
+
+    // 列出所有键
+    const list = await env.MY_KV.list({ prefix: 'user:' });
+
+    // 删除
+    await env.MY_KV.delete('temp_key');
+
+    return Response.json({ value, keys: list.keys.length });
+  },
+};
+```
+
+KV 的特点：
+- 最终一致性（写入后全球传播需要几秒）
+- 适合读多写少的场景
+- 单个值最大 25MB
+- 免费版每天 10 万次读写
+
+## 定时任务（Cron Triggers）
+
+Workers 支持 Cron Triggers，可以在固定时间间隔执行任务——非常适合做域名到期检查、定时数据同步这类功能。
+
+`wrangler.toml` 中配置：
+
+```toml
+[triggers]
+crons = ["0 */6 * * *"]  # 每 6 小时执行一次
+```
+
+对应的代码：
+
+```typescript
+export default {
+  // HTTP 请求处理
+  async fetch(request: Request, env: Env): Promise<Response> {
+    return new Response('OK');
+  },
+
+  // 定时任务处理
+  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
+    // 检查所有域名到期情况
+    const domains = await checkAllDomains(env);
+    for (const domain of domains) {
+      if (domain.daysUntilExpiry < 30) {
+        await sendAlert(domain, env);
+      }
+    }
+    console.log(`检查完成: ${domains.length} 个域名`);
+  },
+};
+```
+
+在 domain-check 项目中就是这样实现的——每 6 小时自动扫描一次域名到期情况，发现快到期了发邮件提醒。
+
+## 环境变量与 Secret
+
+敏感信息不应该硬编码。Workers 支持两种配置：
+
+**环境变量（明文）**——在 `wrangler.toml` 中定义：
+
+```toml
+[vars]
+SITE_NAME = "西江月"
+ADMIN_EMAIL = "admin@example.com"
+```
+
+** Secrets（加密）**——通过 CLI 设置：
+
+```bash
+npx wrangler secret put API_KEY
+```
+
+在代码中统一通过 `env` 对象访问：
+
+```typescript
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const siteName = env.SITE_NAME;    // 明文变量
+    const apiKey = env.API_KEY;        // 加密变量
+    return new Response(`${siteName}: ${apiKey ? 'has key' : 'no key'}`);
+  },
+};
+```
+
+## 部署策略
+
+### 快速迭代用 `wrangler deploy`
+
+```bash
+npx wrangler deploy
+```
+
+### 灰度发布用 `wrangler deploy --route`
+
+```bash
+# 先部署到 staging 路由验证
+npx wrangler deploy --route 'staging.example.com/*'
+
+# 确认没问题后再推到生产
+npx wrangler deploy --route 'example.com/*'
+```
+
+### 回滚
+
+Workers 控制台保留最近的部署历史，一键回滚。也可以通过 CLI：
+
+```bash
+npx wrangler rollback
+```
+
+## 实战示例：一个简单的短链接服务
+
+把以上内容综合起来，下面是一个用 Workers + KV 实现的短链接服务核心代码：
+
+```typescript
+import { Router } from 'itty-router';
+
+const router = Router();
+
+// 创建短链接
+router.post('/api/shorten', async (request, env) => {
+  const { url } = await request.json();
+  const id = crypto.randomUUID().slice(0, 8);
+  await env.LINKS.put(id, url);
+  return Response.json({ short: `https://s.example.com/${id}` });
+});
+
+// 跳转
+router.get('/:id', async ({ params }, env) => {
+  const target = await env.LINKS.get(params.id);
+  if (!target) return new Response('Not Found', { status: 404 });
+  return Response.redirect(target, 301);
+});
+
+export default {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext) {
+    return router.handle(request, env);
+  },
+};
+```
+
+## 总结
+
+Cloudflare Workers 是我最推荐的无服务器平台。门槛低（一个文件就能上线）、速度快（全球边缘网络）、运维省心（不用管服务器）。适合的场景：
+
+- API 网关 / 反向代理
+- 短链接服务
+- 域名 / SSL 监控
+- 定时数据同步
+- 表单处理 / Webhook 接收
+- A/B 测试分发
+
+下一步可以探索 Workers AI、D1（边缘 SQLite）、R2 对象存储等更深度的服务，Cloudflare 正在把整个边缘平台做成一站式的应用开发环境。

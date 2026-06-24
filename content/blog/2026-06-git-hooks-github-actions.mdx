@@ -1,0 +1,226 @@
+---
+title: '用 Git Hooks 和 GitHub Actions 打造自动化代码工作流'
+description: '从 pre-commit 代码检查到 CI/CD 自动化部署的完整实践，用 Git Hooks + GitHub Actions 让代码质量检查和发布流程自动化，减少手动操作和人为错误。'
+date: '2026-06-24'
+tags: ['Git', 'CI/CD', 'GitHub Actions', '自动化']
+published: true
+featured: false
+---
+
+> 配合 VPS 初始化和 Docker 部署这两篇文章，这篇聊聊代码从提交到上线的自动化链路。
+
+## 为什么需要自动化工作流
+
+手动做这些事，迟早出错：
+
+- 忘了跑 lint 就提交了代码
+- 忘了跑测试就合并了 PR
+- 部署命令敲错了或者漏了一步
+- 本地跑得好好的，线上却崩了
+
+自动化工作流的价值：**让正确的流程成为唯一的选择**。你不需要"记得"去跑测试——代码提交的那一刻，测试自动跑了。
+
+## 第一层：Git Hooks（本地）
+
+Git Hooks 是在本地 Git 操作触发时自动执行的脚本。最常用的是 `pre-commit`——在 commit 之前运行检查。
+
+### 用 Husky + lint-staged
+
+Husky 是 Git Hooks 的 npm 封装，lint-staged 只对暂存的文件运行检查：
+
+```bash
+npm install -D husky lint-staged
+npx husky init
+```
+
+在 `.husky/pre-commit` 里：
+
+```bash
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+npx lint-staged
+```
+
+在 `package.json` 里配置 lint-staged：
+
+```json
+{
+  "lint-staged": {
+    "*.{js,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
+  }
+}
+```
+
+现在每次 `git commit` 之前，暂存的 JS/TS 文件会自动跑 ESLint + Prettier。有问题就阻止提交。
+
+### commit-msg 规范提交信息
+
+在 `.husky/commit-msg` 里加规范检查：
+
+```bash
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+npx commitlint --edit "$1"
+```
+
+配合 `@commitlint/cli` + `@commitlint/config-conventional`，强制提交信息遵循 Conventional Commits 格式：
+
+```
+feat: 新增用户注册功能
+fix: 修复登录页 token 过期处理
+docs: 更新部署文档
+chore: 升级依赖版本
+```
+
+## 第二层：GitHub Actions（远程）
+
+本地检查通过还不够——PR 合并到 main 之后，代码需要再次验证，然后自动部署。
+
+### 基础 CI 工作流
+
+在 `.github/workflows/ci.yml`：
+
+```yaml
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - run: pnpm install
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm build
+```
+
+CI 的作用：**不管谁提交的代码，都按同一套标准跑一遍**。本地能过不代表合并后能过——别人可能改了依赖，或者环境不一样。
+
+### 自动部署工作流
+
+CI 通过之后，自动把代码部署到服务器：
+
+```yaml
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # SSH 到服务器执行部署
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /var/www/myapp
+            git pull origin main
+            docker compose build --no-cache
+            docker compose up -d --force-recreate
+            docker compose exec app pnpm migrate
+```
+
+部署流程：git pull → 重建镜像 → 重启容器 → 跑数据库迁移。全自动，`git push` 之后不需要做任何事。
+
+### 多环境配置
+
+如果需要 staging 和 production 两套环境：
+
+```yaml
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main       # → production
+      - staging    # → staging
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets[format('{0}_HOST', github.ref == 'refs/heads/main' && 'PROD' || 'STAGING')] }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /var/www/myapp
+            git pull origin ${{ github.ref_name }}
+            docker compose build
+            docker compose up -d
+```
+
+## 常用 Actions 推荐
+
+| 用途 | Action |
+|------|--------|
+| SSH 部署 | `appleboy/ssh-action` |
+| Docker 构建推送 | `docker/build-push-action` |
+| 缓存依赖 | `actions/setup-node` (内置 cache) |
+| 代码质量报告 | ` SonarSource/sonarqube-scan-action` |
+| 通知 | `slackapi/slack-github-action` |
+| 环境变量管理 | `crazy-max/ghaction-import-env` |
+
+## 完整的工作流链路
+
+```
+本地: git commit
+  → pre-commit 跑 lint + format
+  → commit-msg 检查提交信息规范
+
+GitHub: push / PR
+  → CI: lint → test → build
+  → 不通过则阻断合并
+  → 通过后自动合并
+
+main 分支 push
+  → Deploy workflow 触发
+  → SSH 到服务器
+  → git pull → build → deploy
+  → 完成
+```
+
+## 总结
+
+两层自动化覆盖了从"写代码"到"上线"的完整链路：
+
+- **Git Hooks** 把好本地提交这一关，不让问题代码进入版本库
+- **GitHub Actions 把好远程合并这一关**，不管谁来提交都按统一标准验证，通过后自动部署
+
+这两层配好之后，"提交即上线"成为常态，不需要再手动敲部署命令。

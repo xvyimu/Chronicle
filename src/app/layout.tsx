@@ -1,17 +1,42 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
+import { Noto_Sans_SC, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { SITE_CONFIG } from '@/lib/constants';
 import BackToTop from '@/components/ui/BackToTop';
 
+const notoSansSC = Noto_Sans_SC({
+  subsets: ['latin'],
+  weight: ['400', '500', '700'],
+  variable: '--font-noto-sans-sc',
+  display: 'swap',
+  preload: true,
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  variable: '--font-jetbrains-mono',
+  display: 'swap',
+  preload: false,
+});
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_CONFIG.url),
   title: {
     default: SITE_CONFIG.name,
     template: `%s | ${SITE_CONFIG.name}`,
   },
   description: SITE_CONFIG.description,
+  openGraph: {
+    type: 'website',
+    locale: 'zh_CN',
+    siteName: SITE_CONFIG.name,
+    images: [{ url: '/icon.svg', width: 512, height: 512, alt: SITE_CONFIG.name }],
+  },
 };
 
 export default function RootLayout({
@@ -22,7 +47,7 @@ export default function RootLayout({
   return (
     <html
       lang="zh-CN"
-      className="h-full antialiased"
+      className={`h-full antialiased ${notoSansSC.variable} ${jetbrainsMono.variable}`}
       suppressHydrationWarning
     >
       <head>
@@ -30,20 +55,24 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
-                var theme = localStorage.getItem('theme');
-                if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                  document.documentElement.classList.add('dark');
-                }
+                try {
+                  var theme = localStorage.getItem('theme');
+                  if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                  }
+                } catch(e) {}
               })();
             `,
           }}
         />
       </head>
-      <body className="flex min-h-full flex-col bg-[var(--color-bg)] text-[var(--color-text)] font-sans">
+      <body className="flex min-h-full flex-col bg-[var(--bg)] text-[var(--text)]" style={{ fontFamily: 'var(--font-noto-sans-sc), system-ui, sans-serif' }}>
+        <a href="#main-content" className="skip-link">跳到主要内容</a>
         <Header />
-        <main className="flex-1">{children}</main>
+        <main id="main-content" className="flex-1 animate-fade-in">{children}</main>
         <BackToTop />
         <Analytics />
+        <SpeedInsights />
         <Footer />
       </body>
     </html>

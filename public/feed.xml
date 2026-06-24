@@ -1,43 +1,2633 @@
 <?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/">
     <channel>
-        <title>西江月的博客</title>
+        <title>西江月</title>
         <link>http://localhost:3000</link>
-        <description>写代码，偶尔写写东西。</description>
-        <lastBuildDate>Sun, 21 Jun 2026 15:32:45 GMT</lastBuildDate>
+        <description>云原生 · 全栈 · 自动化</description>
+        <lastBuildDate>Wed, 24 Jun 2026 09:12:16 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <language>zh-CN</language>
         <copyright>All rights reserved 2026</copyright>
         <item>
-            <title><![CDATA[Hello World — 我的第一篇博客]]></title>
-            <link>http://localhost:3000/blog/hello-world</link>
-            <guid isPermaLink="false">http://localhost:3000/blog/hello-world</guid>
-            <pubDate>Sun, 21 Jun 2026 00:00:00 GMT</pubDate>
-            <description><![CDATA[博客搭好了，总得写点什么作为开始。]]></description>
+            <title><![CDATA[VPS 初始化安全与运维配置清单]]></title>
+            <link>http://localhost:3000/blog/vps-initial-setup</link>
+            <guid isPermaLink="false">http://localhost:3000/blog/vps-initial-setup</guid>
+            <pubDate>Tue, 23 Jun 2026 00:00:00 GMT</pubDate>
+            <description><![CDATA[拿到一台新 VPS 后应该做的安全配置和运维设置，涵盖 SSH 加固、防火墙、Fail2Ban、自动更新、Docker 安装和监控工具，一份照着执行的清单。]]></description>
             <content:encoded><![CDATA[
-## 为什么写博客
+> 一份新入手 VPS 时的标配配置清单。
 
-一直想做这件事，但总是"等有空再说"。结果就是等了好几年。
+## 前言
 
-这次不一样——先把博客搭起来，再把空填上。
+买 VPS 之后第一时间就 `ssh root@ip` 开始装东西？别急。互联网上每分钟都有扫描机器在扫 22 端口，没做安全配置的服务器活不过 24 小时。
 
-## 这个博客会写什么
+以下是我每台新服务器的标配配置步骤。
 
-- 技术文章（踩坑记录、项目经验）
-- 作品展示（做过的东西）
-- 偶尔的随笔
+## 1. 更新系统
 
-## 关于技术栈
+```bash
+apt update && apt upgrade -y
+apt autoremove -y
+```
 
-这个博客基于 Next.js 16 构建，用 MDX 写文章，Tailwind CSS v4 做样式。
+## 2. 创建普通用户并提权
 
-代码开源在 [GitHub](https://github.com/yuanjia1314/blog)。
+```bash
+# 创建用户
+adduser deploy
 
----
+# 加入 sudo 组
+usermod -aG sudo deploy
 
-就这样，第一篇写完了。后续会慢慢补充。  
-希望这个博客能一直写下去。]]></content:encoded>
+# 验证
+su - deploy
+sudo whoami  # 应该输出 root
+```
+
+**原则**：永远不要直接用 root 日常操作。
+
+## 3. SSH 密钥登录（禁用密码）
+
+```bash
+# 在本地机器（非服务器）上执行
+ssh-keygen -t ed25519 -f ~/.ssh/vps -C "vps-deploy"
+
+# 把公钥传到服务器
+ssh-copy-id -i ~/.ssh/vps.pub deploy@server_ip
+```
+
+登录到服务器，编辑 `/etc/ssh/sshd_config`：
+
+```bash
+sudo nano /etc/ssh/sshd_config
+```
+
+确保以下配置：
+
+```
+Port 22                     # 如果更换端口，记得防火墙同时放行
+PermitRootLogin no          # 禁止 root 登录
+PasswordAuthentication no   # 禁用密码登录
+PubkeyAuthentication yes    # 允许密钥登录
+MaxAuthTries 3              # 最大认证尝试次数
+ClientAliveInterval 120     # 客户端超时（秒）
+ClientAliveCountMax 3       # 超时重试次数
+```
+
+重启 SSH 服务：
+
+```bash
+sudo systemctl restart sshd
+```
+
+**建议换端口**：把 `Port 22` 改成 10000-65535 之间的高位端口，能减少 99% 的扫描攻击。改之前确认防火墙放行了新端口，不然你会把自己锁在外面。
+
+## 4. 配置 UFW 防火墙
+
+```bash
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+
+# SSH（如果你改了端口，这里也要改）
+sudo ufw allow 22/tcp
+
+# HTTP/HTTPS
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+
+# 如果运行 Docker，Docker 会直接操作 iptables
+# 但 UFW 还是能控制主机层面的流量
+
+sudo ufw enable
+sudo ufw status verbose
+```
+
+## 5. 安装 Fail2Ban
+
+```bash
+sudo apt install -y fail2ban
+```
+
+创建 `/etc/fail2ban/jail.local`：
+
+```ini
+[DEFAULT]
+bantime = 3600        # 封禁 1 小时
+findtime = 600        # 检测窗口 10 分钟
+maxretry = 5          # 失败 5 次封禁
+
+[sshd]
+enabled = true
+port = 22             # 如果你改了 SSH 端口，这里要同步改
+```
+
+启动服务：
+
+```bash
+sudo systemctl enable fail2ban
+sudo systemctl start fail2ban
+
+# 查看封禁状态
+sudo fail2ban-client status sshd
+```
+
+## 6. 配置自动安全更新
+
+```bash
+sudo apt install -y unattended-upgrades
+
+# 配置
+sudo dpkg-reconfigure --priority=low unattended-upgrades
+```
+
+确认配置文件 `/etc/apt/apt.conf.d/50unattended-upgrades`：
+
+```conf
+Unattended-Upgrade::Allowed-Origins {
+    "${distro_id}:${distro_codename}-security";
+    "${distro_id}:${distro_codename}-updates";
+};
+Unattended-Upgrade::AutoFixInterruptedDpkg "true";
+Unattended-Upgrade::Remove-Unused-Dependency "true";
+Unattended-Upgrade::Automatic-Reboot "false";
+```
+
+安全更新会自动安装，不会自动重启。
+
+## 7. 安装 Docker
+
+```bash
+# 官方一键安装
+curl -fsSL https://get.docker.com | sh
+
+# 把用户加入 docker 组（避免每次 sudo）
+sudo usermod -aG docker $USER
+
+# 重启会话后验证
+docker --version
+docker compose version
+```
+
+## 8. 安装运维监控工具
+
+基础工具：
+
+```bash
+# htop — 资源占用实时查看
+sudo apt install -y htop
+
+# btop — 更美观的替代品
+sudo apt install -y btop
+
+# ncdu — 磁盘空间分析
+sudo apt install -y ncdu
+
+# netstat — 网络连接查看
+sudo apt install -y net-tools
+
+# iotop — 磁盘 IO 监控
+sudo apt install -y iotop
+```
+
+建议同时装一个简单的系统监控，比如 netdata：
+
+```bash
+bash <(curl -Ss https://my-netdata.io/kickstart.sh)
+```
+
+它会启动一个 web 面板（默认端口 19999），可以直接在浏览器里看 CPU、内存、磁盘、网络等实时数据。
+
+## 9. 配置时间同步
+
+```bash
+sudo timedatectl set-timezone Asia/Shanghai
+sudo apt install -y chrony
+sudo systemctl enable chrony
+sudo systemctl start chrony
+sudo timedatectl status
+```
+
+## 10. 系统级调优
+
+**调整文件描述符限制**——编辑 `/etc/security/limits.conf`：
+
+```
+* soft nofile 65535
+* hard nofile 65535
+```
+
+**开启 BBR 拥塞控制**——编辑 `/etc/sysctl.conf`：
+
+```conf
+net.core.default_qdisc = fq
+net.ipv4.tcp_congestion_control = bbr
+```
+
+生效：
+
+```bash
+sudo sysctl -p
+
+# 验证
+sysctl net.ipv4.tcp_congestion_control
+# 输出：net.ipv4.tcp_congestion_control = bbr
+```
+
+## 一步到位的初始化脚本
+
+以上步骤可以合并成一个初始化脚本，新买 VPS 后一键执行。这里提供一个简化版：
+
+```bash
+#!/bin/bash
+# VPS 初始化脚本
+
+set -e
+
+echo "=== 更新系统 ==="
+apt update && apt upgrade -y
+
+echo "=== 安装基础工具 ==="
+apt install -y curl wget git ufw fail2ban htop btop ncdu \
+  net-tools chrony unattended-upgrades
+
+echo "=== 配置防火墙 ==="
+ufw default deny incoming
+ufw default allow outgoing
+ufw allow 22/tcp
+ufw allow 80/tcp
+ufw allow 443/tcp
+ufw --force enable
+
+echo "=== 安装 Docker ==="
+curl -fsSL https://get.docker.com | sh
+
+echo "=== 配置时间 ==="
+timedatectl set-timezone Asia/Shanghai
+systemctl enable chrony
+
+echo "=== 安全配置提示 ==="
+echo "1. 创建普通用户：adduser deploy && usermod -aG sudo deploy"
+echo "2. 配置 SSH 密钥登录并禁用密码"
+echo "3. 修改 SSH 端口（可选）"
+echo "4. 配置 fail2ban：service fail2ban start"
+echo "5. 调整 limits.conf 和 sysctl.conf（BBR）"
+```
+
+保存为 `init-vps.sh`，新 VPS 上 `bash init-vps.sh` 即可。
+
+## 总结
+
+安全配置不是一劳永逸的事，但它有个**基础门槛**——过了这道门槛，绝大部分的自动扫描和低级攻击就与你无关了。上面这 10 步做完，你的 VPS 已经比互联网上 90% 的裸机安全得多。
+
+定期做的事：
+- 每月检查一次 `fail2ban` 状态
+- `apt update` 保持系统更新
+- 检查 `/var/log/auth.log` 看有没有异常登录尝试
+]]></content:encoded>
+            <_reading_time>
+                <readingTime>7 min read</readingTime>
+            </_reading_time>
+        </item>
+        <item>
+            <title><![CDATA[Supabase 实战：从数据库到实时订阅]]></title>
+            <link>http://localhost:3000/blog/supabase-practical-guide</link>
+            <guid isPermaLink="false">http://localhost:3000/blog/supabase-practical-guide</guid>
+            <pubDate>Tue, 23 Jun 2026 00:00:00 GMT</pubDate>
+            <description><![CDATA[全栈式接入 Supabase 的实战指南，涵盖 PostgreSQL 数据库设计、Row Level Security 权限控制、Realtime 订阅、Storage 文件存储和 Edge Functions 无服务器函数。]]></description>
+            <content:encoded><![CDATA[
+> 参考 [nav-site](https://github.com/yuanjia1314/nav-site) 项目中深度使用 Supabase 的经验。
+
+## 为什么选 Supabase
+
+Supabase 常被称为"开源版 Firebase"。它提供了一套完整的后端服务：PostgreSQL 数据库、身份认证、实时订阅、文件存储和 Edge Functions——全部基于开源技术构建。
+
+选择理由：
+
+- **PostgreSQL 原生**——不是 NoSQL 封装，就是原生 SQL，能直接用 PG 的全部能力
+- **Row Level Security**——在数据库层面控制每行数据的访问权限，安全又灵活
+- **Realtime**——通过 WebSocket 实现数据库变更的实时推送
+- **自托管友好**——开源，可以自己部署
+
+## 快速开始
+
+在 Supabase 控制台创建一个项目，然后安装客户端：
+
+```bash
+npm install @supabase/supabase-js
+```
+
+初始化客户端：
+
+```typescript
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+```
+
+Next.js 中通常把这段放在 `src/lib/supabase.ts` 里统一导出。
+
+## 数据库设计与迁移
+
+Supabase 内置了数据库管理界面，但我推荐用代码管理表结构。创建 `supabase/migrations/` 目录，按时间戳命名迁移文件。
+
+示例：创建一个 API 分类表
+
+```sql
+-- supabase/migrations/202606220001_create_categories.sql
+
+create table public.categories (
+  id bigint generated by default as identity primary key,
+  name text not null,
+  slug text not null unique,
+  description text,
+  icon text,
+  sort_order integer default 0,
+  created_at timestamptz default now()
+);
+
+-- 创建索引
+create index categories_slug_idx on public.categories (slug);
+
+-- 插入初始数据
+insert into public.categories (name, slug, description, sort_order) values
+  ('大语言模型', 'llm', '各类 AI 大模型 API', 1),
+  ('语音识别', 'speech', '语音转文字 API', 2),
+  ('图像生成', 'image', 'AI 图像生成 API', 3);
+```
+
+## Row Level Security（RLS）
+
+RLS 是 Supabase 最强大的功能之一。它为每一张表定义访问策略，在数据库层保障数据安全。
+
+```sql
+-- 为 API 表启用 RLS
+alter table public.apis enable row level security;
+
+-- 所有人可读
+create policy "apis_select_policy" on public.apis
+  for select using (true);
+
+-- 仅认证用户可写入
+create policy "apis_insert_policy" on public.apis
+  for insert with check (auth.role() = 'authenticated');
+
+-- 仅管理员可更新/删除
+create policy "apis_update_policy" on public.apis
+  for update using (
+    auth.jwt() ->> 'role' = 'admin'
+  );
+```
+
+在客户端查询时，Supabase JS 客户端会自动带上当前用户的认证信息，RLS 策略会自动生效：
+
+```typescript
+// 前端查询——自动应用 RLS
+const { data: apis, error } = await supabase
+  .from('apis')
+  .select('*')
+  .order('created_at', { ascending: false });
+
+// 用户只能看到自己有权限的数据
+// 非认证用户只能 SELECT，不能 INSERT
+```
+
+## 实时订阅（Realtime）
+
+Supabase 的 Realtime 功能基于 PostgreSQL 的逻辑复制，当数据库有变更时通过 WebSocket 推送给前端。
+
+启用订阅（可以在 SQL 编辑器中执行）：
+
+```sql
+-- 为 apis 表启用复制
+alter publication supabase_realtime add table apis;
+```
+
+前端监听变更：
+
+```typescript
+import { useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+
+function ApiList() {
+  useEffect(() => {
+    // 订阅 apis 表的变更
+    const channel = supabase
+      .channel('apis-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'apis' },
+        (payload) => {
+          console.log('变更类型:', payload.eventType);
+          console.log('新数据:', payload.new);
+          // 更新 UI
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // ...
+}
+```
+
+适合的场景：
+- 协作编辑应用
+- 实时通知/消息
+- 仪表盘数据实时刷新
+
+## Storage 文件存储
+
+Supabase Storage 基于 S3 兼容的对象存储，适合存放用户上传的文件。
+
+```typescript
+// 上传头像
+const { data, error } = await supabase.storage
+  .from('avatars')
+  .upload(`public/${userId}.jpg`, file, {
+    cacheControl: '3600',
+    upsert: true,
+  });
+
+// 获取公开 URL
+const { data: { publicUrl } } = supabase.storage
+  .from('avatars')
+  .getPublicUrl(`public/${userId}.jpg`);
+
+// 删除文件
+await supabase.storage
+  .from('avatars')
+  .remove([`public/${userId}.jpg`]);
+```
+
+记得在 Storage 中设置 RLS 策略——同样支持 SQL 策略定义。
+
+## Edge Functions
+
+Supabase Edge Functions 基于 Deno，可以执行自定义的后端逻辑，适合做 Webhook 处理、数据验证等：
+
+```typescript
+// supabase/functions/webhook/index.ts
+import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+serve(async (req) => {
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  );
+
+  const { name, url } = await req.json();
+
+  // 写入数据库
+  const { data, error } = await supabase
+    .from('submissions')
+    .insert({ name, url, status: 'pending' });
+
+  if (error) {
+    return new Response(JSON.stringify({ error }), { status: 400 });
+  }
+
+  return new Response(JSON.stringify({ success: true, data }), {
+    headers: { 'Content-Type': 'application/json' },
+  });
+});
+```
+
+部署：
+
+```bash
+npx supabase functions deploy webhook
+```
+
+## 在 Next.js 中的完整集成
+
+以下是在 nav-site 项目中使用 Supabase 的真实模式：
+
+```typescript
+// src/lib/supabase-server.ts — 服务端客户端（有完整权限）
+import { createClient } from '@supabase/supabase-js';
+
+export const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+// 在 Server Component 或 API Route 中直接查询数据库
+export async function getCategories() {
+  const { data } = await supabaseAdmin
+    .from('categories')
+    .select('*')
+    .order('sort_order');
+  return data ?? [];
+}
+```
+
+```typescript
+// src/lib/supabase-client.ts — 浏览器端客户端（受 RLS 限制）
+import { createBrowserClient } from '@supabase/ssr';
+
+export function createClient() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}
+```
+
+引入 `@supabase/ssr` 是为了在 Next.js App Router 中正确处理 cookie 会话。
+
+## 总结
+
+Supabase 让我可以专注于前端逻辑，后端的基础设施——数据库、认证、权限、存储、实时推送——全都交给它处理。对我这种更偏前端的全栈开发者来说，它大大降低了后端开发的心智负担。
+
+几个项目用下来的感受：
+
+- **小项目**：Supabase 做全部后端，前端直接调客户端 API
+- **中等项目**：Supabase 做数据层，Edge Functions 做业务逻辑
+- **大项目**：Supabase 做数据库+认证，单独的后端服务做复杂的业务逻辑
+
+下一篇文章会聊如何用 Supabase + Redis 构建多层的缓存架构，提升 API 响应速度。]]></content:encoded>
+            <_reading_time>
+                <readingTime>7 min read</readingTime>
+            </_reading_time>
+        </item>
+        <item>
+            <title><![CDATA[Redis 缓存策略：从入门到生产环境实践]]></title>
+            <link>http://localhost:3000/blog/redis-caching-strategies</link>
+            <guid isPermaLink="false">http://localhost:3000/blog/redis-caching-strategies</guid>
+            <pubDate>Thu, 25 Jun 2026 00:00:00 GMT</pubDate>
+            <description><![CDATA[Redis 在 Web 应用中的核心使用场景：缓存穿透/击穿/雪崩的应对方案、热点 Key 处理、缓存与数据库一致性策略，以及常见误区和排查方法。]]></description>
+            <content:encoded><![CDATA[
+> 缓存是后端性能优化的第一利器。这篇文章讲 Redis 在生产环境中的实际使用模式和踩过的坑。
+
+## 什么时候需要 Redis
+
+不是所有项目都需要 Redis。先问自己一个问题：**数据库查询是瓶颈吗？**
+
+如果页面响应时间已经足够快（< 200ms），加缓存带来的收益有限，反而引入复杂度。Redis 适合的场景：
+
+- **读多写少**的查询结果缓存（如商品列表、配置信息）
+- **会话存储**（替代 JWT 的 stateless 方案，方便服务端注销）
+- **速率限制**（API 限流、登录尝试次数限制）
+- **短生命周期的临时数据**（验证码、一次性 Token）
+- **排行榜 / 计数器**（Redis 的 Sorted Set 天生适合）
+
+## 缓存模式
+
+### Cache Aside（最常用）
+
+读操作：先查缓存，命中直接返回；未命中查数据库，写入缓存后返回。
+写操作：先更新数据库，然后**删除**缓存（不是更新）。
+
+```typescript
+async function getUser(id: string) {
+  // 1. 先查缓存
+  const cached = await redis.get(`user:${id}`);
+  if (cached) return JSON.parse(cached);
+
+  // 2. 缓存未命中，查数据库
+  const user = await db.user.findUnique({ where: { id } });
+  if (!user) return null;
+
+  // 3. 写入缓存
+  await redis.set(`user:${id}`, JSON.stringify(user), {
+    ex: 3600, // 1 小时过期
+  });
+
+  return user;
+}
+
+async function updateUser(id: string, data: UpdateInput) {
+  // 1. 更新数据库
+  await db.user.update({ where: { id }, data });
+
+  // 2. 删除缓存（下次读取时重建）
+  await redis.del(`user:${id}`);
+}
+```
+
+为什么写操作是"删除"而不是"更新"缓存？因为并发场景下，更新缓存容易出现脏数据——两个写请求交替更新数据库和缓存，导致缓存和数据库不一致。删除缓存更安全——下次读取时重建，最多短暂地缓存未命中，不会出现脏数据。
+
+### Read Through / Write Through
+
+由缓存服务自己负责和数据库的同步，应用层不需要关心。Redis 本身不支持这种模式，通常需要额外的代理层（如 [Cachex](https://github.com/hex-rb/cachex) 在 Elixir 中）。
+
+### Write Behind（异步写回）
+
+写操作先写缓存，异步批量刷到数据库。性能最好，但**有数据丢失风险**——Redis 宕机时未刷盘的写操作会丢。适合对数据一致性要求不高的场景（如点赞数、浏览量）。
+
+## 三大缓存问题
+
+### 缓存穿透
+
+**问题**：请求一个永远不存在的 Key（如 `user:999999999`），缓存不命中，每次都穿透到数据库。
+
+**解法**：
+- **缓存空值**：即使数据库返回 null，也缓存一个空值（短过期时间）
+- **布隆过滤器**：在缓存层之前加一层布隆过滤器，快速判断 Key 是否存在
+
+```typescript
+async function getUser(id: string) {
+  // 布隆过滤器检查
+  if (!await bloomFilter.mightContain(id)) return null;
+
+  const cached = await redis.get(`user:${id}`);
+  if (cached !== null) return cached ? JSON.parse(cached) : null;
+
+  const user = await db.user.findUnique({ where: { id } });
+
+  // 缓存空值，防止穿透
+  await redis.set(`user:${id}`, user ? JSON.stringify(user) : 'NULL', {
+    ex: user ? 3600 : 60, // 空值短过期
+  });
+
+  return user;
+}
+```
+
+### 缓存击穿
+
+**问题**：某个热点 Key 过期瞬间，大量并发请求同时穿透到数据库。
+
+**解法**：
+- **互斥锁**：缓存未命中时只允许一个请求去查数据库，其他请求等待
+- **逻辑过期**：缓存值带一个过期时间戳，后台异步更新，永远不会"同时失效"
+
+```typescript
+async function getHotUser(id: string) {
+  const cached = await redis.get(`user:${id}`);
+  if (cached) {
+    const { value, expireAt } = JSON.parse(cached);
+    if (Date.now() < expireAt) return value;
+    // 逻辑过期——后台异步刷新，当前请求返回旧值
+    refreshCacheAsync(id);
+    return value;
+  }
+
+  // 互斥锁——防止并发穿透
+  const lock = await redis.set(`lock:user:${id}`, '1', {
+    ex: 5,
+    nx: true, // 只在 key 不存在时设置
+  });
+
+  if (!lock) {
+    // 没拿到锁，等一会儿再试
+    await sleep(50);
+    return getHotUser(id);
+  }
+
+  try {
+    const user = await db.user.findUnique({ where: { id } });
+    await redis.set(`user:${id}`, JSON.stringify({
+      value: user,
+      expireAt: Date.now() + 3600000,
+    }), { ex: 7200 });
+    return user;
+  } finally {
+    await redis.del(`lock:user:${id}`);
+  }
+}
+```
+
+### 缓存雪崩
+
+**问题**：大量 Key 同时过期，或者 Redis 宕机，所有请求同时打到数据库。
+
+**解法**：
+- **过期时间加随机偏移**：避免同一时刻大面积失效
+- **多级缓存**：本地缓存（如 LRU 内存缓存） + Redis 缓存 + 数据库
+- **Redis 高可用**：Cluster 模式或 Sentinel，避免单点故障
+
+```typescript
+// 过期时间加随机偏移（基础时间 ± 随机浮动）
+const baseTTL = 3600;
+const jitter = Math.floor(Math.random() * 600); // 0-10 分钟随机
+await redis.set(key, value, { ex: baseTTL + jitter });
+```
+
+## 缓存与数据库一致性
+
+这是最容易被忽视的问题。以下策略按一致性强度排列：
+
+| 策略 | 一致性 | 性能 | 复杂度 |
+|------|--------|------|--------|
+| 更新数据库后删除缓存 | 最终一致 | 高 | 低 |
+| 延迟双删 | 较强 | 中 | 中 |
+| 订阅数据库变更（CDC） | 强一致 | 高 | 高 |
+
+**延迟双删**：更新数据库 → 删除缓存 → 延迟几百毫秒 → 再删一次缓存。中间可能有旧数据写入缓存，但第二次删除会覆盖。
+
+```typescript
+async function updateWithDoubleDelete(id: string, data: UpdateInput) {
+  await db.user.update({ where: { id }, data });
+  await redis.del(`user:${id}`);
+
+  // 延迟双删——给旧缓存回填留出窗口
+  setTimeout(() => redis.del(`user:${id}`), 500);
+}
+```
+
+如果对一致性要求极高，可以用 CDC（Change Data Capture）方案——订阅数据库的 binlog，数据变更时自动更新或删除缓存。这种方案一致性最强，但需要额外的中间件（如 Debezium + Kafka）。
+
+## 热点 Key 识别和处理
+
+某些 Key 的 QPS 远超其他（如秒杀活动的商品信息）。单节点 Redis 可能扛不住：
+
+```typescript
+// 热点 Key 自动探测
+redis.INFO('stats') // 查看 key 访问频率
+
+// 热点 Key 多副本策略——把一个 Key 复制成 N 个
+const replicas = 5;
+const key = `hot:product:${id}`;
+const randomSuffix = Math.floor(Math.random() * replicas);
+const distributedKey = `${key}#${randomSuffix}`;
+const value = await redis.get(distributedKey);
+```
+
+## Redis 数据结构选型
+
+不要所有东西都用 String：
+
+| 场景 | 数据结构 | 说明 |
+|------|----------|------|
+| 缓存值 | String | 最常见 |
+| 排行榜 | Sorted Set | ZADD/ZRANGE，按分数排序 |
+| 计数器 | String (INCR) | 原子递增 |
+| 消息队列 | List | LPUSH/BRPOP |
+| 用户标签 | Set | SADD/SMEMBERS |
+| 去重 | Set / Bloom Filter | 判断是否已存在 |
+| 时间线 | Sorted Set | 按时间戳作为 score |
+
+## 常见误区
+
+1. **过度缓存**：不是所有数据都适合缓存。频繁变更的数据放缓存反而增加复杂度。
+2. **忽略缓存失效时间**：不设过期时间 = 永久缓存 = 内存泄漏。
+3. **大 Key 问题**：一个 Key 存几 MB 数据，会导致 Redis 阻塞。拆分大 Key。
+4. **没有监控**：用 `redis-cli info` 查看命中率。命中率低于 90% 说明缓存设计有问题。
+5. **把 Redis 当数据库用**：Redis 是内存数据库，不是持久化存储。重要数据必须写关系型数据库。
+
+## 总结
+
+Redis 的核心价值是把"慢"变成"快"。但缓存是双刃剑——引入复杂度、一致性难题和故障场景。实际使用中遵循这些原则：
+
+- **缓存读多写少的数据**
+- **设置合理的过期时间 + 随机偏移**
+- **写操作后删除缓存，不更新**
+- **热点 Key 提前预案**
+- **监控命中率，低于 90% 要检查设计**
+
+参考：[Redis 官方文档](https://redis.io/docs/)
+]]></content:encoded>
+            <_reading_time>
+                <readingTime>9 min read</readingTime>
+            </_reading_time>
+        </item>
+        <item>
+            <title><![CDATA[Nginx 反向代理与负载均衡实战]]></title>
+            <link>http://localhost:3000/blog/nginx-reverse-proxy</link>
+            <guid isPermaLink="false">http://localhost:3000/blog/nginx-reverse-proxy</guid>
+            <pubDate>Wed, 24 Jun 2026 00:00:00 GMT</pubDate>
+            <description><![CDATA[从 Nginx 基础配置到反向代理、负载均衡、HTTPS 重定向和静态资源优化的完整指南，适合需要在生产环境部署 Web 服务的开发者。]]></description>
+            <content:encoded><![CDATA[
+> 在 Docker 部署和 VPS 初始化之后，Nginx 是最常用的前端层——反向代理、负载均衡、HTTPS 终端、静态资源缓存，一个搞定。
+
+## 为什么需要 Nginx
+
+即使你的应用跑在 Docker 里，直接暴露端口到公网也不是好主意。Nginx 作为反向代理层，能帮你做：
+
+- **HTTPS 终端**——处理 SSL/TLS 握手，后端服务用 HTTP 就行
+- **负载均衡**——多个实例分摊流量
+- **静态资源缓存**——图片/CSS/JS 直接由 Nginx 返回，不经过后端
+- **请求限流**——防止恶意请求打垮后端
+- **访问日志**——统一的流量记录
+
+## 安装
+
+```bash
+# Ubuntu/Debian
+sudo apt install -y nginx
+
+# 验证
+nginx -v
+sudo systemctl status nginx
+```
+
+配置文件目录：`/etc/nginx/`，主配置文件：`/etc/nginx/nginx.conf`
+
+## 基础站点配置
+
+在 `/etc/nginx/sites-available/` 下创建配置文件，然后在 `sites-enabled/` 里软链接：
+
+```bash
+sudo nano /etc/nginx/sites-available/myapp
+sudo ln -s /etc/nginx/sites-available/myapp /etc/nginx/sites-enabled/
+```
+
+一个完整的生产级配置：
+
+```nginx
+server {
+    listen 80;
+    listen [::]:80;
+    server_name example.com;
+
+    # 跳转到 HTTPS
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name example.com;
+
+    # SSL 证书（Let's Encrypt）
+    ssl_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    # 安全头
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # 静态资源——直接由 Nginx 处理，不转发到后端
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff2?)$ {
+        root /var/www/myapp/dist;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        access_log off;
+    }
+
+    # API 请求——转发到后端服务
+    location /api/ {
+        proxy_pass http://127.0.0.1:3000/api/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # 超时设置（WebSocket 需要更长超时）
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+
+    # 前端路由——SPA fallback
+    location / {
+        root /var/www/myapp/dist;
+        try_files $uri $uri/ /index.html;
+    }
+}
+```
+
+验证配置并重载：
+
+```bash
+sudo nginx -t          # 先验证语法
+sudo systemctl reload nginx  # 重载（不中断现有连接）
+```
+
+## 反向代理到 Docker
+
+如果你的应用跑在 Docker 容器里，有两种方式连接：
+
+**方式一：端口映射 + localhost**
+
+```bash
+docker run -d -p 3000:3000 myapp
+```
+
+Nginx 配置不变，`proxy_pass http://127.0.0.1:3000` 就行。
+
+**方式二：Docker 网络（推荐）**
+
+```bash
+# 创建 bridge 网络
+docker network create webnet
+
+# 启动应用容器，加入网络
+docker run -d --name myapp --network webnet myapp
+
+# Nginx 容器也用同一个网络
+docker run -d --name nginx-proxy --network webnet \
+  -p 80:80 -p 443:443 \
+  -v /etc/nginx/conf.d \
+  -v /etc/letsencrypt \
+  nginx:alpine
+```
+
+Nginx 里直接用容器名：
+
+```nginx
+location /api/ {
+    proxy_pass http://myapp:3000/api/;
+}
+```
+
+## 负载均衡
+
+多个实例分摊流量，提高可用性和吞吐量：
+
+```nginx
+upstream backend {
+    # 加权轮询
+    server 127.0.0.1:3000 weight=3;
+    server 127.0.0.1:3001 weight=1;
+    server 127.0.0.1:3002;
+
+    # keepalive 连接复用
+    keepalive 32;
+}
+
+server {
+    listen 80;
+    server_name example.com;
+
+    location /api/ {
+        proxy_pass http://backend;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+    }
+}
+```
+
+负载均衡策略：
+
+| 策略 | 配置 | 适用场景 |
+|------|------|----------|
+| 轮询 | 默认 | 各实例性能相近 |
+| 加权轮询 | `weight=N` | 实例性能不同 |
+| IP 哈希 | `ip_hash;` | 需要会话保持 |
+| 最少连接 | `least_conn;` | 请求处理时长差异大 |
+
+## 请求限流
+
+防止爬虫或攻击打垮后端：
+
+```nginx
+# 在 http 块中定义限流区域
+limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s;
+
+server {
+    listen 80;
+    server_name example.com;
+
+    location /api/ {
+        limit_req zone=api burst=20 nodelay;
+        proxy_pass http://backend;
+    }
+}
+```
+
+参数解释：
+- `rate=10r/s`：每秒最多 10 个请求
+- `burst=20`：允许突发最多 20 个请求排队
+- `nodelay`：突发请求立即处理（不排队等待）
+
+## 访问日志优化
+
+默认 Nginx 会记录每次请求的完整日志，时间长了磁盘吃紧：
+
+```nginx
+# 自定义日志格式（只记录必要字段）
+log_format slim '$remote_addr - $remote_user [$time_local] '
+                '"$request" $status $body_bytes_sent '
+                '"$http_referer" "$http_user_agent"';
+
+access_log /var/log/nginx/access.log slim buffer=32k flush=5s;
+
+# 对静态资源关闭日志
+location ~* \.(css|js|png|jpg)$ {
+    access_log off;
+}
+```
+
+## 常用诊断命令
+
+```bash
+# 测试配置语法
+nginx -t
+
+# 重载（零停机）
+systemctl reload nginx
+
+# 查看错误日志
+tail -f /var/log/nginx/error.log
+
+# 查看访问日志中的慢请求
+awk '$7 ~ /api/ {print $0}' /var/log/nginx/access.log | \
+  awk '{print $NF}' | sort -nr | head -20
+
+# 查看 Nginx 状态（如果开启了 stub_status）
+curl http://127.0.0.1/nginx_status
+```
+
+## 总结
+
+Nginx 是部署流程里最值得花时间配置好的环节。一个合理的 Nginx 层能让后端服务更简单——只管处理业务逻辑，安全、缓存、限流全交给 Nginx。
+
+参考配置：[Nginx 官方文档](https://nginx.org/en/docs/)
+]]></content:encoded>
+            <_reading_time>
+                <readingTime>6 min read</readingTime>
+            </_reading_time>
+        </item>
+        <item>
+            <title><![CDATA[Next.js 16 App Router 实战：服务端组件与流式渲染]]></title>
+            <link>http://localhost:3000/blog/nextjs-app-router</link>
+            <guid isPermaLink="false">http://localhost:3000/blog/nextjs-app-router</guid>
+            <pubDate>Tue, 23 Jun 2026 00:00:00 GMT</pubDate>
+            <description><![CDATA[从 Pages Router 迁移到 App Router 的实践笔记，涵盖 Server Component、Streaming SSR、Server Actions 和数据获取模式，以及生产环境常见问题的解决。]]></description>
+            <content:encoded><![CDATA[
+> 本站就是用 Next.js 16 App Router 构建的。这篇文章分享一下我在实际项目中使用的模式和踩过的坑。
+
+## Pages Router vs App Router
+
+Next.js 13 引入的 App Router 在 16 版本已经稳定，成为推荐的首选路由方案：
+
+| | Pages Router | App Router |
+|--|-------------|------------|
+| 组件类型 | 客户端组件 | 服务端组件（默认） |
+| 数据获取 | `getServerSideProps` / `getStaticProps` | 直接在组件中 `async/await` |
+| 流式渲染 | 不支持 | 支持 Suspense 边界 |
+| 布局系统 | 每个页面独立 | 嵌套 Layout，保留状态 |
+| 数据变更 | 自己写 API 路由 | Server Actions |
+
+## 服务端组件（Server Components）
+
+App Router 默认所有组件都是服务端组件。这意味着组件在**服务端渲染**，不会发送 JavaScript 到浏览器：
+
+```tsx
+// app/page.tsx — 这是服务端组件（不需要 "use client"）
+import { BlogList } from '@/components/blog';
+import { getAllPosts } from '@/lib/posts';
+
+export default async function HomePage() {
+  const posts = await getAllPosts(); // 直接在组件中查询数据库
+
+  return (
+    <div>
+      {posts.map(post => (
+        <article key={post.slug}>
+          <h2>{post.title}</h2>
+          <p>{post.excerpt}</p>
+        </article>
+      ))}
+    </div>
+  );
+}
+```
+
+服务端组件的好处：
+- **更少的客户端 JavaScript**——框架代码不在页面上执行，组件只在服务端运行
+- **直接访问数据库**——不用建 API 路由，组件里直接查
+- **自动代码分割**——只有用到客户端交互的地方才加载 JS
+
+## 客户端组件（"use client"）
+
+当需要交互时（useState、useEffect、onClick），加上 `"use client"`：
+
+```tsx
+'use client';
+
+import { useState } from 'react';
+
+export function SearchBar() {
+  const [query, setQuery] = useState('');
+
+  return (
+    <input
+      value={query}
+      onChange={e => setQuery(e.target.value)}
+      placeholder="搜索文章..."
+    />
+  );
+}
+```
+
+**最佳实践**：尽可能保持组件在服务端，只在需要交互的叶子节点加 `"use client"`。一个常见错误是把整个页面标记为客户端组件，失去服务端渲染的优势。
+
+## 数据获取模式
+
+### 1. 服务端直接获取（推荐）
+
+```tsx
+// app/blog/page.tsx
+export default async function BlogPage() {
+  const posts = await getPosts();
+
+  return <BlogList posts={posts} />;
+}
+```
+
+### 2. Suspense + Streaming
+
+流式渲染允许页面的不同部分独立加载：
+
+```tsx
+import { Suspense } from 'react';
+
+export default function DashboardPage() {
+  return (
+    <div>
+      {/* 立即显示的 UI */}
+      <h1>仪表盘</h1>
+      <p>欢迎回来</p>
+
+      {/* 异步加载的内容——不会阻塞页面渲染 */}
+      <Suspense fallback={<div>加载统计中...</div>}>
+        <Stats />
+      </Suspense>
+
+      <Suspense fallback={<div>加载活动列表...</div>}>
+        <RecentActivity />
+      </Suspense>
+    </div>
+  );
+}
+
+async function Stats() {
+  const data = await fetchStats(); // 慢查询
+  return <StatsDisplay data={data} />;
+}
+
+async function RecentActivity() {
+  const activities = await fetchActivities(); // 另一个慢查询
+  return <ActivityList items={activities} />;
+}
+```
+
+Stats 和 RecentActivity 会**并行加载**，各自在完成后立即流式注入页面。用户不会看到空白页——页面骨架先展示，内容块逐步呈现。
+
+### 3. 增量静态生成（ISR）
+
+对于不经常变更的内容，可以在构建时生成静态页面，然后按需重新验证：
+
+```tsx
+// app/blog/[slug]/page.tsx
+export const revalidate = 3600; // 每小时重新生成
+
+export default async function BlogPost({ params }: { params: { slug: string } }) {
+  const post = await getPost(params.slug);
+
+  if (!post) notFound();
+
+  return (
+    <article>
+      <h1>{post.title}</h1>
+      <MDXContent source={post.content} />
+    </article>
+  );
+}
+```
+
+## Server Actions
+
+Server Actions 让表单提交和数据库操作变得非常简单——不再需要写 API 路由：
+
+```tsx
+// app/contact/page.tsx
+export default function ContactPage() {
+  async function handleSubmit(formData: FormData) {
+    'use server';
+
+    const name = formData.get('name');
+    const email = formData.get('email');
+    const message = formData.get('message');
+
+    // 直接操作数据库
+    await db.contacts.create({
+      data: { name, email, message },
+    });
+
+    // 不需要手动 revalidate——Next.js 自动处理
+    revalidatePath('/contact');
+  }
+
+  return (
+    <form action={handleSubmit}>
+      <input name="name" required />
+      <input name="email" type="email" required />
+      <textarea name="message" required />
+      <button type="submit">发送</button>
+    </form>
+  );
+}
+```
+
+Server Actions 的关键点：
+- `'use server'` 标记让 Next.js 知道这是一个只在服务端执行的函数
+- 可以直接操作数据库、调用 API、操作文件系统
+- 表单提交不需要手动管理 loading 状态（Next.js 内置 `useFormStatus`）
+- 支持 revalidation，数据变更后页面自动刷新
+
+## 布局嵌套
+
+App Router 最实用的特性之一是布局嵌套——跨页面共享的 UI（Header/Footer）只渲染一次：
+
+```tsx
+// app/layout.tsx — 根布局
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="zh-CN">
+      <body>
+        <Header />
+        <main>{children}</main>
+        <Footer />
+      </body>
+    </html>
+  );
+}
+```
+
+```tsx
+// app/blog/layout.tsx — 博客部分的局部布局
+export default function BlogLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="blog-layout">
+      <aside>
+        <CategoryNav />
+      </aside>
+      <section>{children}</section>
+    </div>
+  );
+}
+```
+
+布局的特点：
+- 跨页面切换时**保持状态**（Header 不会重新挂载）
+- 支持嵌套——每个路由段可以有独立的布局
+- 不会重新获取数据——如果在布局层获取的数据，切换子页面时不会重新查询
+
+## 常见问题和排查
+
+### 1. 客户端组件里的 import 报错
+
+服务端组件只能 import 其他服务端组件。如果用了只给客户端用的 API（如 localStorage），会报错。解法：把交互部分提取到独立的 `'use client'` 组件。
+
+### 2. 动态路由的 generateStaticParams
+
+对于 SSG 的博客页面，需要返回所有可能的 slug：
+
+```tsx
+export async function generateStaticParams() {
+  const posts = await getAllPosts();
+  return posts.map(post => ({ slug: post.slug }));
+}
+```
+
+### 3. next/script 的加载时机
+
+引用第三方脚本（如 Google Analytics）时，`strategy` 控制加载时机：
+
+```tsx
+import Script from 'next/script';
+
+export default function Analytics() {
+  return (
+    <>
+      {/* 页面变为可交互后加载 */}
+      <Script
+        src="https://www.googletagmanager.com/gtag/js?id=GA_ID"
+        strategy="afterInteractive"
+      />
+      {/* 空闲时加载 */}
+      <Script id="ga-init" strategy="lazyOnload">
+        {`window.dataLayer = window.dataLayer || [];`}
+      </Script>
+    </>
+  );
+}
+```
+
+## 总结
+
+App Router 的学习曲线比 Pages Router 陡一些——概念更多（服务端/客户端组件、流式渲染、Server Actions）。但熟悉之后，开发体验和性能都更好。
+
+几个核心要点：
+- **默认服务端组件**，只在必要时加 `"use client"`
+- **服务端直接获取数据**，不用建 API 路由
+- **Suspense 做流式渲染**，让页面更快展示
+- **Server Actions 处理表单**，简化数据变更
+- **嵌套布局**避免不必要的重复渲染
+
+参考：[Next.js 官方文档](https://nextjs.org/docs)
+]]></content:encoded>
+            <_reading_time>
+                <readingTime>8 min read</readingTime>
+            </_reading_time>
+        </item>
+        <item>
+            <title><![CDATA[Linux 服务器排查手册：CPU、内存、磁盘、网络]]></title>
+            <link>http://localhost:3000/blog/linux-server-troubleshooting</link>
+            <guid isPermaLink="false">http://localhost:3000/blog/linux-server-troubleshooting</guid>
+            <pubDate>Fri, 26 Jun 2026 00:00:00 GMT</pubDate>
+            <description><![CDATA[当服务出问题时，从四个维度系统性地排查服务器状态——CPU 满载、内存泄漏、磁盘占满、网络异常，每种场景的排查步骤和常用命令。]]></description>
+            <content:encoded><![CDATA[
+> 服务出问题的时候，最怕的不是问题本身，而是不知道从哪开始查。这篇文章整理了一套排查流程。
+
+## 排查前的心态
+
+出问题的时候容易慌，急着找原因。但系统排查比凭直觉猜更有效率：
+
+1. **先确认影响范围**——一个用户报错还是全部？
+2. **最近有什么变更**——刚部署了新版本？改了配置？
+3. **按维度逐个排除**——CPU → 内存 → 磁盘 → 网络 → 应用层
+
+## 一、CPU 过高
+
+### 快速定位
+
+```bash
+# 看整体负载
+top
+htop          # 更好看，推荐装
+
+# 按 CPU 使用率排序（top 中按 P）
+# 按内存使用率排序（top 中按 M）
+
+# 看 CPU 平均负载
+uptime        # load average: 1.20, 0.80, 0.50
+```
+
+`load average` 的三个值分别表示过去 1/5/15 分钟的平均负载。超过 CPU 核数说明有排队。
+
+### 找到元凶
+
+```bash
+# 找到最吃 CPU 的进程 ID
+top -bn1 | head -20
+
+# 查看具体线程（如果进程多线程）
+top -H -p <PID>
+
+# 进程详细信息
+ps -p <PID> -o pid,ppid,%cpu,%mem,cmd,lstart
+
+# 系统调用追踪
+strace -p <PID> -c   # 统计系统调用次数
+strace -p <PID> -e trace=network  # 只看网络相关调用
+```
+
+### 常见原因
+
+| 现象 | 可能原因 | 临时方案 |
+|------|----------|----------|
+| 单个进程 100% | 死循环 / 计算密集型任务 | `kill -9` 或重启 |
+| CPU 用户态高 | 应用层问题 | 检查应用日志 |
+| CPU 内核态高 | 磁盘 IO / 系统调用频繁 | `iostat -x 1` 看 IO 等待 |
+| 挖矿病毒 | 不认识的进程名 | 查 crontab，杀进程删文件 |
+
+## 二、内存不足
+
+### 查看内存使用
+
+```bash
+# 总览
+free -h
+
+# 查看各进程内存占用
+ps aux --sort=-%mem | head -10
+
+# 按 RSS（实际物理内存）排序
+ps -eo pid,ppid,%mem,rss,cmd --sort=-rss | head -10
+```
+
+`free -h` 输出解读：
+
+```
+               total        used        free      shared  buff/cache   available
+Mem:           3.8G        2.1G        800M         50M        900M        1.3G
+Swap:          1.0G        200M        800M
+```
+
+重点看 **available**——这是实际可用内存（包括可回收的 cache）。available 接近 0 才真正危险。
+
+### 内存泄漏排查
+
+当发现内存持续增长不回落：
+
+```bash
+# 连续查看进程内存变化
+watch -n 2 'ps -p <PID> -o rss,vsz'
+
+# 查看内存映射
+pmap -x <PID> | tail -20
+
+# 更深入的工具（需安装）
+smem -t -p   # 按 RSS/USS/PSS 查看
+```
+
+常见内存泄漏来源：
+- Node.js 应用的闭包引用未释放
+- Python 列表 / dict 无限增长
+- Java 堆设置过大或未回收
+- 日志框架缓存未刷新
+
+### 配置 Swap
+
+如果内存确实不够，Swap 是最后的防护网：
+
+```bash
+# 查看当前 Swap
+swapon --show
+
+# 创建 Swap 文件（4GB）
+sudo fallocate -l 4G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+
+# 持久化（加到 /etc/fstab）
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+```
+
+但也别太依赖 Swap——Swap 使用率超过 10-20% 说明物理内存确实不够了，该升级机器了。
+
+## 三、磁盘占满
+
+### 查看磁盘空间
+
+```bash
+# 各分区使用情况
+df -h
+
+# 查看目录大小（从根目录往下找）
+du -sh /* | sort -rh | head -10
+
+# 当前目录下的文件大小
+du -sh * | sort -rh | head -10
+```
+
+### 找到大文件
+
+```bash
+# 找到大于 100MB 的文件
+find / -type f -size +100M -exec ls -lh {} \; | sort -k5 -rh | head -20
+
+# 目录层级分析
+ncdu          # 交互式，推荐装
+```
+
+### 清理空间
+
+常见的可清理对象：
+
+```bash
+# Docker 日志——最容易被忽视的磁盘杀手
+# 检查 Docker 日志文件大小
+ls -lh /var/lib/docker/containers/*/*-json.log
+
+# 清理（注意：这是全局清理，确认没有正在调试的容器）
+sudo sh -c 'truncate -s 0 /var/lib/docker/containers/*/*-json.log'
+
+# 更好的方式：配置日志轮转（/etc/docker/daemon.json）
+{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+  }
+}
+
+# 清理已停止的容器 / 未使用的镜像 / 构建缓存
+docker system prune -a
+
+# apt 缓存
+sudo apt clean
+
+# journal 日志
+sudo journalctl --vacuum-size=200M
+
+# npm/pnpm 缓存
+pnpm store prune
+```
+
+### 查看 inode 耗尽
+
+磁盘空间够但创建不了文件？可能是 inode 用完了：
+
+```bash
+df -i          # 查看 inode 使用率
+
+# 找 inode 消耗大户（通常是缓存目录、邮件队列）
+find / -xdev -printf '%h\n' | sort | uniq -c | sort -k1 -rn | head -10
+```
+
+## 四、网络问题
+
+### 连通性检查
+
+```bash
+# 基础 ping
+ping -c 5 google.com
+
+# DNS 解析
+nslookup example.com
+dig example.com
+
+# 路由追踪
+traceroute example.com
+mtr example.com     # 更好的 traceroute，实时显示丢包率
+```
+
+### 端口和服务
+
+```bash
+# 查看正在监听的端口
+ss -tlnp         # TCP 监听（替换 netstat -tlnp）
+ss -ulnp         # UDP 监听
+
+# 查看连接状态统计
+ss -tan | awk '{print $1}' | sort | uniq -c
+
+# 查看连接数排名
+ss -tan | grep ESTAB | awk '{print $4}' | cut -d: -f1 | sort | uniq -c | sort -rn | head -10
+```
+
+`ss -tan` 输出的状态解读：
+
+| 状态 | 含义 |
+|------|------|
+| LISTEN | 服务在监听端口 |
+| ESTABLISHED | 已建立的连接 |
+| TIME_WAIT | 主动关闭后的等待状态（大量正常） |
+| CLOSE_WAIT | 被动关闭但未关闭（需排查应用层） |
+
+大量 `CLOSE_WAIT` 说明应用没有正确关闭连接——通常是 HTTP 客户端或数据库连接池的问题。
+
+### 带宽和丢包
+
+```bash
+# 实时查看带宽（需安装）
+iftop
+nethogs       # 按进程显示带宽
+
+# 查看接口统计
+ip -s link show eth0
+
+# 丢包检查
+# 网卡层面的丢包
+ethtool -S eth0 | grep -i error
+# 内核层面的丢包（看 drop 列）
+netstat -s | grep -i 'drop\|overflow'
+```
+
+## 五、系统全面检查脚本
+
+把以上内容合并成一个快速诊断脚本，出问题时一键运行：
+
+```bash
+#!/bin/bash
+# server-diagnose.sh — 服务器快速诊断
+
+echo "===== 系统信息 ====="
+uname -a
+uptime
+echo ""
+
+echo "===== CPU ====="
+top -bn1 | grep "Cpu(s)"
+echo ""
+
+echo "===== 内存 ====="
+free -h
+echo ""
+
+echo "===== 磁盘 ====="
+df -h | grep -v tmpfs
+echo ""
+
+echo "===== 网络 ====="
+echo "端口监听:"
+ss -tlnp4
+echo "连接数 TOP:"
+ss -tan | grep ESTAB | awk '{print $4}' | cut -d: -f1 | sort | uniq -c | sort -rn | head -10
+echo ""
+
+echo "===== TOP 进程(CPU) ====="
+ps aux --sort=-%cpu | head -6
+echo ""
+
+echo "===== TOP 进程(内存) ====="
+ps aux --sort=-%mem | head -6
+```
+
+## 总结
+
+排查问题的核心是**系统化**——不要凭感觉从一个方向跳到另一个方向。按 CPU → 内存 → 磁盘 → 网络的顺序逐个排除，大部分问题可以在 5 分钟内定位到根因。
+
+日常预防更重要：
+- 装好监控（netdata / prometheus）
+- 配置日志轮转
+- 给关键指标设告警（磁盘 > 80%、内存 < 20%）
+- 定期查看 `dmesg`——很多问题（OOM killer、硬件错误）只出现在内核日志里，不会在应用日志中出现
+]]></content:encoded>
+            <_reading_time>
+                <readingTime>9 min read</readingTime>
+            </_reading_time>
+        </item>
+        <item>
+            <title><![CDATA[Go 语言入门：从零写一个 CLI 工具]]></title>
+            <link>http://localhost:3000/blog/go-cli-tool</link>
+            <guid isPermaLink="false">http://localhost:3000/blog/go-cli-tool</guid>
+            <pubDate>Thu, 25 Jun 2026 00:00:00 GMT</pubDate>
+            <description><![CDATA[用 Go 语言从零实现一个实用的命令行工具，涵盖 flag 参数解析、文件 IO、JSON 输出、错误处理和交叉编译，让有脚本基础的开发者快速上手 Go。]]></description>
+            <content:encoded><![CDATA[
+> 之前一直用 Node.js / Python 写工具，最近开始用 Go 写——编译成单个二进制文件、零依赖部署的感觉确实好。
+
+## 为什么选 Go 写 CLI
+
+- **单个二进制文件**——编译后直接丢到服务器上就能跑，不需要 runtime
+- **编译速度快**——毫秒级编译，开发迭代效率不低
+- **标准库完善**——flag、json、crypto、http 全自带，不用装依赖
+- **跨平台编译**——一台机器上可以编译出 Windows/Linux/macOS 的二进制
+
+## 第一个工具：JSON 格式化器
+
+我们写一个能把压缩的 JSON 格式化并高亮显示的工具：
+
+```go
+package main
+
+import (
+    "encoding/json"
+    "flag"
+    "fmt"
+    "io"
+    "os"
+)
+
+func main() {
+    // 命令行参数
+    indent := flag.String("i", "  ", "缩进字符串")
+    flag.Parse()
+
+    // 从 stdin 或文件读取
+    var input []byte
+    var err error
+
+    if flag.NArg() > 0 {
+        input, err = os.ReadFile(flag.Arg(0))
+    } else {
+        input, err = io.ReadAll(os.Stdin)
+    }
+
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "读取失败: %v\n", err)
+        os.Exit(1)
+    }
+
+    // 解析 JSON
+    var raw interface{}
+    if err := json.Unmarshal(input, &raw); err != nil {
+        fmt.Fprintf(os.Stderr, "JSON 解析失败: %v\n", err)
+        os.Exit(1)
+    }
+
+    // 格式化输出
+    output, err := json.MarshalIndent(raw, "", *indent)
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "格式化失败: %v\n", err)
+        os.Exit(1)
+    }
+
+    fmt.Println(string(output))
+}
+```
+
+使用：
+
+```bash
+# 从文件读取
+go run main.go data.json
+
+# 管道输入
+cat data.json | go run main.go
+
+# 自定义缩进为 4 个空格
+go run main.go -i "    " data.json
+```
+
+## 参数解析进阶
+
+标准库的 `flag` 适合简单参数，复杂 CLI 推荐用 `cobra`：
+
+```bash
+go get github.com/spf13/cobra
+```
+
+```go
+package main
+
+import (
+    "fmt"
+    "os"
+    "github.com/spf13/cobra"
+)
+
+var rootCmd = &cobra.Command{
+    Use:   "mytool",
+    Short: "一个实用的命令行工具",
+    Long:  "支持文件处理、数据转换、系统信息查询等功能",
+}
+
+var versionCmd = &cobra.Command{
+    Use:   "version",
+    Short: "打印版本号",
+    Run: func(cmd *cobra.Command, args []string) {
+        fmt.Println("v1.0.0")
+    },
+}
+
+var convertCmd = &cobra.Command{
+    Use:   "convert <input>",
+    Short: "格式转换",
+    Args:  cobra.ExactArgs(1),
+    Run: func(cmd *cobra.Command, args []string) {
+        input := args[0]
+        output := cmd.Flag("output").Value.String()
+        fmt.Printf("转换 %s → %s\n", input, output)
+    },
+}
+
+func init() {
+    convertCmd.Flags().StringP("output", "o", "", "输出文件路径")
+    rootCmd.AddCommand(versionCmd)
+    rootCmd.AddCommand(convertCmd)
+}
+
+func main() {
+    if err := rootCmd.Execute(); err != nil {
+        fmt.Fprintf(os.Stderr, "错误: %v\n", err)
+        os.Exit(1)
+    }
+}
+```
+
+## 文件操作
+
+Go 的文件 IO 很直观：
+
+```go
+// 读取整个文件
+data, err := os.ReadFile("config.json")
+
+// 写入文件
+err := os.WriteFile("output.txt", []byte(content), 0644)
+
+// 逐行读取（大文件推荐）
+file, _ := os.Open("large.txt")
+scanner := bufio.NewScanner(file)
+for scanner.Scan() {
+    line := scanner.Text()
+    // 处理每一行
+}
+file.Close()
+
+// 遍历目录
+entries, _ := os.ReadDir("./data")
+for _, entry := range entries {
+    fmt.Println(entry.Name(), entry.IsDir())
+}
+```
+
+## JSON 处理
+
+Go 的 JSON 处理比 JavaScript 严格——字段名必须匹配（除非用 tag）：
+
+```go
+type Config struct {
+    Name    string `json:"name"`
+    Port    int    `json:"port,omitempty"`  // 零值时省略
+    Enabled bool   `json:"enabled"`
+    Tags    []string `json:"tags"`         // 数组
+}
+
+// 解析 JSON
+var cfg Config
+json.NewDecoder(resp.Body).Decode(&cfg)
+
+// 输出 JSON（格式化）
+json.NewEncoder(os.Stdout).Encode(cfg)
+```
+
+## 错误处理
+
+Go 的错误处理风格是多层 return，习惯之后其实很清晰：
+
+```go
+func loadConfig(path string) (*Config, error) {
+    data, err := os.ReadFile(path)
+    if err != nil {
+        return nil, fmt.Errorf("读取配置文件失败: %w", err)
+    }
+
+    var cfg Config
+    if err := json.Unmarshal(data, &cfg); err != nil {
+        return nil, fmt.Errorf("JSON 解析失败: %w", err)
+    }
+
+    if cfg.Port < 1 || cfg.Port > 65535 {
+        return nil, fmt.Errorf("端口号无效: %d", cfg.Port)
+    }
+
+    return &cfg, nil
+}
+
+// 调用时
+cfg, err := loadConfig("config.json")
+if err != nil {
+    log.Fatalf("加载配置失败: %v", err)
+}
+```
+
+`%w` 把错误包装起来，调用方可以用 `errors.Is()` 和 `errors.As()` 判断底层错误类型。
+
+## 交叉编译
+
+Go 的交叉编译非常方便：
+
+```bash
+# Linux AMD64
+GOOS=linux GOARCH=amd64 go build -o mytool-linux
+
+# macOS ARM64 (Apple Silicon)
+GOOS=darwin GOARCH=arm64 go build -o mytool-macos
+
+# Windows
+GOOS=windows GOARCH=amd64 go build -o mytool.exe
+```
+
+一个编译产物就是一个文件，直接放到目标机器上运行，不需要 Go 环境。
+
+## 编译优化
+
+```bash
+# 去掉调试信息，减小体积
+go build -ldflags="-s -w" -o mytool
+
+# 加上 UPX 压缩（可再减 50-70%）
+upx --brute mytool
+```
+
+一个简单的 CLI 工具，编译后通常只有 2-5MB。
+
+## 总结
+
+Go 写 CLI 工具的体验很舒适——标准库够用、编译产物简单、运行性能好。适合写需要分发到多台服务器的工具。下一步可以考虑：
+
+- 用 `cobra` + `viper` 做更复杂的 CLI 框架
+- 加入彩色输出（`fatih/color`）
+- 加入进度条（`cheggaaa/pb`）
+]]></content:encoded>
+            <_reading_time>
+                <readingTime>6 min read</readingTime>
+            </_reading_time>
+        </item>
+        <item>
+            <title><![CDATA[用 Git Hooks 和 GitHub Actions 打造自动化代码工作流]]></title>
+            <link>http://localhost:3000/blog/git-hooks-github-actions</link>
+            <guid isPermaLink="false">http://localhost:3000/blog/git-hooks-github-actions</guid>
+            <pubDate>Wed, 24 Jun 2026 00:00:00 GMT</pubDate>
+            <description><![CDATA[从 pre-commit 代码检查到 CI/CD 自动化部署的完整实践，用 Git Hooks + GitHub Actions 让代码质量检查和发布流程自动化，减少手动操作和人为错误。]]></description>
+            <content:encoded><![CDATA[
+> 配合 VPS 初始化和 Docker 部署这两篇文章，这篇聊聊代码从提交到上线的自动化链路。
+
+## 为什么需要自动化工作流
+
+手动做这些事，迟早出错：
+
+- 忘了跑 lint 就提交了代码
+- 忘了跑测试就合并了 PR
+- 部署命令敲错了或者漏了一步
+- 本地跑得好好的，线上却崩了
+
+自动化工作流的价值：**让正确的流程成为唯一的选择**。你不需要"记得"去跑测试——代码提交的那一刻，测试自动跑了。
+
+## 第一层：Git Hooks（本地）
+
+Git Hooks 是在本地 Git 操作触发时自动执行的脚本。最常用的是 `pre-commit`——在 commit 之前运行检查。
+
+### 用 Husky + lint-staged
+
+Husky 是 Git Hooks 的 npm 封装，lint-staged 只对暂存的文件运行检查：
+
+```bash
+npm install -D husky lint-staged
+npx husky init
+```
+
+在 `.husky/pre-commit` 里：
+
+```bash
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+npx lint-staged
+```
+
+在 `package.json` 里配置 lint-staged：
+
+```json
+{
+  "lint-staged": {
+    "*.{js,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
+  }
+}
+```
+
+现在每次 `git commit` 之前，暂存的 JS/TS 文件会自动跑 ESLint + Prettier。有问题就阻止提交。
+
+### commit-msg 规范提交信息
+
+在 `.husky/commit-msg` 里加规范检查：
+
+```bash
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+npx commitlint --edit "$1"
+```
+
+配合 `@commitlint/cli` + `@commitlint/config-conventional`，强制提交信息遵循 Conventional Commits 格式：
+
+```
+feat: 新增用户注册功能
+fix: 修复登录页 token 过期处理
+docs: 更新部署文档
+chore: 升级依赖版本
+```
+
+## 第二层：GitHub Actions（远程）
+
+本地检查通过还不够——PR 合并到 main 之后，代码需要再次验证，然后自动部署。
+
+### 基础 CI 工作流
+
+在 `.github/workflows/ci.yml`：
+
+```yaml
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - run: pnpm install
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm build
+```
+
+CI 的作用：**不管谁提交的代码，都按同一套标准跑一遍**。本地能过不代表合并后能过——别人可能改了依赖，或者环境不一样。
+
+### 自动部署工作流
+
+CI 通过之后，自动把代码部署到服务器：
+
+```yaml
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # SSH 到服务器执行部署
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /var/www/myapp
+            git pull origin main
+            docker compose build --no-cache
+            docker compose up -d --force-recreate
+            docker compose exec app pnpm migrate
+```
+
+部署流程：git pull → 重建镜像 → 重启容器 → 跑数据库迁移。全自动，`git push` 之后不需要做任何事。
+
+### 多环境配置
+
+如果需要 staging 和 production 两套环境：
+
+```yaml
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main       # → production
+      - staging    # → staging
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets[format('{0}_HOST', github.ref == 'refs/heads/main' && 'PROD' || 'STAGING')] }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /var/www/myapp
+            git pull origin ${{ github.ref_name }}
+            docker compose build
+            docker compose up -d
+```
+
+## 常用 Actions 推荐
+
+| 用途 | Action |
+|------|--------|
+| SSH 部署 | `appleboy/ssh-action` |
+| Docker 构建推送 | `docker/build-push-action` |
+| 缓存依赖 | `actions/setup-node` (内置 cache) |
+| 代码质量报告 | ` SonarSource/sonarqube-scan-action` |
+| 通知 | `slackapi/slack-github-action` |
+| 环境变量管理 | `crazy-max/ghaction-import-env` |
+
+## 完整的工作流链路
+
+```
+本地: git commit
+  → pre-commit 跑 lint + format
+  → commit-msg 检查提交信息规范
+
+GitHub: push / PR
+  → CI: lint → test → build
+  → 不通过则阻断合并
+  → 通过后自动合并
+
+main 分支 push
+  → Deploy workflow 触发
+  → SSH 到服务器
+  → git pull → build → deploy
+  → 完成
+```
+
+## 总结
+
+两层自动化覆盖了从"写代码"到"上线"的完整链路：
+
+- **Git Hooks** 把好本地提交这一关，不让问题代码进入版本库
+- **GitHub Actions 把好远程合并这一关**，不管谁来提交都按统一标准验证，通过后自动部署
+
+这两层配好之后，"提交即上线"成为常态，不需要再手动敲部署命令。
+]]></content:encoded>
+            <_reading_time>
+                <readingTime>5 min read</readingTime>
+            </_reading_time>
+        </item>
+        <item>
+            <title><![CDATA[Docker 容器部署实战：从零搭建 Node.js 应用]]></title>
+            <link>http://localhost:3000/blog/docker-deploy-guide</link>
+            <guid isPermaLink="false">http://localhost:3000/blog/docker-deploy-guide</guid>
+            <pubDate>Mon, 22 Jun 2026 00:00:00 GMT</pubDate>
+            <description><![CDATA[从安装 Docker 开始，到将一个完整的 Node.js 应用容器化并部署到服务器的全过程，包含 Dockerfile 优化、多阶段构建、Docker Compose 编排，以及生产环境的最佳实践。]]></description>
+            <content:encoded><![CDATA[
+> **适用读者**：有基础 Linux 操作经验、想上手 Docker 的开发者。
+> **目标**：把一个 Node.js 应用从源码 → Docker 镜像 → 服务器跑起来。
+
+## 为什么选择 Docker
+
+在接触 Docker 之前，我在服务器上部署应用的方式很简单粗暴：装 Node.js → git pull → npm install → pm2 start。问题在于：
+
+- 换一台服务器就要重新配置一遍环境
+- 不同项目可能需要不同版本的 Node.js
+- 依赖冲突时有发生
+- 多人协作时"在我机器上能跑"成了永恒的笑话
+
+Docker 解决了这些问题。它把应用和它的运行环境打包成一个**镜像**，不管你换到哪台机器，跑起来的环境完全一致。
+
+## 前置条件
+
+- 一台 Linux 服务器（本文以 Ubuntu 22.04 为例）
+- 一个简单的 Node.js 应用
+- 基本的命令行操作能力
+
+## 第一步：安装 Docker
+
+登录服务器，执行：
+
+```bash
+# 更新包索引
+sudo apt update
+
+# 安装依赖
+sudo apt install -y ca-certificates curl gnupg
+
+# 添加 Docker 官方 GPG 密钥
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
+  sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+# 添加 Docker 仓库
+echo "deb [arch=$(dpkg --print-architecture) \
+  signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# 安装 Docker
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io
+
+# 验证安装
+sudo docker run hello-world
+```
+
+看到 Hello World 的输出就说明安装成功了。
+
+## 第二步：编写 Dockerfile
+
+假设你有这样一个 Node.js 应用：
+
+```
+my-app/
+├── package.json
+├── src/
+│   └── index.js
+└── Dockerfile
+```
+
+一个简单但规范的 `Dockerfile` 是这样的：
+
+```dockerfile
+# ---- 构建阶段 ----
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
+COPY . .
+RUN yarn build
+
+# ---- 运行阶段 ----
+FROM node:20-alpine AS runner
+WORKDIR /app
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 appuser
+
+# 只复制构建产物，不复制源码
+COPY --from=builder --chown=appuser:nodejs /app/dist ./dist
+COPY --from=builder --chown=appuser:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=appuser:nodejs /app/package.json ./
+
+USER appuser
+EXPOSE 3000
+CMD ["node", "dist/index.js"]
+```
+
+这里用了**多阶段构建**（multi-stage build）：
+- **构建阶段**：安装所有依赖，执行构建
+- **运行阶段**：只复制构建产物和运行时依赖，镜像体积小得多
+
+对比一下：单阶段构建的镜像大约 ~500MB，用多阶段构建后只有 ~150MB。
+
+## 第三步：构建镜像
+
+```bash
+docker build -t my-app:latest .
+```
+
+构建完成后，查看镜像：
+
+```bash
+docker images
+```
+
+## 第四步：运行容器
+
+最简单的启动方式：
+
+```bash
+docker run -d \
+  --name my-app \
+  -p 3000:3000 \
+  --restart unless-stopped \
+  my-app:latest
+```
+
+参数说明：
+- `-d`：后台运行
+- `--name`：容器命名
+- `-p 宿主机端口:容器端口`：端口映射
+- `--restart unless-stopped`：退出时自动重启（除非手动停止）
+
+## 第五步：用 Docker Compose 管理
+
+当你的应用不止一个服务时（比如需要数据库），Docker Compose 就派上用场了。
+
+在项目根目录创建 `docker-compose.yml`：
+
+```yaml
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=myapp
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+```
+
+启动所有服务：
+
+```bash
+docker compose up -d
+```
+
+查看日志：
+
+```bash
+docker compose logs -f app
+```
+
+## 生产环境最佳实践
+
+几个实践中最重要的点：
+
+### 1. 不要用 root 用户运行
+
+Dockerfile 里一定要建一个普通用户，然后用 `USER` 切换。上面示例里已经做了。
+
+### 2. 定期更新基础镜像
+
+```bash
+docker pull node:20-alpine
+docker compose build --pull
+```
+
+不要忽视安全更新。
+
+### 3. 使用健康检查
+
+Docker Compose 支持 `healthcheck`，上面的 PostgreSQL 示例里已经配置了。应用层也可以加 HTTP 健康检查端点。
+
+### 4. 日志管理
+
+Docker 容器默认会写日志到 JSON 文件，时间长了会占满磁盘。在 `/etc/docker/daemon.json` 中配置日志轮转：
+
+```json
+{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+  }
+}
+```
+
+改完重启 Docker：`sudo systemctl restart docker`。
+
+### 5. 使用 .dockerignore
+
+```gitignore
+node_modules
+.git
+.env
+dist
+*.md
+```
+
+避免把不必要的文件打包进镜像，能显著加快构建速度。
+
+## 总结
+
+从安装 Docker、写 Dockerfile、构建镜像，到用 Docker Compose 编排多容器服务——这套流程已经成了我部署应用的标配。容器化的好处不用多说，关键是**形成规范**：每个项目都按同样的方式组织、同样的命令部署，省心很多。
+
+下一篇会讲如何用 Docker Compose 编排更多服务，以及一些进阶的部署策略。
+]]></content:encoded>
+            <_reading_time>
+                <readingTime>6 min read</readingTime>
+            </_reading_time>
+        </item>
+        <item>
+            <title><![CDATA[Cloudflare Workers 实战：构建无服务器应用]]></title>
+            <link>http://localhost:3000/blog/cloudflare-workers-guide</link>
+            <guid isPermaLink="false">http://localhost:3000/blog/cloudflare-workers-guide</guid>
+            <pubDate>Mon, 22 Jun 2026 00:00:00 GMT</pubDate>
+            <description><![CDATA[从 Workers 基础概念到完整项目实战，涵盖路由、KV 存储、环境变量、定时触发器、Cron Triggers 和部署策略，带你搭建一个真正的可运行应用。]]></description>
+            <content:encoded><![CDATA[
+> 参考 [domain-check](https://github.com/yutian81/domain-check) 项目的实践经验。
+
+## 什么是 Cloudflare Workers
+
+Cloudflare Workers 是一个在 Cloudflare 全球边缘网络上运行的无服务器计算平台。简单理解：你写一段 JavaScript/TypeScript 代码，提交到 Cloudflare，它在全球 300+ 个节点上自动部署。用户请求时会从距离最近的节点响应，延迟极低。
+
+相比传统的 VPS + Nginx 部署方式，Workers 的优势很明显：
+
+- **无需管理服务器**——只管写代码，Cloudflare 负责运行
+- **全球部署**——一个指令，分布到 300+ 节点
+- **冷启动极快**——基于 V8 Isolate，比传统 Serverless 运行时（如 AWS Lambda）启动快得多
+- **免费额度慷慨**——每天 10 万次请求免费
+
+## 第一个 Worker
+
+用 `wrangler` CLI 创建一个新项目：
+
+```bash
+# 安装 wrangler
+npm install -g wrangler
+
+# 登录（需要 Cloudflare 账号）
+npx wrangler login
+
+# 创建项目
+npx wrangler init my-worker
+cd my-worker
+```
+
+框架生成的 `src/index.ts`：
+
+```typescript
+export default {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    return new Response('Hello from Cloudflare Workers!');
+  },
+};
+```
+
+部署：
+
+```bash
+npx wrangler deploy
+```
+
+就是这么简单——一个运行在全球边缘网络的 HTTP 服务就上线了。
+
+## 路由分发
+
+实际项目不会只有一个端点。用 `itty-router` 这类轻量路由库可以让代码结构清晰：
+
+```bash
+npm install itty-router
+```
+
+```typescript
+import { Router } from 'itty-router';
+
+const router = Router();
+
+router.get('/', () => new Response('Home Page'));
+router.get('/api/status', () => {
+  return Response.json({ status: 'ok', timestamp: Date.now() });
+});
+router.get('/api/hello/:name', ({ params }) => {
+  return new Response(`Hello, ${params.name}!`);
+});
+
+export default {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext) {
+    return router.handle(request);
+  },
+};
+```
+
+## 接入 KV 存储
+
+KV（Key-Value）存储是 Workers 生态中最常用的持久化方案。它是个全球复制的键值数据库，适合存储配置信息、缓存数据、用户状态等。
+
+在 `wrangler.toml` 中绑定 KV 命名空间：
+
+```toml
+[[kv_namespaces]]
+binding = "MY_KV"
+id = "your-kv-namespace-id"
+```
+
+然后就可以在代码中使用：
+
+```typescript
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    // 读取
+    const value = await env.MY_KV.get('config');
+
+    // 写入
+    await env.MY_KV.put('config', JSON.stringify({ theme: 'dark' }));
+
+    // 列出所有键
+    const list = await env.MY_KV.list({ prefix: 'user:' });
+
+    // 删除
+    await env.MY_KV.delete('temp_key');
+
+    return Response.json({ value, keys: list.keys.length });
+  },
+};
+```
+
+KV 的特点：
+- 最终一致性（写入后全球传播需要几秒）
+- 适合读多写少的场景
+- 单个值最大 25MB
+- 免费版每天 10 万次读写
+
+## 定时任务（Cron Triggers）
+
+Workers 支持 Cron Triggers，可以在固定时间间隔执行任务——非常适合做域名到期检查、定时数据同步这类功能。
+
+`wrangler.toml` 中配置：
+
+```toml
+[triggers]
+crons = ["0 */6 * * *"]  # 每 6 小时执行一次
+```
+
+对应的代码：
+
+```typescript
+export default {
+  // HTTP 请求处理
+  async fetch(request: Request, env: Env): Promise<Response> {
+    return new Response('OK');
+  },
+
+  // 定时任务处理
+  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
+    // 检查所有域名到期情况
+    const domains = await checkAllDomains(env);
+    for (const domain of domains) {
+      if (domain.daysUntilExpiry < 30) {
+        await sendAlert(domain, env);
+      }
+    }
+    console.log(`检查完成: ${domains.length} 个域名`);
+  },
+};
+```
+
+在 domain-check 项目中就是这样实现的——每 6 小时自动扫描一次域名到期情况，发现快到期了发邮件提醒。
+
+## 环境变量与 Secret
+
+敏感信息不应该硬编码。Workers 支持两种配置：
+
+**环境变量（明文）**——在 `wrangler.toml` 中定义：
+
+```toml
+[vars]
+SITE_NAME = "西江月"
+ADMIN_EMAIL = "admin@example.com"
+```
+
+** Secrets（加密）**——通过 CLI 设置：
+
+```bash
+npx wrangler secret put API_KEY
+```
+
+在代码中统一通过 `env` 对象访问：
+
+```typescript
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const siteName = env.SITE_NAME;    // 明文变量
+    const apiKey = env.API_KEY;        // 加密变量
+    return new Response(`${siteName}: ${apiKey ? 'has key' : 'no key'}`);
+  },
+};
+```
+
+## 部署策略
+
+### 快速迭代用 `wrangler deploy`
+
+```bash
+npx wrangler deploy
+```
+
+### 灰度发布用 `wrangler deploy --route`
+
+```bash
+# 先部署到 staging 路由验证
+npx wrangler deploy --route 'staging.example.com/*'
+
+# 确认没问题后再推到生产
+npx wrangler deploy --route 'example.com/*'
+```
+
+### 回滚
+
+Workers 控制台保留最近的部署历史，一键回滚。也可以通过 CLI：
+
+```bash
+npx wrangler rollback
+```
+
+## 实战示例：一个简单的短链接服务
+
+把以上内容综合起来，下面是一个用 Workers + KV 实现的短链接服务核心代码：
+
+```typescript
+import { Router } from 'itty-router';
+
+const router = Router();
+
+// 创建短链接
+router.post('/api/shorten', async (request, env) => {
+  const { url } = await request.json();
+  const id = crypto.randomUUID().slice(0, 8);
+  await env.LINKS.put(id, url);
+  return Response.json({ short: `https://s.example.com/${id}` });
+});
+
+// 跳转
+router.get('/:id', async ({ params }, env) => {
+  const target = await env.LINKS.get(params.id);
+  if (!target) return new Response('Not Found', { status: 404 });
+  return Response.redirect(target, 301);
+});
+
+export default {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext) {
+    return router.handle(request, env);
+  },
+};
+```
+
+## 总结
+
+Cloudflare Workers 是我最推荐的无服务器平台。门槛低（一个文件就能上线）、速度快（全球边缘网络）、运维省心（不用管服务器）。适合的场景：
+
+- API 网关 / 反向代理
+- 短链接服务
+- 域名 / SSL 监控
+- 定时数据同步
+- 表单处理 / Webhook 接收
+- A/B 测试分发
+
+下一步可以探索 Workers AI、D1（边缘 SQLite）、R2 对象存储等更深度的服务，Cloudflare 正在把整个边缘平台做成一站式的应用开发环境。
+]]></content:encoded>
+            <_reading_time>
+                <readingTime>7 min read</readingTime>
+            </_reading_time>
         </item>
     </channel>
 </rss>

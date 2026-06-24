@@ -1,0 +1,94 @@
+import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
+import Image from 'next/image';
+import Link from 'next/link';
+import { getAllProjectIds, getProjectById } from '@/lib/projects';
+import { SITE_CONFIG } from '@/lib/constants';
+
+export async function generateStaticParams() {
+  return getAllProjectIds().map((id) => ({ id }));
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const project = getProjectById(id);
+  if (!project) return {};
+
+  return {
+    title: `${project.title} | ${SITE_CONFIG.name}`,
+    description: project.description,
+    openGraph: {
+      title: project.title,
+      description: project.description,
+      type: 'website',
+      images: project.image ? [{ url: project.image }] : [],
+    },
+  };
+}
+
+export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const project = getProjectById(id);
+  if (!project) notFound();
+
+  return (
+    <section className="section">
+      <div className="section__inner">
+        <div className="project-detail">
+          <Link href="/projects" className="project-detail__back">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+            返回作品集
+          </Link>
+
+          <header className="project-detail__header">
+            <h1 className="project-detail__title">{project.title}</h1>
+            <div className="project-detail__meta">
+              <span className="project-detail__year">{project.year}</span>
+              {project.tags.map((tag) => (
+                <span key={tag} className="project-detail__tag">{tag}</span>
+              ))}
+            </div>
+          </header>
+
+          {project.image && (
+            <div className="project-detail__image">
+              <Image
+                src={project.image}
+                alt={project.title}
+                fill
+                className="object-cover"
+                sizes="(max-width: 720px) 100vw, 720px"
+                priority
+              />
+            </div>
+          )}
+
+          <p className="project-detail__desc">{project.description}</p>
+
+          <div className="project-detail__actions">
+            {project.url && (
+              <a href={project.url} target="_blank" rel="noopener noreferrer" className="btn btn--primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+                  <polyline points="15 3 21 3 21 9" />
+                  <line x1="10" y1="14" x2="21" y2="3" />
+                </svg>
+                线上访问
+              </a>
+            )}
+            {project.github && (
+              <a href={project.github} target="_blank" rel="noopener noreferrer" className="btn btn--ghost">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22" />
+                </svg>
+                查看源码
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

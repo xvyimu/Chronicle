@@ -1,0 +1,242 @@
+---
+title: 'Docker 容器部署实战：从零搭建 Node.js 应用'
+description: '从安装 Docker 开始，到将一个完整的 Node.js 应用容器化并部署到服务器的全过程，包含 Dockerfile 优化、多阶段构建、Docker Compose 编排，以及生产环境的最佳实践。'
+date: '2026-06-22'
+tags: ['Docker', 'Node.js', '部署', '容器']
+published: true
+featured: true
+---
+
+> **适用读者**：有基础 Linux 操作经验、想上手 Docker 的开发者。
+> **目标**：把一个 Node.js 应用从源码 → Docker 镜像 → 服务器跑起来。
+
+## 为什么选择 Docker
+
+在接触 Docker 之前，我在服务器上部署应用的方式很简单粗暴：装 Node.js → git pull → npm install → pm2 start。问题在于：
+
+- 换一台服务器就要重新配置一遍环境
+- 不同项目可能需要不同版本的 Node.js
+- 依赖冲突时有发生
+- 多人协作时"在我机器上能跑"成了永恒的笑话
+
+Docker 解决了这些问题。它把应用和它的运行环境打包成一个**镜像**，不管你换到哪台机器，跑起来的环境完全一致。
+
+## 前置条件
+
+- 一台 Linux 服务器（本文以 Ubuntu 22.04 为例）
+- 一个简单的 Node.js 应用
+- 基本的命令行操作能力
+
+## 第一步：安装 Docker
+
+登录服务器，执行：
+
+```bash
+# 更新包索引
+sudo apt update
+
+# 安装依赖
+sudo apt install -y ca-certificates curl gnupg
+
+# 添加 Docker 官方 GPG 密钥
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
+  sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+# 添加 Docker 仓库
+echo "deb [arch=$(dpkg --print-architecture) \
+  signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# 安装 Docker
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io
+
+# 验证安装
+sudo docker run hello-world
+```
+
+看到 Hello World 的输出就说明安装成功了。
+
+## 第二步：编写 Dockerfile
+
+假设你有这样一个 Node.js 应用：
+
+```
+my-app/
+├── package.json
+├── src/
+│   └── index.js
+└── Dockerfile
+```
+
+一个简单但规范的 `Dockerfile` 是这样的：
+
+```dockerfile
+# ---- 构建阶段 ----
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
+COPY . .
+RUN yarn build
+
+# ---- 运行阶段 ----
+FROM node:20-alpine AS runner
+WORKDIR /app
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 appuser
+
+# 只复制构建产物，不复制源码
+COPY --from=builder --chown=appuser:nodejs /app/dist ./dist
+COPY --from=builder --chown=appuser:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=appuser:nodejs /app/package.json ./
+
+USER appuser
+EXPOSE 3000
+CMD ["node", "dist/index.js"]
+```
+
+这里用了**多阶段构建**（multi-stage build）：
+- **构建阶段**：安装所有依赖，执行构建
+- **运行阶段**：只复制构建产物和运行时依赖，镜像体积小得多
+
+对比一下：单阶段构建的镜像大约 ~500MB，用多阶段构建后只有 ~150MB。
+
+## 第三步：构建镜像
+
+```bash
+docker build -t my-app:latest .
+```
+
+构建完成后，查看镜像：
+
+```bash
+docker images
+```
+
+## 第四步：运行容器
+
+最简单的启动方式：
+
+```bash
+docker run -d \
+  --name my-app \
+  -p 3000:3000 \
+  --restart unless-stopped \
+  my-app:latest
+```
+
+参数说明：
+- `-d`：后台运行
+- `--name`：容器命名
+- `-p 宿主机端口:容器端口`：端口映射
+- `--restart unless-stopped`：退出时自动重启（除非手动停止）
+
+## 第五步：用 Docker Compose 管理
+
+当你的应用不止一个服务时（比如需要数据库），Docker Compose 就派上用场了。
+
+在项目根目录创建 `docker-compose.yml`：
+
+```yaml
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=myapp
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+```
+
+启动所有服务：
+
+```bash
+docker compose up -d
+```
+
+查看日志：
+
+```bash
+docker compose logs -f app
+```
+
+## 生产环境最佳实践
+
+几个实践中最重要的点：
+
+### 1. 不要用 root 用户运行
+
+Dockerfile 里一定要建一个普通用户，然后用 `USER` 切换。上面示例里已经做了。
+
+### 2. 定期更新基础镜像
+
+```bash
+docker pull node:20-alpine
+docker compose build --pull
+```
+
+不要忽视安全更新。
+
+### 3. 使用健康检查
+
+Docker Compose 支持 `healthcheck`，上面的 PostgreSQL 示例里已经配置了。应用层也可以加 HTTP 健康检查端点。
+
+### 4. 日志管理
+
+Docker 容器默认会写日志到 JSON 文件，时间长了会占满磁盘。在 `/etc/docker/daemon.json` 中配置日志轮转：
+
+```json
+{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+  }
+}
+```
+
+改完重启 Docker：`sudo systemctl restart docker`。
+
+### 5. 使用 .dockerignore
+
+```gitignore
+node_modules
+.git
+.env
+dist
+*.md
+```
+
+避免把不必要的文件打包进镜像，能显著加快构建速度。
+
+## 总结
+
+从安装 Docker、写 Dockerfile、构建镜像，到用 Docker Compose 编排多容器服务——这套流程已经成了我部署应用的标配。容器化的好处不用多说，关键是**形成规范**：每个项目都按同样的方式组织、同样的命令部署，省心很多。
+
+下一篇会讲如何用 Docker Compose 编排更多服务，以及一些进阶的部署策略。

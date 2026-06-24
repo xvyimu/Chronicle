@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 
@@ -23,8 +23,8 @@ export default function BackToTop() {
       onClick={scrollToTop}
       aria-label="回到顶部"
       className={`fixed bottom-6 right-6 z-50 flex h-10 w-10 items-center justify-center rounded-full
-        bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] shadow-md
-        ring-1 ring-zinc-200 dark:ring-zinc-700
+        bg-[var(--bg-soft)] text-[var(--text-soft)] shadow-md
+        ring-1 ring-[var(--border)]
         transition-all duration-300 hover:bg-primary hover:text-white hover:ring-primary
         ${visible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 pointer-events-none'}`}
     >

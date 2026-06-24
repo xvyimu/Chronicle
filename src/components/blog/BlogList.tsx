@@ -1,4 +1,4 @@
-import BlogCard from './BlogCard';
+﻿import BlogCard from './BlogCard';
 import { PostMeta } from '@/types';
 
 export default function BlogList({ posts, columns = 2 }: { posts: PostMeta[]; columns?: 1 | 2 | 3 }) {
@@ -10,13 +10,12 @@ export default function BlogList({ posts, columns = 2 }: { posts: PostMeta[]; co
 
   return (
     <div className={`grid gap-5 ${gridCols[columns]}`}>
-      {posts.length === 0 ? (
-        <p className="col-span-full py-12 text-center text-[var(--color-text-muted)]">
+      {posts.length === 0 && (
+        <p className="col-span-full py-12 text-center text-[var(--text-dim)]">
           暂无文章
         </p>
-      ) : (
-        posts.map((post) => <BlogCard key={post.slug} post={post} />)
       )}
+      {posts.map((post) => <BlogCard key={post.slug} post={post} />)}
     </div>
   );
 }

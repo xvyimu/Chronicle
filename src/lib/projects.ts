@@ -1,18 +1,50 @@
-import fs from 'fs';
-import path from 'path';
+import { z } from 'zod';
 import { Project } from '@/types';
 import { CONTENT_DIR } from './constants';
+import { getContentSource } from './content-source';
+import { createCache } from './cache';
 
-const PROJECTS_FILE = path.join(process.cwd(), CONTENT_DIR.projects);
+const httpsUrl = z.string().optional().refine(
+  (v) => !v || /^https?:\/\//.test(v),
+  'URL must start with http:// or https://'
+);
+
+const ProjectSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string(),
+  tags: z.array(z.string()),
+  url: httpsUrl.optional().transform((v) => (v ? v : undefined)),
+  github: httpsUrl.optional().transform((v) => (v ? v : undefined)),
+  image: z.string().optional(),
+  featured: z.boolean(),
+  year: z.number().int().positive(),
+});
+
+export function parseProjects(raw: unknown): Project[] {
+  const arr = z.array(ProjectSchema).parse(raw);
+  return arr.sort((a, b) => b.year - a.year);
+}
+
+const _cache = createCache<Project[]>({ watchPath: CONTENT_DIR.projects });
 
 export function getAllProjects(): Project[] {
-  if (!fs.existsSync(PROJECTS_FILE)) {
-    console.warn(`[projects.ts] 数据文件不存在: ${PROJECTS_FILE}`);
-    return [];
-  }
-  const raw = fs.readFileSync(PROJECTS_FILE, 'utf-8');
-  const data: Project[] = JSON.parse(raw);
-  return data.sort((a, b) => b.year - a.year);
+  return _cache.getOrCompute(() => {
+    const source = getContentSource();
+    const raw = source.readFile(CONTENT_DIR.projects);
+    if (raw === null) {
+      console.warn(`[projects.ts] 数据文件不存在: ${CONTENT_DIR.projects}`);
+      return [];
+    }
+    let data: unknown;
+    try {
+      data = JSON.parse(raw);
+    } catch (e) {
+      console.error(`[projects.ts] JSON 解析失败: ${CONTENT_DIR.projects}`, e);
+      return [];
+    }
+    return parseProjects(data);
+  });
 }
 
 export function getFeaturedProjects(): Project[] {

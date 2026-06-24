@@ -1,0 +1,307 @@
+---
+title: 'Linux 服务器排查手册：CPU、内存、磁盘、网络'
+description: '当服务出问题时，从四个维度系统性地排查服务器状态——CPU 满载、内存泄漏、磁盘占满、网络异常，每种场景的排查步骤和常用命令。'
+date: '2026-06-26'
+tags: ['Linux', '运维', 'VPS', '监控']
+published: true
+featured: false
+---
+
+> 服务出问题的时候，最怕的不是问题本身，而是不知道从哪开始查。这篇文章整理了一套排查流程。
+
+## 排查前的心态
+
+出问题的时候容易慌，急着找原因。但系统排查比凭直觉猜更有效率：
+
+1. **先确认影响范围**——一个用户报错还是全部？
+2. **最近有什么变更**——刚部署了新版本？改了配置？
+3. **按维度逐个排除**——CPU → 内存 → 磁盘 → 网络 → 应用层
+
+## 一、CPU 过高
+
+### 快速定位
+
+```bash
+# 看整体负载
+top
+htop          # 更好看，推荐装
+
+# 按 CPU 使用率排序（top 中按 P）
+# 按内存使用率排序（top 中按 M）
+
+# 看 CPU 平均负载
+uptime        # load average: 1.20, 0.80, 0.50
+```
+
+`load average` 的三个值分别表示过去 1/5/15 分钟的平均负载。超过 CPU 核数说明有排队。
+
+### 找到元凶
+
+```bash
+# 找到最吃 CPU 的进程 ID
+top -bn1 | head -20
+
+# 查看具体线程（如果进程多线程）
+top -H -p <PID>
+
+# 进程详细信息
+ps -p <PID> -o pid,ppid,%cpu,%mem,cmd,lstart
+
+# 系统调用追踪
+strace -p <PID> -c   # 统计系统调用次数
+strace -p <PID> -e trace=network  # 只看网络相关调用
+```
+
+### 常见原因
+
+| 现象 | 可能原因 | 临时方案 |
+|------|----------|----------|
+| 单个进程 100% | 死循环 / 计算密集型任务 | `kill -9` 或重启 |
+| CPU 用户态高 | 应用层问题 | 检查应用日志 |
+| CPU 内核态高 | 磁盘 IO / 系统调用频繁 | `iostat -x 1` 看 IO 等待 |
+| 挖矿病毒 | 不认识的进程名 | 查 crontab，杀进程删文件 |
+
+## 二、内存不足
+
+### 查看内存使用
+
+```bash
+# 总览
+free -h
+
+# 查看各进程内存占用
+ps aux --sort=-%mem | head -10
+
+# 按 RSS（实际物理内存）排序
+ps -eo pid,ppid,%mem,rss,cmd --sort=-rss | head -10
+```
+
+`free -h` 输出解读：
+
+```
+               total        used        free      shared  buff/cache   available
+Mem:           3.8G        2.1G        800M         50M        900M        1.3G
+Swap:          1.0G        200M        800M
+```
+
+重点看 **available**——这是实际可用内存（包括可回收的 cache）。available 接近 0 才真正危险。
+
+### 内存泄漏排查
+
+当发现内存持续增长不回落：
+
+```bash
+# 连续查看进程内存变化
+watch -n 2 'ps -p <PID> -o rss,vsz'
+
+# 查看内存映射
+pmap -x <PID> | tail -20
+
+# 更深入的工具（需安装）
+smem -t -p   # 按 RSS/USS/PSS 查看
+```
+
+常见内存泄漏来源：
+- Node.js 应用的闭包引用未释放
+- Python 列表 / dict 无限增长
+- Java 堆设置过大或未回收
+- 日志框架缓存未刷新
+
+### 配置 Swap
+
+如果内存确实不够，Swap 是最后的防护网：
+
+```bash
+# 查看当前 Swap
+swapon --show
+
+# 创建 Swap 文件（4GB）
+sudo fallocate -l 4G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+
+# 持久化（加到 /etc/fstab）
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+```
+
+但也别太依赖 Swap——Swap 使用率超过 10-20% 说明物理内存确实不够了，该升级机器了。
+
+## 三、磁盘占满
+
+### 查看磁盘空间
+
+```bash
+# 各分区使用情况
+df -h
+
+# 查看目录大小（从根目录往下找）
+du -sh /* | sort -rh | head -10
+
+# 当前目录下的文件大小
+du -sh * | sort -rh | head -10
+```
+
+### 找到大文件
+
+```bash
+# 找到大于 100MB 的文件
+find / -type f -size +100M -exec ls -lh {} \; | sort -k5 -rh | head -20
+
+# 目录层级分析
+ncdu          # 交互式，推荐装
+```
+
+### 清理空间
+
+常见的可清理对象：
+
+```bash
+# Docker 日志——最容易被忽视的磁盘杀手
+# 检查 Docker 日志文件大小
+ls -lh /var/lib/docker/containers/*/*-json.log
+
+# 清理（注意：这是全局清理，确认没有正在调试的容器）
+sudo sh -c 'truncate -s 0 /var/lib/docker/containers/*/*-json.log'
+
+# 更好的方式：配置日志轮转（/etc/docker/daemon.json）
+{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+  }
+}
+
+# 清理已停止的容器 / 未使用的镜像 / 构建缓存
+docker system prune -a
+
+# apt 缓存
+sudo apt clean
+
+# journal 日志
+sudo journalctl --vacuum-size=200M
+
+# npm/pnpm 缓存
+pnpm store prune
+```
+
+### 查看 inode 耗尽
+
+磁盘空间够但创建不了文件？可能是 inode 用完了：
+
+```bash
+df -i          # 查看 inode 使用率
+
+# 找 inode 消耗大户（通常是缓存目录、邮件队列）
+find / -xdev -printf '%h\n' | sort | uniq -c | sort -k1 -rn | head -10
+```
+
+## 四、网络问题
+
+### 连通性检查
+
+```bash
+# 基础 ping
+ping -c 5 google.com
+
+# DNS 解析
+nslookup example.com
+dig example.com
+
+# 路由追踪
+traceroute example.com
+mtr example.com     # 更好的 traceroute，实时显示丢包率
+```
+
+### 端口和服务
+
+```bash
+# 查看正在监听的端口
+ss -tlnp         # TCP 监听（替换 netstat -tlnp）
+ss -ulnp         # UDP 监听
+
+# 查看连接状态统计
+ss -tan | awk '{print $1}' | sort | uniq -c
+
+# 查看连接数排名
+ss -tan | grep ESTAB | awk '{print $4}' | cut -d: -f1 | sort | uniq -c | sort -rn | head -10
+```
+
+`ss -tan` 输出的状态解读：
+
+| 状态 | 含义 |
+|------|------|
+| LISTEN | 服务在监听端口 |
+| ESTABLISHED | 已建立的连接 |
+| TIME_WAIT | 主动关闭后的等待状态（大量正常） |
+| CLOSE_WAIT | 被动关闭但未关闭（需排查应用层） |
+
+大量 `CLOSE_WAIT` 说明应用没有正确关闭连接——通常是 HTTP 客户端或数据库连接池的问题。
+
+### 带宽和丢包
+
+```bash
+# 实时查看带宽（需安装）
+iftop
+nethogs       # 按进程显示带宽
+
+# 查看接口统计
+ip -s link show eth0
+
+# 丢包检查
+# 网卡层面的丢包
+ethtool -S eth0 | grep -i error
+# 内核层面的丢包（看 drop 列）
+netstat -s | grep -i 'drop\|overflow'
+```
+
+## 五、系统全面检查脚本
+
+把以上内容合并成一个快速诊断脚本，出问题时一键运行：
+
+```bash
+#!/bin/bash
+# server-diagnose.sh — 服务器快速诊断
+
+echo "===== 系统信息 ====="
+uname -a
+uptime
+echo ""
+
+echo "===== CPU ====="
+top -bn1 | grep "Cpu(s)"
+echo ""
+
+echo "===== 内存 ====="
+free -h
+echo ""
+
+echo "===== 磁盘 ====="
+df -h | grep -v tmpfs
+echo ""
+
+echo "===== 网络 ====="
+echo "端口监听:"
+ss -tlnp4
+echo "连接数 TOP:"
+ss -tan | grep ESTAB | awk '{print $4}' | cut -d: -f1 | sort | uniq -c | sort -rn | head -10
+echo ""
+
+echo "===== TOP 进程(CPU) ====="
+ps aux --sort=-%cpu | head -6
+echo ""
+
+echo "===== TOP 进程(内存) ====="
+ps aux --sort=-%mem | head -6
+```
+
+## 总结
+
+排查问题的核心是**系统化**——不要凭感觉从一个方向跳到另一个方向。按 CPU → 内存 → 磁盘 → 网络的顺序逐个排除，大部分问题可以在 5 分钟内定位到根因。
+
+日常预防更重要：
+- 装好监控（netdata / prometheus）
+- 配置日志轮转
+- 给关键指标设告警（磁盘 > 80%、内存 < 20%）
+- 定期查看 `dmesg`——很多问题（OOM killer、硬件错误）只出现在内核日志里，不会在应用日志中出现

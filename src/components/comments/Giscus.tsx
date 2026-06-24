@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { SITE_CONFIG } from '@/lib/constants';
 
 interface GiscusProps {
@@ -13,22 +13,48 @@ interface GiscusProps {
   lang?: string;
 }
 
+const giscusDefaults = SITE_CONFIG.giscus;
+
 export default function Giscus({
-  repoId = 'R_kgDOTBAmxA',
-  category = 'Announcements',
-  categoryId = 'DIC_kwDOTBAmxM4C_mwW',
-  mapping = 'pathname',
-  reactionsEnabled = '1',
-  inputPosition = 'bottom',
-  lang = 'zh-CN',
+  repoId = giscusDefaults.repoId,
+  category = giscusDefaults.category,
+  categoryId = giscusDefaults.categoryId,
+  mapping = giscusDefaults.mapping,
+  reactionsEnabled = giscusDefaults.reactionsEnabled,
+  inputPosition = giscusDefaults.inputPosition,
+  lang = giscusDefaults.lang,
 }: GiscusProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const scriptLoaded = useRef(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
 
+  // Lazy-load: only mount Giscus when the comment section scrolls into view
   useEffect(() => {
-    if (scriptLoaded.current) return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, []);
+
+  // Load Giscus script when visible
+  useEffect(() => {
+    if (!visible) return;
     const container = containerRef.current;
     if (!container) return;
+
+    // Avoid double-loading
+    if (container.querySelector('script')) return;
 
     const script = document.createElement('script');
     script.src = 'https://giscus.app/client.js';
@@ -54,11 +80,12 @@ export default function Giscus({
     });
 
     container.appendChild(script);
-    scriptLoaded.current = true;
-  }, [repoId, category, categoryId, mapping, reactionsEnabled, inputPosition, lang]);
+  }, [visible, repoId, category, categoryId, mapping, reactionsEnabled, inputPosition, lang]);
 
   // Sync theme with giscus when site theme changes
   useEffect(() => {
+    if (!visible) return;
+
     const sendTheme = () => {
       const isDark = document.documentElement.classList.contains('dark');
       const giscusTheme = isDark ? 'dark' : 'light';
@@ -71,33 +98,52 @@ export default function Giscus({
       }
     };
 
-    // Observe theme changes
     const observer = new MutationObserver((mutations) => {
       for (const m of mutations) {
         if (m.attributeName === 'class') {
           sendTheme();
+          break;
         }
       }
     });
     observer.observe(document.documentElement, { attributes: true });
 
-    // Send initial theme once giscus iframe is loaded
-    const timer = setInterval(() => {
+    const sendThemeWhenReady = () => {
       const iframe = document.querySelector<HTMLIFrameElement>('iframe.giscus-frame');
       if (iframe) {
+        iframe.addEventListener('load', sendTheme, { once: true });
         sendTheme();
-        clearInterval(timer);
+      } else {
+        const bodyObserver = new MutationObserver(() => {
+          const iframe = document.querySelector<HTMLIFrameElement>('iframe.giscus-frame');
+          if (iframe) {
+            bodyObserver.disconnect();
+            iframe.addEventListener('load', sendTheme, { once: true });
+            sendTheme();
+          }
+        });
+        bodyObserver.observe(document.body, { childList: true, subtree: true });
+        const timeout = setTimeout(() => bodyObserver.disconnect(), 10000);
+        return () => { clearTimeout(timeout); bodyObserver.disconnect(); };
       }
-    }, 500);
-    // Stop polling after 10s
-    const timeout = setTimeout(() => clearInterval(timer), 10000);
+    };
+
+    const cleanupReady = sendThemeWhenReady();
 
     return () => {
       observer.disconnect();
-      clearInterval(timer);
-      clearTimeout(timeout);
+      cleanupReady?.();
     };
-  }, []);
+  }, [visible]);
 
-  return <div ref={containerRef} className="mt-16" />;
+  return (
+    <div ref={sentinelRef} className="mt-16">
+      {visible && <div ref={containerRef} />}
+      {!visible && (
+        <div className="flex items-center justify-center py-12 text-[var(--text-dim)] text-sm">
+          滚动到此处加载评论
+        </div>
+      )}
+    </div>
+  );
 }

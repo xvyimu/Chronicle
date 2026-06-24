@@ -1,0 +1,247 @@
+---
+title: 'Nginx 反向代理与负载均衡实战'
+description: '从 Nginx 基础配置到反向代理、负载均衡、HTTPS 重定向和静态资源优化的完整指南，适合需要在生产环境部署 Web 服务的开发者。'
+date: '2026-06-24'
+tags: ['Nginx', 'Linux', '运维', '部署']
+published: true
+featured: false
+---
+
+> 在 Docker 部署和 VPS 初始化之后，Nginx 是最常用的前端层——反向代理、负载均衡、HTTPS 终端、静态资源缓存，一个搞定。
+
+## 为什么需要 Nginx
+
+即使你的应用跑在 Docker 里，直接暴露端口到公网也不是好主意。Nginx 作为反向代理层，能帮你做：
+
+- **HTTPS 终端**——处理 SSL/TLS 握手，后端服务用 HTTP 就行
+- **负载均衡**——多个实例分摊流量
+- **静态资源缓存**——图片/CSS/JS 直接由 Nginx 返回，不经过后端
+- **请求限流**——防止恶意请求打垮后端
+- **访问日志**——统一的流量记录
+
+## 安装
+
+```bash
+# Ubuntu/Debian
+sudo apt install -y nginx
+
+# 验证
+nginx -v
+sudo systemctl status nginx
+```
+
+配置文件目录：`/etc/nginx/`，主配置文件：`/etc/nginx/nginx.conf`
+
+## 基础站点配置
+
+在 `/etc/nginx/sites-available/` 下创建配置文件，然后在 `sites-enabled/` 里软链接：
+
+```bash
+sudo nano /etc/nginx/sites-available/myapp
+sudo ln -s /etc/nginx/sites-available/myapp /etc/nginx/sites-enabled/
+```
+
+一个完整的生产级配置：
+
+```nginx
+server {
+    listen 80;
+    listen [::]:80;
+    server_name example.com;
+
+    # 跳转到 HTTPS
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name example.com;
+
+    # SSL 证书（Let's Encrypt）
+    ssl_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    # 安全头
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # 静态资源——直接由 Nginx 处理，不转发到后端
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff2?)$ {
+        root /var/www/myapp/dist;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        access_log off;
+    }
+
+    # API 请求——转发到后端服务
+    location /api/ {
+        proxy_pass http://127.0.0.1:3000/api/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # 超时设置（WebSocket 需要更长超时）
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+
+    # 前端路由——SPA fallback
+    location / {
+        root /var/www/myapp/dist;
+        try_files $uri $uri/ /index.html;
+    }
+}
+```
+
+验证配置并重载：
+
+```bash
+sudo nginx -t          # 先验证语法
+sudo systemctl reload nginx  # 重载（不中断现有连接）
+```
+
+## 反向代理到 Docker
+
+如果你的应用跑在 Docker 容器里，有两种方式连接：
+
+**方式一：端口映射 + localhost**
+
+```bash
+docker run -d -p 3000:3000 myapp
+```
+
+Nginx 配置不变，`proxy_pass http://127.0.0.1:3000` 就行。
+
+**方式二：Docker 网络（推荐）**
+
+```bash
+# 创建 bridge 网络
+docker network create webnet
+
+# 启动应用容器，加入网络
+docker run -d --name myapp --network webnet myapp
+
+# Nginx 容器也用同一个网络
+docker run -d --name nginx-proxy --network webnet \
+  -p 80:80 -p 443:443 \
+  -v /etc/nginx/conf.d \
+  -v /etc/letsencrypt \
+  nginx:alpine
+```
+
+Nginx 里直接用容器名：
+
+```nginx
+location /api/ {
+    proxy_pass http://myapp:3000/api/;
+}
+```
+
+## 负载均衡
+
+多个实例分摊流量，提高可用性和吞吐量：
+
+```nginx
+upstream backend {
+    # 加权轮询
+    server 127.0.0.1:3000 weight=3;
+    server 127.0.0.1:3001 weight=1;
+    server 127.0.0.1:3002;
+
+    # keepalive 连接复用
+    keepalive 32;
+}
+
+server {
+    listen 80;
+    server_name example.com;
+
+    location /api/ {
+        proxy_pass http://backend;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+    }
+}
+```
+
+负载均衡策略：
+
+| 策略 | 配置 | 适用场景 |
+|------|------|----------|
+| 轮询 | 默认 | 各实例性能相近 |
+| 加权轮询 | `weight=N` | 实例性能不同 |
+| IP 哈希 | `ip_hash;` | 需要会话保持 |
+| 最少连接 | `least_conn;` | 请求处理时长差异大 |
+
+## 请求限流
+
+防止爬虫或攻击打垮后端：
+
+```nginx
+# 在 http 块中定义限流区域
+limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s;
+
+server {
+    listen 80;
+    server_name example.com;
+
+    location /api/ {
+        limit_req zone=api burst=20 nodelay;
+        proxy_pass http://backend;
+    }
+}
+```
+
+参数解释：
+- `rate=10r/s`：每秒最多 10 个请求
+- `burst=20`：允许突发最多 20 个请求排队
+- `nodelay`：突发请求立即处理（不排队等待）
+
+## 访问日志优化
+
+默认 Nginx 会记录每次请求的完整日志，时间长了磁盘吃紧：
+
+```nginx
+# 自定义日志格式（只记录必要字段）
+log_format slim '$remote_addr - $remote_user [$time_local] '
+                '"$request" $status $body_bytes_sent '
+                '"$http_referer" "$http_user_agent"';
+
+access_log /var/log/nginx/access.log slim buffer=32k flush=5s;
+
+# 对静态资源关闭日志
+location ~* \.(css|js|png|jpg)$ {
+    access_log off;
+}
+```
+
+## 常用诊断命令
+
+```bash
+# 测试配置语法
+nginx -t
+
+# 重载（零停机）
+systemctl reload nginx
+
+# 查看错误日志
+tail -f /var/log/nginx/error.log
+
+# 查看访问日志中的慢请求
+awk '$7 ~ /api/ {print $0}' /var/log/nginx/access.log | \
+  awk '{print $NF}' | sort -nr | head -20
+
+# 查看 Nginx 状态（如果开启了 stub_status）
+curl http://127.0.0.1/nginx_status
+```
+
+## 总结
+
+Nginx 是部署流程里最值得花时间配置好的环节。一个合理的 Nginx 层能让后端服务更简单——只管处理业务逻辑，安全、缓存、限流全交给 Nginx。
+
+参考配置：[Nginx 官方文档](https://nginx.org/en/docs/)

@@ -1,36 +1,182 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 西江月博客
 
-## Getting Started
+基于 Next.js 16 App Router 的个人博客兼作品集，MDX 驱动、静态优先。
 
-First, run the development server:
+## 技术栈
+
+Next.js 16.2 · React 19.2 · TypeScript 5 strict · Tailwind CSS v4 · MDX (next-mdx-remote) · Shiki (rehype-pretty-code) · Giscus 评论 · fuse.js · Vitest · Playwright · ESLint 9
+
+## 快速启动
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+浏览器打开 [http://localhost:3000](http://localhost:3000)。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 环境变量
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# .env.local
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_GISCUS_REPO=owner/repo
+NEXT_PUBLIC_GISCUS_REPO_ID=your_repo_id
+NEXT_PUBLIC_GISCUS_CATEGORY_ID=your_category_id
+```
 
-## Learn More
+参见 `.env.example`。
 
-To learn more about Next.js, take a look at the following resources:
+## 常用命令
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| 命令 | 作用 |
+| --- | --- |
+| `pnpm dev` | 本地开发服务器 |
+| `pnpm build` | 生成 RSS + 生产构建 |
+| `pnpm start` | 启动生产服务器 |
+| `pnpm test` | Vitest 单元/集成测试 |
+| `pnpm test:watch` | Vitest 监听模式 |
+| `pnpm test:e2e` | Playwright E2E 测试（自动启动 dev server） |
+| `pnpm lint` | ESLint |
+| `pnpm analyze` | Bundle 体积分析 |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 项目结构
 
-## Deploy on Vercel
+```text
+.
+├─ content/                  # 内容源
+│  ├─ about.mdx              # 关于页
+│  └─ blog/*.mdx             # 博客文章（10 篇）
+├─ data/
+│  └─ projects.json          # 作品集数据
+├─ docs/                     # 项目文档
+│  ├─ overview.md            # 文档导航
+│  ├─ architecture.md        # 架构与模块职责
+│  ├─ content-workflow.md    # 内容维护流程
+│  ├─ css-conventions.md     # CSS 范式规范
+│  ├─ cache-components-migration.md  # Cache Components 迁移指南
+│  └─ 项目审查与改进文档.md   # 历史审查记录
+├─ e2e/                      # Playwright E2E 测试（4 文件 / 30 用例）
+│  ├─ home.spec.ts           # 首页测试
+│  ├─ blog.spec.ts           # 博客列表与详情测试
+│  ├─ navigation.spec.ts     # 主题切换 / 项目 / 标签 / 关于 / 404
+│  └─ extended.spec.ts       # 作品详情 / 标签详情 / RSS / Sitemap / robots
+├─ public/
+│  ├─ images/projects/       # 项目封面图
+│  ├─ feed.xml               # RSS（构建前由脚本生成）
+│  ├─ feed.json              # JSON Feed（构建前由脚本生成）
+│  └─ icon.svg               # 站点图标
+├─ scripts/
+│  ├─ generate-rss.ts        # 构建前生成 RSS / JSON Feed
+│  └─ check-bundle-budget.ts # Bundle 体积预算检查
+├─ src/
+│  ├─ app/                   # App Router 路由
+│  │  ├─ styles/             # CSS 分层（tokens / layout / components / prose / responsive）
+│  │  ├─ blog/[slug]/        # 文章详情（含 opengraph-image）
+│  │  ├─ projects/[id]/      # 作品详情
+│  │  ├─ tags/[tag]/         # 标签归档
+│  │  ├─ layout.tsx          # 根布局（字体 / 主题 / 跳转链接）
+│  │  ├─ manifest.ts         # PWA manifest
+│  │  ├─ robots.ts           # robots.txt
+│  │  └─ sitemap.ts          # 站点地图
+│  ├─ components/
+│  │  ├─ blog/               # 博客组件（SearchBar / MdxContent / TOC / CodeBlock / 阅读偏好…）
+│  │  ├─ layout/             # Header / Footer
+│  │  ├─ projects/           # ProjectCard
+│  │  ├─ comments/           # Giscus
+│  │  └─ ui/                 # ThemeToggle / BackToTop / MagneticCard / ParticleCanvas
+│  ├─ lib/                   # 数据层（posts / projects / tags / utils / constants / cache / jsonld）
+│  └─ types/                 # TypeScript 类型定义
+├─ .github/workflows/ci.yml  # CI 流水线（lint / test / tsc / build / bundle-budget / e2e）
+├─ eslint.config.mjs         # ESLint 9 flat config
+├─ next.config.ts            # Next.js 配置（CSP 安全头 / viewTransition / bundle analyzer）
+├─ playwright.config.ts      # Playwright 配置
+├─ postcss.config.mjs        # PostCSS 配置
+├─ tsconfig.json             # TypeScript 配置（strict / @/* 路径别名）
+├─ vitest.config.ts          # Vitest 配置（jsdom 环境）
+└─ package.json
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 路由
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| 路由 | 说明 |
+| --- | --- |
+| `/` | 首页（Hero 粒子背景 + 最新文章 + 精选项目） |
+| `/about` | 关于页 |
+| `/blog` | 博客列表（fuse.js 模糊搜索 + 键盘导航） |
+| `/blog/[slug]` | 文章详情（TOC + 阅读进度 + 阅读偏好 + 评论） |
+| `/projects` | 作品集 |
+| `/projects/[id]` | 作品详情 |
+| `/tags` | 标签汇总 |
+| `/tags/[tag]` | 单标签归档 |
+| `/feed.xml` | RSS 订阅 |
+| `/feed.json` | JSON Feed |
+| `/sitemap.xml` | 站点地图 |
+| `/robots.txt` | 爬虫规则 |
+
+## 设计系统
+
+CSS 自定义属性 + Tailwind v4 `@theme` 令牌，分 5 层：
+
+- `tokens.css` — 色彩 / 间距 / 圆角 / 阴影 / 主题过渡
+- `layout.css` — Header / Footer / 进度条 / 回到顶部
+- `components.css` — Hero / 卡片 / 标签 / 搜索 / 阅读偏好 / 项目详情
+- `prose.css` — MDX 排版 / 代码块双主题（vitesse-dark / vitesse-light）
+- `responsive.css` — 移动端适配 / 菜单遮罩
+
+详见 [docs/css-conventions.md](./docs/css-conventions.md)。
+
+## 功能清单
+
+- 明暗主题切换（View Transition API 平滑过渡）
+- 模糊搜索（fuse.js + `/` 快捷键 + 键盘导航）
+- 代码块主题跟随站点（亮色用 github-light）
+- 阅读偏好（字号调节 · 宽窄切换 · 图片点击放大）
+- 文章卡片 magnetic hover 微交互
+- Hero 区 Canvas 2D 粒子背景（尊重 reduced-motion）
+- 阅读进度条 + 目录 + 回到顶部
+- Giscus 评论（主题同步）
+- RSS / JSON Feed / Sitemap / PWA manifest
+- WCAG 无障碍（focus-visible / aria-label / skip-link）
+- CSP 安全头 + HSTS
+
+## 测试
+
+| 层级 | 工具 | 数量 | 覆盖范围 |
+| --- | --- | --- | --- |
+| 单元/集成 | Vitest + Testing Library | 115 用例 | lib 数据层 / 组件交互 / 页面渲染 |
+| E2E | Playwright | 30 用例 | 首页 / 博客 / 导航 / 主题 / 作品 / 标签 / RSS / Sitemap |
+
+```bash
+pnpm test          # 运行单元测试
+pnpm test:e2e      # 运行 E2E 测试（自动启动 dev server）
+```
+
+## CI/CD
+
+GitHub Actions 流水线（`.github/workflows/ci.yml`）包含三个并行 Job：
+
+- **quality** — lint → test → tsc → generate-rss → build → bundle-budget
+- **bundle-analyze** — 构建并上传 Bundle 分析报告
+- **e2e** — 安装 Chromium → 运行 Playwright E2E 测试
+
+部署平台：Vercel（自动跟随 main 分支）。
+
+## 内容约定
+
+- 文章文件名：`YYYY-MM-主题名.mdx`，slug 自动去掉日期前缀
+- `published: false` 的文章不在生产环境展示
+- 站点配置唯一源：`src/lib/constants.ts`
+- 新增页面后同步更新 sitemap 和导航
+
+详见 [docs/content-workflow.md](./docs/content-workflow.md)。
+
+## 文档索引
+
+- [docs/overview.md](./docs/overview.md) — 文档导航
+- [docs/architecture.md](./docs/architecture.md) — 架构与模块职责
+- [docs/content-workflow.md](./docs/content-workflow.md) — 内容维护流程
+- [docs/css-conventions.md](./docs/css-conventions.md) — CSS 范式规范
+- [docs/cache-components-migration.md](./docs/cache-components-migration.md) — Cache Components 迁移指南
+- [docs/项目审查与改进文档.md](./docs/项目审查与改进文档.md) — 历史审查记录
+- [AGENTS.md](./AGENTS.md) — AI 编码助手指引

@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 
 interface PaginationProps {
   currentPage: number;
@@ -14,10 +14,9 @@ export default function Pagination({ currentPage, totalPages, basePath = '/blog'
       {currentPage > 1 && (
         <Link
           href={currentPage === 2 ? basePath : `${basePath}?page=${currentPage - 1}`}
-          className="inline-flex h-9 items-center rounded-md px-3 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
+          className="inline-flex h-9 items-center rounded-md px-3 text-sm text-[var(--text-soft)] hover:bg-[var(--bg-soft)] transition-colors"
         >
-          ← 上一页
-        </Link>
+          ← 上一页  </Link>
       )}
       {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
         const href = p === 1 ? basePath : `${basePath}?page=${p}`;
@@ -28,7 +27,7 @@ export default function Pagination({ currentPage, totalPages, basePath = '/blog'
             className={`inline-flex h-9 w-9 items-center justify-center rounded-md text-sm transition-colors ${
               p === currentPage
                 ? 'bg-primary text-white'
-                : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]'
+                : 'text-[var(--text-soft)] hover:bg-[var(--bg-soft)]'
             }`}
           >
             {p}
@@ -38,10 +37,9 @@ export default function Pagination({ currentPage, totalPages, basePath = '/blog'
       {currentPage < totalPages && (
         <Link
           href={`${basePath}?page=${currentPage + 1}`}
-          className="inline-flex h-9 items-center rounded-md px-3 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
+          className="inline-flex h-9 items-center rounded-md px-3 text-sm text-[var(--text-soft)] hover:bg-[var(--bg-soft)] transition-colors"
         >
-          下一页 →
-        </Link>
+          下一页 →  </Link>
       )}
     </nav>
   );

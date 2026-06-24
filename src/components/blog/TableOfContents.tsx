@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 
@@ -13,7 +13,7 @@ export default function TableOfContents() {
   const [activeId, setActiveId] = useState<string>('');
 
   useEffect(() => {
-    const article = document.querySelector('article');
+    const article = document.getElementById('article-content') ?? document.querySelector('article');
     if (!article) return;
 
     const headings = article.querySelectorAll('h2, h3');
@@ -44,7 +44,7 @@ export default function TableOfContents() {
 
   return (
     <nav className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto">
-      <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
+      <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)]">
         目录
       </h4>
       <ul className="space-y-1.5 text-sm">
@@ -52,12 +52,12 @@ export default function TableOfContents() {
           <li key={item.id}>
             <a
               href={`#${item.id}`}
-              className={`block transition-colors ${
-                item.level === 3 ? 'pl-4' : ''
+              className={`block transition-colors border-l-2 py-1 ${
+                item.level === 3 ? 'pl-5' : 'pl-3'
               } ${
                 activeId === item.id
-                  ? 'text-primary font-medium'
-                  : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
+                  ? 'text-[var(--brand)] border-[var(--brand)] font-medium'
+                  : 'text-[var(--text-dim)] border-transparent hover:text-[var(--text-soft)] hover:border-[var(--border-strong)]'
               }`}
               onClick={(e) => {
                 e.preventDefault();

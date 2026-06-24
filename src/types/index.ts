@@ -11,6 +11,7 @@ export interface PostFrontmatter {
 export interface PostMeta extends PostFrontmatter {
   slug: string;
   readingTime: string;   // 由 reading-time 计算，如 "5 min read"
+  wordCount: number;     // 字数（中文按字符计，英文按单词计）
 }
 
 export interface PostFull extends PostMeta {
@@ -24,10 +25,9 @@ export interface Project {
   tags: string[];
   url?: string;
   github?: string;
-  image: string;
+  image?: string;
   featured: boolean;
   year: number;
-  longDescription?: boolean; // true 时表示存在 content/projects/[id].mdx
 }
 
 export interface TagInfo {

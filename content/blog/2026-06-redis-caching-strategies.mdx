@@ -1,0 +1,229 @@
+---
+title: 'Redis 缓存策略：从入门到生产环境实践'
+description: 'Redis 在 Web 应用中的核心使用场景：缓存穿透/击穿/雪崩的应对方案、热点 Key 处理、缓存与数据库一致性策略，以及常见误区和排查方法。'
+date: '2026-06-25'
+tags: ['Redis', '数据库', '缓存', '后端']
+published: true
+featured: false
+---
+
+> 缓存是后端性能优化的第一利器。这篇文章讲 Redis 在生产环境中的实际使用模式和踩过的坑。
+
+## 什么时候需要 Redis
+
+不是所有项目都需要 Redis。先问自己一个问题：**数据库查询是瓶颈吗？**
+
+如果页面响应时间已经足够快（< 200ms），加缓存带来的收益有限，反而引入复杂度。Redis 适合的场景：
+
+- **读多写少**的查询结果缓存（如商品列表、配置信息）
+- **会话存储**（替代 JWT 的 stateless 方案，方便服务端注销）
+- **速率限制**（API 限流、登录尝试次数限制）
+- **短生命周期的临时数据**（验证码、一次性 Token）
+- **排行榜 / 计数器**（Redis 的 Sorted Set 天生适合）
+
+## 缓存模式
+
+### Cache Aside（最常用）
+
+读操作：先查缓存，命中直接返回；未命中查数据库，写入缓存后返回。
+写操作：先更新数据库，然后**删除**缓存（不是更新）。
+
+```typescript
+async function getUser(id: string) {
+  // 1. 先查缓存
+  const cached = await redis.get(`user:${id}`);
+  if (cached) return JSON.parse(cached);
+
+  // 2. 缓存未命中，查数据库
+  const user = await db.user.findUnique({ where: { id } });
+  if (!user) return null;
+
+  // 3. 写入缓存
+  await redis.set(`user:${id}`, JSON.stringify(user), {
+    ex: 3600, // 1 小时过期
+  });
+
+  return user;
+}
+
+async function updateUser(id: string, data: UpdateInput) {
+  // 1. 更新数据库
+  await db.user.update({ where: { id }, data });
+
+  // 2. 删除缓存（下次读取时重建）
+  await redis.del(`user:${id}`);
+}
+```
+
+为什么写操作是"删除"而不是"更新"缓存？因为并发场景下，更新缓存容易出现脏数据——两个写请求交替更新数据库和缓存，导致缓存和数据库不一致。删除缓存更安全——下次读取时重建，最多短暂地缓存未命中，不会出现脏数据。
+
+### Read Through / Write Through
+
+由缓存服务自己负责和数据库的同步，应用层不需要关心。Redis 本身不支持这种模式，通常需要额外的代理层（如 [Cachex](https://github.com/hex-rb/cachex) 在 Elixir 中）。
+
+### Write Behind（异步写回）
+
+写操作先写缓存，异步批量刷到数据库。性能最好，但**有数据丢失风险**——Redis 宕机时未刷盘的写操作会丢。适合对数据一致性要求不高的场景（如点赞数、浏览量）。
+
+## 三大缓存问题
+
+### 缓存穿透
+
+**问题**：请求一个永远不存在的 Key（如 `user:999999999`），缓存不命中，每次都穿透到数据库。
+
+**解法**：
+- **缓存空值**：即使数据库返回 null，也缓存一个空值（短过期时间）
+- **布隆过滤器**：在缓存层之前加一层布隆过滤器，快速判断 Key 是否存在
+
+```typescript
+async function getUser(id: string) {
+  // 布隆过滤器检查
+  if (!await bloomFilter.mightContain(id)) return null;
+
+  const cached = await redis.get(`user:${id}`);
+  if (cached !== null) return cached ? JSON.parse(cached) : null;
+
+  const user = await db.user.findUnique({ where: { id } });
+
+  // 缓存空值，防止穿透
+  await redis.set(`user:${id}`, user ? JSON.stringify(user) : 'NULL', {
+    ex: user ? 3600 : 60, // 空值短过期
+  });
+
+  return user;
+}
+```
+
+### 缓存击穿
+
+**问题**：某个热点 Key 过期瞬间，大量并发请求同时穿透到数据库。
+
+**解法**：
+- **互斥锁**：缓存未命中时只允许一个请求去查数据库，其他请求等待
+- **逻辑过期**：缓存值带一个过期时间戳，后台异步更新，永远不会"同时失效"
+
+```typescript
+async function getHotUser(id: string) {
+  const cached = await redis.get(`user:${id}`);
+  if (cached) {
+    const { value, expireAt } = JSON.parse(cached);
+    if (Date.now() < expireAt) return value;
+    // 逻辑过期——后台异步刷新，当前请求返回旧值
+    refreshCacheAsync(id);
+    return value;
+  }
+
+  // 互斥锁——防止并发穿透
+  const lock = await redis.set(`lock:user:${id}`, '1', {
+    ex: 5,
+    nx: true, // 只在 key 不存在时设置
+  });
+
+  if (!lock) {
+    // 没拿到锁，等一会儿再试
+    await sleep(50);
+    return getHotUser(id);
+  }
+
+  try {
+    const user = await db.user.findUnique({ where: { id } });
+    await redis.set(`user:${id}`, JSON.stringify({
+      value: user,
+      expireAt: Date.now() + 3600000,
+    }), { ex: 7200 });
+    return user;
+  } finally {
+    await redis.del(`lock:user:${id}`);
+  }
+}
+```
+
+### 缓存雪崩
+
+**问题**：大量 Key 同时过期，或者 Redis 宕机，所有请求同时打到数据库。
+
+**解法**：
+- **过期时间加随机偏移**：避免同一时刻大面积失效
+- **多级缓存**：本地缓存（如 LRU 内存缓存） + Redis 缓存 + 数据库
+- **Redis 高可用**：Cluster 模式或 Sentinel，避免单点故障
+
+```typescript
+// 过期时间加随机偏移（基础时间 ± 随机浮动）
+const baseTTL = 3600;
+const jitter = Math.floor(Math.random() * 600); // 0-10 分钟随机
+await redis.set(key, value, { ex: baseTTL + jitter });
+```
+
+## 缓存与数据库一致性
+
+这是最容易被忽视的问题。以下策略按一致性强度排列：
+
+| 策略 | 一致性 | 性能 | 复杂度 |
+|------|--------|------|--------|
+| 更新数据库后删除缓存 | 最终一致 | 高 | 低 |
+| 延迟双删 | 较强 | 中 | 中 |
+| 订阅数据库变更（CDC） | 强一致 | 高 | 高 |
+
+**延迟双删**：更新数据库 → 删除缓存 → 延迟几百毫秒 → 再删一次缓存。中间可能有旧数据写入缓存，但第二次删除会覆盖。
+
+```typescript
+async function updateWithDoubleDelete(id: string, data: UpdateInput) {
+  await db.user.update({ where: { id }, data });
+  await redis.del(`user:${id}`);
+
+  // 延迟双删——给旧缓存回填留出窗口
+  setTimeout(() => redis.del(`user:${id}`), 500);
+}
+```
+
+如果对一致性要求极高，可以用 CDC（Change Data Capture）方案——订阅数据库的 binlog，数据变更时自动更新或删除缓存。这种方案一致性最强，但需要额外的中间件（如 Debezium + Kafka）。
+
+## 热点 Key 识别和处理
+
+某些 Key 的 QPS 远超其他（如秒杀活动的商品信息）。单节点 Redis 可能扛不住：
+
+```typescript
+// 热点 Key 自动探测
+redis.INFO('stats') // 查看 key 访问频率
+
+// 热点 Key 多副本策略——把一个 Key 复制成 N 个
+const replicas = 5;
+const key = `hot:product:${id}`;
+const randomSuffix = Math.floor(Math.random() * replicas);
+const distributedKey = `${key}#${randomSuffix}`;
+const value = await redis.get(distributedKey);
+```
+
+## Redis 数据结构选型
+
+不要所有东西都用 String：
+
+| 场景 | 数据结构 | 说明 |
+|------|----------|------|
+| 缓存值 | String | 最常见 |
+| 排行榜 | Sorted Set | ZADD/ZRANGE，按分数排序 |
+| 计数器 | String (INCR) | 原子递增 |
+| 消息队列 | List | LPUSH/BRPOP |
+| 用户标签 | Set | SADD/SMEMBERS |
+| 去重 | Set / Bloom Filter | 判断是否已存在 |
+| 时间线 | Sorted Set | 按时间戳作为 score |
+
+## 常见误区
+
+1. **过度缓存**：不是所有数据都适合缓存。频繁变更的数据放缓存反而增加复杂度。
+2. **忽略缓存失效时间**：不设过期时间 = 永久缓存 = 内存泄漏。
+3. **大 Key 问题**：一个 Key 存几 MB 数据，会导致 Redis 阻塞。拆分大 Key。
+4. **没有监控**：用 `redis-cli info` 查看命中率。命中率低于 90% 说明缓存设计有问题。
+5. **把 Redis 当数据库用**：Redis 是内存数据库，不是持久化存储。重要数据必须写关系型数据库。
+
+## 总结
+
+Redis 的核心价值是把"慢"变成"快"。但缓存是双刃剑——引入复杂度、一致性难题和故障场景。实际使用中遵循这些原则：
+
+- **缓存读多写少的数据**
+- **设置合理的过期时间 + 随机偏移**
+- **写操作后删除缓存，不更新**
+- **热点 Key 提前预案**
+- **监控命中率，低于 90% 要检查设计**
+
+参考：[Redis 官方文档](https://redis.io/docs/)

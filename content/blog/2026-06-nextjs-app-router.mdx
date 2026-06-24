@@ -1,0 +1,282 @@
+---
+title: 'Next.js 16 App Router 实战：服务端组件与流式渲染'
+description: '从 Pages Router 迁移到 App Router 的实践笔记，涵盖 Server Component、Streaming SSR、Server Actions 和数据获取模式，以及生产环境常见问题的解决。'
+date: '2026-06-23'
+tags: ['Next.js', 'React', '前端', '全栈']
+published: true
+featured: true
+---
+
+> 本站就是用 Next.js 16 App Router 构建的。这篇文章分享一下我在实际项目中使用的模式和踩过的坑。
+
+## Pages Router vs App Router
+
+Next.js 13 引入的 App Router 在 16 版本已经稳定，成为推荐的首选路由方案：
+
+| | Pages Router | App Router |
+|--|-------------|------------|
+| 组件类型 | 客户端组件 | 服务端组件（默认） |
+| 数据获取 | `getServerSideProps` / `getStaticProps` | 直接在组件中 `async/await` |
+| 流式渲染 | 不支持 | 支持 Suspense 边界 |
+| 布局系统 | 每个页面独立 | 嵌套 Layout，保留状态 |
+| 数据变更 | 自己写 API 路由 | Server Actions |
+
+## 服务端组件（Server Components）
+
+App Router 默认所有组件都是服务端组件。这意味着组件在**服务端渲染**，不会发送 JavaScript 到浏览器：
+
+```tsx
+// app/page.tsx — 这是服务端组件（不需要 "use client"）
+import { BlogList } from '@/components/blog';
+import { getAllPosts } from '@/lib/posts';
+
+export default async function HomePage() {
+  const posts = await getAllPosts(); // 直接在组件中查询数据库
+
+  return (
+    <div>
+      {posts.map(post => (
+        <article key={post.slug}>
+          <h2>{post.title}</h2>
+          <p>{post.excerpt}</p>
+        </article>
+      ))}
+    </div>
+  );
+}
+```
+
+服务端组件的好处：
+- **更少的客户端 JavaScript**——框架代码不在页面上执行，组件只在服务端运行
+- **直接访问数据库**——不用建 API 路由，组件里直接查
+- **自动代码分割**——只有用到客户端交互的地方才加载 JS
+
+## 客户端组件（"use client"）
+
+当需要交互时（useState、useEffect、onClick），加上 `"use client"`：
+
+```tsx
+'use client';
+
+import { useState } from 'react';
+
+export function SearchBar() {
+  const [query, setQuery] = useState('');
+
+  return (
+    <input
+      value={query}
+      onChange={e => setQuery(e.target.value)}
+      placeholder="搜索文章..."
+    />
+  );
+}
+```
+
+**最佳实践**：尽可能保持组件在服务端，只在需要交互的叶子节点加 `"use client"`。一个常见错误是把整个页面标记为客户端组件，失去服务端渲染的优势。
+
+## 数据获取模式
+
+### 1. 服务端直接获取（推荐）
+
+```tsx
+// app/blog/page.tsx
+export default async function BlogPage() {
+  const posts = await getPosts();
+
+  return <BlogList posts={posts} />;
+}
+```
+
+### 2. Suspense + Streaming
+
+流式渲染允许页面的不同部分独立加载：
+
+```tsx
+import { Suspense } from 'react';
+
+export default function DashboardPage() {
+  return (
+    <div>
+      {/* 立即显示的 UI */}
+      <h1>仪表盘</h1>
+      <p>欢迎回来</p>
+
+      {/* 异步加载的内容——不会阻塞页面渲染 */}
+      <Suspense fallback={<div>加载统计中...</div>}>
+        <Stats />
+      </Suspense>
+
+      <Suspense fallback={<div>加载活动列表...</div>}>
+        <RecentActivity />
+      </Suspense>
+    </div>
+  );
+}
+
+async function Stats() {
+  const data = await fetchStats(); // 慢查询
+  return <StatsDisplay data={data} />;
+}
+
+async function RecentActivity() {
+  const activities = await fetchActivities(); // 另一个慢查询
+  return <ActivityList items={activities} />;
+}
+```
+
+Stats 和 RecentActivity 会**并行加载**，各自在完成后立即流式注入页面。用户不会看到空白页——页面骨架先展示，内容块逐步呈现。
+
+### 3. 增量静态生成（ISR）
+
+对于不经常变更的内容，可以在构建时生成静态页面，然后按需重新验证：
+
+```tsx
+// app/blog/[slug]/page.tsx
+export const revalidate = 3600; // 每小时重新生成
+
+export default async function BlogPost({ params }: { params: { slug: string } }) {
+  const post = await getPost(params.slug);
+
+  if (!post) notFound();
+
+  return (
+    <article>
+      <h1>{post.title}</h1>
+      <MDXContent source={post.content} />
+    </article>
+  );
+}
+```
+
+## Server Actions
+
+Server Actions 让表单提交和数据库操作变得非常简单——不再需要写 API 路由：
+
+```tsx
+// app/contact/page.tsx
+export default function ContactPage() {
+  async function handleSubmit(formData: FormData) {
+    'use server';
+
+    const name = formData.get('name');
+    const email = formData.get('email');
+    const message = formData.get('message');
+
+    // 直接操作数据库
+    await db.contacts.create({
+      data: { name, email, message },
+    });
+
+    // 不需要手动 revalidate——Next.js 自动处理
+    revalidatePath('/contact');
+  }
+
+  return (
+    <form action={handleSubmit}>
+      <input name="name" required />
+      <input name="email" type="email" required />
+      <textarea name="message" required />
+      <button type="submit">发送</button>
+    </form>
+  );
+}
+```
+
+Server Actions 的关键点：
+- `'use server'` 标记让 Next.js 知道这是一个只在服务端执行的函数
+- 可以直接操作数据库、调用 API、操作文件系统
+- 表单提交不需要手动管理 loading 状态（Next.js 内置 `useFormStatus`）
+- 支持 revalidation，数据变更后页面自动刷新
+
+## 布局嵌套
+
+App Router 最实用的特性之一是布局嵌套——跨页面共享的 UI（Header/Footer）只渲染一次：
+
+```tsx
+// app/layout.tsx — 根布局
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="zh-CN">
+      <body>
+        <Header />
+        <main>{children}</main>
+        <Footer />
+      </body>
+    </html>
+  );
+}
+```
+
+```tsx
+// app/blog/layout.tsx — 博客部分的局部布局
+export default function BlogLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="blog-layout">
+      <aside>
+        <CategoryNav />
+      </aside>
+      <section>{children}</section>
+    </div>
+  );
+}
+```
+
+布局的特点：
+- 跨页面切换时**保持状态**（Header 不会重新挂载）
+- 支持嵌套——每个路由段可以有独立的布局
+- 不会重新获取数据——如果在布局层获取的数据，切换子页面时不会重新查询
+
+## 常见问题和排查
+
+### 1. 客户端组件里的 import 报错
+
+服务端组件只能 import 其他服务端组件。如果用了只给客户端用的 API（如 localStorage），会报错。解法：把交互部分提取到独立的 `'use client'` 组件。
+
+### 2. 动态路由的 generateStaticParams
+
+对于 SSG 的博客页面，需要返回所有可能的 slug：
+
+```tsx
+export async function generateStaticParams() {
+  const posts = await getAllPosts();
+  return posts.map(post => ({ slug: post.slug }));
+}
+```
+
+### 3. next/script 的加载时机
+
+引用第三方脚本（如 Google Analytics）时，`strategy` 控制加载时机：
+
+```tsx
+import Script from 'next/script';
+
+export default function Analytics() {
+  return (
+    <>
+      {/* 页面变为可交互后加载 */}
+      <Script
+        src="https://www.googletagmanager.com/gtag/js?id=GA_ID"
+        strategy="afterInteractive"
+      />
+      {/* 空闲时加载 */}
+      <Script id="ga-init" strategy="lazyOnload">
+        {`window.dataLayer = window.dataLayer || [];`}
+      </Script>
+    </>
+  );
+}
+```
+
+## 总结
+
+App Router 的学习曲线比 Pages Router 陡一些——概念更多（服务端/客户端组件、流式渲染、Server Actions）。但熟悉之后，开发体验和性能都更好。
+
+几个核心要点：
+- **默认服务端组件**，只在必要时加 `"use client"`
+- **服务端直接获取数据**，不用建 API 路由
+- **Suspense 做流式渲染**，让页面更快展示
+- **Server Actions 处理表单**，简化数据变更
+- **嵌套布局**避免不必要的重复渲染
+
+参考：[Next.js 官方文档](https://nextjs.org/docs)

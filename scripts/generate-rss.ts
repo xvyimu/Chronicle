@@ -1,6 +1,9 @@
 /**
  * RSS Feed 生成脚本
- * 在 next build 前运行：node scripts/generate-rss.mjs
+ * 在 next build 前运行：tsx scripts/generate-rss.ts
+ *
+ * 常量来源：@/lib/constants
+ * slug 提取：@/lib/posts (filenameToSlug)
  */
 
 import fs from 'fs';
@@ -8,11 +11,8 @@ import path from 'path';
 import { Feed } from 'feed';
 import matter from 'gray-matter';
 import readingTime from 'reading-time';
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
-const SITE_NAME = '西江月的博客';
-const SITE_DESC = '写代码，偶尔写写东西。';
-const AUTHOR = { name: '西江月', link: 'https://github.com/yuanjia1314' };
+import { SITE_CONFIG } from '@/lib/constants';
+import { filenameToSlug } from '@/lib/posts';
 
 const POSTS_DIR = path.join(process.cwd(), 'content/blog');
 
@@ -23,14 +23,14 @@ function generateRss() {
   }
 
   const feed = new Feed({
-    title: SITE_NAME,
-    description: SITE_DESC,
-    id: SITE_URL,
-    link: SITE_URL,
+    title: SITE_CONFIG.name,
+    description: SITE_CONFIG.description,
+    id: SITE_CONFIG.url,
+    link: SITE_CONFIG.url,
     language: 'zh-CN',
     updated: new Date(),
     copyright: `All rights reserved ${new Date().getFullYear()}`,
-    author: AUTHOR,
+    author: { name: SITE_CONFIG.author.name, link: SITE_CONFIG.url },
   });
 
   const filenames = fs
@@ -46,16 +46,22 @@ function generateRss() {
 
     if (data.published === false) continue;
 
-    const slug = filename.replace(/^\d{4}-\d{2}-\d{2}-/, '').replace(/\.mdx$/, '');
+    const slug = filenameToSlug(filename);
 
     feed.addItem({
       title: data.title,
-      id: `${SITE_URL}/blog/${slug}`,
-      link: `${SITE_URL}/blog/${slug}`,
+      id: `${SITE_CONFIG.url}/blog/${slug}`,
+      link: `${SITE_CONFIG.url}/blog/${slug}`,
       description: data.description,
       content,
       date: new Date(data.date),
-      readingTime: readingTime(content).text,
+      // Custom extension: reading time as a JSON feed extension
+      extensions: [
+        {
+          name: '_reading_time',
+          objects: { readingTime: readingTime(content).text },
+        },
+      ],
     });
   }
 

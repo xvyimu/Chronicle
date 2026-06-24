@@ -1,0 +1,241 @@
+# 内容维护与发布流程
+
+这份文档面向两类协作者：
+
+- 需要新增或修改博客内容的人
+- 需要维护作品集、站点信息和发布链路的人
+
+## 1. 内容入口一览
+
+当前项目的主要内容源有三类：
+
+| 位置 | 类型 | 用途 |
+| --- | --- | --- |
+| content/blog/*.mdx | MDX | 博客文章 |
+| content/about.mdx | MDX | 关于页 |
+| data/projects.json | JSON | 作品集结构化数据 |
+
+## 2. 新增博客文章
+
+### 文件命名建议
+
+建议采用：
+
+```
+YYYY-MM-主题名.mdx
+```
+
+例如：
+
+```
+2026-06-cloudflare-workers-guide.mdx
+```
+
+当前代码中的 slug 规则会去掉 YYYY-MM- 前缀，再去掉 .mdx 后缀，所以最终链接会是：
+
+```
+/blog/cloudflare-workers-guide
+```
+
+### frontmatter 最低要求
+
+根据 src/lib/posts.ts 当前实现，这三个字段属于必填：
+
+- title
+- description
+- date
+
+推荐完整示例：
+
+```mdx
+---
+title: Cloudflare Workers 实践笔记
+description: 从部署方式到常见坑位的一次整理
+date: 2026-06-23
+tags:
+  - Cloudflare
+  - Workers
+published: true
+featured: true
+image: /images/posts/cloudflare-workers-cover.jpg
+---
+
+正文从这里开始。
+```
+
+### 字段说明
+
+| 字段 | 类型 | 是否必填 | 说明 |
+| --- | --- | --- | --- |
+| title | string | 是 | 文章标题 |
+| description | string | 是 | 摘要，用于列表与 SEO |
+| date | string | 是 | 建议使用 YYYY-MM-DD |
+| tags | string[] | 否 | 标签列表，默认空数组 |
+| published | boolean | 否 | false 时表示草稿 |
+| featured | boolean | 否 | true 时可在首页等位置突出展示 |
+| image | string | 否 | 封面图或 OG 图 |
+
+### 草稿机制
+
+当前逻辑是：
+
+- 开发环境：草稿默认可见，便于预览
+- 生产环境：published: false 的文章会被过滤掉
+
+因此发布前要特别检查，避免把计划中的草稿误改为 published: true。
+
+## 3. 修改关于页
+
+关于页内容来自：
+
+- content/about.mdx
+
+适合放：
+
+- 个人介绍
+- 技术方向
+- 联系方式
+- 工作经历摘要
+- 站点说明
+
+如果这里新增了社交信息或身份介绍，建议同时回头检查：
+
+- src/lib/constants.ts（站点配置单一来源）
+
+这两处是站点名称、描述、作者、评论仓库等信息的主要影响点。
+
+## 4. 维护作品集
+
+作品集基础数据存放在：
+
+- data/projects.json
+
+根据 src/lib/projects.ts 当前校验逻辑，可用字段包括：
+
+| 字段 | 类型 | 是否必填 | 说明 |
+| --- | --- | --- | --- |
+| id | string | 是 | 唯一标识 |
+| title | string | 是 | 项目名称 |
+| description | string | 是 | 简介 |
+| tags | string[] | 是 | 技术标签 |
+| url | string | 否 | 在线地址 |
+| github | string | 否 | 仓库地址 |
+| image | string | 是 | 封面图 |
+| featured | boolean | 是 | 是否精选 |
+| year | number | 是 | 项目年份 |
+| longDescription | boolean | 否 | 是否存在更长的说明内容 |
+
+### 适合 JSON 的内容
+
+- 卡片标题
+- 简介
+- 标签
+- 跳转链接
+- 封面地址
+- 是否精选
+
+### 不适合 JSON 的内容
+
+- 很长的案例复盘
+- 多段排版说明
+- 富文本内容
+- 图片和正文交错的项目叙述
+
+如果后续项目介绍越来越长，建议增补 content/projects/ 目录，让 JSON 只保留摘要与索引字段。
+
+## 5. 图片与静态资源
+
+当前项目的静态资源放在 public/ 下，因此：
+
+- 文内图片可以优先使用 /images/... 这样的路径
+- 作品图、头像、封面图也应尽量统一放在 public/images/ 下的清晰子目录中
+
+建议做法：
+
+- 文章封面：public/images/posts/
+- 项目封面：public/images/projects/
+- 站点级资源：public/images/site/
+
+这样后续排查资源缺失会更容易。
+
+## 6. 构建和发布前检查
+
+### 博客内容发布前
+
+建议至少检查：
+
+1. frontmatter 是否完整
+2. 标题、摘要、日期是否正确
+3. published 是否符合预期
+4. 图片路径是否真实存在
+5. 标签拼写是否统一
+6. 本地页面是否能正常打开
+
+### 作品集发布前
+
+建议至少检查：
+
+1. projects.json 是否满足 zod 结构要求
+2. 封面图路径是否存在
+3. url 和 github 是否可访问
+4. featured 是否符合首页展示预期
+5. year 是否正确
+
+## 7. RSS 与内容发布关系
+
+RSS 由 `scripts/generate-rss.ts` 在构建前生成（`npx tsx scripts/generate-rss.ts && next build`），因此以下变更会直接影响订阅输出：
+
+- 新增文章
+- 修改文章标题、摘要、日期
+- 修改文章 slug 规则相关文件名
+- 将文章设为草稿或从草稿改为发布
+- 修改站点 URL
+
+如果你发现 RSS 链接、标题或描述不对，优先检查：
+
+- content/blog 文件命名
+- frontmatter
+- scripts/generate-rss.ts
+- src/lib/constants.ts
+- 环境变量 NEXT_PUBLIC_SITE_URL
+
+## 8. 建议的维护习惯
+
+### 写文章时
+
+- 先写 frontmatter，再写正文
+- 标签命名尽量统一，例如不要混用 Next.js、NextJS
+- 如果文章会被首页推荐，再显式加上 featured: true
+
+### 改站点信息时
+
+站点名称、描述、作者如果发生变化，最好一次性联查这些位置：
+
+- src/lib/constants.ts（站点配置唯一来源）
+- src/app/manifest.ts（由 constants.ts 生成 PWA manifest）
+
+### 合并前
+
+建议至少运行：
+
+```bash
+pnpm lint
+pnpm test
+pnpm build
+```
+
+如果 build 通过，通常也能顺便验证：
+
+- RSS 是否成功生成
+- 页面路由是否能完成生产构建
+- 内容格式是否存在明显问题
+
+## 9. 何时需要同步更新文档
+
+当出现以下变化时，建议同步更新本文件：
+
+- frontmatter 字段新增或删减
+- projects.json 结构调整
+- 新增内容目录，例如 content/projects
+- 新增搜索索引、文章摘要生成、图片处理等构建流程
+- 内容发布流程从纯本地文件改为接 CMS

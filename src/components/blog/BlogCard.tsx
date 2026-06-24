@@ -1,30 +1,37 @@
 import Link from 'next/link';
-import TagLink from './TagLink';
 import { PostMeta } from '@/types';
-import { formatDate, slugifyTag } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
+import MagneticCard from '@/components/ui/MagneticCard';
 
 export default function BlogCard({ post }: { post: PostMeta }) {
   return (
-    <article className="group flex flex-col gap-2 rounded-lg border border-zinc-200 p-5 transition-colors hover:border-zinc-300 dark:border-zinc-700 dark:hover:border-zinc-600">
-      <Link href={`/blog/${post.slug}`} className="after:absolute after:inset-0">
-        <h2 className="text-lg font-semibold leading-snug text-[var(--color-text)] group-hover:text-primary transition-colors">
-          {post.title}
-        </h2>
-      </Link>
-      <p className="line-clamp-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-        {post.description}
-      </p>
-      <div className="mt-auto flex items-center gap-3 text-xs text-[var(--color-text-muted)]">
-        <time dateTime={post.date}>{formatDate(post.date)}</time>
-        <span>{post.readingTime}</span>
+    <MagneticCard className="blog__item group">
+      <div className="blog__meta">
+        <time className="blog__date" dateTime={post.date}>{formatDate(post.date)}</time>
+        {post.tags.length > 0 && (
+          <span className="blog__tag">{post.tags[0]}</span>
+        )}
+        {post.featured && (
+          <span className="blog__featured">精选</span>
+        )}
       </div>
-      {post.tags.length > 0 && (
-        <div className="mt-1 flex flex-wrap gap-1.5">
-          {post.tags.map((tag) => (
-            <TagLink key={tag} tag={tag} slug={slugifyTag(tag)} />
-          ))}
-        </div>
-      )}
-    </article>
+      <h3 className="blog__title group-hover:text-[var(--brand)] transition-colors duration-300">
+        <Link href={`/blog/${post.slug}`} className="after:absolute after:inset-0">
+          {post.title}
+        </Link>
+      </h3>
+      <p className="blog__excerpt">{post.description}</p>
+      <div className="flex items-center justify-between mt-auto">
+        {post.readingTime && (
+          <span className="blog__date">{post.readingTime}</span>
+        )}
+        <span className="blog__more">
+          阅读更多
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300 group-hover:translate-x-1">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </span>
+      </div>
+    </MagneticCard>
   );
 }

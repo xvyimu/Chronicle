@@ -1,0 +1,179 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
+import SearchBar from '@/components/blog/SearchBar';
+import type { PostMeta } from '@/types';
+
+// Mock next/navigation useRouter
+const mockPush = vi.fn();
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: mockPush }),
+}));
+
+const MOCK_POSTS: PostMeta[] = [
+  {
+    title: 'Next.js App Router Guide',
+    description: 'A comprehensive guide to App Router',
+    date: '2026-06-23',
+    tags: ['Next.js', 'React'],
+    published: true,
+    featured: true,
+    slug: 'nextjs-app-router',
+    readingTime: '5 min read',
+    wordCount: 1200,
+  },
+  {
+    title: 'Redis Caching Strategies',
+    description: 'Deep dive into Redis caching patterns',
+    date: '2026-06-20',
+    tags: ['Redis', '后端'],
+    published: true,
+    featured: false,
+    slug: 'redis-caching-strategies',
+    readingTime: '8 min read',
+    wordCount: 2000,
+  },
+  {
+    title: 'Linux Server Setup',
+    description: 'Setting up a Linux server from scratch',
+    date: '2026-06-15',
+    tags: ['Linux', '运维'],
+    published: true,
+    featured: false,
+    slug: 'linux-server-setup',
+    readingTime: '10 min read',
+    wordCount: 2500,
+  },
+];
+
+describe('SearchBar', () => {
+  beforeEach(() => {
+    cleanup();
+    mockPush.mockClear();
+  });
+
+  afterEach(() => cleanup());
+
+  it('renders an input with search placeholder', () => {
+    render(<SearchBar posts={MOCK_POSTS} />);
+    expect(screen.getByPlaceholderText(/搜索文章/)).toBeInTheDocument();
+  });
+
+  it('shows no results dropdown when query is empty', () => {
+    render(<SearchBar posts={MOCK_POSTS} />);
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+  });
+
+  it('filters posts by title when typing', async () => {
+    render(<SearchBar posts={MOCK_POSTS} />);
+    const input = screen.getByPlaceholderText(/搜索文章/);
+    fireEvent.change(input, { target: { value: 'Redis' } });
+
+    await waitFor(() => {
+      expect(screen.getByText('Redis Caching Strategies')).toBeInTheDocument();
+    }, { timeout: 3000 });
+  });
+
+  it('filters posts by tag', async () => {
+    render(<SearchBar posts={MOCK_POSTS} />);
+    const input = screen.getByPlaceholderText(/搜索文章/);
+    fireEvent.change(input, { target: { value: 'Linux' } });
+
+    await waitFor(() => {
+      expect(screen.getByText('Linux Server Setup')).toBeInTheDocument();
+    }, { timeout: 3000 });
+  });
+
+  it('shows "没有匹配的文章" when no results match', async () => {
+    render(<SearchBar posts={MOCK_POSTS} />);
+    const input = screen.getByPlaceholderText(/搜索文章/);
+    fireEvent.change(input, { target: { value: 'zzznomatch' } });
+
+    await waitFor(() => {
+      expect(screen.getByText('没有匹配的文章')).toBeInTheDocument();
+    }, { timeout: 3000 });
+  });
+
+  it('shows result count in the dropdown', async () => {
+    render(<SearchBar posts={MOCK_POSTS} />);
+    const input = screen.getByPlaceholderText(/搜索文章/);
+    fireEvent.change(input, { target: { value: 'server' } });
+
+    await waitFor(() => {
+      expect(screen.getByText(/找到 1 篇/)).toBeInTheDocument();
+    }, { timeout: 3000 });
+  });
+
+  it('clears query when clear button is clicked', async () => {
+    render(<SearchBar posts={MOCK_POSTS} />);
+    const input = screen.getByPlaceholderText(/搜索文章/) as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'Redis' } });
+
+    // Clear button appears immediately when query is set
+    await waitFor(() => {
+      expect(screen.getByLabelText('清除搜索')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByLabelText('清除搜索'));
+    expect(input.value).toBe('');
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+  });
+
+  it('navigates to post on Enter when a result is selected', async () => {
+    render(<SearchBar posts={MOCK_POSTS} />);
+    const input = screen.getByPlaceholderText(/搜索文章/);
+    fireEvent.change(input, { target: { value: 'Redis' } });
+
+    // Wait for Fuse.js to load and results to render
+    await waitFor(() => {
+      expect(screen.getByText('Redis Caching Strategies')).toBeInTheDocument();
+    }, { timeout: 3000 });
+
+    // Arrow down to select first result
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    // Enter to navigate
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    expect(mockPush).toHaveBeenCalledWith('/blog/redis-caching-strategies');
+  });
+
+  it('wraps around when navigating down past the last result', async () => {
+    render(<SearchBar posts={MOCK_POSTS} />);
+    const input = screen.getByPlaceholderText(/搜索文章/);
+    fireEvent.change(input, { target: { value: 'a' } });
+
+    // Wait for search results to load
+    await waitFor(() => {
+      expect(screen.getByRole('listbox')).toBeInTheDocument();
+    }, { timeout: 3000 });
+
+    // Wait for results to actually appear (not loading state)
+    await waitFor(() => {
+      expect(screen.queryByText('正在加载搜索…')).not.toBeInTheDocument();
+    }, { timeout: 3000 });
+
+    // Navigate down multiple times — should wrap without error
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+
+    // Should not crash and still have the listbox
+    expect(screen.getByRole('listbox')).toBeInTheDocument();
+  });
+
+  it('shows loading indicator while Fuse.js is loading', async () => {
+    render(<SearchBar posts={MOCK_POSTS} />);
+    const input = screen.getByPlaceholderText(/搜索文章/);
+    fireEvent.change(input, { target: { value: 'test' } });
+
+    // The listbox should appear immediately with loading text
+    await waitFor(() => {
+      expect(screen.getByRole('listbox')).toBeInTheDocument();
+    });
+
+    // Then results should appear after Fuse.js loads
+    await waitFor(() => {
+      expect(screen.queryByText('正在加载搜索…')).not.toBeInTheDocument();
+    }, { timeout: 3000 });
+  });
+});

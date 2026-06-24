@@ -1,28 +1,36 @@
-import fs from 'fs';
-import path from 'path';
 import matter from 'gray-matter';
 import readingTime from 'reading-time';
 import { PostFrontmatter, PostMeta, PostFull } from '@/types';
 import { assertRequiredFields } from './utils';
 import { CONTENT_DIR } from './constants';
+import { getContentSource } from './content-source';
+import { createCache } from './cache';
 
-const POSTS_DIR = path.join(process.cwd(), CONTENT_DIR.blog);
 const REQUIRED_FIELDS = ['title', 'description', 'date'];
 
-/** 文件名 → slug：去掉 YYYY-MM-DD- 前缀和 .mdx 后缀 */
-function filenameToSlug(filename: string): string {
+/** 文件名 → slug：去掉 YYYY-MM- 前缀和 .mdx 后缀（导出供 RSS 脚本等复用） */
+export function filenameToSlug(filename: string): string {
   return filename
-    .replace(/^\d{4}-\d{2}-\d{2}-/, '')
+    .replace(/^\d{4}-\d{2}-/, '')
     .replace(/\.mdx$/, '');
 }
 
 /** 读取并解析单篇文章（含 frontmatter 校验） */
 function readPostFile(filename: string): PostFull {
-  const filePath = path.join(POSTS_DIR, filename);
-  const raw = fs.readFileSync(filePath, 'utf-8');
+  const source = getContentSource();
+  const relativePath = `${CONTENT_DIR.blog}/${filename}`;
+  const raw = source.readFile(relativePath);
+  if (raw === null) {
+    throw new Error(`[posts.ts] 文件不存在: ${relativePath}`);
+  }
   const { data, content } = matter(raw);
 
-  assertRequiredFields(data, REQUIRED_FIELDS, filePath);
+  assertRequiredFields(data, REQUIRED_FIELDS, relativePath);
+
+  // 运行时类型校验，防止 frontmatter 字段类型错误
+  if (typeof data.title !== 'string') throw new Error(`[内容校验失败] ${relativePath}: title 必须是字符串`);
+  if (typeof data.description !== 'string') throw new Error(`[内容校验失败] ${relativePath}: description 必须是字符串`);
+  if (typeof data.date !== 'string') throw new Error(`[内容校验失败] ${relativePath}: date 必须是字符串`);
 
   const frontmatter: PostFrontmatter = {
     title: data.title,
@@ -34,10 +42,13 @@ function readPostFile(filename: string): PostFull {
     image: data.image,
   };
 
+  const stats = readingTime(content);
+
   return {
     ...frontmatter,
     slug: filenameToSlug(filename),
-    readingTime: readingTime(content).text,
+    readingTime: stats.text,
+    wordCount: stats.words,
     content,
   };
 }
@@ -50,24 +61,30 @@ function isVisible(post: PostFrontmatter): boolean {
   return true; // 开发环境默认显示草稿
 }
 
-let _cache: PostFull[] | null = null;
+const _cache = createCache<PostFull[]>({ watchPath: CONTENT_DIR.blog });
 
 /** 获取全部文章（按日期倒序），带内存缓存避免重复读盘 */
 export function getAllPosts(): PostMeta[] {
-  if (!_cache) {
-    if (!fs.existsSync(POSTS_DIR)) {
-      console.warn(`[posts.ts] 内容目录不存在: ${POSTS_DIR}`);
-      _cache = [];
-    } else {
-      const filenames = fs.readdirSync(POSTS_DIR).filter((f) => f.endsWith('.mdx'));
-      _cache = filenames.map(readPostFile);
+  const source = getContentSource();
+  const cache = _cache.getOrCompute(() => {
+    const filenames = source.readDir(CONTENT_DIR.blog);
+    if (filenames === null) {
+      console.warn(`[posts.ts] 内容目录不存在: ${CONTENT_DIR.blog}`);
+      return [];
     }
-  }
+    return filenames
+      .filter((f) => f.endsWith('.mdx'))
+      .map(readPostFile);
+  });
 
-  return _cache
+  return cache
     .filter(isVisible)
-    .sort((a, b) => (a.date < b.date ? 1 : -1))
-    .map(({ content, ...meta }) => meta); // 列表场景不需要正文
+    .sort((a, b) => {
+      if (a.date < b.date) return 1;
+      if (a.date > b.date) return -1;
+      return a.slug.localeCompare(b.slug); // 同日期按 slug 排序保证确定性
+    })
+    .map(({ content: _content, ...meta }) => meta); // 列表场景不需要正文
 }
 
 /** 获取置顶文章（首页用） */
@@ -77,8 +94,9 @@ export function getFeaturedPosts(): PostMeta[] {
 
 /** 根据 slug 获取单篇完整文章（含正文），找不到返回 null */
 export function getPostBySlug(slug: string): PostFull | null {
-  if (!_cache) getAllPosts(); // 触发缓存填充
-  const post = _cache?.find((p) => p.slug === slug && isVisible(p));
+  getAllPosts(); // 确保缓存已填充
+  const cache = _cache.get() ?? [];
+  const post = cache.find((p) => p.slug === slug && isVisible(p));
   return post ?? null;
 }
 
@@ -113,7 +131,7 @@ export function getAdjacentPosts(slug: string): {
 export function getPaginatedPosts(page: number, pageSize: number) {
   const all = getAllPosts();
   const totalPages = Math.max(1, Math.ceil(all.length / pageSize));
-  const safePage = Math.min(Math.max(1, page), totalPages);
+  const safePage = Math.min(Math.max(1, Math.floor(page)), totalPages);
   const start = (safePage - 1) * pageSize;
 
   return {

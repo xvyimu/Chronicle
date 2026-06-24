@@ -1,0 +1,255 @@
+---
+title: 'Go 语言入门：从零写一个 CLI 工具'
+description: '用 Go 语言从零实现一个实用的命令行工具，涵盖 flag 参数解析、文件 IO、JSON 输出、错误处理和交叉编译，让有脚本基础的开发者快速上手 Go。'
+date: '2026-06-25'
+tags: ['Go', '后端', 'CLI', '工具']
+published: true
+featured: false
+---
+
+> 之前一直用 Node.js / Python 写工具，最近开始用 Go 写——编译成单个二进制文件、零依赖部署的感觉确实好。
+
+## 为什么选 Go 写 CLI
+
+- **单个二进制文件**——编译后直接丢到服务器上就能跑，不需要 runtime
+- **编译速度快**——毫秒级编译，开发迭代效率不低
+- **标准库完善**——flag、json、crypto、http 全自带，不用装依赖
+- **跨平台编译**——一台机器上可以编译出 Windows/Linux/macOS 的二进制
+
+## 第一个工具：JSON 格式化器
+
+我们写一个能把压缩的 JSON 格式化并高亮显示的工具：
+
+```go
+package main
+
+import (
+    "encoding/json"
+    "flag"
+    "fmt"
+    "io"
+    "os"
+)
+
+func main() {
+    // 命令行参数
+    indent := flag.String("i", "  ", "缩进字符串")
+    flag.Parse()
+
+    // 从 stdin 或文件读取
+    var input []byte
+    var err error
+
+    if flag.NArg() > 0 {
+        input, err = os.ReadFile(flag.Arg(0))
+    } else {
+        input, err = io.ReadAll(os.Stdin)
+    }
+
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "读取失败: %v\n", err)
+        os.Exit(1)
+    }
+
+    // 解析 JSON
+    var raw interface{}
+    if err := json.Unmarshal(input, &raw); err != nil {
+        fmt.Fprintf(os.Stderr, "JSON 解析失败: %v\n", err)
+        os.Exit(1)
+    }
+
+    // 格式化输出
+    output, err := json.MarshalIndent(raw, "", *indent)
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "格式化失败: %v\n", err)
+        os.Exit(1)
+    }
+
+    fmt.Println(string(output))
+}
+```
+
+使用：
+
+```bash
+# 从文件读取
+go run main.go data.json
+
+# 管道输入
+cat data.json | go run main.go
+
+# 自定义缩进为 4 个空格
+go run main.go -i "    " data.json
+```
+
+## 参数解析进阶
+
+标准库的 `flag` 适合简单参数，复杂 CLI 推荐用 `cobra`：
+
+```bash
+go get github.com/spf13/cobra
+```
+
+```go
+package main
+
+import (
+    "fmt"
+    "os"
+    "github.com/spf13/cobra"
+)
+
+var rootCmd = &cobra.Command{
+    Use:   "mytool",
+    Short: "一个实用的命令行工具",
+    Long:  "支持文件处理、数据转换、系统信息查询等功能",
+}
+
+var versionCmd = &cobra.Command{
+    Use:   "version",
+    Short: "打印版本号",
+    Run: func(cmd *cobra.Command, args []string) {
+        fmt.Println("v1.0.0")
+    },
+}
+
+var convertCmd = &cobra.Command{
+    Use:   "convert <input>",
+    Short: "格式转换",
+    Args:  cobra.ExactArgs(1),
+    Run: func(cmd *cobra.Command, args []string) {
+        input := args[0]
+        output := cmd.Flag("output").Value.String()
+        fmt.Printf("转换 %s → %s\n", input, output)
+    },
+}
+
+func init() {
+    convertCmd.Flags().StringP("output", "o", "", "输出文件路径")
+    rootCmd.AddCommand(versionCmd)
+    rootCmd.AddCommand(convertCmd)
+}
+
+func main() {
+    if err := rootCmd.Execute(); err != nil {
+        fmt.Fprintf(os.Stderr, "错误: %v\n", err)
+        os.Exit(1)
+    }
+}
+```
+
+## 文件操作
+
+Go 的文件 IO 很直观：
+
+```go
+// 读取整个文件
+data, err := os.ReadFile("config.json")
+
+// 写入文件
+err := os.WriteFile("output.txt", []byte(content), 0644)
+
+// 逐行读取（大文件推荐）
+file, _ := os.Open("large.txt")
+scanner := bufio.NewScanner(file)
+for scanner.Scan() {
+    line := scanner.Text()
+    // 处理每一行
+}
+file.Close()
+
+// 遍历目录
+entries, _ := os.ReadDir("./data")
+for _, entry := range entries {
+    fmt.Println(entry.Name(), entry.IsDir())
+}
+```
+
+## JSON 处理
+
+Go 的 JSON 处理比 JavaScript 严格——字段名必须匹配（除非用 tag）：
+
+```go
+type Config struct {
+    Name    string `json:"name"`
+    Port    int    `json:"port,omitempty"`  // 零值时省略
+    Enabled bool   `json:"enabled"`
+    Tags    []string `json:"tags"`         // 数组
+}
+
+// 解析 JSON
+var cfg Config
+json.NewDecoder(resp.Body).Decode(&cfg)
+
+// 输出 JSON（格式化）
+json.NewEncoder(os.Stdout).Encode(cfg)
+```
+
+## 错误处理
+
+Go 的错误处理风格是多层 return，习惯之后其实很清晰：
+
+```go
+func loadConfig(path string) (*Config, error) {
+    data, err := os.ReadFile(path)
+    if err != nil {
+        return nil, fmt.Errorf("读取配置文件失败: %w", err)
+    }
+
+    var cfg Config
+    if err := json.Unmarshal(data, &cfg); err != nil {
+        return nil, fmt.Errorf("JSON 解析失败: %w", err)
+    }
+
+    if cfg.Port < 1 || cfg.Port > 65535 {
+        return nil, fmt.Errorf("端口号无效: %d", cfg.Port)
+    }
+
+    return &cfg, nil
+}
+
+// 调用时
+cfg, err := loadConfig("config.json")
+if err != nil {
+    log.Fatalf("加载配置失败: %v", err)
+}
+```
+
+`%w` 把错误包装起来，调用方可以用 `errors.Is()` 和 `errors.As()` 判断底层错误类型。
+
+## 交叉编译
+
+Go 的交叉编译非常方便：
+
+```bash
+# Linux AMD64
+GOOS=linux GOARCH=amd64 go build -o mytool-linux
+
+# macOS ARM64 (Apple Silicon)
+GOOS=darwin GOARCH=arm64 go build -o mytool-macos
+
+# Windows
+GOOS=windows GOARCH=amd64 go build -o mytool.exe
+```
+
+一个编译产物就是一个文件，直接放到目标机器上运行，不需要 Go 环境。
+
+## 编译优化
+
+```bash
+# 去掉调试信息，减小体积
+go build -ldflags="-s -w" -o mytool
+
+# 加上 UPX 压缩（可再减 50-70%）
+upx --brute mytool
+```
+
+一个简单的 CLI 工具，编译后通常只有 2-5MB。
+
+## 总结
+
+Go 写 CLI 工具的体验很舒适——标准库够用、编译产物简单、运行性能好。适合写需要分发到多台服务器的工具。下一步可以考虑：
+
+- 用 `cobra` + `viper` 做更复杂的 CLI 框架
+- 加入彩色输出（`fatih/color`）
+- 加入进度条（`cheggaaa/pb`）

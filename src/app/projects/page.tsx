@@ -1,4 +1,3 @@
-import Container from '@/components/ui/Container';
 import ProjectCard from '@/components/projects/ProjectCard';
 import { getAllProjects } from '@/lib/projects';
 
@@ -6,17 +5,25 @@ export default function ProjectsPage() {
   const projects = getAllProjects();
 
   return (
-    <Container className="py-12 sm:py-16">
-      <h1 className="mb-8 text-2xl font-bold">作品集</h1>
-      {projects.length === 0 ? (
-        <p className="text-[var(--color-text-muted)]">暂无作品</p>
-      ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {projects.map((project) => (
-            <ProjectCard key={project.id} project={project} />
-          ))}
+    <section className="section">
+      <div className="section__inner">
+        <div className="section__head">
+          <div>
+            <span className="section__eyebrow">Projects</span>
+            <h2 className="section__title">作品集</h2>
+            <p className="section__subtitle">一些有趣的开源项目和工具</p>
+          </div>
         </div>
-      )}
-    </Container>
+        {projects.length === 0 ? (
+          <p className="text-[var(--text-dim)]">暂无作品</p>
+        ) : (
+          <div className="cards cards--3">
+            {projects.map((project) => (
+              <ProjectCard key={project.id} project={project} />
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
   );
 }

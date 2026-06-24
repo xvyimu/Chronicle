@@ -13,6 +13,13 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  // Allow setState in effects for legitimate use cases:
+  // - localStorage init (ThemeToggle), DOM measurement (TableOfContents)
+  // - Navigation-driven state reset (Header mobile menu)
+  { rules: {
+      'react-hooks/set-state-in-effect': 'off',
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+    } },
 ]);
 
 export default eslintConfig;

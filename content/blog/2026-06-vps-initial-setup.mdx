@@ -1,0 +1,277 @@
+---
+title: 'VPS 初始化安全与运维配置清单'
+description: '拿到一台新 VPS 后应该做的安全配置和运维设置，涵盖 SSH 加固、防火墙、Fail2Ban、自动更新、Docker 安装和监控工具，一份照着执行的清单。'
+date: '2026-06-23'
+tags: ['VPS', 'Linux', '安全', '运维']
+published: true
+featured: false
+---
+
+> 一份新入手 VPS 时的标配配置清单。
+
+## 前言
+
+买 VPS 之后第一时间就 `ssh root@ip` 开始装东西？别急。互联网上每分钟都有扫描机器在扫 22 端口，没做安全配置的服务器活不过 24 小时。
+
+以下是我每台新服务器的标配配置步骤。
+
+## 1. 更新系统
+
+```bash
+apt update && apt upgrade -y
+apt autoremove -y
+```
+
+## 2. 创建普通用户并提权
+
+```bash
+# 创建用户
+adduser deploy
+
+# 加入 sudo 组
+usermod -aG sudo deploy
+
+# 验证
+su - deploy
+sudo whoami  # 应该输出 root
+```
+
+**原则**：永远不要直接用 root 日常操作。
+
+## 3. SSH 密钥登录（禁用密码）
+
+```bash
+# 在本地机器（非服务器）上执行
+ssh-keygen -t ed25519 -f ~/.ssh/vps -C "vps-deploy"
+
+# 把公钥传到服务器
+ssh-copy-id -i ~/.ssh/vps.pub deploy@server_ip
+```
+
+登录到服务器，编辑 `/etc/ssh/sshd_config`：
+
+```bash
+sudo nano /etc/ssh/sshd_config
+```
+
+确保以下配置：
+
+```
+Port 22                     # 如果更换端口，记得防火墙同时放行
+PermitRootLogin no          # 禁止 root 登录
+PasswordAuthentication no   # 禁用密码登录
+PubkeyAuthentication yes    # 允许密钥登录
+MaxAuthTries 3              # 最大认证尝试次数
+ClientAliveInterval 120     # 客户端超时（秒）
+ClientAliveCountMax 3       # 超时重试次数
+```
+
+重启 SSH 服务：
+
+```bash
+sudo systemctl restart sshd
+```
+
+**建议换端口**：把 `Port 22` 改成 10000-65535 之间的高位端口，能减少 99% 的扫描攻击。改之前确认防火墙放行了新端口，不然你会把自己锁在外面。
+
+## 4. 配置 UFW 防火墙
+
+```bash
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+
+# SSH（如果你改了端口，这里也要改）
+sudo ufw allow 22/tcp
+
+# HTTP/HTTPS
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+
+# 如果运行 Docker，Docker 会直接操作 iptables
+# 但 UFW 还是能控制主机层面的流量
+
+sudo ufw enable
+sudo ufw status verbose
+```
+
+## 5. 安装 Fail2Ban
+
+```bash
+sudo apt install -y fail2ban
+```
+
+创建 `/etc/fail2ban/jail.local`：
+
+```ini
+[DEFAULT]
+bantime = 3600        # 封禁 1 小时
+findtime = 600        # 检测窗口 10 分钟
+maxretry = 5          # 失败 5 次封禁
+
+[sshd]
+enabled = true
+port = 22             # 如果你改了 SSH 端口，这里要同步改
+```
+
+启动服务：
+
+```bash
+sudo systemctl enable fail2ban
+sudo systemctl start fail2ban
+
+# 查看封禁状态
+sudo fail2ban-client status sshd
+```
+
+## 6. 配置自动安全更新
+
+```bash
+sudo apt install -y unattended-upgrades
+
+# 配置
+sudo dpkg-reconfigure --priority=low unattended-upgrades
+```
+
+确认配置文件 `/etc/apt/apt.conf.d/50unattended-upgrades`：
+
+```conf
+Unattended-Upgrade::Allowed-Origins {
+    "${distro_id}:${distro_codename}-security";
+    "${distro_id}:${distro_codename}-updates";
+};
+Unattended-Upgrade::AutoFixInterruptedDpkg "true";
+Unattended-Upgrade::Remove-Unused-Dependency "true";
+Unattended-Upgrade::Automatic-Reboot "false";
+```
+
+安全更新会自动安装，不会自动重启。
+
+## 7. 安装 Docker
+
+```bash
+# 官方一键安装
+curl -fsSL https://get.docker.com | sh
+
+# 把用户加入 docker 组（避免每次 sudo）
+sudo usermod -aG docker $USER
+
+# 重启会话后验证
+docker --version
+docker compose version
+```
+
+## 8. 安装运维监控工具
+
+基础工具：
+
+```bash
+# htop — 资源占用实时查看
+sudo apt install -y htop
+
+# btop — 更美观的替代品
+sudo apt install -y btop
+
+# ncdu — 磁盘空间分析
+sudo apt install -y ncdu
+
+# netstat — 网络连接查看
+sudo apt install -y net-tools
+
+# iotop — 磁盘 IO 监控
+sudo apt install -y iotop
+```
+
+建议同时装一个简单的系统监控，比如 netdata：
+
+```bash
+bash <(curl -Ss https://my-netdata.io/kickstart.sh)
+```
+
+它会启动一个 web 面板（默认端口 19999），可以直接在浏览器里看 CPU、内存、磁盘、网络等实时数据。
+
+## 9. 配置时间同步
+
+```bash
+sudo timedatectl set-timezone Asia/Shanghai
+sudo apt install -y chrony
+sudo systemctl enable chrony
+sudo systemctl start chrony
+sudo timedatectl status
+```
+
+## 10. 系统级调优
+
+**调整文件描述符限制**——编辑 `/etc/security/limits.conf`：
+
+```
+* soft nofile 65535
+* hard nofile 65535
+```
+
+**开启 BBR 拥塞控制**——编辑 `/etc/sysctl.conf`：
+
+```conf
+net.core.default_qdisc = fq
+net.ipv4.tcp_congestion_control = bbr
+```
+
+生效：
+
+```bash
+sudo sysctl -p
+
+# 验证
+sysctl net.ipv4.tcp_congestion_control
+# 输出：net.ipv4.tcp_congestion_control = bbr
+```
+
+## 一步到位的初始化脚本
+
+以上步骤可以合并成一个初始化脚本，新买 VPS 后一键执行。这里提供一个简化版：
+
+```bash
+#!/bin/bash
+# VPS 初始化脚本
+
+set -e
+
+echo "=== 更新系统 ==="
+apt update && apt upgrade -y
+
+echo "=== 安装基础工具 ==="
+apt install -y curl wget git ufw fail2ban htop btop ncdu \
+  net-tools chrony unattended-upgrades
+
+echo "=== 配置防火墙 ==="
+ufw default deny incoming
+ufw default allow outgoing
+ufw allow 22/tcp
+ufw allow 80/tcp
+ufw allow 443/tcp
+ufw --force enable
+
+echo "=== 安装 Docker ==="
+curl -fsSL https://get.docker.com | sh
+
+echo "=== 配置时间 ==="
+timedatectl set-timezone Asia/Shanghai
+systemctl enable chrony
+
+echo "=== 安全配置提示 ==="
+echo "1. 创建普通用户：adduser deploy && usermod -aG sudo deploy"
+echo "2. 配置 SSH 密钥登录并禁用密码"
+echo "3. 修改 SSH 端口（可选）"
+echo "4. 配置 fail2ban：service fail2ban start"
+echo "5. 调整 limits.conf 和 sysctl.conf（BBR）"
+```
+
+保存为 `init-vps.sh`，新 VPS 上 `bash init-vps.sh` 即可。
+
+## 总结
+
+安全配置不是一劳永逸的事，但它有个**基础门槛**——过了这道门槛，绝大部分的自动扫描和低级攻击就与你无关了。上面这 10 步做完，你的 VPS 已经比互联网上 90% 的裸机安全得多。
+
+定期做的事：
+- 每月检查一次 `fail2ban` 状态
+- `apt update` 保持系统更新
+- 检查 `/var/log/auth.log` 看有没有异常登录尝试

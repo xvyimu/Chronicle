@@ -12,6 +12,10 @@
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
 
 # next.js
 /.next/
@@ -23,6 +27,22 @@
 # misc
 .DS_Store
 *.pem
+
+# screenshots / temp
+.screenshot-*.png
+
+# pipeline artifacts
+.pipeline/
+
+# tooling caches
+.agents/
+.workbuddy/
+
+# generated reports (Trae Work / ad-hoc HTML)
+blog-next-steps/
+blog-progress-report/
+优化方案.html
+项目深度分析与代码审查报告.html
 
 # debug
 npm-debug.log*
