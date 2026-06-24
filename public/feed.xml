@@ -4,11 +4,506 @@
         <title>西江月</title>
         <link>http://localhost:3000</link>
         <description>云原生 · 全栈 · 自动化</description>
-        <lastBuildDate>Wed, 24 Jun 2026 09:12:16 GMT</lastBuildDate>
+        <lastBuildDate>Wed, 24 Jun 2026 09:32:22 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <language>zh-CN</language>
         <copyright>All rights reserved 2026</copyright>
+        <item>
+            <title><![CDATA[Web 性能优化实战：从 Core Web Vitals 到首屏加载]]></title>
+            <link>http://localhost:3000/blog/web-performance-optimization</link>
+            <guid isPermaLink="false">http://localhost:3000/blog/web-performance-optimization</guid>
+            <pubDate>Sun, 28 Jun 2026 00:00:00 GMT</pubDate>
+            <description><![CDATA[Web 性能优化的完整指南：Core Web Vitals 指标解读、LCP/INP/CLS 优化策略、资源加载优先级、字体优化、图片懒加载、代码分割，以及如何用 Lighthouse 和 Chrome DevTools 定位性能瓶颈。]]></description>
+            <content:encoded><![CDATA[
+> 性能不是一次性的工作，而是一种习惯。这篇文章讲 Web 性能优化的实战方法——从指标到落地。
+
+## Core Web Vitals：Google 的性能三件套
+
+Google 用三个核心指标衡量网页体验，直接影响搜索排名：
+
+| 指标 | 全称 | 含义 | Good | Poor |
+| --- | --- | --- | --- | --- |
+| LCP | Largest Contentful Paint | 最大内容绘制时间 | < 2.5s | > 4.0s |
+| INP | Interaction to Next Paint | 交互到下一次绘制 | < 200ms | > 500ms |
+| CLS | Cumulative Layout Shift | 累积布局偏移 | < 0.1 | > 0.25 |
+
+### LCP（最大内容绘制）
+
+通常是首屏中最大的图片或文字块。优化 LCP 是首屏体验的核心。
+
+### INP（交互到下次绘制）
+
+2024 年 3 月正式替代 FID，衡量页面对用户交互的响应速度。点击、键盘输入、点按都要在 200ms 内给出视觉反馈。
+
+### CLS（累积布局偏移）
+
+页面加载过程中元素的意外移动。最常见的元凶是图片没有尺寸、字体加载导致文字跳动、动态插入内容。
+
+## LCP 优化：让首屏内容更快出现
+
+### 1. 识别 LCP 元素
+
+```javascript
+// 用 PerformanceObserver 监听 LCP
+new PerformanceObserver((list) => {
+  const entries = list.getEntries();
+  const lastEntry = entries[entries.length - 1];
+  console.log('LCP element:', lastEntry.element);
+  console.log('LCP time:', lastEntry.startTime);
+  console.log('LCP type:', lastEntry.renderTime ? 'render' : 'load');
+}).observe({ type: 'largest-contentful-paint', buffered: true });
+```
+
+### 2. 关键渲染路径优化
+
+LCP 元素的加载链路通常是：HTML → CSS → 图片/字体 → 渲染。优化每一环：
+
+```html
+<head>
+  <!-- 预连接到图片 CDN -->
+  <link rel="preconnect" href="https://cdn.example.com">
+  <link rel="dns-prefetch" href="https://cdn.example.com">
+
+  <!-- 预加载 LCP 图片 -->
+  <link rel="preload" as="image" href="/images/hero.jpg" fetchpriority="high">
+
+  <!-- 关键 CSS 内联（减少渲染阻塞） -->
+  <style>
+    /* 首屏关键样式内联 */
+    .hero { min-height: 50vh; background: var(--bg); }
+  </style>
+
+  <!-- 非关键 CSS 异步加载 -->
+  <link rel="preload" as="style" href="/css/non-critical.css" onload="this.rel='stylesheet'">
+</head>
+```
+
+### 3. 图片优化
+
+```html
+<!-- 响应式图片 + 懒加载 -->
+<img
+  src="/images/hero.jpg"
+  alt="Hero"
+  width="1200"
+  height="630"
+  loading="eager"
+  fetchpriority="high"
+  srcset="/images/hero-480.jpg 480w, /images/hero-800.jpg 800w, /images/hero-1200.jpg 1200w"
+  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 1200px"
+>
+```
+
+**Next.js Image 组件自动处理：**
+
+```tsx
+import Image from 'next/image';
+
+// 首屏图片：priority 自动添加 preload
+<Image
+  src="/images/hero.jpg"
+  alt="Hero"
+  width={1200}
+  height={630}
+  priority
+  sizes="(max-width: 640px) 100vw, 1200px"
+/>
+
+// 非首屏图片：自动懒加载
+<Image
+  src="/images/article-cover.jpg"
+  alt="Cover"
+  width={800}
+  height={450}
+  sizes="(max-width: 640px) 100vw, 800px"
+/>
+```
+
+### 4. 字体优化
+
+字体加载会阻塞文本渲染（FOIT — Flash of Invisible Text），导致 LCP 延迟。
+
+```css
+/* 使用 font-display: swap 避免 FOIT */
+@font-face {
+  font-family: 'Noto Sans SC';
+  src: url('/fonts/noto-sans-sc.woff2') format('woff2');
+  font-display: swap;  /* 先用系统字体，字体加载后替换 */
+  font-weight: 400;
+  unicode-range: U+0000-00FF, U+4E00-9FFF;  /* 只加载需要的字符范围 */
+}
+```
+
+**Next.js next/font 自动优化：**
+
+```tsx
+import { Noto_Sans_SC, JetBrains_Mono } from 'next/font/google';
+
+const notoSansSC = Noto_Sans_SC({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  display: 'swap',
+  variable: '--font-noto-sans-sc',
+});
+
+// next/font 会：
+// 1. 自动下载字体文件并自托管
+// 2. 注入 CSS 变量
+// 3. 使用 font-display: swap
+// 4. 预加载字体文件
+```
+
+### 5. 减少 JavaScript 阻塞
+
+```html
+<!-- 非关键 JS 延迟加载 -->
+<script src="/js/analytics.js" defer></script>
+<script src="/js/chat-widget.js" async></script>
+
+<!-- 关键 JS 内联 -->
+<script>
+  // 主题初始化（避免 FOUC）
+  (function() {
+    const theme = localStorage.getItem('theme') ?? 'system';
+    if (theme === 'dark' || (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    }
+  })();
+</script>
+```
+
+## INP 优化：让交互更流畅
+
+INP 衡量的是从用户交互到屏幕更新的完整延迟。长任务是 INP 的主要敌人。
+
+### 1. 分解长任务
+
+```javascript
+// 坏：一个 200ms 的长任务阻塞主线程
+function processAll(items) {
+  items.forEach(item => {
+    heavyComputation(item);
+  });
+}
+
+// 好：用 scheduler.yield() 分解任务
+async function processAll(items) {
+  for (const item of items) {
+    heavyComputation(item);
+    // 让出主线程
+    if ('scheduler' in window && 'yield' in scheduler) {
+      await scheduler.yield();
+    } else {
+      await new Promise(r => setTimeout(r, 0));
+    }
+  }
+}
+```
+
+### 2. 使用 requestIdleCallback
+
+```javascript
+// 非紧急任务放到空闲时间执行
+function prefetchLinks() {
+  requestIdleCallback(() => {
+    document.querySelectorAll('a[href]').forEach(link => {
+      // 预取链接
+    });
+  }, { timeout: 2000 });
+}
+```
+
+### 3. 防抖与节流
+
+```typescript
+// 防抖：搜索输入
+function debounce<T extends (...args: any[]) => void>(fn: T, delay: number) {
+  let timer: ReturnType<typeof setTimeout>;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+}
+
+// 节流：滚动事件
+function throttle<T extends (...args: any[]) => void>(fn: T, limit: number) {
+  let inThrottle = false;
+  return (...args: Parameters<T>) => {
+    if (!inThrottle) {
+      fn(...args);
+      inThrottle = true;
+      setTimeout(() => (inThrottle = false), limit);
+    }
+  };
+}
+
+// 使用
+const handleSearch = debounce((query: string) => fetchResults(query), 300);
+const handleScroll = throttle(() => updateProgress(), 16);  // ~60fps
+```
+
+### 4. React 中的优化
+
+```tsx
+// 使用 useTransition 标记非紧急更新
+import { useTransition, useDeferredValue } from 'react';
+
+function SearchResults({ query }) {
+  const [isPending, startTransition] = useTransition();
+  const deferredQuery = useDeferredValue(query);
+
+  // 搜索结果用 deferredQuery，输入框用 query
+  // 输入框始终保持响应
+  return (
+    <>
+      <input value={query} onChange={...} />
+      <Results query={deferredQuery} />
+    </>
+  );
+}
+
+// useMemo 缓存计算结果
+const sortedItems = useMemo(
+  () => items.sort((a, b) => a.date - b.date),
+  [items]
+);
+
+// useCallback 缓存回调
+const handleClick = useCallback((id: string) => {
+  setSelected(id);
+}, []);
+```
+
+## CLS 优化：避免布局跳动
+
+### 1. 图片和嵌入内容预留空间
+
+```css
+/* 图片必须设置宽高或 aspect-ratio */
+img {
+  width: 100%;
+  aspect-ratio: 16 / 9;  /* 预留空间 */
+}
+
+/* 视频容器 */
+.video-container {
+  position: relative;
+  aspect-ratio: 16 / 9;
+}
+.video-container iframe {
+  position: absolute;
+  inset: 0;
+}
+```
+
+### 2. 字体加载策略
+
+```css
+/* 使用 font-display: swap + size-adjust 减少字体替换跳动 */
+@font-face {
+  font-family: 'Noto Sans SC';
+  src: url('/fonts/noto.woff2') format('woff2');
+  font-display: swap;
+  size-adjust: 100%;  /* 调整 fallback 字体大小匹配自定义字体 */
+  ascent-override: 90%;
+  descent-override: 20%;
+  line-gap-override: 0%;
+}
+```
+
+### 3. 动画使用 transform
+
+```css
+/* 坏：修改 height 导致重排 */
+.bad-animation {
+  transition: height 0.3s;
+}
+.bad-animation:hover {
+  height: 200px;
+}
+
+/* 好：使用 transform 不触发重排 */
+.good-animation {
+  transition: transform 0.3s;
+}
+.good-animation:hover {
+  transform: scaleY(1.5);
+}
+```
+
+### 4. 避免动态插入内容
+
+```html
+<!-- 坏：广告或弹窗突然出现，推动内容下移 -->
+<div id="ad-slot"></div>
+<script>
+  // 页面加载后插入广告
+  document.getElementById('ad-slot').innerHTML = '<iframe src="...">';
+</script>
+
+<!-- 好：预留空间 -->
+<div id="ad-slot" style="min-height: 250px;">
+  <!-- 广告加载后填充 -->
+</div>
+```
+
+## 代码分割与按需加载
+
+### Next.js App Router 自动分割
+
+```tsx
+// app/blog/[slug]/page.tsx
+import { lazy } from 'react';
+
+// 重型组件懒加载
+const GiscusComments = lazy(() => import('@/components/comments/Giscus'));
+
+export default function BlogPost() {
+  return (
+    <article>
+      {/* 正文 */}
+      <Suspense fallback={<div>加载评论...</div>}>
+        <GiscusComments />
+      </Suspense>
+    </article>
+  );
+}
+```
+
+### 动态导入第三方库
+
+```typescript
+// 搜索功能用到的 fuse.js 按需加载
+async function search(query: string) {
+  const Fuse = (await import('fuse.js')).default;
+  const fuse = new Fuse(posts, { keys: ['title', 'description'] });
+  return fuse.search(query);
+}
+```
+
+## Lighthouse 审计
+
+### 命令行运行
+
+```bash
+# 安装 Lighthouse CLI
+npm install -g lighthouse
+
+# 运行审计
+lighthouse http://localhost:3000 --output html --output-path ./lighthouse-report.html
+
+# 只跑性能审计
+lighthouse http://localhost:3000 --only-categories=performance --view
+```
+
+### Chrome DevTools
+
+1. 打开 DevTools → Lighthouse 面板
+2. 选择 "Performance" 类别
+3. 点击 "Analyze page load"
+4. 查看 Opportunities 和 Diagnostics 建议
+
+### 关键审计项
+
+| 审计项 | 说明 | 优化方法 |
+| --- | --- | --- |
+| LCP | 首屏最大内容 | 预加载 LCP 资源、优化图片 |
+| Eliminate render-blocking resources | 渲染阻塞资源 | 内联关键 CSS、defer JS |
+| Minify CSS/JS | 代码压缩 | 生产构建自动处理 |
+| Serve images in next-gen formats | 现代图片格式 | WebP/AVIF |
+| Efficiently encode images | 图片压缩 | 压缩工具 |
+| Preconnect to required origins | 预连接 | `<link rel="preconnect">` |
+| Reduce JS execution time | JS 执行时间 | 代码分割、减少 polyfill |
+| Avoid multiple page redirects | 重定向 | 避免不必要的重定向 |
+| Use HTTP/2 | 多路复用 | 服务器配置 H2/H3 |
+| Passes `preload` audit | 预加载关键资源 | `<link rel="preload">` |
+
+## 性能监控
+
+### Web Vitals 采集
+
+```typescript
+// 使用 web-vitals 库
+import { onLCP, onINP, onCLS, onFCP, onTTFB } from 'web-vitals';
+
+function sendToAnalytics(metric: any) {
+  // 发送到分析平台
+  fetch('/api/vitals', {
+    method: 'POST',
+    body: JSON.stringify({
+      name: metric.name,
+      value: metric.value,
+      id: metric.id,
+      rating: metric.rating,  // 'good' | 'needs-improvement' | 'poor'
+    }),
+  });
+}
+
+onLCP(sendToAnalytics);
+onINP(sendToAnalytics);
+onCLS(sendToAnalytics);
+onFCP(sendToAnalytics);
+onTTFB(sendToAnalytics);
+```
+
+### Vercel Analytics
+
+```tsx
+// app/layout.tsx
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        {children}
+        <Analytics />
+        <SpeedInsights />
+      </body>
+    </html>
+  );
+}
+```
+
+## 性能预算
+
+```json
+// .lighthouserc.json
+{
+  "ci": {
+    "assert": {
+      "assertions": {
+        "categories:performance": ["error", { "minScore": 0.9 }],
+        "categories:accessibility": ["error", { "minScore": 0.9 }],
+        "largest-contentful-paint": ["error", { "maxNumericValue": 2500 }],
+        "interaction-to-next-paint": ["error", { "maxNumericValue": 200 }],
+        "cumulative-layout-shift": ["error", { "maxNumericValue": 0.1 }],
+        "total-byte-weight": ["warn", { "maxNumericValue": 500000 }]
+      }
+    }
+  }
+}
+```
+
+## 小结
+
+性能优化的优先级：
+
+1. **测量** — 先用 Lighthouse 和 Web Vitals 找到瓶颈
+2. **LCP** — 预加载首屏关键资源、优化图片和字体
+3. **CLS** — 为所有媒体预留空间、使用 transform 动画
+4. **INP** — 分解长任务、防抖节流、React useTransition
+5. **代码分割** — 按路由和交互懒加载
+6. **持续监控** — 采集真实用户的 Web Vitals 数据
+
+性能优化不是追求 100 分，而是在用户体验和开发成本之间找到平衡点。先解决 Poor 的问题，再逐步向 Good 靠拢。
+]]></content:encoded>
+            <_reading_time>
+                <readingTime>11 min read</readingTime>
+            </_reading_time>
+        </item>
         <item>
             <title><![CDATA[VPS 初始化安全与运维配置清单]]></title>
             <link>http://localhost:3000/blog/vps-initial-setup</link>
@@ -287,6 +782,364 @@ echo "5. 调整 limits.conf 和 sysctl.conf（BBR）"
 ]]></content:encoded>
             <_reading_time>
                 <readingTime>7 min read</readingTime>
+            </_reading_time>
+        </item>
+        <item>
+            <title><![CDATA[TypeScript 高级类型实战：从泛型到条件类型的进阶之路]]></title>
+            <link>http://localhost:3000/blog/typescript-advanced-types</link>
+            <guid isPermaLink="false">http://localhost:3000/blog/typescript-advanced-types</guid>
+            <pubDate>Fri, 26 Jun 2026 00:00:00 GMT</pubDate>
+            <description><![CDATA[深入 TypeScript 类型系统：泛型约束、条件类型、映射类型、模板字面量类型、类型推断技巧，以及在实际项目中如何用类型驱动开发减少运行时错误。]]></description>
+            <content:encoded><![CDATA[
+> 类型系统不是用来限制你的，而是用来保护你的。这篇文章讲 TypeScript 高级类型在实际项目中的运用。
+
+## 为什么需要高级类型
+
+基础类型（`string`、`number`、`boolean`）能覆盖大部分场景，但当项目复杂度上升，你会遇到这些问题：
+
+- API 响应结构不确定，到处用 `as any` 断言
+- 组件 props 组合复杂，手动维护接口定义容易遗漏
+- 第三方库类型不完整，调用时缺乏提示
+- 重构时改了一处，运行时才发现另一处没改
+
+TypeScript 的高级类型能力，本质上是在编译期建立更强的约束，让错误提前暴露。
+
+## 泛型约束：给类型加边界
+
+### 基础泛型
+
+```typescript
+function first<T>(arr: T[]): T | undefined {
+  return arr[0];
+}
+
+const n = first([1, 2, 3]);        // number
+const s = first(['a', 'b']);       // string
+```
+
+### 泛型约束（extends）
+
+当你需要泛型具备某些属性时，用 `extends` 约束：
+
+```typescript
+// 约束 T 必须有 length 属性
+function logLength<T extends { length: number }>(item: T): T {
+  console.log(item.length);
+  return item;
+}
+
+logLength('hello');     // ✓
+logLength([1, 2, 3]);   // ✓
+logLength(123);         // ✗ number 没有 length
+```
+
+### keyof 和泛型组合
+
+在数据层中非常常见——根据 key 安全地访问对象属性：
+
+```typescript
+function pick<T, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
+  const result = {} as Pick<T, K>;
+  for (const key of keys) {
+    result[key] = obj[key];
+  }
+  return result;
+}
+
+const user = { id: 1, name: 'Alice', email: 'a@b.com', role: 'admin' };
+const summary = pick(user, ['id', 'name']);  // { id: number; name: string }
+```
+
+## 条件类型：类型层面的 if-else
+
+### 基本语法
+
+```typescript
+type IsString<T> = T extends string ? true : false;
+
+type A = IsString<'hello'>;  // true
+type B = IsString<42>;       // false
+```
+
+### infer 关键字
+
+`infer` 让你在条件类型中提取子类型，这是最强大的类型工具之一：
+
+```typescript
+// 提取函数返回类型
+type ReturnType<T> = T extends (...args: any[]) => infer R ? R : never;
+
+// 提取 Promise 内部类型
+type Awaited<T> = T extends Promise<infer U> ? U : T;
+
+// 提取数组元素类型
+type ElementOf<T> = T extends (infer E)[] ? E : never;
+
+type R1 = ReturnType<() => string>;          // string
+type R2 = Awaited<Promise<number>>;          // number
+type R3 = ElementOf<string[]>;               // string
+```
+
+### 实战：API 响应类型推导
+
+```typescript
+interface ApiEndpoints {
+  '/users': { id: number; name: string }[];
+  '/posts': { id: number; title: string; body: string }[];
+  '/config': { theme: string; lang: string };
+}
+
+// 根据 path 自动推导响应类型
+type ResponseOf<P extends keyof ApiEndpoints> = ApiEndpoints[P];
+
+async function fetchApi<P extends keyof ApiEndpoints>(
+  path: P
+): Promise<ResponseOf<P>> {
+  const res = await fetch(path);
+  return res.json();
+}
+
+const users = await fetchApi('/users');   // { id: number; name: string }[]
+const config = await fetchApi('/config'); // { theme: string; lang: string }
+```
+
+## 映射类型：批量转换类型
+
+### 内置工具类型
+
+TypeScript 提供了几个常用的映射类型：
+
+```typescript
+interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+
+type PartialUser = Partial<User>;       // 所有属性变可选
+type RequiredUser = Required<User>;     // 所有属性变必填
+type ReadonlyUser = Readonly<User>;     // 所有属性变只读
+type UserPreview = Pick<User, 'id' | 'name'>;  // 只保留部分属性
+type UserWithoutEmail = Omit<User, 'email'>;   // 排除部分属性
+```
+
+### 自定义映射类型
+
+```typescript
+// 所有属性变为可空（null | undefined）
+type Nullable<T> = { [K in keyof T]: T[K] | null };
+
+// 所有属性变为 getter
+type Getters<T> = {
+  [K in keyof T as `get${Capitalize<string & K>}`]: () => T[K]
+};
+
+type NullableUser = Nullable<User>;
+// { id: number | null; name: string | null; email: string | null; }
+
+type UserGetters = Getters<User>;
+// { getId: () => number; getName: () => string; getEmail: () => string; }
+```
+
+## 模板字面量类型
+
+### 基本用法
+
+```typescript
+type EventName = 'click' | 'hover' | 'focus';
+type Handler = `on${Capitalize<EventName>}`;
+// 'onClick' | 'onHover' | 'onFocus'
+
+type CSSProperty = `margin-${'top' | 'right' | 'bottom' | 'left'}`;
+// 'margin-top' | 'margin-right' | 'margin-bottom' | 'margin-left'
+```
+
+### 实战：类型安全的事件系统
+
+```typescript
+type EventMap = {
+  click: { x: number; y: number };
+  scroll: { scrollTop: number };
+  resize: { width: number; height: number };
+};
+
+class TypedEmitter {
+  private handlers: { [E in keyof EventMap]?: Array<(data: EventMap[E]) => void> } = {};
+
+  on<E extends keyof EventMap>(event: E, handler: (data: EventMap[E]) => void) {
+    (this.handlers[event] ??= []).push(handler);
+  }
+
+  emit<E extends keyof EventMap>(event: E, data: EventMap[E]) {
+    this.handlers[event]?.forEach(h => h(data));
+  }
+}
+
+const emitter = new TypedEmitter();
+emitter.on('click', (data) => {
+  console.log(data.x, data.y);  // ✓ 类型安全
+});
+
+emitter.emit('click', { x: 10, y: 20 });        // ✓
+emitter.emit('click', { x: 10 });               // ✗ 缺少 y
+emitter.emit('hover', { x: 10, y: 20 });        // ✗ hover 不在 EventMap 中
+```
+
+## 类型守卫：收窄联合类型
+
+### typeof 和 instanceof
+
+```typescript
+function process(value: string | number) {
+  if (typeof value === 'string') {
+    return value.toUpperCase();  // 此处 value 是 string
+  }
+  return value.toFixed(2);       // 此处 value 是 number
+}
+```
+
+### in 操作符
+
+```typescript
+interface Fish { swim: () => void }
+interface Bird { fly: () => void }
+
+function move(animal: Fish | Bird) {
+  if ('swim' in animal) {
+    animal.swim();  // ✓
+  } else {
+    animal.fly();   // ✓
+  }
+}
+```
+
+### 自定义类型守卫（is）
+
+```typescript
+interface ApiError { code: number; message: string }
+interface NetworkError { status: number; url: string }
+
+function isApiError(err: unknown): err is ApiError {
+  return typeof err === 'object' && err !== null && 'code' in err;
+}
+
+try {
+  await apiCall();
+} catch (err) {
+  if (isApiError(err)) {
+    console.log(err.code);     // ✓ err 被收窄为 ApiError
+  }
+}
+```
+
+## 实际项目中的类型策略
+
+### 1. 数据验证与类型推导结合
+
+用 zod 在运行时验证数据，同时自动推导 TypeScript 类型：
+
+```typescript
+import { z } from 'zod';
+
+const UserSchema = z.object({
+  id: z.number(),
+  name: z.string().min(1),
+  email: z.string().email(),
+  role: z.enum(['admin', 'user', 'guest']),
+});
+
+type User = z.infer<typeof UserSchema>;
+// 自动推导出：{ id: number; name: string; email: string; role: 'admin' | 'user' | 'guest' }
+
+// 运行时验证 + 类型安全
+function parseUser(data: unknown): User {
+  return UserSchema.parse(data);  // 验证失败抛 ZodError
+}
+```
+
+### 2. 品牌类型（Branded Types）
+
+防止原始类型混用：
+
+```typescript
+// 品牌类型
+type UserId = string & { readonly __brand: 'UserId' };
+type PostId = string & { readonly __brand: 'PostId' };
+
+function getUser(id: UserId) { /* ... */ }
+function getPost(id: PostId) { /* ... */ }
+
+const uid = '123' as UserId;
+const pid = '456' as PostId;
+
+getUser(uid);  // ✓
+getUser(pid);  // ✗ PostId 不能赋给 UserId
+```
+
+### 3. 递归类型处理树形结构
+
+```typescript
+interface TreeNode {
+  id: string;
+  label: string;
+  children?: TreeNode[];
+}
+
+// 深度遍历树
+function flatten<T extends TreeNode>(nodes: T[]): T[] {
+  return nodes.flatMap(node => [
+    node,
+    ...(node.children ? flatten(node.children) : []),
+  ]);
+}
+```
+
+## 常见陷阱
+
+### 不要过度使用 any
+
+`any` 会关闭类型检查，等于回到 JavaScript。如果实在不确定类型，用 `unknown` 代替——它强制你做类型检查后才能使用。
+
+### 避免类型断言滥用
+
+```typescript
+// 坏：强制断言，编译器不再检查
+const user = data as User;
+
+// 好：用类型守卫或 zod 验证
+const user = UserSchema.parse(data);
+```
+
+### 注意类型兼容性是结构化的
+
+TypeScript 采用结构类型系统（鸭子类型），只要结构匹配就兼容：
+
+```typescript
+interface A { x: number }
+interface B { x: number; y: number }
+
+const b: B = { x: 1, y: 2 };
+const a: A = b;  // ✓ B 比 A 多属性，结构兼容
+```
+
+这意味着你不能依赖"类型名"来区分对象，必要时用品牌类型。
+
+## 小结
+
+| 技巧 | 适用场景 |
+| --- | --- |
+| 泛型约束 | 工具函数、数据层抽象 |
+| 条件类型 + infer | 类型推导、API 响应类型 |
+| 映射类型 | 批量转换接口属性 |
+| 模板字面量类型 | 事件系统、CSS 属性、路由参数 |
+| 类型守卫 | 联合类型收窄、运行时验证 |
+| 品牌类型 | 防止原始类型混用 |
+| zod + infer | 运行时验证 + 编译期类型 |
+
+类型系统的价值不在于写出更复杂的类型，而在于让错误在编译期暴露。当你发现自己在写 `as any` 时，停下来想想——大概率有更好的类型表达方式。
+]]></content:encoded>
+            <_reading_time>
+                <readingTime>9 min read</readingTime>
             </_reading_time>
         </item>
         <item>
@@ -788,6 +1641,994 @@ Redis 的核心价值是把"慢"变成"快"。但缓存是双刃剑——引入�
 ]]></content:encoded>
             <_reading_time>
                 <readingTime>9 min read</readingTime>
+            </_reading_time>
+        </item>
+        <item>
+            <title><![CDATA[PostgreSQL 性能优化实战：慢查询排查与索引策略]]></title>
+            <link>http://localhost:3000/blog/postgresql-performance</link>
+            <guid isPermaLink="false">http://localhost:3000/blog/postgresql-performance</guid>
+            <pubDate>Sat, 27 Jun 2026 00:00:00 GMT</pubDate>
+            <description><![CDATA[PostgreSQL 在生产环境中的性能优化方法：EXPLAIN 分析、索引策略（B-Tree/GIN/GiST）、连接池配置、VACUUM 与表膨胀治理、分区表实践，以及常见慢查询的排查思路。]]></description>
+            <content:encoded><![CDATA[
+> 数据库慢查询是后端最常见的问题。这篇文章讲 PostgreSQL 性能优化的实战经验——从 EXPLAIN 分析到索引设计。
+
+## 性能问题的第一信号
+
+当你发现 API 响应变慢，先确认是不是数据库的问题：
+
+```sql
+-- 查看当前活跃连接和正在执行的查询
+SELECT pid, state, query, query_start, now() - query_start AS duration
+FROM pg_stat_activity
+WHERE state != 'idle'
+ORDER BY duration DESC;
+
+-- 查看慢查询日志（需要配置 log_min_duration_statement）
+-- postgresql.conf:
+-- log_min_duration_statement = 100  -- 记录超过 100ms 的查询
+-- log_line_prefix = '%t [%p] %u@%d '
+```
+
+如果确认是数据库慢，下一步就是用 `EXPLAIN ANALYZE` 分析查询计划。
+
+## EXPLAIN ANALYZE：读懂查询计划
+
+### 基本用法
+
+```sql
+EXPLAIN ANALYZE
+SELECT * FROM posts WHERE author_id = 42 ORDER BY created_at DESC LIMIT 10;
+```
+
+输出示例：
+
+```
+Limit  (cost=0.42..12.47 rows=10 width=256) (actual time=0.025..0.048 rows=10 loops=1)
+  ->  Index Scan using idx_posts_author_created on posts  (cost=0.42..45.20 rows=50 width=256) (actual time=0.024..0.046 rows=10 loops=1)
+        Index Cond: (author_id = 42)
+        Filter: (deleted_at IS NULL)
+Planning Time: 0.15 ms
+Execution Time: 0.08 ms
+```
+
+### 关键指标
+
+| 指标 | 含义 | 关注点 |
+| --- | --- | --- |
+| `Seq Scan` | 全表扫描 | 大表出现通常意味着缺索引 |
+| `Index Scan` | 索引扫描 | 理想情况 |
+| `Bitmap Heap Scan` | 位图扫描 | 介于两者之间，大量行匹配时常见 |
+| `cost` | 优化器估算成本 | 第一行是启动成本，第二行是总成本 |
+| `actual time` | 实际执行时间 | 和 cost 对比，差异大说明统计信息过期 |
+| `rows` | 返回行数 | 估算值和实际值差异大时需要 ANALYZE |
+| `loops` | 循环次数 | 嵌套循环连接时关注 |
+
+### 常见问题模式
+
+**Seq Scan on large table** — 全表扫描大表，通常需要加索引：
+
+```sql
+-- 优化前：Seq Scan，扫描 100 万行
+EXPLAIN ANALYZE SELECT * FROM orders WHERE customer_id = 1001;
+-- Seq Scan on orders (cost=0.00..23456.78 rows=5 width=128) (actual time=1.234..567.890 rows=3 loops=1)
+
+-- 加索引后：Index Scan
+CREATE INDEX idx_orders_customer ON orders(customer_id);
+-- Index Scan using idx_orders_customer on orders (cost=0.42..8.44 rows=3 width=128) (actual time=0.015..0.018 rows=3 loops=1)
+```
+
+**Nested Loop with high cost** — 嵌套循环连接大表，考虑改用 Hash Join：
+
+```sql
+-- 强制使用 Hash Join（测试用，不要在生产环境随意加 hint）
+SET enable_nestloop = off;
+EXPLAIN ANALYZE SELECT * FROM orders o JOIN customers c ON o.customer_id = c.id;
+```
+
+## 索引策略
+
+### B-Tree 索引（默认）
+
+适合等值查询、范围查询、排序：
+
+```sql
+-- 单列索引
+CREATE INDEX idx_posts_created ON posts(created_at DESC);
+
+-- 复合索引（注意列顺序：等值条件在前，范围条件在后）
+CREATE INDEX idx_orders_customer_status_date
+  ON orders(customer_id, status, created_at DESC);
+
+-- 这个索引可以服务以下查询：
+SELECT * FROM orders WHERE customer_id = 100 AND status = 'paid' ORDER BY created_at DESC;
+SELECT * FROM orders WHERE customer_id = 100 AND status = 'paid';
+SELECT * FROM orders WHERE customer_id = 100;
+-- 但不能高效服务：
+SELECT * FROM orders WHERE status = 'paid';  -- 跳过了 customer_id
+```
+
+### 部分索引（Partial Index）
+
+只索引满足条件的行，节省空间并提高查询效率：
+
+```sql
+-- 只索引未删除的帖子
+CREATE INDEX idx_posts_active ON posts(created_at DESC)
+  WHERE deleted_at IS NULL;
+
+-- 只索引待处理订单
+CREATE INDEX idx_orders_pending ON orders(created_at)
+  WHERE status = 'pending';
+```
+
+### 表达式索引
+
+对计算结果建索引：
+
+```sql
+-- 不区分大小写的邮箱查询
+CREATE INDEX idx_users_email_lower ON users(LOWER(email));
+
+SELECT * FROM users WHERE LOWER(email) = 'alice@example.com';  -- 会使用索引
+
+-- JSONB 字段索引
+CREATE INDEX idx_events_data ON events USING GIN (data);
+
+SELECT * FROM events WHERE data @> '{"type": "click"}';  -- 会使用 GIN 索引
+```
+
+### GIN 索引
+
+适合全文搜索、数组、JSONB：
+
+```sql
+-- 全文搜索
+CREATE INDEX idx_posts_search ON posts USING GIN (to_tsvector('chinese', title || ' ' || body));
+
+SELECT * FROM posts WHERE to_tsvector('chinese', title || ' ' || body) @@ to_tsquery('PostgreSQL & 性能');
+
+-- 数组包含查询
+CREATE INDEX idx_tags ON posts USING GIN (tags);
+
+SELECT * FROM posts WHERE tags @> ARRAY['PostgreSQL', '数据库'];
+```
+
+### 索引维护
+
+```sql
+-- 查看索引使用情况
+SELECT
+  schemaname, relname, indexrelname,
+  idx_scan AS scans,
+  idx_tup_read AS tuples_read,
+  idx_tup_fetch AS tuples_fetched,
+  pg_size_pretty(pg_relation_size(indexrelid)) AS size
+FROM pg_stat_user_indexes
+ORDER BY idx_scan ASC;  -- 扫描次数少的索引可能是冗余的
+
+-- 重建碎片化的索引（在线操作，不阻塞写入）
+REINDEX INDEX CONCURRENTLY idx_posts_created;
+
+-- 删除未使用的索引（先观察一段时间）
+DROP INDEX CONCURRENTLY idx_posts_unused;
+```
+
+## 连接池配置
+
+PostgreSQL 的连接是进程模型，每个连接 fork 一个后端进程。连接过多会消耗大量内存并导致上下文切换。
+
+### PgBouncer 配置
+
+```ini
+; pgbouncer.ini
+[databases]
+mydb = host=127.0.0.1 port=5432 dbname=mydb
+
+[pgbouncer]
+listen_addr = 0.0.0.0
+listen_port = 6432
+
+; 连接池模式：transaction 级别复用
+pool_mode = transaction
+
+; 每个数据库的最大连接数
+default_pool_size = 20
+
+; 每个用户的最大连接数
+max_client_conn = 200
+
+; 空闲连接超时
+server_idle_timeout = 300
+```
+
+### 应用层连接池
+
+```typescript
+// Node.js + pg 模块
+import { Pool } from 'pg';
+
+const pool = new Pool({
+  host: 'localhost',
+  port: 5432,
+  database: 'mydb',
+  max: 20,           // 最大连接数
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
+
+// 从池中获取连接
+const client = await pool.connect();
+try {
+  const result = await client.query('SELECT * FROM posts WHERE id = $1', [1]);
+  return result.rows[0];
+} finally {
+  client.release();  // 归还连接
+}
+```
+
+## VACUUM 与表膨胀
+
+PostgreSQL 的 MVCC 机制会产生死元组（dead tuples），需要 VACUUM 回收空间。
+
+### 检查表膨胀
+
+```sql
+SELECT
+  schemaname, relname,
+  n_live_tup AS live_tuples,
+  n_dead_tup AS dead_tuples,
+  ROUND(n_dead_tup::numeric / NULLIF(n_live_tup, 0) * 100, 2) AS bloat_ratio,
+  last_autovacuum,
+  last_autoanalyze
+FROM pg_stat_user_tables
+WHERE n_live_tup > 1000
+ORDER BY bloat_ratio DESC;
+```
+
+### Autovacuum 调优
+
+```sql
+-- 全局配置（postgresql.conf）
+-- autovacuum = on
+-- autovacuum_naptime = 60        -- 每 60 秒检查一次
+-- autovacuum_vacuum_threshold = 50
+-- autovacuum_vacuum_scale_factor = 0.1  -- 死元组超过 10% 时触发
+
+-- 针对特定表调整
+ALTER TABLE posts SET (
+  autovacuum_vacuum_scale_factor = 0.05,  -- 更积极的 vacuum
+  autovacuum_analyze_scale_factor = 0.02
+);
+
+-- 针对写密集的表
+ALTER TABLE logs SET (
+  autovacuum_vacuum_scale_factor = 0.02,
+  autovacuum_vacuum_insert_scale_factor = 0.05,
+  fillfactor = 80  -- 预留空间减少页分裂
+);
+```
+
+### 手动 VACUUM
+
+```sql
+-- 普通 vacuum：标记死元组为可重用，不归还磁盘空间
+VACUUM posts;
+
+-- vacuum full：重建表，归还磁盘空间，但会锁表
+-- 生产环境慎用！
+VACUUM FULL posts;
+
+-- 分析统计信息（更新优化器的行数估算）
+ANALYZE posts;
+
+-- 组合操作
+VACUUM ANALYZE posts;
+```
+
+## 分区表
+
+当单表数据量超过千万级，考虑分区。
+
+### 按范围分区（时间最常见）
+
+```sql
+-- 创建分区表
+CREATE TABLE events (
+  id BIGSERIAL,
+  created_at TIMESTAMPTZ NOT NULL,
+  event_type TEXT NOT NULL,
+  data JSONB
+) PARTITION BY RANGE (created_at);
+
+-- 按月分区
+CREATE TABLE events_2026_01 PARTITION OF events
+  FOR VALUES FROM ('2026-01-01') TO ('2026-02-01');
+
+CREATE TABLE events_2026_02 PARTITION OF events
+  FOR VALUES FROM ('2026-02-01') TO ('2026-03-01');
+
+-- ... 后续月份
+
+-- 自动创建分区的函数
+CREATE OR REPLACE FUNCTION create_monthly_partition(target_date DATE)
+RETURNS void AS $$
+DECLARE
+  partition_name TEXT;
+  start_date DATE;
+  end_date DATE;
+BEGIN
+  start_date := DATE_TRUNC('month', target_date)::DATE;
+  end_date := (start_date + INTERVAL '1 month')::DATE;
+  partition_name := 'events_' || TO_CHAR(start_date, 'YYYY_MM');
+
+  EXECUTE format(
+    'CREATE TABLE IF NOT EXISTS %I PARTITION OF events FOR VALUES FROM (%L) TO (%L)',
+    partition_name, start_date, end_date
+  );
+END;
+$$ LANGUAGE plpgsql;
+```
+
+### 分区裁剪
+
+查询条件包含分区键时，PostgreSQL 只扫描相关分区：
+
+```sql
+EXPLAIN SELECT * FROM events WHERE created_at >= '2026-06-01';
+-- Append
+--   -> Seq Scan on events_2026_06
+-- 不会扫描其他月份的分区
+```
+
+## 常见慢查询排查清单
+
+### 1. N+1 查询
+
+```typescript
+// 坏：N+1 查询
+const posts = await db.query('SELECT * FROM posts LIMIT 20');
+for (const post of posts.rows) {
+  const author = await db.query('SELECT * FROM users WHERE id = $1', [post.author_id]);
+  // 20 次额外查询
+}
+
+// 好：JOIN 一次搞定
+const result = await db.query(`
+  SELECT p.*, u.name AS author_name
+  FROM posts p
+  JOIN users u ON p.author_id = u.id
+  LIMIT 20
+`);
+```
+
+### 2. SELECT * 滥用
+
+```sql
+-- 坏：传输不需要的列，无法利用覆盖索引
+SELECT * FROM posts WHERE author_id = 42;
+
+-- 好：只查需要的列，可能走覆盖索引
+SELECT id, title, created_at FROM posts WHERE author_id = 42;
+```
+
+### 3. OFFSET 分页性能
+
+```sql
+-- 坏：OFFSET 越大越慢（需要扫描并跳过前面的行）
+SELECT * FROM posts ORDER BY created_at DESC OFFSET 10000 LIMIT 20;
+
+-- 好：游标分页（利用索引）
+SELECT * FROM posts
+WHERE created_at < '2026-06-20T00:00:00Z'
+ORDER BY created_at DESC LIMIT 20;
+```
+
+### 4. 统计信息过期
+
+```sql
+-- 检查统计信息是否更新
+SELECT relname, n_live_tup, last_analyze, last_autoanalyze
+FROM pg_stat_user_tables;
+
+-- 手动更新统计信息
+ANALYZE posts;
+```
+
+### 5. 锁等待
+
+```sql
+-- 查看锁等待
+SELECT
+  blocked.pid AS blocked_pid,
+  blocked.query AS blocked_query,
+  blocking.pid AS blocking_pid,
+  blocking.query AS blocking_query
+FROM pg_stat_activity blocked
+JOIN pg_stat_activity blocking
+  ON blocking.pid = ANY(pg_blocking_pids(blocked.pid));
+
+-- 终止长时间运行的查询
+SELECT pg_terminate_backend(pid) FROM pg_stat_activity
+WHERE state = 'active' AND now() - query_start > INTERVAL '5 minutes';
+```
+
+## 监控指标
+
+| 指标 | 查询方式 | 告警阈值 |
+| --- | --- | --- |
+| 连接数 | `SELECT count(*) FROM pg_stat_activity` | > max_connections * 0.8 |
+| 死锁 | `SELECT deadlocks FROM pg_stat_database` | > 0 |
+| 缓存命中率 | `SELECT sum(blks_hit) / sum(blks_hit + blks_read) FROM pg_stat_database` | < 0.95 |
+| 事务回滚率 | `SELECT xact_rollback / (xact_commit + xact_rollback) FROM pg_stat_database` | > 0.01 |
+| 表膨胀率 | `n_dead_tup / n_live_tup` | > 0.2 |
+| 慢查询 | pg_stat_statements 扩展 | > 1s |
+
+## 小结
+
+PostgreSQL 性能优化的核心思路：
+
+1. **先测量，再优化** — 用 EXPLAIN ANALYZE 找到真正的瓶颈
+2. **索引设计遵循查询模式** — 复合索引的列顺序很重要
+3. **连接池是必须的** — PgBouncer + 应用层池化
+4. **VACUUM 不能忽视** — 监控膨胀率，调优 autovacuum
+5. **大表考虑分区** — 时间序列数据按月分区是最常见的模式
+6. **避免 N+1 和大 OFFSET** — 这是应用层最常见的数据库性能杀手
+
+性能优化是一个持续过程，不是一次性工作。建立监控、定期审查慢查询、保持统计信息更新，比任何单次优化都重要。
+]]></content:encoded>
+            <_reading_time>
+                <readingTime>12 min read</readingTime>
+            </_reading_time>
+        </item>
+        <item>
+            <title><![CDATA[PostgreSQL 性能调优：从慢查询到索引优化]]></title>
+            <link>http://localhost:3000/blog/postgresql-performance-tuning</link>
+            <guid isPermaLink="false">http://localhost:3000/blog/postgresql-performance-tuning</guid>
+            <pubDate>Thu, 25 Jun 2026 00:00:00 GMT</pubDate>
+            <description><![CDATA[PostgreSQL 在生产环境中的性能优化实践，涵盖 EXPLAIN ANALYZE 解读、索引策略（B-Tree/GIN/GiST）、连接池配置、VACUUM 调优和分区表实战。]]></description>
+            <content:encoded><![CDATA[
+> 数据库慢起来要人命。这篇文章讲 PostgreSQL 在生产环境中的性能调优实践——从读懂 EXPLAIN ANALYZE 开始，到索引选型、连接池、VACUUM 和分区表。
+
+## 先定位问题：EXPLAIN ANALYZE
+
+调优的第一步不是加索引，而是搞清楚慢在哪里。`EXPLAIN ANALYZE` 是 PostgreSQL 最强大的诊断工具——它不仅显示执行计划，还会实际执行查询并报告每一步的耗时。
+
+```sql
+EXPLAIN ANALYZE
+SELECT u.id, u.name, COUNT(o.id) AS order_count
+FROM users u
+LEFT JOIN orders o ON o.user_id = u.id
+WHERE u.created_at > '2026-01-01'
+GROUP BY u.id, u.name
+ORDER BY order_count DESC
+LIMIT 20;
+```
+
+输出大致长这样：
+
+```text
+Limit  (cost=1234.56..1234.78 rows=20 width=48) (actual time=45.234..45.256 rows=20 loops=1)
+  ->  Sort  (cost=1234.56..1250.00 rows=1000 width=48) (actual time=45.230..45.240 rows=20 loops=1)
+        Sort Key: (count(o.id)) DESC
+        Sort Method: top-N heapsort  Memory: 30kB
+        ->  Hash Join  (cost=500.12..1200.00 rows=1000 width=48) (actual time=20.123..40.456 rows=5000 loops=1)
+              Hash Cond: (o.user_id = u.id)
+              ->  Seq Scan on orders o  (cost=0.00..400.00 rows=20000 width=12) (actual time=0.012..15.234 rows=20000 loops=1)
+              ->  Hash  (cost=450.00..450.00 rows=5000 width=40) (actual time=10.123..10.123 rows=5000 loops=1)
+                    ->  Seq Scan on users u  (cost=0.00..450.00 rows=5000 width=40) (actual time=0.012..8.456 rows=5000 loops=1)
+                          Filter: (created_at > '2026-01-01'::date)
+                          Rows Removed by Filter: 5000
+Planning Time: 0.234 ms
+Execution Time: 45.678 ms
+```
+
+读懂这段输出的关键：
+
+- **`Seq Scan`**：全表扫描。小表无所谓，大表出现 Seq Scan 通常意味着缺索引。
+- **`Index Scan` / `Index Only Scan`**：走了索引。`Index Only Scan` 是最优的，因为不需要回表。
+- **`Rows Removed by Filter`**：被过滤掉的行数。如果这个数字远大于返回行数，说明索引建错了位置。
+- **`actual time`**：实际耗时。注意是累计值，从该节点开始算起。
+- **`loops`**：循环次数。嵌套循环连接时内表可能被扫描很多次，`actual time` 是单次耗时，总耗时需要乘以 `loops`。
+- **`Sort Method: external merge`**：排序用了磁盘。调大 `work_mem` 可以让它走内存。
+
+加 `BUFFERS` 选项可以看到内存和磁盘 IO 情况，更有用：
+
+```sql
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT * FROM orders WHERE user_id = 123;
+```
+
+```text
+Index Scan using orders_user_id_idx on orders  (cost=0.29..8.31 rows=1 width=100) (actual time=0.015..0.018 rows=3 loops=1)
+  Index Cond: (user_id = 123)
+  Buffers: shared hit=4
+Planning Time: 0.123 ms
+Execution Time: 0.045 ms
+```
+
+`shared hit` 表示命中缓存，`shared read` 表示从磁盘读。如果 `read` 远大于 `hit`，说明数据没在内存里，可能需要调大 `shared_buffers`。
+
+## 索引类型选择
+
+索引不是越多越好——每个索引都会拖慢写入。选对类型比加索引更重要。
+
+### B-Tree（默认，最常用）
+
+适合等值查询、范围查询、排序。PostgreSQL 默认创建的就是 B-Tree。
+
+```sql
+-- 普通索引
+CREATE INDEX idx_orders_user_id ON orders(user_id);
+
+-- 复合索引（注意列顺序，最左前缀原则）
+CREATE INDEX idx_orders_user_status ON orders(user_id, status, created_at);
+
+-- 部分索引——只索引满足条件的行，节省空间
+CREATE INDEX idx_orders_pending ON orders(created_at)
+  WHERE status = 'pending';
+
+-- 表达式索引——对函数结果建索引
+CREATE INDEX idx_users_lower_email ON users(LOWER(email));
+```
+
+复合索引的列顺序很关键。把**等值条件**的列放前面，**范围条件**的列放后面：
+
+```sql
+-- 查询：WHERE user_id = 123 AND created_at > '2026-01-01'
+-- 这个索引能用上
+CREATE INDEX idx_orders_user_created ON orders(user_id, created_at);
+
+-- 这个索引用不上 created_at 的范围过滤（违反最左前缀）
+CREATE INDEX idx_orders_created_user ON orders(created_at, user_id);
+```
+
+### GIN（倒排索引）
+
+适合多值列：数组、JSONB、全文检索。GIN 索引查询快，但写入慢。
+
+```sql
+-- JSONB 字段查询
+CREATE INDEX idx_products_attrs ON products USING GIN (attributes);
+
+-- 现在可以高效查询 JSONB
+SELECT * FROM products WHERE attributes @> '{"color": "red"}';
+SELECT * FROM products WHERE attributes ? 'discount';
+
+-- 全文检索
+CREATE INDEX idx_articles_content ON articles USING GIN (to_tsvector('chinese', content));
+
+SELECT * FROM articles
+WHERE to_tsvector('chinese', content) @@ to_tsquery('PostgreSQL & 性能');
+
+-- 数组包含查询
+CREATE INDEX idx_tags ON posts USING GIN (tags);
+SELECT * FROM posts WHERE tags @> ARRAY['PostgreSQL', '数据库'];
+```
+
+### GiST（通用搜索树）
+
+适合几何数据、范围类型、最近邻搜索。
+
+```sql
+-- 地理位置查询（PostGIS）
+CREATE INDEX idx_stores_location ON stores USING GIST (location);
+
+-- 查找附近的店
+SELECT id, name, location <-> ST_Point(121.47, 31.23) AS distance
+FROM stores
+ORDER BY location <-> ST_Point(121.47, 31.23)
+LIMIT 10;
+
+-- 时间范围重叠查询
+CREATE INDEX idx_bookings_range ON bookings USING GIST (during);
+
+SELECT * FROM bookings
+WHERE during && tstzrange('2026-06-25 10:00', '2026-06-25 12:00');
+```
+
+### BRIN（块范围索引）
+
+适合时序数据——按物理顺序存储且有序的大表。BRIN 索引极小，但只适合范围扫描。
+
+```sql
+-- 日志表，按时间递增写入
+CREATE INDEX idx_logs_created_brin ON logs USING BRIN (created_at);
+
+-- 查询某天的日志，BRIN 能快速定位到对应的数据块
+SELECT * FROM logs WHERE created_at >= '2026-06-25' AND created_at < '2026-06-26';
+```
+
+### 索引类型速查
+
+| 索引类型 | 适用场景 | 写入开销 | 索引大小 |
+|----------|----------|----------|----------|
+| B-Tree | 等值、范围、排序 | 中 | 中 |
+| GIN | JSONB、数组、全文检索 | 高 | 大 |
+| GiST | 几何、范围、最近邻 | 中 | 中 |
+| BRIN | 时序、有序大表 | 极低 | 极小 |
+| Hash | 等值（不推荐，崩溃不安全） | 低 | 小 |
+
+### 索引使用情况检查
+
+建了索引不代表被用上了。定期检查无用索引：
+
+```sql
+-- 查找从未被使用的索引（需运行一段时间后统计才准）
+SELECT schemaname, relname, indexrelname, idx_scan
+FROM pg_stat_user_indexes
+WHERE idx_scan = 0
+  AND schemaname = 'public'
+ORDER BY pg_relation_size(indexrelid) DESC;
+
+-- 查找重复或冗余索引
+SELECT pg_size_pretty(sum(pg_relation_size(idx))::bigint) AS size,
+       (array_agg(idx))[1] AS idx1, (array_agg(idx))[2] AS idx2
+FROM (
+  SELECT indexrelid::regclass AS idx, indrelid::regclass AS table_name,
+         (indrelid::text || ' ' || indkey::text) AS key
+  FROM pg_index
+) sub
+GROUP BY key
+HAVING count(*) > 1;
+```
+
+## 连接池配置（PgBouncer）
+
+PostgreSQL 的连接是进程模型——每个连接 fork 一个进程，开销不小。连接数多了内存和 CPU 都扛不住。PgBouncer 在应用和数据库之间做连接池，用少量后端连接服务大量客户端。
+
+```ini
+; pgbouncer.ini
+[databases]
+mydb = host=127.0.0.1 port=5432 dbname=mydb
+
+[pgbouncer]
+listen_addr = 0.0.0.0
+listen_port = 6432
+auth_type = scram-sha-256
+auth_file = /etc/pgbouncer/userlist.txt
+
+; 连接池大小——这是最关键的参数
+pool_mode = transaction
+max_client_conn = 1000
+default_pool_size = 25
+reserve_pool_size = 5
+reserve_pool_timeout = 3
+
+; 超时
+server_idle_timeout = 600
+client_idle_timeout = 0
+query_wait_timeout = 120
+```
+
+`pool_mode` 三种模式：
+
+- **`session`**：会话级池化。客户端断开才归还连接。几乎没池化效果，不推荐。
+- **`transaction`**：事务级池化。事务结束就归还连接。**推荐**，池化效果最好。
+- **`statement`**：语句级池化。每条语句结束归还。不支持事务，限制太大。
+
+`transaction` 模式下要注意：不能用会话级特性（如 `SET`、临时表、`LISTEN/NOTIFY`、advisory lock）。如果业务依赖这些，要么改用 `session` 模式，要么把这些操作放到单独的连接。
+
+应用侧连接配置（以 Node.js 为例）：
+
+```typescript
+import { Pool } from 'pg';
+
+const pool = new Pool({
+  host: '127.0.0.1',
+  port: 6432, // 连 PgBouncer，不是直连 PostgreSQL
+  database: 'mydb',
+  user: 'app',
+  password: process.env.DB_PASSWORD,
+  max: 20, // 应用侧连接数，配合 PgBouncer 的 default_pool_size
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
+
+// 健康检查——定期执行简单查询
+setInterval(async () => {
+  try {
+    await pool.query('SELECT 1');
+  } catch (e) {
+    console.error('DB health check failed:', e);
+  }
+}, 30000);
+```
+
+`max` 配多少？经验公式：`应用实例数 × max ≤ PgBouncer 的 default_pool_size × 数据库 CPU 核数 × 2`。连接数不是越多越好——太多反而会因为上下文切换拖慢数据库。
+
+## VACUUM 和 autovacuum 调优
+
+PostgreSQL 的 MVCC 机制决定了：UPDATE 和 DELETE 不会立即回收空间，而是留下"死元组"，需要 VACUUM 清理。autovacuum 不调好，表会膨胀，查询会变慢。
+
+```sql
+-- 查看表的死元组情况
+SELECT relname, n_live_tup, n_dead_tup,
+       round(n_dead_tup::numeric / NULLIF(n_live_tup, 0) * 100, 2) AS dead_ratio,
+       last_autovacuum, last_autoanalyze
+FROM pg_stat_user_tables
+ORDER BY n_dead_tup DESC
+LIMIT 20;
+```
+
+### autovacuum 关键参数
+
+```ini
+# postgresql.conf
+autovacuum = on                    # 必须开启
+autovacuum_max_workers = 6         # 并发 worker 数，大表多时调大
+autovacuum_naptime = 30s           # 检查间隔
+autovacuum_vacuum_threshold = 50   # 死元组超过这个数才触发
+autovacuum_vacuum_scale_factor = 0.1  # 死元组比例超过 10% 触发
+autovacuum_analyze_scale_factor = 0.05
+```
+
+`scale_factor` 是关键参数。默认 0.1 意味着表有 10% 的行变成死元组才触发 VACUUM。对大表来说这个阈值太高——一千万行的表要等一百万行死元组才清理。
+
+### 针对大表的定制化配置
+
+```sql
+-- 对特定表设置更激进的 autovacuum 阈值
+ALTER TABLE big_logs SET (
+  autovacuum_vacuum_scale_factor = 0.01,  -- 1% 就触发
+  autovacuum_vacuum_threshold = 1000,
+  autovacuum_analyze_scale_factor = 0.01
+);
+
+-- 对频繁更新的表设置更频繁的清理
+ALTER TABLE user_sessions SET (
+  autovacuum_vacuum_scale_factor = 0.05,
+  autovacuum_naptime = 10
+);
+```
+
+### 手动 VACUUM 的时机
+
+autovacuum 是后台低优先级进程，清理速度可能跟不上。这些情况需要手动 VACUUM：
+
+```sql
+-- 大表批量删除后，立即回收空间（会锁表，谨慎使用）
+VACUUM FULL big_logs;  -- 重写表，回收空间，但会阻塞读写
+
+-- 更好的选择——pg_repack（不锁表）
+-- pg_repack -t big_logs -d mydb
+
+-- 只更新统计信息，不清理（轻量）
+ANALYZE big_logs;
+
+-- 普通清理，不锁表，但不回收空间给操作系统
+VACUUM big_logs;
+```
+
+`VACUUM FULL` 会重写整个表并回收磁盘空间，但会持有排他锁。生产环境用 `pg_repack` 扩展替代——它在后台重建表，不阻塞业务。
+
+## 表分区实战
+
+单表数据量超过千万行后，查询、维护都会变慢。分区把大表拆成小表，查询只扫描相关分区。
+
+### 范围分区（最常用）
+
+按时间范围分区，适合日志、订单这类时序数据。
+
+```sql
+-- 创建分区父表
+CREATE TABLE orders (
+  id BIGSERIAL,
+  user_id BIGINT NOT NULL,
+  amount DECIMAL(10, 2) NOT NULL,
+  status VARCHAR(20) NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL,
+  PRIMARY KEY (id, created_at)  -- 分区键必须在主键里
+) PARTITION BY RANGE (created_at);
+
+-- 按月创建分区
+CREATE TABLE orders_2026_01 PARTITION OF orders
+  FOR VALUES FROM ('2026-01-01') TO ('2026-02-01');
+
+CREATE TABLE orders_2026_02 PARTITION OF orders
+  FOR VALUES FROM ('2026-02-01') TO ('2026-03-01');
+
+CREATE TABLE orders_2026_06 PARTITION OF orders
+  FOR VALUES FROM ('2026-06-01') TO ('2026-07-01');
+
+-- 默认分区（兜底，防止插入失败）
+CREATE TABLE orders_default PARTITION OF orders DEFAULT;
+
+-- 每个分区可以单独建索引
+CREATE INDEX idx_orders_2026_06_user ON orders_2026_06(user_id);
+CREATE INDEX idx_orders_2026_06_status ON orders_2026_06(status, created_at);
+```
+
+查询时 PostgreSQL 会自动做分区裁剪（Partition Pruning），只扫描相关分区：
+
+```sql
+-- 只扫描 orders_2026_06 分区
+EXPLAIN SELECT * FROM orders
+WHERE created_at >= '2026-06-01' AND created_at < '2026-07-01';
+```
+
+### 列表分区
+
+按离散值分区，适合按地区、租户分表。
+
+```sql
+CREATE TABLE users_by_region (
+  id BIGSERIAL,
+  name VARCHAR(100),
+  region VARCHAR(20) NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (id, region)
+) PARTITION BY LIST (region);
+
+CREATE TABLE users_cn PARTITION OF users_by_region
+  FOR VALUES IN ('cn', 'hk', 'tw');
+
+CREATE TABLE users_us PARTITION OF users_by_region
+  FOR VALUES IN ('us', 'ca');
+
+CREATE TABLE users_eu PARTITION OF users_by_region
+  FOR VALUES IN ('uk', 'de', 'fr', 'es');
+
+CREATE TABLE users_other PARTITION OF users_by_region DEFAULT;
+```
+
+### 自动分区管理
+
+手动建分区太麻烦，用 `pg_partman` 扩展自动管理：
+
+```sql
+CREATE EXTENSION pg_partman;
+
+-- 自动按月分区，预创建未来 3 个月的分区
+SELECT partman.create_parent(
+  'public.orders',
+  'created_at',
+  'native',
+  'monthly',
+  p_premake := 3
+);
+
+-- 定时任务自动维护分区（创建新分区、清理旧分区）
+-- 配合 pg_cron 扩展
+SELECT cron.schedule('partman_maintenance', '0 3 * * *', $$SELECT partman.run_maintenance_proc()$$);
+```
+
+### 分区表的老数据归档
+
+```sql
+-- 分离旧分区（不删数据，变成普通表）
+ALTER TABLE orders DETACH PARTITION orders_2024_01;
+
+-- 归档到冷存储
+ALTER TABLE orders_2024_01 SET TABLESPACE cold_storage;
+
+-- 或者直接删除（确认备份后）
+DROP TABLE orders_2024_01;
+```
+
+## 常见慢查询场景和解决方案
+
+### 场景一：N+1 查询
+
+应用层 ORM 容易产生 N+1 查询。数据库层面看不出问题，但往返次数爆炸。
+
+```sql
+-- 错误：循环里查关联
+-- SELECT * FROM users WHERE id IN (...) -- 1 次
+-- SELECT * FROM orders WHERE user_id = ? -- N 次
+
+-- 正确：一次 JOIN 搞定
+SELECT u.id, u.name, o.id AS order_id, o.amount
+FROM users u
+LEFT JOIN LATERAL (
+  SELECT * FROM orders WHERE user_id = u.id ORDER BY created_at DESC LIMIT 5
+) o ON true
+WHERE u.id IN (1, 2, 3, 4, 5);
+```
+
+### 场景二：深分页
+
+`OFFSET 100000 LIMIT 20` 要先扫描 10 万行再丢弃，越往后越慢。
+
+```sql
+-- 慢：OFFSET 越大越慢
+SELECT * FROM orders ORDER BY created_at DESC OFFSET 100000 LIMIT 20;
+
+-- 快：用游标分页（记住上一页最后一条的值）
+SELECT * FROM orders
+WHERE created_at < '2026-06-24 10:00:00'
+ORDER BY created_at DESC
+LIMIT 20;
+```
+
+如果必须用 OFFSET，配合覆盖索引减少回表：
+
+```sql
+-- 先用索引查出主键，再 JOIN 取数据
+SELECT o.* FROM orders o
+JOIN (
+  SELECT id FROM orders ORDER BY created_at DESC OFFSET 100000 LIMIT 20
+) tmp ON o.id = tmp.id;
+```
+
+### 场景三：COUNT(*) 慢
+
+PostgreSQL 的 `COUNT(*)` 要全表扫描，没有计数缓存。
+
+```sql
+-- 慢：精确计数
+SELECT COUNT(*) FROM orders WHERE status = 'pending';
+
+-- 快：近似计数（误差约 5%）
+SELECT reltuples::bigint FROM pg_class WHERE relname = 'orders';
+
+-- 或者维护计数表
+CREATE TABLE order_counts (status VARCHAR PRIMARY KEY, cnt BIGINT);
+UPDATE order_counts SET cnt = cnt + 1 WHERE status = 'pending';
+```
+
+### 场景四：OR 条件走不上索引
+
+```sql
+-- 慢：OR 条件可能导致全表扫描
+SELECT * FROM orders WHERE user_id = 123 OR amount > 1000;
+
+-- 快：拆成 UNION ALL，各自走索引
+SELECT * FROM orders WHERE user_id = 123
+UNION
+SELECT * FROM orders WHERE amount > 1000 AND user_id <> 123;
+```
+
+### 场景五：隐式类型转换
+
+```sql
+-- 慢：created_at 是 timestamp，传字符串可能不走索引
+SELECT * FROM orders WHERE created_at = '2026-06-25';
+
+-- 快：显式类型转换
+SELECT * FROM orders WHERE created_at = '2026-06-25'::timestamptz;
+
+-- 慢：user_id 是 bigint，传字符串
+SELECT * FROM orders WHERE user_id = '123';
+
+-- 快：传整数
+SELECT * FROM orders WHERE user_id = 123;
+```
+
+## 关键配置参数
+
+```ini
+# postgresql.conf 核心参数
+shared_buffers = 4GB              # 总内存的 25%
+effective_cache_size = 12GB       # 总内存的 75%，告诉优化器可用缓存
+work_mem = 64MB                   # 单个排序/哈希的内存，调大避免磁盘排序
+maintenance_work_mem = 512MB      # VACUUM、建索引的内存
+max_connections = 100             # 配合 PgBouncer，不要设太大
+random_page_cost = 1.1            # SSD 调低，让优化器更倾向走索引
+effective_io_concurrency = 200    # SSD 调高，提升并行 IO
+checkpoint_completion_target = 0.9
+wal_buffers = 16MB
+max_wal_size = 4GB
+```
+
+`random_page_cost` 默认是 4.0（针对机械硬盘），SSD 上调到 1.1，优化器会更倾向用索引。这个参数被很多人忽略，但对查询计划影响很大。
+
+## 总结
+
+PostgreSQL 性能调优的核心思路：
+
+- **先诊断，后优化**——用 `EXPLAIN ANALYZE` 定位瓶颈，别盲目加索引
+- **选对索引类型**——B-Tree 不是万能的，JSONB 用 GIN，时序用 BRIN
+- **连接池必备**——PgBouncer 的 `transaction` 模式是生产标配
+- **autovacuum 要调**——大表用更激进的阈值，别用默认值
+- **大表要分区**——范围分区处理时序数据，配合 pg_partman 自动管理
+- **配置要匹配硬件**——`shared_buffers`、`work_mem`、`random_page_cost` 这几个最关键
+
+调优是持续过程。上线后用 `pg_stat_statements` 监控慢查询，定期回顾索引使用情况，该删的索引果断删。
+
+参考：[PostgreSQL 官方文档](https://www.postgresql.org/docs/)、[EXPLAIN 文档](https://www.postgresql.org/docs/current/sql-explain.html)、[PgBouncer 文档](https://www.pgbouncer.org/)
+]]></content:encoded>
+            <_reading_time>
+                <readingTime>18 min read</readingTime>
             </_reading_time>
         </item>
         <item>
@@ -2627,6 +4468,922 @@ Cloudflare Workers 是我最推荐的无服务器平台。门槛低（一个文�
 ]]></content:encoded>
             <_reading_time>
                 <readingTime>7 min read</readingTime>
+            </_reading_time>
+        </item>
+        <item>
+            <title><![CDATA[CI/CD 流水线设计：从单脚本到 GitHub Actions 多阶段流水线]]></title>
+            <link>http://localhost:3000/blog/cicd-pipeline-design</link>
+            <guid isPermaLink="false">http://localhost:3000/blog/cicd-pipeline-design</guid>
+            <pubDate>Thu, 25 Jun 2026 00:00:00 GMT</pubDate>
+            <description><![CDATA[从零搭建 CI/CD 流水线，涵盖流水线阶段设计、并行与串行策略、缓存优化、制品管理和部署策略，以 GitHub Actions 为例。]]></description>
+            <content:encoded><![CDATA[
+> 手动部署是事故的温床。这篇文章讲如何从零设计 CI/CD 流水线——阶段划分、并行策略、缓存优化、制品管理和部署策略，以 GitHub Actions 为例。
+
+## 为什么要设计流水线
+
+很多人刚开始自动化部署就是写个 shell 脚本：拉代码、装依赖、构建、上传、重启服务。能用，但问题一堆：
+
+- **没有质量门禁**——测试没跑就上线了
+- **不可复现**——"我本地能跑"的经典场景
+- **没有回滚机制**——上线出问题只能手动修
+- **串行执行**——所有步骤排队，慢得要命
+- **没有缓存**——每次都重新装依赖、重新构建
+
+好的流水线应该像工厂流水线——每个阶段职责明确、可独立验证、失败可快速定位、成功可自动推进。
+
+## 流水线阶段设计原则
+
+一条成熟的流水线通常包含这些阶段，按执行顺序排列：
+
+```text
+lint → type-check → test → build → deploy
+```
+
+每个阶段的设计原则：
+
+| 阶段 | 作用 | 失败策略 | 执行速度 |
+|------|------|----------|----------|
+| lint | 代码风格检查 | 阻断 | 极快（< 30s） |
+| type-check | 类型检查 | 阻断 | 快（< 1min） |
+| test | 单元测试 + 集成测试 | 阻断 | 中（1-5min） |
+| build | 构建制品 | 阻断 | 中（1-5min） |
+| deploy | 部署到环境 | 阻断/通知 | 慢（视环境） |
+
+**核心原则：快速失败**。把快的检查放前面，慢的放后面。lint 失败就没必要跑测试了——尽早暴露问题，节省 CI 资源。
+
+### 基础流水线骨架
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+# 同一分支新推送时取消旧的运行
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # 阶段 1：代码质量检查（最快，先跑）
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+
+  # 阶段 2：类型检查
+  type-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm type-check
+
+  # 阶段 3：测试
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test --coverage
+
+  # 阶段 4：构建（依赖前面三个阶段通过）
+  build:
+    needs: [lint, type-check, test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: dist/
+          retention-days: 7
+```
+
+注意 `needs` 关键字——它定义了 job 之间的依赖关系。`build` 依赖 `lint`、`type-check`、`test` 三个 job，只有它们都通过才会执行。而前三个 job 之间没有依赖，会**并行执行**。
+
+## 并行与串行策略
+
+### 并行执行独立任务
+
+lint、type-check、test 之间没有依赖关系，应该并行执行。上面的配置已经实现了这一点——它们都没有 `needs` 指向彼此。
+
+```yaml
+# 这三个 job 并行执行
+lint:
+  runs-on: ubuntu-latest
+  # ...
+
+type-check:
+  runs-on: ubuntu-latest
+  # ...
+
+test:
+  runs-on: ubuntu-latest
+  # ...
+
+# build 等待全部完成
+build:
+  needs: [lint, type-check, test]
+  # ...
+```
+
+并行的好处是总耗时等于最慢的那个 job，而不是所有 job 之和。如果 lint 30s、type-check 60s、test 120s，串行要 210s，并行只要 120s。
+
+### 串行执行有依赖的任务
+
+部署有环境顺序要求——先部署到预发，验证通过再部署到生产：
+
+```yaml
+deploy-staging:
+  needs: build
+  runs-on: ubuntu-latest
+  if: github.ref == 'refs/heads/main'
+  environment: staging
+  steps:
+    - uses: actions/download-artifact@v4
+      with:
+        name: build-output
+        path: dist/
+    - name: Deploy to staging
+      run: |
+        rsync -avz dist/ user@staging:/var/www/app/
+        ssh user@staging 'systemctl restart app'
+
+deploy-production:
+  needs: deploy-staging
+  runs-on: ubuntu-latest
+  if: github.ref == 'refs/heads/main'
+  environment:
+    name: production
+    url: https://app.example.com
+  steps:
+    - uses: actions/download-artifact@v4
+      with:
+        name: build-output
+        path: dist/
+    - name: Deploy to production
+      run: |
+        rsync -avz dist/ user@prod:/var/www/app/
+        ssh user@prod 'systemctl restart app'
+```
+
+`environment` 关键字不只是注释——它会触发 GitHub 的环境保护规则，可以配置必需的审批人、等待时间、部署分支限制。生产环境的部署必须有人工审批，这是最后一道防线。
+
+### 并行测试分片
+
+测试套件太大时，可以拆分成多个分片并行执行：
+
+```yaml
+test:
+  runs-on: ubuntu-latest
+  strategy:
+    matrix:
+      shard: [1, 2, 3, 4]
+  steps:
+    - uses: actions/checkout@v4
+    - uses: pnpm/action-setup@v3
+      with:
+        version: 9
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'pnpm'
+    - run: pnpm install --frozen-lockfile
+    - run: pnpm test --shard=${{ matrix.shard }}/4
+```
+
+Vitest 原生支持分片：`vitest --shard=1/4` 会只运行 1/4 的测试。4 个分片并行，测试时间缩短到原来的 1/4。
+
+## 缓存优化
+
+缓存是 CI 加速的关键。每次都重新装依赖、重新构建，浪费时间也浪费钱。
+
+### pnpm store 缓存
+
+`actions/setup-node` 内置了 pnpm 缓存支持，但配置要对：
+
+```yaml
+- uses: pnpm/action-setup@v3
+  with:
+    version: 9
+- uses: actions/setup-node@v4
+  with:
+    node-version: 20
+    cache: 'pnpm'  # 关键：指定缓存 pnpm store
+```
+
+如果需要更精细的控制，手动缓存：
+
+```yaml
+- name: Get pnpm store directory
+  id: pnpm-cache
+  shell: bash
+  run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+- name: Setup pnpm cache
+  uses: actions/cache@v4
+  with:
+    path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+    key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+    restore-keys: |
+      ${{ runner.os }}-pnpm-store-
+```
+
+`key` 用 lockfile 的 hash——依赖变了缓存自动失效。`restore-keys` 是回退策略——lockfile 变了也能部分命中（大部分依赖没变）。
+
+### 构建缓存
+
+构建产物也可以缓存。Next.js、Vite 等工具的构建缓存目录：
+
+```yaml
+- name: Cache build
+  uses: actions/cache@v4
+  with:
+    path: |
+      .next/cache
+      node_modules/.cache
+    key: ${{ runner.os }}-build-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('src/**', 'pages/**', 'app/**') }}
+    restore-keys: |
+      ${{ runner.os }}-build-
+```
+
+### Docker 构建缓存
+
+Docker 构建用 BuildKit 的缓存挂载：
+
+```yaml
+- name: Build Docker image
+  uses: docker/build-push-action@v5
+  with:
+    context: .
+    push: true
+    tags: app:${{ github.sha }}
+    cache-from: type=gha
+    cache-to: type=gha,mode=max
+```
+
+`type=gha` 是 GitHub Actions 的缓存后端，`mode=max` 缓存所有层（包括中间层），下次构建直接复用。
+
+### 缓存命中率检查
+
+缓存不是配了就有效。定期检查命中率：
+
+```yaml
+- name: Cache hit check
+  if: steps.pnpm-cache.outputs.cache-hit == 'true'
+  run: echo "Cache hit!"
+  # 如果总是 miss，检查 key 是否过于严格
+```
+
+## 矩阵构建
+
+矩阵构建用于在多种环境下测试——不同 Node 版本、不同操作系统、不同数据库版本。
+
+### 多 Node 版本测试
+
+```yaml
+test:
+  runs-on: ubuntu-latest
+  strategy:
+    fail-fast: false  # 一个失败不取消其他
+    matrix:
+      node-version: [18, 20, 22]
+  steps:
+    - uses: actions/checkout@v4
+    - uses: pnpm/action-setup@v3
+      with:
+        version: 9
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'pnpm'
+    - run: pnpm install --frozen-lockfile
+    - run: pnpm test
+```
+
+`fail-fast: false` 很重要——默认 `true` 会在一个版本失败时取消其他版本的测试。调试兼容性问题时，你需要看到所有版本的完整结果。
+
+### 多平台 + 多版本组合
+
+```yaml
+test:
+  strategy:
+    fail-fast: false
+    matrix:
+      os: [ubuntu-latest, macos-latest, windows-latest]
+      node-version: [18, 20, 22]
+  runs-on: ${{ matrix.os }}
+  steps:
+    - uses: actions/checkout@v4
+    - uses: pnpm/action-setup@v3
+      with:
+        version: 9
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'pnpm'
+    - run: pnpm install --frozen-lockfile
+    - run: pnpm test
+```
+
+这会生成 9 个 job（3 OS × 3 Node）。注意 Windows 上 pnpm 的路径处理可能有问题，需要测试。
+
+### 矩阵的排除和包含
+
+```yaml
+strategy:
+  matrix:
+    os: [ubuntu-latest, macos-latest]
+    node-version: [18, 20, 22]
+    exclude:
+      # macOS 上不测 Node 18
+      - os: macos-latest
+        node-version: 18
+    include:
+      # 额外加一个 Linux + Node 22 的 lint job
+      - os: ubuntu-latest
+        node-version: 22
+        lint: true
+```
+
+## 制品管理
+
+构建产物（制品/artifacts）是流水线的核心——构建一次，部署多次。不要在每个环境都重新构建。
+
+### 上传和下载制品
+
+```yaml
+build:
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+    - uses: pnpm/action-setup@v3
+      with:
+        version: 9
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'pnpm'
+    - run: pnpm install --frozen-lockfile
+    - run: pnpm build
+
+    # 上传构建产物
+    - uses: actions/upload-artifact@v4
+      with:
+        name: dist-${{ github.sha }}
+        path: |
+          dist/
+          package.json
+          pnpm-lock.yaml
+        retention-days: 14
+        compression-level: 6
+
+deploy-staging:
+  needs: build
+  runs-on: ubuntu-latest
+  steps:
+    # 下载构建产物——不重新构建
+    - uses: actions/download-artifact@v4
+      with:
+        name: dist-${{ github.sha }}
+        path: ./
+    - name: Deploy
+      run: |
+        tar -czf dist.tar.gz dist/
+        scp dist.tar.gz user@staging:/tmp/
+        ssh user@staging 'tar -xzf /tmp/dist.tar.gz -C /var/www/app'
+```
+
+### Docker 镜像作为制品
+
+对于容器化部署，Docker 镜像就是制品。推送到镜像仓库后，各环境拉取即可：
+
+```yaml
+build-and-push:
+  needs: [lint, test]
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+    - uses: docker/setup-buildx-action@v3
+    - uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build and push
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: |
+          ghcr.io/${{ github.repository }}:${{ github.sha }}
+          ghcr.io/${{ github.repository }}:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        labels: |
+          org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          org.opencontainers.image.revision=${{ github.sha }}
+```
+
+用 commit SHA 作为镜像 tag——每次构建唯一标识，方便回滚到任意版本。
+
+## 部署策略
+
+### 蓝绿部署
+
+蓝绿部署维护两套完全相同的环境（蓝和绿），切换流量实现零停机部署。
+
+```yaml
+deploy-blue-green:
+  needs: build-and-push
+  runs-on: ubuntu-latest
+  environment: production
+  steps:
+    - uses: actions/checkout@v4
+
+    - name: Determine active environment
+      id: active
+      run: |
+        # 查询当前活跃环境（通过负载均衡器或 DNS）
+        ACTIVE=$(curl -s https://api.example.com/health/env)
+        echo "active=$ACTIVE" >> $GITHUB_OUTPUT
+        if [ "$ACTIVE" = "blue" ]; then
+          echo "target=green" >> $GITHUB_OUTPUT
+        else
+          echo "target=blue" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Deploy to inactive environment
+      run: |
+        TARGET=${{ steps.active.outputs.target }}
+        IMAGE=ghcr.io/${{ github.repository }}:${{ github.sha }}
+
+        # 部署到非活跃环境
+        ssh deploy@$TARGET.example.com "
+          docker pull $IMAGE
+          docker stop app || true
+          docker rm app || true
+          docker run -d --name app --restart always -p 3000:3000 $IMAGE
+        "
+
+    - name: Health check
+      run: |
+        TARGET=${{ steps.active.outputs.target }}
+        for i in {1..10}; do
+          if curl -f https://$TARGET.example.com/health; then
+            echo "Health check passed"
+            exit 0
+          fi
+          sleep 5
+        done
+        echo "Health check failed"
+        exit 1
+
+    - name: Switch traffic
+      run: |
+        TARGET=${{ steps.active.outputs.target }}
+        # 切换负载均衡器或 DNS 指向新环境
+        aws elbv2 modify-target-group-attributes \
+          --target-group-arn $TARGET_ARN \
+          # ... 切换逻辑
+        echo "Traffic switched to $TARGET"
+```
+
+蓝绿部署的优点是**秒级回滚**——出问题直接切回旧环境。缺点是需要双倍资源。
+
+### 滚动部署
+
+滚动部署逐步替换实例，不需要双倍资源，但回滚较慢。
+
+```yaml
+deploy-rolling:
+  needs: build-and-push
+  runs-on: ubuntu-latest
+  environment: production
+  steps:
+    - name: Rolling update
+      run: |
+        IMAGE=ghcr.io/${{ github.repository }}:${{ github.sha }}
+
+        # 获取所有实例
+        INSTANCES=$(aws ec2 describe-instances \
+          --filters "Name=tag:Role,Values=app" \
+          --query 'Reservations[].Instances[].PrivateIpAddress' \
+          --output text)
+
+        # 逐个更新——每次只更新一个，等健康检查通过再更新下一个
+        for INSTANCE in $INSTANCES; do
+          echo "Updating $INSTANCE..."
+
+          # 从负载均衡器摘除
+          aws elbv2 deregister-targets \
+            --target-group-arn $TG_ARN \
+            --targets Id=$INSTANCE
+
+          # 等待连接排空
+          sleep 10
+
+          # 更新实例
+          ssh deploy@$INSTANCE "
+            docker pull $IMAGE
+            docker stop app && docker rm app
+            docker run -d --name app --restart always -p 3000:3000 $IMAGE
+          "
+
+          # 健康检查
+          for i in {1..12}; do
+            if ssh deploy@$INSTANCE 'curl -f http://localhost:3000/health'; then
+              break
+            fi
+            sleep 5
+          done
+
+          # 重新加入负载均衡器
+          aws elbv2 register-targets \
+            --target-group-arn $TG_ARN \
+            --targets Id=$INSTANCE
+        done
+```
+
+### Kubernetes 部署
+
+K8s 环境下部署更简单——更新镜像 tag，K8s 自动处理滚动更新和回滚：
+
+```yaml
+deploy-k8s:
+  needs: build-and-push
+  runs-on: ubuntu-latest
+  environment: production
+  steps:
+    - uses: actions/checkout@v4
+
+    - name: Configure kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    - name: Set K8s context
+      uses: azure/k8s-set-context@v3
+      with:
+        kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+    - name: Deploy
+      run: |
+        # 滚动更新——只需更新镜像 tag
+        kubectl set image deployment/app \
+          app=ghcr.io/${{ github.repository }}:${{ github.sha }} \
+          -n production
+
+        # 等待 rollout 完成
+        kubectl rollout status deployment/app \
+          -n production \
+          --timeout=300s
+
+    - name: Rollback on failure
+      if: failure()
+      run: |
+        kubectl rollout undo deployment/app -n production
+        echo "Deployment failed, rolled back"
+```
+
+`kubectl rollout status` 会等待所有 Pod 更新完成。如果超时或失败，`if: failure()` 触发自动回滚。
+
+## 密钥管理
+
+CI/CD 里的密钥管理是安全重点。**永远不要把密钥写在 YAML 里**。
+
+### GitHub Secrets 配置
+
+在仓库的 Settings → Secrets and variables → Actions 中配置：
+
+```yaml
+deploy:
+  runs-on: ubuntu-latest
+  steps:
+    - name: Deploy with secrets
+      env:
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        API_KEY: ${{ secrets.API_KEY }}
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      run: |
+        # 配置 SSH
+        mkdir -p ~/.ssh
+        echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+
+        # 使用密钥（不会在日志中打印）
+        ssh deploy@server "DATABASE_PASSWORD=${DB_PASSWORD} ./deploy.sh"
+```
+
+GitHub 会自动遮蔽 secret 的值——即使脚本里 `echo $DB_PASSWORD`，日志里也只显示 `***`。
+
+### 环境级密钥
+
+不同环境用不同的密钥，通过 `environment` 隔离：
+
+```yaml
+deploy-staging:
+  environment: staging
+  env:
+    DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+  # ...
+
+deploy-production:
+  environment: production  # 需要审批
+  env:
+    DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+  # ...
+```
+
+生产环境的 `environment` 配置审批规则——必须有人工确认才能运行，防止误部署。
+
+### 短期密钥（OIDC）
+
+长期密钥有泄漏风险。用 OIDC 获取短期凭证更安全：
+
+```yaml
+permissions:
+  id-token: write  # 必须开启 OIDC
+  contents: read
+
+deploy-aws:
+  runs-on: ubuntu-latest
+  steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: arn:aws:iam::123456789012:role/github-actions
+        aws-region: ap-northeast-1
+        # 不需要 access-key-id 和 secret-access-key
+    - run: aws s3 sync dist/ s3://my-bucket/
+```
+
+OIDC 方式不需要在 GitHub 存 AWS 密钥——每次运行时通过角色扮演获取临时凭证，用完即弃。
+
+## 完整流水线示例
+
+把前面的内容组合成一条完整的多阶段流水线：
+
+```yaml
+# .github/workflows/deploy.yml
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false  # 部署不取消，避免中断
+
+jobs:
+  # === 质量门禁阶段（并行） ===
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+
+  type-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm type-check
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        shard: [1, 2]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test --shard=${{ matrix.shard }}/2 --coverage
+
+  # === 构建阶段 ===
+  build:
+    needs: [lint, type-check, test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
+            ghcr.io/${{ github.repository }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # === 部署预发 ===
+  deploy-staging:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: https://staging.example.com
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-kubectl@v3
+      - uses: azure/k8s-set-context@v3
+        with:
+          kubeconfig: ${{ secrets.STAGING_KUBE_CONFIG }}
+      - run: |
+          kubectl set image deployment/app \
+            app=ghcr.io/${{ github.repository }}:${{ github.sha }} \
+            -n staging
+          kubectl rollout status deployment/app -n staging --timeout=180s
+
+  # === 集成测试（预发环境） ===
+  e2e-test:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm e2e --base-url=https://staging.example.com
+        env:
+          E2E_TOKEN: ${{ secrets.E2E_TOKEN }}
+
+  # === 部署生产（需要审批） ===
+  deploy-production:
+    needs: e2e-test
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://example.com
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-kubectl@v3
+      - uses: azure/k8s-set-context@v3
+        with:
+          kubeconfig: ${{ secrets.PRODUCTION_KUBE_CONFIG }}
+      - run: |
+          kubectl set image deployment/app \
+            app=ghcr.io/${{ github.repository }}:${{ github.sha }} \
+            -n production
+          kubectl rollout status deployment/app -n production --timeout=300s
+      - name: Rollback on failure
+        if: failure()
+        run: kubectl rollout undo deployment/app -n production
+```
+
+这条流水线的执行流程：
+
+```text
+lint ─┐
+type-check ─┤
+test (shard 1) ─┼─→ build → deploy-staging → e2e-test → deploy-production
+test (shard 2) ─┘                                        (需审批)
+```
+
+总耗时约 8-12 分钟，其中质量门禁阶段 2-3 分钟（并行），构建 2-3 分钟，预发部署 + E2E 测试 3-4 分钟，生产部署 1-2 分钟。
+
+## 流水线设计要点
+
+### 1. 快速反馈
+
+PR 阶段只跑 lint + type-check + unit test，不跑构建和部署。让开发者在 2 分钟内得到反馈。
+
+```yaml
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  quick-check:
+    # 只跑快速检查，不构建不部署
+```
+
+### 2. 构建一次，部署多次
+
+不要在每个环境重新构建。构建产物用 commit SHA 标识，各环境拉取同一个制品。这保证了"测试通过的就是上线的"。
+
+### 3. 失败要可追溯
+
+每个步骤都要有清晰的日志。测试失败要上传报告：
+
+```yaml
+- uses: actions/upload-artifact@v4
+  if: always()  # 即使失败也上传
+  with:
+    name: test-report
+    path: coverage/
+    retention-days: 7
+```
+
+### 4. 部署要可回滚
+
+生产部署必须配回滚机制。K8s 用 `kubectl rollout undo`，蓝绿部署切回旧环境，Docker 切回旧 tag。回滚应该是自动的——部署失败立即回滚，不等人工介入。
+
+### 5. 监控流水线本身
+
+流水线也是系统，会出问题。监控 CI 的成功率和耗时：
+
+```yaml
+- name: Notify on failure
+  if: failure()
+  uses: slackapi/slack-github-action@v1
+  with:
+    slack-message: "Deploy failed: ${{ github.run_id }}"
+  env:
+    SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+```
+
+## 总结
+
+好的 CI/CD 流水线是团队效率的倍增器：
+
+- **阶段清晰**——lint → test → build → deploy，快速失败
+- **并行优先**——独立任务并行，有依赖才串行
+- **缓存必备**——依赖缓存、构建缓存、Docker 缓存，能省则省
+- **矩阵测试**——多版本多平台，保证兼容性
+- **制品管理**——构建一次部署多次，用 SHA 标识版本
+- **部署策略**——蓝绿秒级回滚，滚动节省资源，K8s 自动化
+- **密钥安全**——Secrets 管理，环境隔离，OIDC 短期凭证
+- **自动回滚**——部署失败自动回滚，不等人工
+
+流水线是演进的。从最简单的 lint + test 开始，逐步加构建、部署、缓存、矩阵。不要一开始就设计完美流水线——先跑起来，再优化。
+
+参考：[GitHub Actions 文档](https://docs.github.com/en/actions)、[Docker Build Push Action](https://github.com/docker/build-push-action)、[Kubernetes 部署文档](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)
+]]></content:encoded>
+            <_reading_time>
+                <readingTime>20 min read</readingTime>
             </_reading_time>
         </item>
     </channel>

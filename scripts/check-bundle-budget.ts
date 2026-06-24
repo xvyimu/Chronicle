@@ -25,11 +25,11 @@ interface BudgetConfig {
 /** Budget thresholds — adjust as the project grows */
 const BUDGETS: BudgetConfig[] = [
   { prefix: 'chunks/', maxSingleKB: 300, description: 'JS chunks (per file)' },
-  { prefix: 'css', maxSingleKB: 100, description: 'CSS bundles' },
+  { prefix: 'css', maxSingleKB: 300, description: 'CSS bundles (incl. Shiki themes)' },
 ];
 
-/** Total static output budget in KB */
-const TOTAL_BUDGET_KB = 2048; // 2 MB total
+/** Total static output budget in KB (excludes font files, which are loaded on demand) */
+const TOTAL_BUDGET_KB = 2048; // 2 MB total (JS + CSS only)
 
 const STATIC_DIR = join(process.cwd(), '.next', 'static');
 
@@ -75,7 +75,12 @@ function checkBudgets(): { passed: boolean; violations: string[] } {
     const relPath = getRelativePath(file);
     const sizeBytes = statSync(file).size;
     const sizeKB = sizeBytes / 1024;
-    totalKB += sizeKB;
+
+    // Skip font files — they're subsetted by next/font and loaded on demand
+    const isFont = relPath.includes('/media/') || relPath.endsWith('.woff2') || relPath.endsWith('.woff');
+    if (!isFont) {
+      totalKB += sizeKB;
+    }
 
     for (const budget of BUDGETS) {
       if (relPath.includes(budget.prefix)) {

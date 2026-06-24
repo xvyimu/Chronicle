@@ -1,0 +1,434 @@
+---
+title: 'PostgreSQL 性能优化实战：慢查询排查与索引策略'
+description: 'PostgreSQL 在生产环境中的性能优化方法：EXPLAIN 分析、索引策略（B-Tree/GIN/GiST）、连接池配置、VACUUM 与表膨胀治理、分区表实践，以及常见慢查询的排查思路。'
+date: '2026-06-27'
+tags: ['PostgreSQL', '数据库', '性能优化', '后端']
+published: true
+featured: false
+---
+
+> 数据库慢查询是后端最常见的问题。这篇文章讲 PostgreSQL 性能优化的实战经验——从 EXPLAIN 分析到索引设计。
+
+## 性能问题的第一信号
+
+当你发现 API 响应变慢，先确认是不是数据库的问题：
+
+```sql
+-- 查看当前活跃连接和正在执行的查询
+SELECT pid, state, query, query_start, now() - query_start AS duration
+FROM pg_stat_activity
+WHERE state != 'idle'
+ORDER BY duration DESC;
+
+-- 查看慢查询日志（需要配置 log_min_duration_statement）
+-- postgresql.conf:
+-- log_min_duration_statement = 100  -- 记录超过 100ms 的查询
+-- log_line_prefix = '%t [%p] %u@%d '
+```
+
+如果确认是数据库慢，下一步就是用 `EXPLAIN ANALYZE` 分析查询计划。
+
+## EXPLAIN ANALYZE：读懂查询计划
+
+### 基本用法
+
+```sql
+EXPLAIN ANALYZE
+SELECT * FROM posts WHERE author_id = 42 ORDER BY created_at DESC LIMIT 10;
+```
+
+输出示例：
+
+```
+Limit  (cost=0.42..12.47 rows=10 width=256) (actual time=0.025..0.048 rows=10 loops=1)
+  ->  Index Scan using idx_posts_author_created on posts  (cost=0.42..45.20 rows=50 width=256) (actual time=0.024..0.046 rows=10 loops=1)
+        Index Cond: (author_id = 42)
+        Filter: (deleted_at IS NULL)
+Planning Time: 0.15 ms
+Execution Time: 0.08 ms
+```
+
+### 关键指标
+
+| 指标 | 含义 | 关注点 |
+| --- | --- | --- |
+| `Seq Scan` | 全表扫描 | 大表出现通常意味着缺索引 |
+| `Index Scan` | 索引扫描 | 理想情况 |
+| `Bitmap Heap Scan` | 位图扫描 | 介于两者之间，大量行匹配时常见 |
+| `cost` | 优化器估算成本 | 第一行是启动成本，第二行是总成本 |
+| `actual time` | 实际执行时间 | 和 cost 对比，差异大说明统计信息过期 |
+| `rows` | 返回行数 | 估算值和实际值差异大时需要 ANALYZE |
+| `loops` | 循环次数 | 嵌套循环连接时关注 |
+
+### 常见问题模式
+
+**Seq Scan on large table** — 全表扫描大表，通常需要加索引：
+
+```sql
+-- 优化前：Seq Scan，扫描 100 万行
+EXPLAIN ANALYZE SELECT * FROM orders WHERE customer_id = 1001;
+-- Seq Scan on orders (cost=0.00..23456.78 rows=5 width=128) (actual time=1.234..567.890 rows=3 loops=1)
+
+-- 加索引后：Index Scan
+CREATE INDEX idx_orders_customer ON orders(customer_id);
+-- Index Scan using idx_orders_customer on orders (cost=0.42..8.44 rows=3 width=128) (actual time=0.015..0.018 rows=3 loops=1)
+```
+
+**Nested Loop with high cost** — 嵌套循环连接大表，考虑改用 Hash Join：
+
+```sql
+-- 强制使用 Hash Join（测试用，不要在生产环境随意加 hint）
+SET enable_nestloop = off;
+EXPLAIN ANALYZE SELECT * FROM orders o JOIN customers c ON o.customer_id = c.id;
+```
+
+## 索引策略
+
+### B-Tree 索引（默认）
+
+适合等值查询、范围查询、排序：
+
+```sql
+-- 单列索引
+CREATE INDEX idx_posts_created ON posts(created_at DESC);
+
+-- 复合索引（注意列顺序：等值条件在前，范围条件在后）
+CREATE INDEX idx_orders_customer_status_date
+  ON orders(customer_id, status, created_at DESC);
+
+-- 这个索引可以服务以下查询：
+SELECT * FROM orders WHERE customer_id = 100 AND status = 'paid' ORDER BY created_at DESC;
+SELECT * FROM orders WHERE customer_id = 100 AND status = 'paid';
+SELECT * FROM orders WHERE customer_id = 100;
+-- 但不能高效服务：
+SELECT * FROM orders WHERE status = 'paid';  -- 跳过了 customer_id
+```
+
+### 部分索引（Partial Index）
+
+只索引满足条件的行，节省空间并提高查询效率：
+
+```sql
+-- 只索引未删除的帖子
+CREATE INDEX idx_posts_active ON posts(created_at DESC)
+  WHERE deleted_at IS NULL;
+
+-- 只索引待处理订单
+CREATE INDEX idx_orders_pending ON orders(created_at)
+  WHERE status = 'pending';
+```
+
+### 表达式索引
+
+对计算结果建索引：
+
+```sql
+-- 不区分大小写的邮箱查询
+CREATE INDEX idx_users_email_lower ON users(LOWER(email));
+
+SELECT * FROM users WHERE LOWER(email) = 'alice@example.com';  -- 会使用索引
+
+-- JSONB 字段索引
+CREATE INDEX idx_events_data ON events USING GIN (data);
+
+SELECT * FROM events WHERE data @> '{"type": "click"}';  -- 会使用 GIN 索引
+```
+
+### GIN 索引
+
+适合全文搜索、数组、JSONB：
+
+```sql
+-- 全文搜索
+CREATE INDEX idx_posts_search ON posts USING GIN (to_tsvector('chinese', title || ' ' || body));
+
+SELECT * FROM posts WHERE to_tsvector('chinese', title || ' ' || body) @@ to_tsquery('PostgreSQL & 性能');
+
+-- 数组包含查询
+CREATE INDEX idx_tags ON posts USING GIN (tags);
+
+SELECT * FROM posts WHERE tags @> ARRAY['PostgreSQL', '数据库'];
+```
+
+### 索引维护
+
+```sql
+-- 查看索引使用情况
+SELECT
+  schemaname, relname, indexrelname,
+  idx_scan AS scans,
+  idx_tup_read AS tuples_read,
+  idx_tup_fetch AS tuples_fetched,
+  pg_size_pretty(pg_relation_size(indexrelid)) AS size
+FROM pg_stat_user_indexes
+ORDER BY idx_scan ASC;  -- 扫描次数少的索引可能是冗余的
+
+-- 重建碎片化的索引（在线操作，不阻塞写入）
+REINDEX INDEX CONCURRENTLY idx_posts_created;
+
+-- 删除未使用的索引（先观察一段时间）
+DROP INDEX CONCURRENTLY idx_posts_unused;
+```
+
+## 连接池配置
+
+PostgreSQL 的连接是进程模型，每个连接 fork 一个后端进程。连接过多会消耗大量内存并导致上下文切换。
+
+### PgBouncer 配置
+
+```ini
+; pgbouncer.ini
+[databases]
+mydb = host=127.0.0.1 port=5432 dbname=mydb
+
+[pgbouncer]
+listen_addr = 0.0.0.0
+listen_port = 6432
+
+; 连接池模式：transaction 级别复用
+pool_mode = transaction
+
+; 每个数据库的最大连接数
+default_pool_size = 20
+
+; 每个用户的最大连接数
+max_client_conn = 200
+
+; 空闲连接超时
+server_idle_timeout = 300
+```
+
+### 应用层连接池
+
+```typescript
+// Node.js + pg 模块
+import { Pool } from 'pg';
+
+const pool = new Pool({
+  host: 'localhost',
+  port: 5432,
+  database: 'mydb',
+  max: 20,           // 最大连接数
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
+
+// 从池中获取连接
+const client = await pool.connect();
+try {
+  const result = await client.query('SELECT * FROM posts WHERE id = $1', [1]);
+  return result.rows[0];
+} finally {
+  client.release();  // 归还连接
+}
+```
+
+## VACUUM 与表膨胀
+
+PostgreSQL 的 MVCC 机制会产生死元组（dead tuples），需要 VACUUM 回收空间。
+
+### 检查表膨胀
+
+```sql
+SELECT
+  schemaname, relname,
+  n_live_tup AS live_tuples,
+  n_dead_tup AS dead_tuples,
+  ROUND(n_dead_tup::numeric / NULLIF(n_live_tup, 0) * 100, 2) AS bloat_ratio,
+  last_autovacuum,
+  last_autoanalyze
+FROM pg_stat_user_tables
+WHERE n_live_tup > 1000
+ORDER BY bloat_ratio DESC;
+```
+
+### Autovacuum 调优
+
+```sql
+-- 全局配置（postgresql.conf）
+-- autovacuum = on
+-- autovacuum_naptime = 60        -- 每 60 秒检查一次
+-- autovacuum_vacuum_threshold = 50
+-- autovacuum_vacuum_scale_factor = 0.1  -- 死元组超过 10% 时触发
+
+-- 针对特定表调整
+ALTER TABLE posts SET (
+  autovacuum_vacuum_scale_factor = 0.05,  -- 更积极的 vacuum
+  autovacuum_analyze_scale_factor = 0.02
+);
+
+-- 针对写密集的表
+ALTER TABLE logs SET (
+  autovacuum_vacuum_scale_factor = 0.02,
+  autovacuum_vacuum_insert_scale_factor = 0.05,
+  fillfactor = 80  -- 预留空间减少页分裂
+);
+```
+
+### 手动 VACUUM
+
+```sql
+-- 普通 vacuum：标记死元组为可重用，不归还磁盘空间
+VACUUM posts;
+
+-- vacuum full：重建表，归还磁盘空间，但会锁表
+-- 生产环境慎用！
+VACUUM FULL posts;
+
+-- 分析统计信息（更新优化器的行数估算）
+ANALYZE posts;
+
+-- 组合操作
+VACUUM ANALYZE posts;
+```
+
+## 分区表
+
+当单表数据量超过千万级，考虑分区。
+
+### 按范围分区（时间最常见）
+
+```sql
+-- 创建分区表
+CREATE TABLE events (
+  id BIGSERIAL,
+  created_at TIMESTAMPTZ NOT NULL,
+  event_type TEXT NOT NULL,
+  data JSONB
+) PARTITION BY RANGE (created_at);
+
+-- 按月分区
+CREATE TABLE events_2026_01 PARTITION OF events
+  FOR VALUES FROM ('2026-01-01') TO ('2026-02-01');
+
+CREATE TABLE events_2026_02 PARTITION OF events
+  FOR VALUES FROM ('2026-02-01') TO ('2026-03-01');
+
+-- ... 后续月份
+
+-- 自动创建分区的函数
+CREATE OR REPLACE FUNCTION create_monthly_partition(target_date DATE)
+RETURNS void AS $$
+DECLARE
+  partition_name TEXT;
+  start_date DATE;
+  end_date DATE;
+BEGIN
+  start_date := DATE_TRUNC('month', target_date)::DATE;
+  end_date := (start_date + INTERVAL '1 month')::DATE;
+  partition_name := 'events_' || TO_CHAR(start_date, 'YYYY_MM');
+
+  EXECUTE format(
+    'CREATE TABLE IF NOT EXISTS %I PARTITION OF events FOR VALUES FROM (%L) TO (%L)',
+    partition_name, start_date, end_date
+  );
+END;
+$$ LANGUAGE plpgsql;
+```
+
+### 分区裁剪
+
+查询条件包含分区键时，PostgreSQL 只扫描相关分区：
+
+```sql
+EXPLAIN SELECT * FROM events WHERE created_at >= '2026-06-01';
+-- Append
+--   -> Seq Scan on events_2026_06
+-- 不会扫描其他月份的分区
+```
+
+## 常见慢查询排查清单
+
+### 1. N+1 查询
+
+```typescript
+// 坏：N+1 查询
+const posts = await db.query('SELECT * FROM posts LIMIT 20');
+for (const post of posts.rows) {
+  const author = await db.query('SELECT * FROM users WHERE id = $1', [post.author_id]);
+  // 20 次额外查询
+}
+
+// 好：JOIN 一次搞定
+const result = await db.query(`
+  SELECT p.*, u.name AS author_name
+  FROM posts p
+  JOIN users u ON p.author_id = u.id
+  LIMIT 20
+`);
+```
+
+### 2. SELECT * 滥用
+
+```sql
+-- 坏：传输不需要的列，无法利用覆盖索引
+SELECT * FROM posts WHERE author_id = 42;
+
+-- 好：只查需要的列，可能走覆盖索引
+SELECT id, title, created_at FROM posts WHERE author_id = 42;
+```
+
+### 3. OFFSET 分页性能
+
+```sql
+-- 坏：OFFSET 越大越慢（需要扫描并跳过前面的行）
+SELECT * FROM posts ORDER BY created_at DESC OFFSET 10000 LIMIT 20;
+
+-- 好：游标分页（利用索引）
+SELECT * FROM posts
+WHERE created_at < '2026-06-20T00:00:00Z'
+ORDER BY created_at DESC LIMIT 20;
+```
+
+### 4. 统计信息过期
+
+```sql
+-- 检查统计信息是否更新
+SELECT relname, n_live_tup, last_analyze, last_autoanalyze
+FROM pg_stat_user_tables;
+
+-- 手动更新统计信息
+ANALYZE posts;
+```
+
+### 5. 锁等待
+
+```sql
+-- 查看锁等待
+SELECT
+  blocked.pid AS blocked_pid,
+  blocked.query AS blocked_query,
+  blocking.pid AS blocking_pid,
+  blocking.query AS blocking_query
+FROM pg_stat_activity blocked
+JOIN pg_stat_activity blocking
+  ON blocking.pid = ANY(pg_blocking_pids(blocked.pid));
+
+-- 终止长时间运行的查询
+SELECT pg_terminate_backend(pid) FROM pg_stat_activity
+WHERE state = 'active' AND now() - query_start > INTERVAL '5 minutes';
+```
+
+## 监控指标
+
+| 指标 | 查询方式 | 告警阈值 |
+| --- | --- | --- |
+| 连接数 | `SELECT count(*) FROM pg_stat_activity` | > max_connections * 0.8 |
+| 死锁 | `SELECT deadlocks FROM pg_stat_database` | > 0 |
+| 缓存命中率 | `SELECT sum(blks_hit) / sum(blks_hit + blks_read) FROM pg_stat_database` | < 0.95 |
+| 事务回滚率 | `SELECT xact_rollback / (xact_commit + xact_rollback) FROM pg_stat_database` | > 0.01 |
+| 表膨胀率 | `n_dead_tup / n_live_tup` | > 0.2 |
+| 慢查询 | pg_stat_statements 扩展 | > 1s |
+
+## 小结
+
+PostgreSQL 性能优化的核心思路：
+
+1. **先测量，再优化** — 用 EXPLAIN ANALYZE 找到真正的瓶颈
+2. **索引设计遵循查询模式** — 复合索引的列顺序很重要
+3. **连接池是必须的** — PgBouncer + 应用层池化
+4. **VACUUM 不能忽视** — 监控膨胀率，调优 autovacuum
+5. **大表考虑分区** — 时间序列数据按月分区是最常见的模式
+6. **避免 N+1 和大 OFFSET** — 这是应用层最常见的数据库性能杀手
+
+性能优化是一个持续过程，不是一次性工作。建立监控、定期审查慢查询、保持统计信息更新，比任何单次优化都重要。

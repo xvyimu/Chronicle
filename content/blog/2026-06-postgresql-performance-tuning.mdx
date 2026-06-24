@@ -1,0 +1,548 @@
+---
+title: 'PostgreSQL 性能调优：从慢查询到索引优化'
+description: 'PostgreSQL 在生产环境中的性能优化实践，涵盖 EXPLAIN ANALYZE 解读、索引策略（B-Tree/GIN/GiST）、连接池配置、VACUUM 调优和分区表实战。'
+date: '2026-06-25'
+tags: ['PostgreSQL', '数据库', '性能优化', '后端']
+published: true
+featured: false
+---
+
+> 数据库慢起来要人命。这篇文章讲 PostgreSQL 在生产环境中的性能调优实践——从读懂 EXPLAIN ANALYZE 开始，到索引选型、连接池、VACUUM 和分区表。
+
+## 先定位问题：EXPLAIN ANALYZE
+
+调优的第一步不是加索引，而是搞清楚慢在哪里。`EXPLAIN ANALYZE` 是 PostgreSQL 最强大的诊断工具——它不仅显示执行计划，还会实际执行查询并报告每一步的耗时。
+
+```sql
+EXPLAIN ANALYZE
+SELECT u.id, u.name, COUNT(o.id) AS order_count
+FROM users u
+LEFT JOIN orders o ON o.user_id = u.id
+WHERE u.created_at > '2026-01-01'
+GROUP BY u.id, u.name
+ORDER BY order_count DESC
+LIMIT 20;
+```
+
+输出大致长这样：
+
+```text
+Limit  (cost=1234.56..1234.78 rows=20 width=48) (actual time=45.234..45.256 rows=20 loops=1)
+  ->  Sort  (cost=1234.56..1250.00 rows=1000 width=48) (actual time=45.230..45.240 rows=20 loops=1)
+        Sort Key: (count(o.id)) DESC
+        Sort Method: top-N heapsort  Memory: 30kB
+        ->  Hash Join  (cost=500.12..1200.00 rows=1000 width=48) (actual time=20.123..40.456 rows=5000 loops=1)
+              Hash Cond: (o.user_id = u.id)
+              ->  Seq Scan on orders o  (cost=0.00..400.00 rows=20000 width=12) (actual time=0.012..15.234 rows=20000 loops=1)
+              ->  Hash  (cost=450.00..450.00 rows=5000 width=40) (actual time=10.123..10.123 rows=5000 loops=1)
+                    ->  Seq Scan on users u  (cost=0.00..450.00 rows=5000 width=40) (actual time=0.012..8.456 rows=5000 loops=1)
+                          Filter: (created_at > '2026-01-01'::date)
+                          Rows Removed by Filter: 5000
+Planning Time: 0.234 ms
+Execution Time: 45.678 ms
+```
+
+读懂这段输出的关键：
+
+- **`Seq Scan`**：全表扫描。小表无所谓，大表出现 Seq Scan 通常意味着缺索引。
+- **`Index Scan` / `Index Only Scan`**：走了索引。`Index Only Scan` 是最优的，因为不需要回表。
+- **`Rows Removed by Filter`**：被过滤掉的行数。如果这个数字远大于返回行数，说明索引建错了位置。
+- **`actual time`**：实际耗时。注意是累计值，从该节点开始算起。
+- **`loops`**：循环次数。嵌套循环连接时内表可能被扫描很多次，`actual time` 是单次耗时，总耗时需要乘以 `loops`。
+- **`Sort Method: external merge`**：排序用了磁盘。调大 `work_mem` 可以让它走内存。
+
+加 `BUFFERS` 选项可以看到内存和磁盘 IO 情况，更有用：
+
+```sql
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT * FROM orders WHERE user_id = 123;
+```
+
+```text
+Index Scan using orders_user_id_idx on orders  (cost=0.29..8.31 rows=1 width=100) (actual time=0.015..0.018 rows=3 loops=1)
+  Index Cond: (user_id = 123)
+  Buffers: shared hit=4
+Planning Time: 0.123 ms
+Execution Time: 0.045 ms
+```
+
+`shared hit` 表示命中缓存，`shared read` 表示从磁盘读。如果 `read` 远大于 `hit`，说明数据没在内存里，可能需要调大 `shared_buffers`。
+
+## 索引类型选择
+
+索引不是越多越好——每个索引都会拖慢写入。选对类型比加索引更重要。
+
+### B-Tree（默认，最常用）
+
+适合等值查询、范围查询、排序。PostgreSQL 默认创建的就是 B-Tree。
+
+```sql
+-- 普通索引
+CREATE INDEX idx_orders_user_id ON orders(user_id);
+
+-- 复合索引（注意列顺序，最左前缀原则）
+CREATE INDEX idx_orders_user_status ON orders(user_id, status, created_at);
+
+-- 部分索引——只索引满足条件的行，节省空间
+CREATE INDEX idx_orders_pending ON orders(created_at)
+  WHERE status = 'pending';
+
+-- 表达式索引——对函数结果建索引
+CREATE INDEX idx_users_lower_email ON users(LOWER(email));
+```
+
+复合索引的列顺序很关键。把**等值条件**的列放前面，**范围条件**的列放后面：
+
+```sql
+-- 查询：WHERE user_id = 123 AND created_at > '2026-01-01'
+-- 这个索引能用上
+CREATE INDEX idx_orders_user_created ON orders(user_id, created_at);
+
+-- 这个索引用不上 created_at 的范围过滤（违反最左前缀）
+CREATE INDEX idx_orders_created_user ON orders(created_at, user_id);
+```
+
+### GIN（倒排索引）
+
+适合多值列：数组、JSONB、全文检索。GIN 索引查询快，但写入慢。
+
+```sql
+-- JSONB 字段查询
+CREATE INDEX idx_products_attrs ON products USING GIN (attributes);
+
+-- 现在可以高效查询 JSONB
+SELECT * FROM products WHERE attributes @> '{"color": "red"}';
+SELECT * FROM products WHERE attributes ? 'discount';
+
+-- 全文检索
+CREATE INDEX idx_articles_content ON articles USING GIN (to_tsvector('chinese', content));
+
+SELECT * FROM articles
+WHERE to_tsvector('chinese', content) @@ to_tsquery('PostgreSQL & 性能');
+
+-- 数组包含查询
+CREATE INDEX idx_tags ON posts USING GIN (tags);
+SELECT * FROM posts WHERE tags @> ARRAY['PostgreSQL', '数据库'];
+```
+
+### GiST（通用搜索树）
+
+适合几何数据、范围类型、最近邻搜索。
+
+```sql
+-- 地理位置查询（PostGIS）
+CREATE INDEX idx_stores_location ON stores USING GIST (location);
+
+-- 查找附近的店
+SELECT id, name, location <-> ST_Point(121.47, 31.23) AS distance
+FROM stores
+ORDER BY location <-> ST_Point(121.47, 31.23)
+LIMIT 10;
+
+-- 时间范围重叠查询
+CREATE INDEX idx_bookings_range ON bookings USING GIST (during);
+
+SELECT * FROM bookings
+WHERE during && tstzrange('2026-06-25 10:00', '2026-06-25 12:00');
+```
+
+### BRIN（块范围索引）
+
+适合时序数据——按物理顺序存储且有序的大表。BRIN 索引极小，但只适合范围扫描。
+
+```sql
+-- 日志表，按时间递增写入
+CREATE INDEX idx_logs_created_brin ON logs USING BRIN (created_at);
+
+-- 查询某天的日志，BRIN 能快速定位到对应的数据块
+SELECT * FROM logs WHERE created_at >= '2026-06-25' AND created_at < '2026-06-26';
+```
+
+### 索引类型速查
+
+| 索引类型 | 适用场景 | 写入开销 | 索引大小 |
+|----------|----------|----------|----------|
+| B-Tree | 等值、范围、排序 | 中 | 中 |
+| GIN | JSONB、数组、全文检索 | 高 | 大 |
+| GiST | 几何、范围、最近邻 | 中 | 中 |
+| BRIN | 时序、有序大表 | 极低 | 极小 |
+| Hash | 等值（不推荐，崩溃不安全） | 低 | 小 |
+
+### 索引使用情况检查
+
+建了索引不代表被用上了。定期检查无用索引：
+
+```sql
+-- 查找从未被使用的索引（需运行一段时间后统计才准）
+SELECT schemaname, relname, indexrelname, idx_scan
+FROM pg_stat_user_indexes
+WHERE idx_scan = 0
+  AND schemaname = 'public'
+ORDER BY pg_relation_size(indexrelid) DESC;
+
+-- 查找重复或冗余索引
+SELECT pg_size_pretty(sum(pg_relation_size(idx))::bigint) AS size,
+       (array_agg(idx))[1] AS idx1, (array_agg(idx))[2] AS idx2
+FROM (
+  SELECT indexrelid::regclass AS idx, indrelid::regclass AS table_name,
+         (indrelid::text || ' ' || indkey::text) AS key
+  FROM pg_index
+) sub
+GROUP BY key
+HAVING count(*) > 1;
+```
+
+## 连接池配置（PgBouncer）
+
+PostgreSQL 的连接是进程模型——每个连接 fork 一个进程，开销不小。连接数多了内存和 CPU 都扛不住。PgBouncer 在应用和数据库之间做连接池，用少量后端连接服务大量客户端。
+
+```ini
+; pgbouncer.ini
+[databases]
+mydb = host=127.0.0.1 port=5432 dbname=mydb
+
+[pgbouncer]
+listen_addr = 0.0.0.0
+listen_port = 6432
+auth_type = scram-sha-256
+auth_file = /etc/pgbouncer/userlist.txt
+
+; 连接池大小——这是最关键的参数
+pool_mode = transaction
+max_client_conn = 1000
+default_pool_size = 25
+reserve_pool_size = 5
+reserve_pool_timeout = 3
+
+; 超时
+server_idle_timeout = 600
+client_idle_timeout = 0
+query_wait_timeout = 120
+```
+
+`pool_mode` 三种模式：
+
+- **`session`**：会话级池化。客户端断开才归还连接。几乎没池化效果，不推荐。
+- **`transaction`**：事务级池化。事务结束就归还连接。**推荐**，池化效果最好。
+- **`statement`**：语句级池化。每条语句结束归还。不支持事务，限制太大。
+
+`transaction` 模式下要注意：不能用会话级特性（如 `SET`、临时表、`LISTEN/NOTIFY`、advisory lock）。如果业务依赖这些，要么改用 `session` 模式，要么把这些操作放到单独的连接。
+
+应用侧连接配置（以 Node.js 为例）：
+
+```typescript
+import { Pool } from 'pg';
+
+const pool = new Pool({
+  host: '127.0.0.1',
+  port: 6432, // 连 PgBouncer，不是直连 PostgreSQL
+  database: 'mydb',
+  user: 'app',
+  password: process.env.DB_PASSWORD,
+  max: 20, // 应用侧连接数，配合 PgBouncer 的 default_pool_size
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
+
+// 健康检查——定期执行简单查询
+setInterval(async () => {
+  try {
+    await pool.query('SELECT 1');
+  } catch (e) {
+    console.error('DB health check failed:', e);
+  }
+}, 30000);
+```
+
+`max` 配多少？经验公式：`应用实例数 × max ≤ PgBouncer 的 default_pool_size × 数据库 CPU 核数 × 2`。连接数不是越多越好——太多反而会因为上下文切换拖慢数据库。
+
+## VACUUM 和 autovacuum 调优
+
+PostgreSQL 的 MVCC 机制决定了：UPDATE 和 DELETE 不会立即回收空间，而是留下"死元组"，需要 VACUUM 清理。autovacuum 不调好，表会膨胀，查询会变慢。
+
+```sql
+-- 查看表的死元组情况
+SELECT relname, n_live_tup, n_dead_tup,
+       round(n_dead_tup::numeric / NULLIF(n_live_tup, 0) * 100, 2) AS dead_ratio,
+       last_autovacuum, last_autoanalyze
+FROM pg_stat_user_tables
+ORDER BY n_dead_tup DESC
+LIMIT 20;
+```
+
+### autovacuum 关键参数
+
+```ini
+# postgresql.conf
+autovacuum = on                    # 必须开启
+autovacuum_max_workers = 6         # 并发 worker 数，大表多时调大
+autovacuum_naptime = 30s           # 检查间隔
+autovacuum_vacuum_threshold = 50   # 死元组超过这个数才触发
+autovacuum_vacuum_scale_factor = 0.1  # 死元组比例超过 10% 触发
+autovacuum_analyze_scale_factor = 0.05
+```
+
+`scale_factor` 是关键参数。默认 0.1 意味着表有 10% 的行变成死元组才触发 VACUUM。对大表来说这个阈值太高——一千万行的表要等一百万行死元组才清理。
+
+### 针对大表的定制化配置
+
+```sql
+-- 对特定表设置更激进的 autovacuum 阈值
+ALTER TABLE big_logs SET (
+  autovacuum_vacuum_scale_factor = 0.01,  -- 1% 就触发
+  autovacuum_vacuum_threshold = 1000,
+  autovacuum_analyze_scale_factor = 0.01
+);
+
+-- 对频繁更新的表设置更频繁的清理
+ALTER TABLE user_sessions SET (
+  autovacuum_vacuum_scale_factor = 0.05,
+  autovacuum_naptime = 10
+);
+```
+
+### 手动 VACUUM 的时机
+
+autovacuum 是后台低优先级进程，清理速度可能跟不上。这些情况需要手动 VACUUM：
+
+```sql
+-- 大表批量删除后，立即回收空间（会锁表，谨慎使用）
+VACUUM FULL big_logs;  -- 重写表，回收空间，但会阻塞读写
+
+-- 更好的选择——pg_repack（不锁表）
+-- pg_repack -t big_logs -d mydb
+
+-- 只更新统计信息，不清理（轻量）
+ANALYZE big_logs;
+
+-- 普通清理，不锁表，但不回收空间给操作系统
+VACUUM big_logs;
+```
+
+`VACUUM FULL` 会重写整个表并回收磁盘空间，但会持有排他锁。生产环境用 `pg_repack` 扩展替代——它在后台重建表，不阻塞业务。
+
+## 表分区实战
+
+单表数据量超过千万行后，查询、维护都会变慢。分区把大表拆成小表，查询只扫描相关分区。
+
+### 范围分区（最常用）
+
+按时间范围分区，适合日志、订单这类时序数据。
+
+```sql
+-- 创建分区父表
+CREATE TABLE orders (
+  id BIGSERIAL,
+  user_id BIGINT NOT NULL,
+  amount DECIMAL(10, 2) NOT NULL,
+  status VARCHAR(20) NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL,
+  PRIMARY KEY (id, created_at)  -- 分区键必须在主键里
+) PARTITION BY RANGE (created_at);
+
+-- 按月创建分区
+CREATE TABLE orders_2026_01 PARTITION OF orders
+  FOR VALUES FROM ('2026-01-01') TO ('2026-02-01');
+
+CREATE TABLE orders_2026_02 PARTITION OF orders
+  FOR VALUES FROM ('2026-02-01') TO ('2026-03-01');
+
+CREATE TABLE orders_2026_06 PARTITION OF orders
+  FOR VALUES FROM ('2026-06-01') TO ('2026-07-01');
+
+-- 默认分区（兜底，防止插入失败）
+CREATE TABLE orders_default PARTITION OF orders DEFAULT;
+
+-- 每个分区可以单独建索引
+CREATE INDEX idx_orders_2026_06_user ON orders_2026_06(user_id);
+CREATE INDEX idx_orders_2026_06_status ON orders_2026_06(status, created_at);
+```
+
+查询时 PostgreSQL 会自动做分区裁剪（Partition Pruning），只扫描相关分区：
+
+```sql
+-- 只扫描 orders_2026_06 分区
+EXPLAIN SELECT * FROM orders
+WHERE created_at >= '2026-06-01' AND created_at < '2026-07-01';
+```
+
+### 列表分区
+
+按离散值分区，适合按地区、租户分表。
+
+```sql
+CREATE TABLE users_by_region (
+  id BIGSERIAL,
+  name VARCHAR(100),
+  region VARCHAR(20) NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (id, region)
+) PARTITION BY LIST (region);
+
+CREATE TABLE users_cn PARTITION OF users_by_region
+  FOR VALUES IN ('cn', 'hk', 'tw');
+
+CREATE TABLE users_us PARTITION OF users_by_region
+  FOR VALUES IN ('us', 'ca');
+
+CREATE TABLE users_eu PARTITION OF users_by_region
+  FOR VALUES IN ('uk', 'de', 'fr', 'es');
+
+CREATE TABLE users_other PARTITION OF users_by_region DEFAULT;
+```
+
+### 自动分区管理
+
+手动建分区太麻烦，用 `pg_partman` 扩展自动管理：
+
+```sql
+CREATE EXTENSION pg_partman;
+
+-- 自动按月分区，预创建未来 3 个月的分区
+SELECT partman.create_parent(
+  'public.orders',
+  'created_at',
+  'native',
+  'monthly',
+  p_premake := 3
+);
+
+-- 定时任务自动维护分区（创建新分区、清理旧分区）
+-- 配合 pg_cron 扩展
+SELECT cron.schedule('partman_maintenance', '0 3 * * *', $$SELECT partman.run_maintenance_proc()$$);
+```
+
+### 分区表的老数据归档
+
+```sql
+-- 分离旧分区（不删数据，变成普通表）
+ALTER TABLE orders DETACH PARTITION orders_2024_01;
+
+-- 归档到冷存储
+ALTER TABLE orders_2024_01 SET TABLESPACE cold_storage;
+
+-- 或者直接删除（确认备份后）
+DROP TABLE orders_2024_01;
+```
+
+## 常见慢查询场景和解决方案
+
+### 场景一：N+1 查询
+
+应用层 ORM 容易产生 N+1 查询。数据库层面看不出问题，但往返次数爆炸。
+
+```sql
+-- 错误：循环里查关联
+-- SELECT * FROM users WHERE id IN (...) -- 1 次
+-- SELECT * FROM orders WHERE user_id = ? -- N 次
+
+-- 正确：一次 JOIN 搞定
+SELECT u.id, u.name, o.id AS order_id, o.amount
+FROM users u
+LEFT JOIN LATERAL (
+  SELECT * FROM orders WHERE user_id = u.id ORDER BY created_at DESC LIMIT 5
+) o ON true
+WHERE u.id IN (1, 2, 3, 4, 5);
+```
+
+### 场景二：深分页
+
+`OFFSET 100000 LIMIT 20` 要先扫描 10 万行再丢弃，越往后越慢。
+
+```sql
+-- 慢：OFFSET 越大越慢
+SELECT * FROM orders ORDER BY created_at DESC OFFSET 100000 LIMIT 20;
+
+-- 快：用游标分页（记住上一页最后一条的值）
+SELECT * FROM orders
+WHERE created_at < '2026-06-24 10:00:00'
+ORDER BY created_at DESC
+LIMIT 20;
+```
+
+如果必须用 OFFSET，配合覆盖索引减少回表：
+
+```sql
+-- 先用索引查出主键，再 JOIN 取数据
+SELECT o.* FROM orders o
+JOIN (
+  SELECT id FROM orders ORDER BY created_at DESC OFFSET 100000 LIMIT 20
+) tmp ON o.id = tmp.id;
+```
+
+### 场景三：COUNT(*) 慢
+
+PostgreSQL 的 `COUNT(*)` 要全表扫描，没有计数缓存。
+
+```sql
+-- 慢：精确计数
+SELECT COUNT(*) FROM orders WHERE status = 'pending';
+
+-- 快：近似计数（误差约 5%）
+SELECT reltuples::bigint FROM pg_class WHERE relname = 'orders';
+
+-- 或者维护计数表
+CREATE TABLE order_counts (status VARCHAR PRIMARY KEY, cnt BIGINT);
+UPDATE order_counts SET cnt = cnt + 1 WHERE status = 'pending';
+```
+
+### 场景四：OR 条件走不上索引
+
+```sql
+-- 慢：OR 条件可能导致全表扫描
+SELECT * FROM orders WHERE user_id = 123 OR amount > 1000;
+
+-- 快：拆成 UNION ALL，各自走索引
+SELECT * FROM orders WHERE user_id = 123
+UNION
+SELECT * FROM orders WHERE amount > 1000 AND user_id <> 123;
+```
+
+### 场景五：隐式类型转换
+
+```sql
+-- 慢：created_at 是 timestamp，传字符串可能不走索引
+SELECT * FROM orders WHERE created_at = '2026-06-25';
+
+-- 快：显式类型转换
+SELECT * FROM orders WHERE created_at = '2026-06-25'::timestamptz;
+
+-- 慢：user_id 是 bigint，传字符串
+SELECT * FROM orders WHERE user_id = '123';
+
+-- 快：传整数
+SELECT * FROM orders WHERE user_id = 123;
+```
+
+## 关键配置参数
+
+```ini
+# postgresql.conf 核心参数
+shared_buffers = 4GB              # 总内存的 25%
+effective_cache_size = 12GB       # 总内存的 75%，告诉优化器可用缓存
+work_mem = 64MB                   # 单个排序/哈希的内存，调大避免磁盘排序
+maintenance_work_mem = 512MB      # VACUUM、建索引的内存
+max_connections = 100             # 配合 PgBouncer，不要设太大
+random_page_cost = 1.1            # SSD 调低，让优化器更倾向走索引
+effective_io_concurrency = 200    # SSD 调高，提升并行 IO
+checkpoint_completion_target = 0.9
+wal_buffers = 16MB
+max_wal_size = 4GB
+```
+
+`random_page_cost` 默认是 4.0（针对机械硬盘），SSD 上调到 1.1，优化器会更倾向用索引。这个参数被很多人忽略，但对查询计划影响很大。
+
+## 总结
+
+PostgreSQL 性能调优的核心思路：
+
+- **先诊断，后优化**——用 `EXPLAIN ANALYZE` 定位瓶颈，别盲目加索引
+- **选对索引类型**——B-Tree 不是万能的，JSONB 用 GIN，时序用 BRIN
+- **连接池必备**——PgBouncer 的 `transaction` 模式是生产标配
+- **autovacuum 要调**——大表用更激进的阈值，别用默认值
+- **大表要分区**——范围分区处理时序数据，配合 pg_partman 自动管理
+- **配置要匹配硬件**——`shared_buffers`、`work_mem`、`random_page_cost` 这几个最关键
+
+调优是持续过程。上线后用 `pg_stat_statements` 监控慢查询，定期回顾索引使用情况，该删的索引果断删。
+
+参考：[PostgreSQL 官方文档](https://www.postgresql.org/docs/)、[EXPLAIN 文档](https://www.postgresql.org/docs/current/sql-explain.html)、[PgBouncer 文档](https://www.pgbouncer.org/)
