@@ -63,7 +63,6 @@ describe('HomePage', () => {
   it('displays post count in hero stats', () => {
     render(<HomePage />);
     const allPosts = getAllPosts();
-    const expectedCount = Math.min(allPosts.length, 4);
-    expect(screen.getByText(expectedCount.toString())).toBeInTheDocument();
+    expect(screen.getByText(allPosts.length.toString())).toBeInTheDocument();
   });
 });

@@ -10,35 +10,51 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
   const [query, setQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(-1);
   const [fuse, setFuse] = useState<Fuse<PostMeta> | null>(null);
-  const [searchReady, setSearchReady] = useState(false);
+  const fuseLoadedRef = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  // Lazy load Fuse.js — only when user first types
+  // Fuse.js options — stable reference for reuse
+  const fuseOptions = useMemo(() => ({
+    keys: [
+      { name: 'title', weight: 0.5 },
+      { name: 'description', weight: 0.3 },
+      { name: 'tags', weight: 0.2 },
+    ],
+    threshold: 0.4,
+    ignoreLocation: true,
+    includeScore: true,
+  }), []);
+
+  // Lazy load Fuse.js on first keystroke, rebuild index when posts change.
+  // fuseLoadedRef prevents re-importing on every keystroke without extra renders.
   useEffect(() => {
-    if (!query.trim() || searchReady) return;
+    if (!query.trim() || fuseLoadedRef.current) return;
+    fuseLoadedRef.current = true;
+
     let cancelled = false;
     import('fuse.js').then(({ default: FuseLib }) => {
       if (cancelled) return;
-      setFuse(
-        new FuseLib(posts, {
-          keys: [
-            { name: 'title', weight: 0.5 },
-            { name: 'description', weight: 0.3 },
-            { name: 'tags', weight: 0.2 },
-          ],
-          threshold: 0.4,
-          ignoreLocation: true,
-          includeScore: true,
-        })
-      );
-      setSearchReady(true);
+      setFuse(new FuseLib(posts, fuseOptions));
     }).catch((err) => {
       console.error('Fuse.js 加载失败', err);
     });
     return () => { cancelled = true; };
-  }, [query, searchReady, posts]);
+  }, [query, posts, fuseOptions]);
+
+  // Rebuild index when posts array reference changes (ISR revalidation)
+  useEffect(() => {
+    if (!fuseLoadedRef.current) return;
+    let cancelled = false;
+    import('fuse.js').then(({ default: FuseLib }) => {
+      if (cancelled) return;
+      setFuse(new FuseLib(posts, fuseOptions));
+    }).catch((err) => {
+      console.error('Fuse.js 加载失败', err);
+    });
+    return () => { cancelled = true; };
+  }, [posts, fuseOptions]);
 
   const results = useMemo(() => {
     if (!query.trim() || !fuse) return [];
@@ -125,6 +141,11 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
           onKeyDown={handleKeyDown}
           className="w-full pl-10 pr-10 py-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] text-sm outline-none transition-all"
           aria-label="搜索文章"
+          role="combobox"
+          aria-expanded={query.trim().length > 0}
+          aria-controls="search-results"
+          aria-autocomplete="list"
+          aria-activedescendant={activeIndex >= 0 ? `search-result-${activeIndex}` : undefined}
           style={{ fontFamily: 'inherit' }}
           onFocus={(e) => {
             e.currentTarget.style.borderColor = 'var(--brand)';
@@ -152,11 +173,13 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
       {query && (
         <div
           ref={listRef}
+          id="search-results"
           className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden"
           role="listbox"
+          aria-label="搜索结果"
         >
           <p className="text-xs text-[var(--text-dim)] px-4 pt-3 pb-1">
-            {!searchReady ? (
+            {!fuse ? (
               <span>正在加载搜索…</span>
             ) : (
               <>
@@ -165,12 +188,13 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
               </>
             )}
           </p>
-          {searchReady && results.length > 0 ? (
+          {fuse && results.length > 0 ? (
             results.map((post, i) => (
               <Link
                 key={post.slug}
                 href={`/blog/${post.slug}`}
                 data-result="true"
+                id={`search-result-${i}`}
                 role="option"
                 aria-selected={i === activeIndex}
                 className={`block px-4 py-3 transition-colors ${
@@ -189,7 +213,7 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
                 <p className="text-xs text-[var(--text-dim)] line-clamp-1 mt-0.5">{post.description}</p>
               </Link>
             ))
-          ) : searchReady && results.length === 0 ? (
+          ) : fuse && results.length === 0 ? (
             <p className="text-sm text-[var(--text-soft)] px-4 py-4">没有匹配的文章</p>
           ) : null}
         </div>

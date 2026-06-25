@@ -111,14 +111,19 @@ export default function Giscus({
     const sendThemeWhenReady = () => {
       const iframe = document.querySelector<HTMLIFrameElement>('iframe.giscus-frame');
       if (iframe) {
-        iframe.addEventListener('load', sendTheme, { once: true });
+        // Clean up load listener on unmount — { once: true } only fires once,
+        // but if component unmounts before load event, listener leaks.
+        const onLoad = () => sendTheme();
+        iframe.addEventListener('load', onLoad);
         sendTheme();
+        return () => { iframe.removeEventListener('load', onLoad); };
       } else {
         const bodyObserver = new MutationObserver(() => {
           const iframe = document.querySelector<HTMLIFrameElement>('iframe.giscus-frame');
           if (iframe) {
             bodyObserver.disconnect();
-            iframe.addEventListener('load', sendTheme, { once: true });
+            const onLoad = () => sendTheme();
+            iframe.addEventListener('load', onLoad);
             sendTheme();
           }
         });

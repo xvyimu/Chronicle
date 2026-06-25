@@ -24,13 +24,9 @@ test.describe('首页', () => {
   test('显示精选作品', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
-    // Featured projects section (if any exist)
+    // Featured projects section should be visible
     const projectsSection = page.getByText('精选作品');
-    // Only check if the section exists
-    const count = await projectsSection.count();
-    if (count > 0) {
-      await expect(projectsSection).toBeVisible({ timeout: 10000 });
-    }
+    await expect(projectsSection).toBeVisible({ timeout: 10000 });
   });
 
   test('导航栏链接可跳转', async ({ page }) => {

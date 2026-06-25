@@ -13,6 +13,10 @@
   margin: 0 auto;
 }
 .section__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
   margin-bottom: 40px;
 }
 .section__eyebrow {
@@ -303,28 +307,11 @@
   transition: box-shadow var(--transition), border-color var(--transition), transform var(--transition);
   will-change: transform;
   box-shadow: var(--shadow-xs);
-  position: relative;
-  overflow: hidden;
-}
-.blog__item::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: var(--brand);
-  transform: scaleY(0);
-  transform-origin: top;
-  transition: transform var(--transition);
 }
 .blog__item:hover {
   box-shadow: var(--shadow-lg);
-  border-color: var(--border-strong);
+  border-color: var(--brand);
   transform: translateY(-2px);
-}
-.blog__item:hover::before {
-  transform: scaleY(1);
 }
 
 /* Magnetic card glow */
@@ -382,10 +369,10 @@
   font-size: 0.72rem;
   padding: 2px 10px;
   border-radius: var(--radius-full);
-  background: rgba(245, 158, 11, 0.1);
-  color: #f59e0b;
+  background: var(--featured-soft);
+  color: var(--featured);
   font-weight: 600;
-  border: 1px solid rgba(245, 158, 11, 0.2);
+  border: 1px solid var(--featured-soft);
 }
 .blog__title {
   font-size: 1.2rem;
@@ -843,3 +830,17 @@
 .blog__item:nth-child(4) { animation-delay: 120ms; }
 .blog__item:nth-child(5) { animation-delay: 160ms; }
 .blog__item:nth-child(6) { animation-delay: 200ms; }
+
+/* ---------- Touch target expansion (WCAG 2.5.5: ≥44px) ---------- */
+/* Icon-only buttons keep compact visual size; ::before expands the hit area */
+.theme-toggle,
+.reading-prefs__btn {
+  position: relative;
+}
+.theme-toggle::before,
+.reading-prefs__btn::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+}

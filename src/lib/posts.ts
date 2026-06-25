@@ -1,12 +1,26 @@
-import matter from 'gray-matter';
+import { parseFrontmatter } from './parse-frontmatter';
 import readingTime from 'reading-time';
+import { z } from 'zod';
 import { PostFrontmatter, PostMeta, PostFull } from '@/types';
-import { assertRequiredFields } from './utils';
 import { CONTENT_DIR } from './constants';
 import { getContentSource } from './content-source';
 import { createCache } from './cache';
 
-const REQUIRED_FIELDS = ['title', 'description', 'date'];
+/** Zod schema for post frontmatter — consistent with projects.ts validation */
+const postFrontmatterSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().min(1),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'date 必须为 YYYY-MM-DD 格式'),
+  tags: z.array(z.string()).optional().default([]),
+  published: z.boolean().optional().default(true),
+  featured: z.boolean().optional().default(false),
+  image: z.string()
+    .refine(
+      (v) => !v || /^https?:\/\//.test(v) || v.startsWith('/'),
+      'image 必须是 http(s):// URL 或 / 开头的绝对路径',
+    )
+    .optional(),
+});
 
 /** 文件名 → slug：去掉 YYYY-MM- 前缀和 .mdx 后缀（导出供 RSS 脚本等复用） */
 export function filenameToSlug(filename: string): string {
@@ -15,7 +29,7 @@ export function filenameToSlug(filename: string): string {
     .replace(/\.mdx$/, '');
 }
 
-/** 读取并解析单篇文章（含 frontmatter 校验） */
+/** 读取并解析单篇文章（含 frontmatter zod 校验） */
 function readPostFile(filename: string): PostFull {
   const source = getContentSource();
   const relativePath = `${CONTENT_DIR.blog}/${filename}`;
@@ -23,24 +37,18 @@ function readPostFile(filename: string): PostFull {
   if (raw === null) {
     throw new Error(`[posts.ts] 文件不存在: ${relativePath}`);
   }
-  const { data, content } = matter(raw);
+  const { data, content } = parseFrontmatter(raw);
 
-  assertRequiredFields(data, REQUIRED_FIELDS, relativePath);
+  // Zod 校验：类型 + 格式 + 必填一次性完成
+  const parsed = postFrontmatterSchema.safeParse(data);
+  if (!parsed.success) {
+    const issues = parsed.error.issues
+      .map((i) => `${i.path.join('.')}: ${i.message}`)
+      .join('; ');
+    throw new Error(`[内容校验失败] ${relativePath}: ${issues}`);
+  }
 
-  // 运行时类型校验，防止 frontmatter 字段类型错误
-  if (typeof data.title !== 'string') throw new Error(`[内容校验失败] ${relativePath}: title 必须是字符串`);
-  if (typeof data.description !== 'string') throw new Error(`[内容校验失败] ${relativePath}: description 必须是字符串`);
-  if (typeof data.date !== 'string') throw new Error(`[内容校验失败] ${relativePath}: date 必须是字符串`);
-
-  const frontmatter: PostFrontmatter = {
-    title: data.title,
-    description: data.description,
-    date: data.date,
-    tags: Array.isArray(data.tags) ? data.tags : [],
-    published: data.published !== false, // 缺省 = true
-    featured: data.featured === true,    // 缺省 = false
-    image: data.image,
-  };
+  const frontmatter: PostFrontmatter = parsed.data;
 
   const stats = readingTime(content);
 

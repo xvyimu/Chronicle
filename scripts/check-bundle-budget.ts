@@ -90,7 +90,7 @@ function checkBudgets(): { passed: boolean; violations: string[] } {
   }
 
   // Report per-prefix violations
-  for (const [prefix, data] of byPrefix) {
+  for (const [, data] of byPrefix) {
     for (const f of data.files) {
       if (f.kb > data.maxKB) {
         violations.push(
@@ -110,7 +110,7 @@ function checkBudgets(): { passed: boolean; violations: string[] } {
   // Print summary
   console.log('\n📦 Bundle Budget Report');
   console.log('─'.repeat(60));
-  for (const [prefix, data] of byPrefix) {
+  for (const [, data] of byPrefix) {
     const prefixTotal = data.files.reduce((sum, f) => sum + f.kb, 0);
     const largest = data.files.sort((a, b) => b.kb - a.kb)[0];
     if (largest) {

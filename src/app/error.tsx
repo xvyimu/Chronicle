@@ -13,11 +13,20 @@ export default function ErrorBoundary({
     console.error('Page error:', error);
   }, [error]);
 
+  // In production, don't expose raw error messages — they may contain
+  // file paths, stack fragments, or internal implementation details.
+  const isDev = process.env.NODE_ENV === 'development';
+  const displayMessage = isDev
+    ? error.message
+    : error.digest
+      ? `错误代码: ${error.digest}`
+      : '页面加载时发生未知错误。';
+
   return (
     <div className="flex min-h-[50vh] flex-col items-center justify-center px-6 text-center">
       <h2 className="text-2xl font-bold text-[var(--text)]">出错了</h2>
       <p className="mt-3 text-[var(--text-dim)] max-w-md">
-        {error.message || '页面加载时发生未知错误。'}
+        {displayMessage}
       </p>
       <button
         onClick={reset}

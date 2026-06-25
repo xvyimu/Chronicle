@@ -8,6 +8,10 @@ export default function MagneticCard({ children, className = '' }: { children: R
   const handleMouseMove = (e: React.MouseEvent) => {
     const el = ref.current;
     if (!el) return;
+
+    // Respect prefers-reduced-motion: skip 3D transform entirely
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
     const rect = el.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width - 0.5;
     const y = (e.clientY - rect.top) / rect.height - 0.5;

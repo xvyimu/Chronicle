@@ -1,31 +1,5 @@
 import { test, expect } from '@playwright/test';
 
-/**
- * Wait for React hydration — ThemeToggle gets a `title` attr only after mounting.
- * Before hydration, fill() won't trigger onChange on controlled inputs.
- */
-async function waitForHydration(page: import('@playwright/test').Page) {
-  await page.waitForFunction(
-    () => !!document.querySelector('button[aria-label="切换主题"]')?.hasAttribute('title'),
-    { timeout: 15000 },
-  );
-}
-
-/**
- * Set value on a React controlled input by using the native setter + input event.
- * Playwright's fill() and pressSequentially() may not trigger onChange reliably
- * on React controlled inputs in dev mode.
- */
-async function setReactInputValue(page: import('@playwright/test').Page, selector: string, value: string) {
-  await page.evaluate(({ sel, val }) => {
-    const input = document.querySelector(sel) as HTMLInputElement;
-    if (!input) return;
-    const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
-    nativeSetter?.call(input, val);
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-  }, { sel: selector, val: value });
-}
-
 test.describe('博客列表页', () => {
   test('显示博客标题和搜索框', async ({ page }) => {
     await page.goto('/blog');

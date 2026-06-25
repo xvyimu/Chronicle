@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, type HTMLAttributes } from 'react';
+import { useState, useRef, useEffect, type HTMLAttributes } from 'react';
 
 /**
  * CodeBlock — 替代 CodeBlockEnhancer 的 React 组件。
@@ -14,6 +14,14 @@ type PreProps = HTMLAttributes<HTMLPreElement> & { 'data-language'?: string };
 export default function CodeBlock({ children, ...props }: PreProps) {
   const [copied, setCopied] = useState(false);
   const preRef = useRef<HTMLPreElement>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clean up any pending timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   const language = props['data-language'];
 
@@ -22,7 +30,8 @@ export default function CodeBlock({ children, ...props }: PreProps) {
     try {
       await navigator.clipboard.writeText(codeText);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => setCopied(false), 2000);
     } catch {
       // 降级方案：使用 execCommand 兼容非 HTTPS 环境
       try {
@@ -35,7 +44,8 @@ export default function CodeBlock({ children, ...props }: PreProps) {
         document.execCommand('copy');
         document.body.removeChild(textarea);
         setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        timeoutRef.current = setTimeout(() => setCopied(false), 2000);
       } catch {
         setCopied(false);
       }

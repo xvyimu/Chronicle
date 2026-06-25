@@ -4,13 +4,14 @@ import { useEffect, useRef } from 'react';
 
 export default function ReadingProgress() {
   const barRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number | null>(null);
 
   useEffect(() => {
     let ticking = false;
     const onScroll = () => {
       if (ticking) return;
       ticking = true;
-      requestAnimationFrame(() => {
+      rafRef.current = requestAnimationFrame(() => {
         const scrollTop = window.scrollY;
         const docHeight = document.documentElement.scrollHeight - window.innerHeight;
         if (docHeight > 0 && barRef.current) {
@@ -22,7 +23,10 @@ export default function ReadingProgress() {
 
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll(); // 初始化
-    return () => window.removeEventListener('scroll', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
   }, []);
 
   return (

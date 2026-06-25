@@ -48,13 +48,20 @@ describe('ProjectsPage', () => {
     }
   });
 
-  it('renders GitHub links for projects with github field', () => {
+  it('renders GitHub links with correct href for projects with github field', () => {
     render(<ProjectsPage />);
     const projects = getAllProjects().filter((p) => p.github);
 
+    // Ensure there is at least one project with a github field
+    expect(projects.length).toBeGreaterThan(0);
+
     for (const project of projects) {
-      // The project card should link to the project detail page
-      expect(screen.getByText(project.title)).toBeInTheDocument();
+      // Find the anchor element whose href contains the project's github URL
+      const githubLink = document.querySelector<HTMLAnchorElement>(
+        `a[href*="${project.github}"]`,
+      );
+      expect(githubLink).not.toBeNull();
+      expect(githubLink!.getAttribute('href')).toContain(project.github);
     }
   });
 });

@@ -44,8 +44,12 @@
 # generated reports (Trae Work / ad-hoc HTML)
 blog-next-steps/
 blog-progress-report/
+project-diagnostic-report/
 优化方案.html
 项目深度分析与代码审查报告.html
+
+# npm lockfile (project uses pnpm)
+package-lock.json
 
 # debug
 npm-debug.log*

@@ -44,7 +44,7 @@ export default function Header() {
           onClick={() => setMobileOpen(false)}
           aria-hidden="true"
         />
-        <nav className={`header__nav ${mobileOpen ? 'is-open' : ''}`} aria-label="主导航">
+        <nav id="mobile-nav" className={`header__nav ${mobileOpen ? 'is-open' : ''}`} aria-label="主导航">
           {navItems.map((item) => {
             const isActive =
               item.href === '/'
@@ -65,9 +65,11 @@ export default function Header() {
         <div className="header__actions">
           <ThemeToggle />
           <button
-            className="icon-btn header__menu-btn"
+            className="icon-btn header__mobile-toggle"
             onClick={() => setMobileOpen((v) => !v)}
             aria-label="菜单"
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-nav"
           >
             {mobileOpen ? (
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">

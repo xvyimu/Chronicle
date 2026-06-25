@@ -4,7 +4,8 @@
  * 用于在 CI 中自动审计关键页面，防止性能回归。
  * 阈值基于当前站点已知的优秀指标设定。
  *
- * 本地运行：npx lhci autorun
+ * CI 通过 treosh/lighthouse-ci-action@v12 的 configPath 引用本文件。
+ * 本地运行（按需拉取）：npx @lhci/cli autorun
  */
 module.exports = {
   ci: {

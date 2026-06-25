@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Generated report artifacts (HTML/JS/fonts, not project source)
+    "project-diagnostic-report/**",
   ]),
   // Allow setState in effects for legitimate use cases:
   // - localStorage init (ThemeToggle), DOM measurement (TableOfContents)

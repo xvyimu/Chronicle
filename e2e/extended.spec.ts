@@ -9,14 +9,15 @@ test.describe('作品详情页', () => {
     // Find a project detail link (not /projects itself)
     const projectLink = page.locator('a[href*="/projects/"]').first();
     const href = await projectLink.getAttribute('href');
+    expect(href).toBeTruthy();
+    expect(href).not.toBe('/projects');
+    expect(href).toMatch(/\/projects\/[^/]+$/);
 
-    if (href && href !== '/projects' && href.match(/\/projects\/[^/]+$/)) {
-      await projectLink.click();
-      await expect(page).toHaveURL(/\/projects\/[^/]+$/);
+    await projectLink.click();
+    await expect(page).toHaveURL(/\/projects\/[^/]+$/);
 
-      // Should have a title (h1)
-      await expect(page.locator('h1')).toBeVisible({ timeout: 10000 });
-    }
+    // Should have a title (h1)
+    await expect(page.locator('h1')).toBeVisible({ timeout: 10000 });
   });
 
   test('作品详情页显示内容', async ({ page }) => {
@@ -25,16 +26,15 @@ test.describe('作品详情页', () => {
     await expect(page.locator('a[href*="/projects/"]').first()).toBeVisible({ timeout: 10000 });
     const projectLink = page.locator('a[href*="/projects/"]').first();
     const href = await projectLink.getAttribute('href');
+    expect(href).toMatch(/\/projects\/[^/]+$/);
 
-    if (href && href.match(/\/projects\/[^/]+$/)) {
-      await projectLink.click();
+    await projectLink.click();
 
-      // Page body should have meaningful content
-      await expect(page.locator('body')).toBeVisible();
-      // Should have some text content
-      const bodyText = await page.locator('body').textContent();
-      expect(bodyText?.trim().length).toBeGreaterThan(0);
-    }
+    // Page body should have meaningful content
+    await expect(page.locator('body')).toBeVisible();
+    // Should have some text content
+    const bodyText = await page.locator('body').textContent();
+    expect(bodyText?.trim().length).toBeGreaterThan(0);
   });
 });
 
@@ -45,20 +45,22 @@ test.describe('标签详情页', () => {
 
     // Click the first tag link
     const tagLink = page.locator('a[href*="/tags/"]').first();
+    await expect(tagLink).toBeVisible({ timeout: 10000 });
     const href = await tagLink.getAttribute('href');
+    expect(href).toBeTruthy();
+    expect(href).not.toBe('/tags');
+    expect(href).toMatch(/\/tags\/[^/]+$/);
 
-    if (href && href !== '/tags' && href.match(/\/tags\/[^/]+$/)) {
-      await tagLink.click();
-      await expect(page).toHaveURL(/\/tags\/[^/]+$/);
+    await tagLink.click();
+    await expect(page).toHaveURL(/\/tags\/[^/]+$/);
 
-      // Should display the tag name as heading
-      await expect(page.locator('h1, h2').first()).toBeVisible({ timeout: 10000 });
+    // Should display the tag name as heading
+    await expect(page.locator('h1, h2').first()).toBeVisible({ timeout: 10000 });
 
-      // Should have at least one blog post link
-      const blogLinks = page.locator('a[href*="/blog/"]');
-      const count = await blogLinks.count();
-      expect(count).toBeGreaterThan(0);
-    }
+    // Should have at least one blog post link
+    const blogLinks = page.locator('a[href*="/blog/"]');
+    const count = await blogLinks.count();
+    expect(count).toBeGreaterThan(0);
   });
 });
 

@@ -21,18 +21,21 @@
   /* 文字 */
   --text: #1a1a2e;
   --text-soft: #4a4a68;
-  --text-dim: #8e8ea0;
-  --text-faint: #b8b8c8;
+  --text-dim: #6e6e85;
 
   /* 边框 */
   --border: #ececf0;
   --border-strong: #d8d8e0;
 
   /* 品牌色 — 柔和靛蓝 */
-  --brand: #6366f1;
-  --brand-hover: #5558e0;
-  --brand-soft: rgba(99, 102, 241, 0.08);
-  --brand-gradient: linear-gradient(135deg, #6366f1, #818cf8);
+  --brand: #5457e0;
+  --brand-hover: #4f52d8;
+  --brand-soft: rgba(84, 87, 224, 0.08);
+  --brand-gradient: linear-gradient(135deg, #5457e0, #818cf8);
+
+  /* 语义色 — 精选标记 */
+  --featured: #f59e0b;
+  --featured-soft: rgba(245, 158, 11, 0.1);
 
   /* 阴影 — 精致分层 */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.03);
@@ -79,16 +82,18 @@
 
   --text: #e8e8f0;
   --text-soft: #b0b0c4;
-  --text-dim: #6e6e88;
-  --text-faint: #4a4a5c;
+  --text-dim: #8e8ea4;
 
   --border: #24242e;
   --border-strong: #34343e;
 
-  --brand: #818cf8;
-  --brand-hover: #9499f9;
-  --brand-soft: rgba(129, 140, 248, 0.12);
-  --brand-gradient: linear-gradient(135deg, #818cf8, #a5b4fc);
+  --brand: #5b5ee8;
+  --brand-hover: #6366f1;
+  --brand-soft: rgba(91, 94, 232, 0.12);
+  --brand-gradient: linear-gradient(135deg, #5b5ee8, #a5b4fc);
+
+  --featured: #fbbf24;
+  --featured-soft: rgba(251, 191, 36, 0.12);
 
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.2);

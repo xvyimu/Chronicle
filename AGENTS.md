@@ -10,10 +10,10 @@ A personal blog built with Next.js 16.2 (App Router), React 19, and Tailwind CSS
 
 - **Framework**: Next.js 16.2 (App Router, SSG)
 - **UI**: React 19.2, Tailwind CSS 4, BEM custom CSS
-- **Content**: MDX with gray-matter frontmatter, next-mdx-remote
+- **Content**: MDX with custom frontmatter parser (`lib/parse-frontmatter.ts`, js-yaml 4.x), next-mdx-remote
 - **Syntax Highlighting**: Shiki via rehype-pretty-code
 - **Search**: fuse.js (client-side fuzzy search)
-- **Testing**: Vitest (unit/integration, 115 tests), Playwright (E2E, 30 tests)
+- **Testing**: Vitest (unit/integration, 184 tests), Playwright (E2E, 30 tests)
 - **CI**: GitHub Actions (lint / test / tsc / build / bundle-budget / e2e)
 - **Deployment**: Vercel
 
@@ -35,12 +35,13 @@ src/
 │   ├── tags/[tag]/         # Tag archive
 │   ├── about/              # About page
 │   ├── styles/             # CSS files (tokens / layout / components / prose / responsive)
-│   ├── layout.tsx          # Root layout (fonts, theme, skip-link)
+│   ├── layout.tsx          # Root layout (fonts, theme, skip-link, CSP nonce)
 │   ├── manifest.ts         # PWA manifest (from constants.ts)
 │   ├── page.tsx            # Home page
 │   ├── sitemap.ts          # Dynamic sitemap
 │   ├── robots.ts           # Robots.txt
-│   └── error.tsx           # Error boundary
+│   ├── middleware.ts       # CSP nonce generation (per-request)
+│   └── error.tsx           # Error boundary (production-safe)
 ├── components/
 │   ├── blog/               # Blog-specific (SearchBar, BlogCard, CodeBlock, TOC, etc.)
 │   ├── layout/             # Header, Footer
@@ -53,10 +54,12 @@ src/
 │   ├── tags.ts             # Tag management
 │   ├── about.ts            # About page content
 │   ├── content-source.ts   # ContentSource interface (fs abstraction)
+│   ├── parse-frontmatter.ts # MDX frontmatter parser (js-yaml 4.x, gray-matter parity)
 │   ├── cache.ts            # createCache<T> utility
+│   ├── storage.ts          # safeLocalStorage wrapper (SSR-safe)
 │   ├── jsonld.ts           # JSON-LD structured data
 │   ├── constants.ts        # Site config, content dirs, page size
-│   └── utils.ts            # slugify, formatDate, validateFrontmatter
+│   └── utils.ts            # slugify, formatDate
 └── types/                  # TypeScript types (PostMeta, PostFull, Project, TagInfo)
 ```
 
@@ -65,7 +68,7 @@ src/
 - **CSS**: BEM for structural components, Tailwind for utilities. See `docs/css-conventions.md`
 - **Caching**: Use `createCache<T>` from `lib/cache.ts`. See `docs/cache-components-migration.md`
 - **Testing**: Unit tests in `*.test.tsx` alongside components. E2E in `e2e/` directory
-- **Security**: CSP headers in `next.config.ts`. No remote images (`remotePatterns: []`)
+- **Security**: CSP nonce via `src/middleware.ts` (per-request). Security headers in `next.config.ts`. No remote images (`remotePatterns: []`)
 - **Fonts**: `next/font/google` only. CSS variables: `--font-noto-sans-sc`, `--font-jetbrains-mono`
 - **SEO**: JSON-LD via `lib/jsonld.ts`. OG images via `opengraph-image.tsx` file convention
 - **Site Config**: Single source of truth in `src/lib/constants.ts` (`SITE_CONFIG`)
@@ -75,7 +78,7 @@ src/
 ```bash
 pnpm dev          # Start dev server (port 3000)
 pnpm build        # Generate RSS + production build
-pnpm test         # Run unit/integration tests (115 tests)
+pnpm test         # Run unit/integration tests (184 tests)
 pnpm test:e2e     # Run E2E tests (30 tests, auto-starts dev server on port 3001)
 pnpm lint         # ESLint
 pnpm analyze     # Bundle size analysis
@@ -90,7 +93,9 @@ pnpm analyze     # Bundle size analysis
 
 ## CI Pipeline
 
-GitHub Actions (`.github/workflows/ci.yml`) runs on push/PR to main:
-1. **quality** — lint → test → tsc → generate-rss → build → bundle-budget
+GitHub Actions (`.github/workflows/ci.yml`) runs on push/PR to master:
+1. **quality** — pnpm audit → lint → test → tsc → generate-rss → build → bundle-budget
 2. **bundle-analyze** — builds with analyzer, uploads report as artifact
-3. **e2e** — installs Chromium, runs Playwright tests
+3. **e2e** — installs Chromium, runs Playwright tests (production build)
+4. **lighthouse** — Lighthouse CI via treosh/lighthouse-ci-action@v12 (needs quality; reuses `lighthouse.config.js` for assertions)
+5. **deploy** — Vercel production deploy (needs quality + e2e; master push only)

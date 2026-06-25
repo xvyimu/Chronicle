@@ -34,11 +34,14 @@ export default function ParticleCanvas() {
     const resize = () => {
       w = canvas.clientWidth;
       h = canvas.clientHeight;
-      canvas.width = w * devicePixelRatio;
-      canvas.height = h * devicePixelRatio;
+      // Clamp devicePixelRatio to 2 — higher values cause excessive
+      // canvas resolution on high-DPI displays without visible quality gain
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
       // Reset transform before scaling to avoid accumulation on resize
       ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.scale(devicePixelRatio, devicePixelRatio);
+      ctx.scale(dpr, dpr);
     };
 
     const particles: Particle[] = [];
@@ -73,7 +76,7 @@ export default function ParticleCanvas() {
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(99, 102, 241, ${p.opacity})`;
+        ctx.fillStyle = `rgba(84, 87, 224, ${p.opacity})`;
         ctx.fill();
       }
 
@@ -90,7 +93,7 @@ export default function ParticleCanvas() {
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = `rgba(99, 102, 241, ${alpha})`;
+            ctx.strokeStyle = `rgba(84, 87, 224, ${alpha})`;
             ctx.stroke();
           }
         }
@@ -98,10 +101,6 @@ export default function ParticleCanvas() {
 
       animId = requestAnimationFrame(draw);
     };
-
-    // Respect reduced motion
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (mq.matches) return;
 
     resize();
     initParticles();

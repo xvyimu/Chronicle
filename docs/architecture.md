@@ -162,7 +162,7 @@ public/* + RSS + sitemap + metadata
 ```
 content/blog/*.mdx
   ↓
-gray-matter 解析 frontmatter
+src/lib/parse-frontmatter.ts 解析 frontmatter (js-yaml 4.x)
   ↓
 src/lib/posts.ts 生成 PostFull / PostMeta
   ↓

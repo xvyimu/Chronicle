@@ -9,12 +9,22 @@
 import fs from 'fs';
 import path from 'path';
 import { Feed } from 'feed';
-import matter from 'gray-matter';
+import { parseFrontmatter } from '@/lib/parse-frontmatter';
 import readingTime from 'reading-time';
+import { z } from 'zod';
 import { SITE_CONFIG } from '@/lib/constants';
 import { filenameToSlug } from '@/lib/posts';
 
 const POSTS_DIR = path.join(process.cwd(), 'content/blog');
+
+/** Frontmatter schema — mirrors posts.ts validation for RSS generation */
+const rssFrontmatterSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().min(1),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'date 必须为 YYYY-MM-DD 格式'),
+  published: z.boolean().optional().default(true),
+  featured: z.boolean().optional().default(false),
+});
 
 function generateRss() {
   if (!fs.existsSync(POSTS_DIR)) {
@@ -42,19 +52,28 @@ function generateRss() {
 
   for (const filename of filenames) {
     const raw = fs.readFileSync(path.join(POSTS_DIR, filename), 'utf-8');
-    const { data, content } = matter(raw);
+    const { data, content } = parseFrontmatter(raw);
 
-    if (data.published === false) continue;
+    // Validate frontmatter before use — prevents Invalid Date / undefined title
+    const parsed = rssFrontmatterSchema.safeParse(data);
+    if (!parsed.success) {
+      const issues = parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ');
+      console.warn(`[RSS] 跳过 ${filename}: ${issues}`);
+      continue;
+    }
+    const fm = parsed.data;
+
+    if (fm.published === false) continue;
 
     const slug = filenameToSlug(filename);
 
     feed.addItem({
-      title: data.title,
+      title: fm.title,
       id: `${SITE_CONFIG.url}/blog/${slug}`,
       link: `${SITE_CONFIG.url}/blog/${slug}`,
-      description: data.description,
+      description: fm.description,
       content,
-      date: new Date(data.date),
+      date: new Date(fm.date),
       // Custom extension: reading time as a JSON feed extension
       extensions: [
         {

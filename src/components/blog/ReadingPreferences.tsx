@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { safeLocalStorage } from '@/lib/storage';
 
 type FontSize = 'sm' | 'md' | 'lg';
 type Width = 'narrow' | 'normal' | 'wide';
@@ -21,8 +22,8 @@ export default function ReadingPreferences({ targetId = 'article-content' }: { t
 
   // Restore from localStorage on mount — must run before apply
   useEffect(() => {
-    const savedSize = localStorage.getItem('reading-font-size') as FontSize | null;
-    const savedWidth = localStorage.getItem('reading-width') as Width | null;
+    const savedSize = safeLocalStorage.getItem('reading-font-size') as FontSize | null;
+    const savedWidth = safeLocalStorage.getItem('reading-width') as Width | null;
     if (savedSize && FONT_SIZES.includes(savedSize)) setFontSize(savedSize);
     if (savedWidth && WIDTHS.includes(savedWidth)) setWidth(savedWidth);
     setHydrated(true);
@@ -35,8 +36,8 @@ export default function ReadingPreferences({ targetId = 'article-content' }: { t
     if (!el) return;
     el.style.setProperty('--reading-font-size', FONT_SIZE_MAP[fontSize]);
     el.style.setProperty('--reading-width', WIDTH_MAP[width]);
-    localStorage.setItem('reading-font-size', fontSize);
-    localStorage.setItem('reading-width', width);
+    safeLocalStorage.setItem('reading-font-size', fontSize);
+    safeLocalStorage.setItem('reading-width', width);
   }, [fontSize, width, targetId, hydrated]);
 
   const cycleFontSize = () => {

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
+import { safeLocalStorage } from '@/lib/storage';
 
 type Theme = 'system' | 'light' | 'dark';
 
@@ -37,7 +38,7 @@ export default function ThemeToggle() {
 
   useEffect(() => {
     const VALID_THEMES: Theme[] = ['light', 'dark', 'system'];
-    const stored = localStorage.getItem('theme') as Theme | null;
+    const stored = safeLocalStorage.getItem('theme') as Theme | null;
     if (stored && VALID_THEMES.includes(stored)) setTheme(stored);
     setMounted(true);
   }, []);
@@ -58,9 +59,9 @@ export default function ThemeToggle() {
     }
 
     if (theme === 'system') {
-      localStorage.removeItem('theme');
+      safeLocalStorage.removeItem('theme');
     } else {
-      localStorage.setItem('theme', theme);
+      safeLocalStorage.setItem('theme', theme);
     }
   }, [theme, mounted]);
 

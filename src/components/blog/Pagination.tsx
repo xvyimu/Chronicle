@@ -24,6 +24,7 @@ export default function Pagination({ currentPage, totalPages, basePath = '/blog'
           <Link
             key={p}
             href={href}
+            aria-current={p === currentPage ? 'page' : undefined}
             className={`inline-flex h-9 w-9 items-center justify-center rounded-md text-sm transition-colors ${
               p === currentPage
                 ? 'bg-primary text-white'
