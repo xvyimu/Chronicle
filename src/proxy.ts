@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * Middleware — generates per-request CSP nonce.
+ * Proxy (replaces deprecated middleware) — generates per-request CSP nonce.
  *
  * Next.js automatically reads the `x-nonce` header and adds it to
  * all framework-generated <script> tags. Inline scripts in layout.tsx
@@ -10,7 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
  * This eliminates `script-src 'unsafe-inline'`, closing the XSS
  * injection vector while keeping Next.js hydration functional.
  */
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const isDev = process.env.NODE_ENV === 'development';
 
   // In dev, skip CSP — Turbopack HMR needs inline scripts and websocket

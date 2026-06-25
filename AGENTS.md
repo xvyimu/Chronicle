@@ -40,7 +40,7 @@ src/
 │   ├── page.tsx            # Home page
 │   ├── sitemap.ts          # Dynamic sitemap
 │   ├── robots.ts           # Robots.txt
-│   ├── middleware.ts       # CSP nonce generation (per-request)
+│   ├── proxy.ts            # CSP nonce generation (per-request)
 │   └── error.tsx           # Error boundary (production-safe)
 ├── components/
 │   ├── blog/               # Blog-specific (SearchBar, BlogCard, CodeBlock, TOC, etc.)
@@ -68,7 +68,7 @@ src/
 - **CSS**: BEM for structural components, Tailwind for utilities. See `docs/css-conventions.md`
 - **Caching**: Use `createCache<T>` from `lib/cache.ts`. See `docs/cache-components-migration.md`
 - **Testing**: Unit tests in `*.test.tsx` alongside components. E2E in `e2e/` directory
-- **Security**: CSP nonce via `src/middleware.ts` (per-request). Security headers in `next.config.ts`. No remote images (`remotePatterns: []`)
+- **Security**: CSP nonce via `src/proxy.ts` (per-request). Security headers in `next.config.ts`. No remote images (`remotePatterns: []`)
 - **Fonts**: `next/font/google` only. CSS variables: `--font-noto-sans-sc`, `--font-jetbrains-mono`
 - **SEO**: JSON-LD via `lib/jsonld.ts`. OG images via `opengraph-image.tsx` file convention
 - **Site Config**: Single source of truth in `src/lib/constants.ts` (`SITE_CONFIG`)
