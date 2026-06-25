@@ -55,6 +55,8 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#0d0d14" media="(prefers-color-scheme: dark)" />
         <script
           nonce={nonce}
           dangerouslySetInnerHTML={{

@@ -34,7 +34,9 @@ export default function Header() {
       <div className="header__inner">
         <Link href="/" className="header__brand">
           <span className="header__logo">
-            {SITE_CONFIG.name.charAt(0)}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+            </svg>
           </span>
           <span className="header__name">{SITE_CONFIG.name}</span>
         </Link>

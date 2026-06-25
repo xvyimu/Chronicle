@@ -139,7 +139,7 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="w-full pl-10 pr-10 py-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] text-sm outline-none transition-all"
+          className="w-full pl-10 pr-10 py-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] text-sm focus-visible:outline-2 focus-visible:outline-[var(--brand)] transition-all"
           aria-label="搜索文章"
           role="combobox"
           aria-expanded={query.trim().length > 0}
