@@ -4,7 +4,7 @@
         <title>西江月</title>
         <link>http://localhost:3000</link>
         <description>云原生 · 全栈 · 自动化</description>
-        <lastBuildDate>Thu, 25 Jun 2026 15:21:54 GMT</lastBuildDate>
+        <lastBuildDate>Fri, 26 Jun 2026 01:22:28 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <language>zh-CN</language>
@@ -3664,7 +3664,7 @@ dist
             <pubDate>Mon, 22 Jun 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[从 Workers 基础概念到完整项目实战，涵盖路由、KV 存储、环境变量、定时触发器、Cron Triggers 和部署策略，带你搭建一个真正的可运行应用。]]></description>
             <content:encoded><![CDATA[
-> 参考 [domain-check](https://github.com/yutian81/domain-check) 项目的实践经验。
+> 参考 [domain-check](https://github.com/yuanjia1314/domain-check) 项目的实践经验。
 
 ## 什么是 Cloudflare Workers
 

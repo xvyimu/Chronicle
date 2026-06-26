@@ -6,6 +6,8 @@ export interface PostFrontmatter {
   published: boolean;
   featured: boolean;
   image?: string;
+  source?: string;       // URL or description of the source material
+  license?: string;      // License type (e.g. "MIT", "CC-BY-4.0", "Original")
 }
 
 export interface PostMeta extends PostFrontmatter {
