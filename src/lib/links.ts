@@ -1,0 +1,382 @@
+export interface LinkItem {
+  title: string;
+  url: string;
+  description: string;
+}
+
+export interface LinkCategory {
+  id: string;
+  title: string;
+  description: string;
+  items: LinkItem[];
+}
+
+export const linkCategories: LinkCategory[] = [
+  {
+    id: 'ai',
+    title: 'AI 工具',
+    description: '主流的 AI 对话、创作和开发辅助工具',
+    items: [
+      {
+        title: 'ChatGPT',
+        url: 'https://chat.openai.com/',
+        description: 'OpenAI 的对话 AI，写代码、答疑、翻译都很顺手',
+      },
+      {
+        title: 'Claude',
+        url: 'https://claude.ai/',
+        description: '擅长处理长文本和复杂逻辑，代码分析能力突出',
+      },
+      {
+        title: 'DeepSeek',
+        url: 'https://chat.deepseek.com/',
+        description: '国产开源大模型，性价比高，上下文窗口大',
+      },
+      {
+        title: 'Kimi',
+        url: 'https://kimi.moonshot.cn/',
+        description: '支持超长上下文的 AI 助手，读论文和源码的好选择',
+      },
+      {
+        title: '豆包',
+        url: 'https://www.doubao.com/chat/',
+        description: '字节跳动的 AI 助手，轻量且日常对话体验流畅',
+      },
+      {
+        title: 'Gemini',
+        url: 'https://gemini.google.com/',
+        description: '谷歌多模态模型，能理解图片、代码和文档',
+      },
+      {
+        title: 'Grok',
+        url: 'https://grok.com/',
+        description: 'xAI 的对话模型，实时接入互联网信息',
+      },
+      {
+        title: 'Copilot',
+        url: 'https://copilot.microsoft.com/',
+        description: '微软 AI 助手，与 Bing 搜索深度整合',
+      },
+      {
+        title: '通义千问',
+        url: 'https://tongyi.aliyun.com/',
+        description: '阿里云的大语言模型，中文语义理解表现稳定',
+      },
+      {
+        title: '文心一言',
+        url: 'https://yiyan.baidu.com/',
+        description: '百度知识增强大模型，结合搜索生态',
+      },
+      {
+        title: 'ClipDrop',
+        url: 'https://clipdrop.co/',
+        description: 'AI 图像工具集，文字生成图片、背景替换、画质增强',
+      },
+      {
+        title: 'NotebookLM',
+        url: 'https://notebooklm.google.com/',
+        description: '谷歌 AI 笔记工具，上传资料后自动生成摘要和问答',
+      },
+      {
+        title: '硅基流动',
+        url: 'https://cloud.siliconflow.cn/',
+        description: '大模型 API 聚合平台，提供多种开源模型的推理服务',
+      },
+      {
+        title: 'Together AI',
+        url: 'https://www.together.ai/',
+        description: '开源模型推理 API，适合开发者和研究使用',
+      },
+    ],
+  },
+  {
+    id: 'coding',
+    title: '编程与学习',
+    description: '刷题平台、技术文档和自学资源',
+    items: [
+      {
+        title: '力扣',
+        url: 'https://leetcode.cn/',
+        description: '面试刷题首选平台，题目分类清晰，社区题解质量高',
+      },
+      {
+        title: '洛谷',
+        url: 'https://www.luogu.com.cn/',
+        description: '国内活跃的 OJ 社区，覆盖从入门到省选的海量题目',
+      },
+      {
+        title: 'Codeforces',
+        url: 'https://codeforces.com/',
+        description: '全球最知名的算法竞赛平台，每周都有高质量比赛',
+      },
+      {
+        title: 'AtCoder',
+        url: 'https://atcoder.jp/',
+        description: '日本竞赛平台，题目风格友好，对新手比较友善',
+      },
+      {
+        title: '牛客',
+        url: 'https://www.nowcoder.com/',
+        description: '国内校招刷题和面经社区，笔试面试题收集全面',
+      },
+      {
+        title: 'Virtual Judge',
+        url: 'https://vjudge.net/',
+        description: '聚合多个 OJ 的提交平台，跨站组赛很方便',
+      },
+      {
+        title: 'OI-Wiki',
+        url: 'https://oi-wiki.org/',
+        description: '竞赛算法知识全书，从基础数据结构的进阶算法都覆盖',
+      },
+      {
+        title: 'MDN',
+        url: 'https://developer.mozilla.org/zh-CN/',
+        description: 'Web 技术权威文档，前端开发的不二参考',
+      },
+      {
+        title: '菜鸟教程',
+        url: 'https://www.runoob.com/',
+        description: '编程入门教程站，语言和框架的基础知识一应俱全',
+      },
+      {
+        title: 'GitHub',
+        url: 'https://github.com/',
+        description: '全球最大的代码托管平台，找开源项目和协作开发的中心',
+      },
+      {
+        title: 'Stack Overflow',
+        url: 'https://stackoverflow.com/',
+        description: '技术问答社区，大部分编码问题都能搜到答案',
+      },
+      {
+        title: '编程导航',
+        url: 'https://www.code-nav.cn/',
+        description: '编程资源导航，整理了大量的学习路线和工具推荐',
+      },
+      {
+        title: 'B站',
+        url: 'https://www.bilibili.com/',
+        description: '国内最大的视频站，编程教程和技术分享资源极其丰富',
+      },
+      {
+        title: '中国大学 MOOC',
+        url: 'https://www.icourse163.org/',
+        description: '高校官方在线课程平台，计算机基础到前沿应有尽有',
+      },
+    ],
+  },
+  {
+    id: 'cloud',
+    title: '云服务与基础设施',
+    description: '主流云平台、域名注册和网站加速服务',
+    items: [
+      {
+        title: '阿里云',
+        url: 'https://www.aliyun.com/',
+        description: '国内市场份额领先的云服务商，产品线覆盖全面',
+      },
+      {
+        title: '腾讯云',
+        url: 'https://cloud.tencent.com/',
+        description: '腾讯旗下云服务平台，轻量应用服务器性价比较好',
+      },
+      {
+        title: '华为云',
+        url: 'https://www.huaweicloud.com/',
+        description: '华为公有云平台，在国内合规和政企市场有优势',
+      },
+      {
+        title: '甲骨文云',
+        url: 'https://www.oracle.com/cn/cloud/free/',
+        description: '提供永久免费套餐，适合个人项目长期运行',
+      },
+      {
+        title: '微软 Azure',
+        url: 'https://azure.microsoft.com/zh-cn/free/',
+        description: '微软云免费层，包含一年免费服务和多种永久免费资源',
+      },
+      {
+        title: '谷歌云',
+        url: 'https://cloud.google.com/',
+        description: '谷歌云平台，新用户可获 3 个月试用赠金',
+      },
+      {
+        title: 'Vultr',
+        url: 'https://www.vultr.com/',
+        description: '按小时计费的云服务商，全球多数据中心部署方便',
+      },
+      {
+        title: 'DigitalOcean',
+        url: 'https://www.digitalocean.com/',
+        description: '面向开发者的云平台，文档优秀且管理面板简洁',
+      },
+      {
+        title: 'Hetzner',
+        url: 'https://www.hetzner.com/',
+        description: '德国老牌云商，欧洲节点性价比极高',
+      },
+      {
+        title: 'OVHcloud',
+        url: 'https://www.ovhcloud.com/',
+        description: '法国云厂商，在全球拥有大量自有数据中心',
+      },
+      {
+        title: '优刻得',
+        url: 'https://www.ucloud.cn/',
+        description: '国内公有云上市公司，海外节点覆盖较广',
+      },
+      {
+        title: 'Cloudflare',
+        url: 'https://www.cloudflare.com/',
+        description: '全球领先的 CDN 和 DNS 服务商，免费计划功能已很强大',
+      },
+      {
+        title: 'GoDaddy',
+        url: 'https://www.godaddy.com/',
+        description: '全球最大的域名注册商之一，域名后缀种类齐全',
+      },
+      {
+        title: 'Dynadot',
+        url: 'https://www.dynadot.com/',
+        description: '域名注册服务商，支持免费 link 域名申请',
+      },
+      {
+        title: '宝塔面板',
+        url: 'https://www.bt.cn/',
+        description: '国内主流的服务器运维面板，可视化管理和一键部署',
+      },
+    ],
+  },
+  {
+    id: 'dev-tools',
+    title: '开发工具箱',
+    description: '日常开发中常用的在线工具和服务',
+    items: [
+      {
+        title: 'WolframAlpha',
+        url: 'https://www.wolframalpha.com/',
+        description: '智能计算知识引擎，解方程、画函数、数据分析都行',
+      },
+      {
+        title: 'GeoGebra',
+        url: 'https://www.geogebra.org/',
+        description: '动态几何和数学可视化工具，函数绘图直观好用',
+      },
+      {
+        title: 'PlantUML',
+        url: 'https://plantuml.com/',
+        description: '用纯文本描述绘制 UML 图，适合嵌入文档和代码注释',
+      },
+      {
+        title: 'iLovePDF',
+        url: 'https://www.ilovepdf.com/zh-cn',
+        description: 'PDF 在线处理工具箱，合并、拆分、压缩、格式转换都免费',
+      },
+      {
+        title: '在线工具大全',
+        url: 'https://www.lddgo.net/',
+        description: '集成各类开发和办公工具的集合站，随用随走',
+      },
+      {
+        title: '免费压缩图片',
+        url: 'https://freecompress.com/zh-cn/compress-image',
+        description: '在线图片压缩，在保持画质的前提下大幅减小文件体积',
+      },
+      {
+        title: 'Speedtest',
+        url: 'https://www.speedtest.net/',
+        description: '全球覆盖广泛的网络测速工具，检测延迟和带宽',
+      },
+      {
+        title: 'GTmetrix',
+        url: 'https://gtmetrix.com/',
+        description: '网站性能分析平台，提供详细的加载瓶颈和改进建议',
+      },
+      {
+        title: 'IT Dog',
+        url: 'https://www.itdog.cn/',
+        description: '国内网络诊断工具，多节点 Ping 和路由追踪很方便',
+      },
+      {
+        title: 'Check-Host',
+        url: 'https://check-host.net/',
+        description: '全球多节点 HTTP 检测，快速判断网站在各地是否可用',
+      },
+      {
+        title: 'IPinfo',
+        url: 'https://ipinfo.io/',
+        description: 'IP 信息查询工具，展示地理位置、ISP 和 ASN 等数据',
+      },
+      {
+        title: 'FOFA',
+        url: 'https://en.fofa.info/',
+        description: '网络空间搜索引擎，探测公网资产和暴露服务',
+      },
+    ],
+  },
+  {
+    id: 'design',
+    title: '设计与素材',
+    description: '免费图库、设计工具和素材资源',
+    items: [
+      {
+        title: 'Unsplash',
+        url: 'https://unsplash.com/',
+        description: '高质量免费图库，每张图片均可用于商业用途',
+      },
+      {
+        title: 'Wallhaven',
+        url: 'https://wallhaven.cc/',
+        description: '壁纸社区，按分辨率、标签和颜色精细筛选',
+      },
+      {
+        title: '可画',
+        url: 'https://www.canva.cn/',
+        description: '在线平面设计工具，大量模板可用，上手几乎零门槛',
+      },
+      {
+        title: '幕布',
+        url: 'https://mubu.com/',
+        description: '大纲笔记工具，一键将文字转化为思维导图',
+      },
+      {
+        title: 'Emoji All',
+        url: 'https://www.emojiall.com/zh-hans',
+        description: 'Emoji 搜索和百科，快速找到你想要的表情符号',
+      },
+    ],
+  },
+  {
+    id: 'fun',
+    title: '趣味小站',
+    description: '写代码累了，来这些小站透透气',
+    items: [
+      {
+        title: '16Personalities',
+        url: 'https://www.16personalities.com/',
+        description: 'MBTI 人格类型测试，从四个维度了解自己的性格',
+      },
+      {
+        title: 'Akinator',
+        url: 'https://cn.akinator.com/',
+        description: '网络精灵猜人物，想一个人物让它猜出是谁',
+      },
+      {
+        title: 'Emoji Mix',
+        url: 'https://tikolu.net/emojimix/',
+        description: '把两个 emoji 合在一起生成新图案，创意有趣',
+      },
+      {
+        title: 'Bongo Cat',
+        url: 'https://bongo.cat/',
+        description: '用键盘弹奏小猫打鼓，每个按键对应不同乐器和音效',
+      },
+      {
+        title: 'MikuTap',
+        url: 'https://miku.sci-fifans.net/',
+        description: '初音未来的打碟小游戏，跟随节奏点击屏幕',
+      },
+    ],
+  },
+];
