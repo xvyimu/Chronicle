@@ -187,6 +187,16 @@ export const linkCategories: LinkCategory[] = [
         description: 'Node.js 官方 API 文档，运行时、文件系统和网络模块速查入口',
       },
       {
+        title: 'Docker Docs',
+        url: 'https://docs.docker.com/',
+        description: 'Docker 官方文档，容器、Compose、镜像构建和运行环境排查都能查到',
+      },
+      {
+        title: 'Kubernetes 文档',
+        url: 'https://kubernetes.io/docs/home/',
+        description: 'Kubernetes 官方文档，集群、工作负载、网络、存储和安全配置的权威入口',
+      },
+      {
         title: 'web.dev',
         url: 'https://web.dev/',
         description: 'Google 维护的 Web 性能、可访问性和最佳实践资料库',
@@ -205,6 +215,16 @@ export const linkCategories: LinkCategory[] = [
         title: 'OWASP Cheat Sheet Series',
         url: 'https://cheatsheetseries.owasp.org/',
         description: 'Web 安全工程清单，认证、输入校验和部署加固都能按图索骥',
+      },
+      {
+        title: 'Google SRE Books',
+        url: 'https://sre.google/books/',
+        description: 'Google 公开的 SRE 体系书籍，适合系统学习可靠性、值班和事故复盘',
+      },
+      {
+        title: 'The Twelve-Factor App',
+        url: 'https://12factor.net/',
+        description: '云原生应用设计的经典十二要素，部署、配置和可移植性原则很耐读',
       },
       {
         title: 'GitHub Actions 文档',
@@ -331,6 +351,68 @@ export const linkCategories: LinkCategory[] = [
     ],
   },
   {
+    id: 'self-hosted',
+    title: '自托管与可观测性',
+    description: '适合个人服务器长期收藏的部署、监控、网关和身份认证工具',
+    items: [
+      {
+        title: 'Coolify',
+        url: 'https://coolify.io/',
+        description: '开源自托管 PaaS，把应用、数据库和常用服务部署到自己的服务器上',
+      },
+      {
+        title: 'Portainer',
+        url: 'https://www.portainer.io/',
+        description: 'Docker、Podman 和 Kubernetes 的图形化管理入口，适合管理多台容器主机',
+      },
+      {
+        title: 'Dockge',
+        url: 'https://dockge.kuma.pet/',
+        description: '轻量的 Docker Compose 栈管理工具，适合小服务器集中维护 Compose 项目',
+      },
+      {
+        title: 'Dokploy',
+        url: 'https://dokploy.com/',
+        description: '面向自托管部署的开源平台，支持应用、数据库和 Compose 工作流',
+      },
+      {
+        title: 'CapRover',
+        url: 'https://caprover.com/',
+        description: '自托管 PaaS，适合在 VPS 上快速部署 Node、静态站和数据库服务',
+      },
+      {
+        title: 'Uptime Kuma',
+        url: 'https://uptime.kuma.pet/',
+        description: '开源监控面板，用来做 HTTP、TCP、Ping 和证书到期监控',
+      },
+      {
+        title: 'Grafana',
+        url: 'https://grafana.com/',
+        description: '可观测性仪表盘平台，适合统一展示指标、日志和告警数据',
+      },
+      {
+        title: 'Prometheus',
+        url: 'https://prometheus.io/',
+        description: '开源监控和时序数据库，服务器指标与服务告警的事实标准之一',
+      },
+      {
+        title: 'Caddy',
+        url: 'https://caddyserver.com/',
+        description: '自动 HTTPS 的 Web 服务器和反向代理，个人服务暴露很省心',
+      },
+      {
+        title: 'Authelia',
+        url: 'https://www.authelia.com/',
+        description: '开源身份认证与访问控制网关，适合给自托管服务加统一登录',
+      },
+      {
+        title: 'Keycloak',
+        url: 'https://www.keycloak.org/',
+        description: '开源 IAM 与 SSO 平台，适合需要 OIDC、SAML 和统一账号体系的场景',
+      },
+    ],
+  },
+  {
     id: 'vps',
     title: 'VPS 与主机商',
     description: '参考库存监控清单整理的 VPS 官网入口，统一去掉推广参数',
@@ -443,6 +525,16 @@ export const linkCategories: LinkCategory[] = [
         description: '网站性能分析平台，提供详细的加载瓶颈和改进建议',
       },
       {
+        title: 'PageSpeed Insights',
+        url: 'https://pagespeed.web.dev/',
+        description: 'Google 官方网页性能检测工具，适合快速看 Core Web Vitals 与优化建议',
+      },
+      {
+        title: 'SSL Labs',
+        url: 'https://www.ssllabs.com/ssltest/',
+        description: 'HTTPS 配置检测工具，证书链、协议版本和加密套件问题一眼定位',
+      },
+      {
         title: 'IT Dog',
         url: 'https://www.itdog.cn/',
         description: '国内网络诊断工具，多节点 Ping 和路由追踪很方便',
@@ -461,6 +553,16 @@ export const linkCategories: LinkCategory[] = [
         title: 'FOFA',
         url: 'https://en.fofa.info/',
         description: '网络空间搜索引擎，探测公网资产和暴露服务',
+      },
+      {
+        title: 'crt.sh',
+        url: 'https://crt.sh/',
+        description: '证书透明度日志搜索工具，排查域名证书签发记录很方便',
+      },
+      {
+        title: 'Who.is',
+        url: 'https://who.is/',
+        description: '域名 WHOIS、DNS 和站点信息查询入口，适合做域名基础排查',
       },
     ],
   },
