@@ -167,6 +167,88 @@ export const linkCategories: LinkCategory[] = [
     ],
   },
   {
+    id: 'engineering-docs',
+    title: '技术文档与工程实践',
+    description: '长期值得反复查阅的官方文档、安全清单和工程博客',
+    items: [
+      {
+        title: 'Next.js 文档',
+        url: 'https://nextjs.org/docs',
+        description: 'App Router、渲染模式、部署和性能优化的官方参考',
+      },
+      {
+        title: 'React Learn',
+        url: 'https://react.dev/learn',
+        description: 'React 官方学习路径，适合系统梳理组件、状态和 Hooks',
+      },
+      {
+        title: 'Node.js 文档',
+        url: 'https://nodejs.org/docs/latest/api/',
+        description: 'Node.js 官方 API 文档，运行时、文件系统和网络模块速查入口',
+      },
+      {
+        title: 'web.dev',
+        url: 'https://web.dev/',
+        description: 'Google 维护的 Web 性能、可访问性和最佳实践资料库',
+      },
+      {
+        title: 'TypeScript Handbook',
+        url: 'https://www.typescriptlang.org/docs/',
+        description: 'TypeScript 官方手册，类型系统和配置问题优先查这里',
+      },
+      {
+        title: 'Tailwind CSS 文档',
+        url: 'https://tailwindcss.com/docs',
+        description: 'Tailwind 官方文档，工具类、主题变量和响应式规则都很全',
+      },
+      {
+        title: 'OWASP Cheat Sheet Series',
+        url: 'https://cheatsheetseries.owasp.org/',
+        description: 'Web 安全工程清单，认证、输入校验和部署加固都能按图索骥',
+      },
+      {
+        title: 'GitHub Actions 文档',
+        url: 'https://docs.github.com/actions',
+        description: 'CI/CD 工作流、权限、缓存和发布自动化的官方说明',
+      },
+      {
+        title: 'Playwright 文档',
+        url: 'https://playwright.dev/docs/intro',
+        description: '端到端测试和浏览器自动化的官方指南，定位前端回归很顺手',
+      },
+      {
+        title: 'Vitest 指南',
+        url: 'https://vitest.dev/guide/',
+        description: 'Vite 生态测试框架文档，适合单元测试和组件测试查漏补缺',
+      },
+      {
+        title: 'Lighthouse 文档',
+        url: 'https://developer.chrome.com/docs/lighthouse',
+        description: '性能、SEO、可访问性和最佳实践评分背后的官方解释',
+      },
+      {
+        title: 'Martin Fowler',
+        url: 'https://martinfowler.com/',
+        description: '软件架构、重构和团队工程实践的经典文章库',
+      },
+      {
+        title: 'GitHub Engineering',
+        url: 'https://github.blog/engineering/',
+        description: 'GitHub 工程团队的基础设施、协作和规模化实践分享',
+      },
+      {
+        title: 'Cloudflare Blog',
+        url: 'https://blog.cloudflare.com/',
+        description: '网络、安全、边缘计算和全球基础设施的一手技术文章',
+      },
+      {
+        title: 'Vercel Blog',
+        url: 'https://vercel.com/blog',
+        description: '前端框架、部署平台和 Web 性能方向的产品与工程文章',
+      },
+    ],
+  },
+  {
     id: 'cloud',
     title: '云服务与基础设施',
     description: '主流云平台、域名注册和网站加速服务',
@@ -245,6 +327,73 @@ export const linkCategories: LinkCategory[] = [
         title: '宝塔面板',
         url: 'https://www.bt.cn/',
         description: '国内主流的服务器运维面板，可视化管理和一键部署',
+      },
+    ],
+  },
+  {
+    id: 'vps',
+    title: 'VPS 与主机商',
+    description: '参考库存监控清单整理的 VPS 官网入口，统一去掉推广参数',
+    items: [
+      {
+        title: 'BandwagonHost',
+        url: 'https://bandwagonhost.com/',
+        description: '常被用来关注 CN2 GIA、洛杉矶和日本优化线路的 VPS 商家',
+      },
+      {
+        title: 'DMIT',
+        url: 'https://www.dmit.io/',
+        description: '以洛杉矶、香港等优化线路产品出名，适合对网络质量敏感的用途',
+      },
+      {
+        title: 'RackNerd',
+        url: 'https://www.racknerd.com/',
+        description: '北美 VPS 商家，节日促销机型多，适合作为入门和测试节点备选',
+      },
+      {
+        title: 'netcup',
+        url: 'https://www.netcup.com/en',
+        description: '德国主机商，VPS、Root Server 和域名产品线完整',
+      },
+      {
+        title: 'V.PS',
+        url: 'https://v.ps/',
+        description: 'xTom 旗下 VPS 品牌，覆盖香港、东京、圣何塞等常用节点',
+      },
+      {
+        title: 'CloudCone',
+        url: 'https://cloudcone.com/',
+        description: '洛杉矶机房起家的云服务商，适合关注小时计费和特价云主机',
+      },
+      {
+        title: 'ColoCrossing',
+        url: 'https://www.colocrossing.com/',
+        description: '美国数据中心与服务器服务商，提供独立服务器、托管和 VPS 相关产品',
+      },
+      {
+        title: 'AkkoCloud',
+        url: 'https://www.akkocloud.com/',
+        description: '小众 VPS 商家，适合对国内访问优化线路做备选观察',
+      },
+      {
+        title: 'BageVM',
+        url: 'https://www.bagevm.com/',
+        description: '主打高性能实例和网络优化场景的小众云主机服务',
+      },
+      {
+        title: 'YINNET',
+        url: 'https://www.yin-net.com/',
+        description: '提供多地区服务器和 IP 资源的小众商家，适合先观察口碑再下单',
+      },
+      {
+        title: 'JUSTG',
+        url: 'https://www.justg.com/',
+        description: '提供多地区 VPS 与优化线路产品，可作为特殊地区节点备选',
+      },
+      {
+        title: 'LegacyVPS 监控',
+        url: 'https://legacyvps.com/scanidc',
+        description: '库存与补货监控入口，用来观察热门套餐，不直接使用推广链接',
       },
     ],
   },
