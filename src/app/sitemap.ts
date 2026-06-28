@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next';
 import { getAllPosts } from '@/lib/posts';
 import { getAllTags } from '@/lib/tags';
 import { getAllCategories } from '@/lib/categories';
+import { getAllProjects } from '@/lib/projects';
 import { SITE_CONFIG } from '@/lib/constants';
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -23,6 +24,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.8,
   }));
 
+  const projectPages: MetadataRoute.Sitemap = getAllProjects().map((project) => ({
+    url: `${baseUrl}/projects/${project.id}`,
+    lastModified: new Date(String(project.year)),
+    changeFrequency: 'monthly' as const,
+    priority: project.featured ? 0.7 : 0.6,
+  }));
+
   const tagPages: MetadataRoute.Sitemap = getAllTags().map((tag) => ({
     url: `${baseUrl}/tags/${tag.slug}`,
     lastModified: new Date(),
@@ -37,5 +45,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.5,
   }));
 
-  return [...staticPages, ...postPages, ...tagPages, ...categoryPages];
+  return [...staticPages, ...postPages, ...projectPages, ...tagPages, ...categoryPages];
 }

@@ -144,7 +144,7 @@ CSS 自定义属性 + Tailwind v4 `@theme` 令牌，分 5 层：
 
 | 层级 | 工具 | 数量 | 覆盖范围 |
 | --- | --- | --- | --- |
-| 单元/集成 | Vitest + Testing Library | 197 用例 | lib 数据层 / 组件交互 / 页面渲染 |
+| 单元/集成 | Vitest + Testing Library | 198 用例 | lib 数据层 / 组件交互 / 页面渲染 |
 | E2E | Playwright | 32 用例 | 首页 / 博客 / 导航 / 主题 / 作品 / 标签 / 分类 / RSS / Sitemap |
 
 ```bash

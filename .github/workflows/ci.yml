@@ -13,6 +13,8 @@ concurrency:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL || 'https://example.com' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -35,6 +37,8 @@ jobs:
       # TypeScript type check — independent build step
       - run: pnpm exec tsc --noEmit
 
+      - run: pnpm check:seo
+
       - run: npx tsx scripts/generate-rss.ts
 
       - run: pnpm build
@@ -44,6 +48,8 @@ jobs:
 
   bundle-analyze:
     runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL || 'https://example.com' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -71,6 +77,8 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL || 'https://example.com' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -103,6 +111,8 @@ jobs:
   lighthouse:
     runs-on: ubuntu-latest
     needs: quality
+    env:
+      NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL || 'https://example.com' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -131,6 +141,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [quality, e2e]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    env:
+      NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
     steps:
       - uses: actions/checkout@v4
 
