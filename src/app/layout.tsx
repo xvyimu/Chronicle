@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Noto_Sans_SC, JetBrains_Mono } from "next/font/google";
+import { Cormorant_Garamond, Noto_Sans_SC, JetBrains_Mono } from "next/font/google";
 import { headers } from "next/headers";
 import "./globals.css";
 import Header from '@/components/layout/Header';
@@ -24,6 +24,14 @@ const jetbrainsMono = JetBrains_Mono({
   variable: '--font-jetbrains-mono',
   display: 'swap',
   preload: false,
+});
+
+const cormorantGaramond = Cormorant_Garamond({
+  subsets: ['latin'],
+  weight: ['500', '600'],
+  variable: '--font-display',
+  display: 'swap',
+  preload: true,
 });
 
 export const metadata: Metadata = {
@@ -53,7 +61,7 @@ export default async function RootLayout({
   return (
     <html
       lang="zh-CN"
-      className={`h-full antialiased ${notoSansSC.variable} ${jetbrainsMono.variable}`}
+      className={`h-full antialiased ${notoSansSC.variable} ${jetbrainsMono.variable} ${cormorantGaramond.variable}`}
       suppressHydrationWarning
     >
       <head>

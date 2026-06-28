@@ -11,11 +11,6 @@ vi.mock('next/link', () => ({
   ),
 }));
 
-// Mock ParticleCanvas — uses canvas APIs not available in jsdom
-vi.mock('@/components/ui/ParticleCanvas', () => ({
-  default: () => <div data-testid="particle-canvas" />,
-}));
-
 // Mock SpeedInsights and Analytics
 vi.mock('@vercel/speed-insights/next', () => ({ SpeedInsights: () => null }));
 vi.mock('@vercel/analytics/react', () => ({ Analytics: () => null }));
@@ -28,12 +23,22 @@ describe('HomePage', () => {
   it('renders the hero section with site name', () => {
     render(<HomePage />);
     expect(screen.getByText(SITE_CONFIG.name)).toBeInTheDocument();
+    expect(screen.getByText('Build Quiet Systems,')).toBeInTheDocument();
+    expect(screen.getByText('Write Useful Notes.')).toBeInTheDocument();
   });
 
   it('renders hero CTA links', () => {
     render(<HomePage />);
     expect(screen.getByText('精选文章').closest('a')).toHaveAttribute('href', '/blog');
+    expect(screen.getByText('导航收藏').closest('a')).toHaveAttribute('href', '/links');
     expect(screen.getByText('关于本站').closest('a')).toHaveAttribute('href', '/about');
+  });
+
+  it('renders editorial hero signal rail', () => {
+    render(<HomePage />);
+    expect(screen.getByText('Technical Notes')).toBeInTheDocument();
+    expect(screen.getByText('Open Source Work')).toBeInTheDocument();
+    expect(screen.getByText('Curated Links')).toBeInTheDocument();
   });
 
   it('renders latest posts section with up to 4 posts', () => {
