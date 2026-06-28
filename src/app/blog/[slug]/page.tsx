@@ -5,7 +5,7 @@ import TableOfContents from '@/components/blog/TableOfContents';
 import ReadingProgress from '@/components/blog/ReadingProgress';
 import ReadingPreferences from '@/components/blog/ReadingPreferences';
 import TagLink from '@/components/blog/TagLink';
-import { getPostBySlug, getAllPostSlugs, getAdjacentPosts, getRelatedPosts } from '@/lib/posts';
+import { getPostBySlug, getAllPostSlugs, getAdjacentPosts, getRelatedPosts, getSeriesPosts } from '@/lib/posts';
 import { inferCategory } from '@/lib/categories';
 import { formatDate, slugifyTag } from '@/lib/utils';
 import { SITE_CONFIG } from '@/lib/constants';
@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!post) return {};
 
   return {
-    title: `${post.title} | ${SITE_CONFIG.name}`,
+    title: post.title,
     description: post.description,
     keywords: post.tags.join(', '),
     alternates: {
@@ -47,6 +47,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   const { prev, next } = getAdjacentPosts(slug);
   const relatedPosts = getRelatedPosts(slug);
+  const seriesPosts = getSeriesPosts(slug);
+  const seriesIndex = seriesPosts.findIndex((item) => item.slug === post.slug);
   const category = post.category ?? inferCategory(post.tags);
 
   const articleLd = toJsonLd(blogPostingSchema(post));
@@ -111,6 +113,78 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             <div id="article-content">
               <MdxContent source={post.content} />
             </div>
+
+            {seriesPosts.length > 1 && (
+              <section className="mt-16 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-xs)]" aria-labelledby="series-posts-title">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--brand)]">
+                      Reading Path
+                    </p>
+                    <h2 id="series-posts-title" className="mt-1 text-lg font-semibold">
+                      专题阅读路径
+                    </h2>
+                    <p className="mt-1 text-sm text-[var(--text-dim)]">
+                      {post.series}
+                    </p>
+                  </div>
+                  {seriesIndex >= 0 && (
+                    <span className="rounded-full border border-[var(--border)] px-3 py-1 text-xs font-medium text-[var(--text-soft)]">
+                      第 {seriesIndex + 1} / {seriesPosts.length} 篇
+                    </span>
+                  )}
+                </div>
+
+                <ol className="mt-5 grid gap-2">
+                  {seriesPosts.map((item, index) => {
+                    const isCurrent = item.slug === post.slug;
+                    const inner = (
+                      <>
+                        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                          isCurrent
+                            ? 'bg-[var(--brand)] text-white'
+                            : 'bg-[var(--bg-soft)] text-[var(--text-dim)]'
+                        }`}>
+                          {index + 1}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className={`block text-sm font-medium ${
+                            isCurrent ? 'text-[var(--text)]' : 'text-[var(--text-soft)] group-hover:text-[var(--brand)]'
+                          }`}>
+                            {item.title}
+                          </span>
+                          <span className="mt-0.5 block text-xs text-[var(--text-dim)]">
+                            {item.readingTime}
+                          </span>
+                        </span>
+                        {isCurrent && (
+                          <span className="shrink-0 rounded-full bg-[var(--brand-soft)] px-2.5 py-1 text-xs font-medium text-[var(--brand)]">
+                            当前阅读
+                          </span>
+                        )}
+                      </>
+                    );
+
+                    return (
+                      <li key={item.slug}>
+                        {isCurrent ? (
+                          <div className="flex items-center gap-3 rounded-[var(--radius-sm)] border border-[var(--brand)] bg-[var(--brand-soft)] p-3">
+                            {inner}
+                          </div>
+                        ) : (
+                          <Link
+                            href={`/blog/${item.slug}`}
+                            className="group flex items-center gap-3 rounded-[var(--radius-sm)] border border-[var(--border)] p-3 transition-colors hover:border-[var(--brand)] hover:bg-[var(--bg-soft)]"
+                          >
+                            {inner}
+                          </Link>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ol>
+              </section>
+            )}
 
             <Giscus />
 

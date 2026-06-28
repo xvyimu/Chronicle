@@ -6,6 +6,7 @@ export interface PostFrontmatter {
   tags: string[];
   category?: string;
   series?: string;
+  seriesOrder?: number;
   published: boolean;
   featured: boolean;
   image?: string;

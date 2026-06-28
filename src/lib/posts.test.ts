@@ -11,6 +11,7 @@ import {
   getPostsByTag,
   getAdjacentPosts,
   getRelatedPosts,
+  getSeriesPosts,
   getPaginatedPosts,
 } from '@/lib/posts';
 
@@ -222,6 +223,28 @@ describe('getRelatedPosts', () => {
 
   it('returns an empty array for an unknown slug', () => {
     expect(getRelatedPosts('does-not-exist')).toEqual([]);
+  });
+});
+
+describe('getSeriesPosts', () => {
+  it('returns posts from the same series in reading order', () => {
+    const series = getSeriesPosts('vps-initial-setup');
+
+    expect(series.map((post) => post.slug)).toEqual([
+      'vps-initial-setup',
+      'docker-deploy-guide',
+      'nginx-reverse-proxy',
+      'git-hooks-github-actions',
+      'cicd-pipeline-design',
+    ]);
+  });
+
+  it('returns an empty array for posts without a series', () => {
+    expect(getSeriesPosts('go-cli-tool')).toEqual([]);
+  });
+
+  it('returns an empty array for an unknown slug', () => {
+    expect(getSeriesPosts('does-not-exist')).toEqual([]);
   });
 });
 

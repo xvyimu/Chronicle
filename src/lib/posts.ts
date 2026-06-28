@@ -16,6 +16,7 @@ const postFrontmatterSchema = z.object({
   tags: z.array(z.string()).optional().default([]),
   category: z.string().min(1).optional(),
   series: z.string().min(1).optional(),
+  seriesOrder: z.number().int().positive().optional(),
   published: z.boolean().optional().default(true),
   featured: z.boolean().optional().default(false),
   image: z.string()
@@ -221,6 +222,21 @@ export function getRelatedPosts(slug: string, limit = 3): PostMeta[] {
     })
     .slice(0, limit)
     .map((item) => item.post);
+}
+
+export function getSeriesPosts(slug: string): PostMeta[] {
+  const current = getPostBySlug(slug);
+  if (!current?.series) return [];
+
+  return getAllPosts()
+    .filter((post) => post.series === current.series)
+    .sort((a, b) => {
+      const orderA = a.seriesOrder ?? Number.MAX_SAFE_INTEGER;
+      const orderB = b.seriesOrder ?? Number.MAX_SAFE_INTEGER;
+      if (orderA !== orderB) return orderA - orderB;
+      if (a.date !== b.date) return a.date > b.date ? -1 : 1;
+      return a.slug.localeCompare(b.slug);
+    });
 }
 
 /** 分页 */
