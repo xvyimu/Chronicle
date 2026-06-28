@@ -1271,7 +1271,7 @@
 .prose {
   max-width: var(--reading-width, 720px);
   margin: 0 auto;
-  font-size: var(--reading-font-size, 1.0625rem);
+  font-size: var(--reading-font-size, 1rem);
   line-height: 1.85;
   color: var(--text);
   transition: font-size var(--transition);
