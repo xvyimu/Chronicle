@@ -1,7 +1,12 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import type { parseFrontmatter as parseFrontmatterType } from '../src/lib/parse-frontmatter';
-import type { filenameToSlug as filenameToSlugType, getAllPosts as getAllPostsType } from '../src/lib/posts';
+import type {
+  buildPostSearchText as buildPostSearchTextType,
+  extractPostHeadings as extractPostHeadingsType,
+  filenameToSlug as filenameToSlugType,
+  getAllPosts as getAllPostsType,
+} from '../src/lib/posts';
 import type { getAllCategories as getAllCategoriesType } from '../src/lib/categories';
 import type { getAllProjects as getAllProjectsType } from '../src/lib/projects';
 import type { getAllTags as getAllTagsType } from '../src/lib/tags';
@@ -17,6 +22,8 @@ type CheckContext = {
   siteUrl: string;
   parseFrontmatter: typeof parseFrontmatterType;
   filenameToSlug: typeof filenameToSlugType;
+  extractPostHeadings: typeof extractPostHeadingsType;
+  buildPostSearchText: typeof buildPostSearchTextType;
   getAllPosts: typeof getAllPostsType;
   getAllCategories: typeof getAllCategoriesType;
   getAllProjects: typeof getAllProjectsType;
@@ -40,6 +47,21 @@ function publicPathExists(publicPath: string): boolean {
   const normalized = publicPath.split(/[?#]/, 1)[0];
   if (!normalized.startsWith('/')) return false;
   return existsSync(path.join(publicDir, normalized));
+}
+
+function slugifyHeading(heading: string): string {
+  return heading
+    .trim()
+    .toLowerCase()
+    .replace(/<[^>]+>/g, '')
+    .replace(/[^\p{L}\p{N}\s-]/gu, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+function compareDateStrings(a: string, b: string): number {
+  return a.localeCompare(b);
 }
 
 function checkAbsoluteUrl(rawUrl: string, context: string, siteOrigin: string): void {
@@ -91,6 +113,8 @@ function checkPostFrontmatter(ctx: CheckContext): void {
   }
 
   const seenSlugs = new Set<string>();
+  const seenTitles = new Map<string, string>();
+  const tagCasing = new Map<string, string>();
   const filenames = readdirSync(blogDir).filter((filename) => filename.endsWith('.mdx'));
 
   for (const filename of filenames) {
@@ -103,6 +127,10 @@ function checkPostFrontmatter(ctx: CheckContext): void {
       addIssue(`Duplicate blog slug: ${slug}`, file);
     }
     seenSlugs.add(slug);
+
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+      addIssue(`Blog slug should use lowercase kebab-case ASCII: ${slug}`, file);
+    }
 
     if (!isRecord(data)) {
       addIssue('Frontmatter must be a YAML object', file);
@@ -119,8 +147,36 @@ function checkPostFrontmatter(ctx: CheckContext): void {
       addIssue(`Frontmatter date must use YYYY-MM-DD: ${data.date}`, file);
     }
 
+    if (typeof data.updatedAt === 'string') {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(data.updatedAt)) {
+        addIssue(`Frontmatter updatedAt must use YYYY-MM-DD: ${data.updatedAt}`, file);
+      } else if (typeof data.date === 'string' && compareDateStrings(data.updatedAt, data.date) < 0) {
+        addIssue(`Frontmatter updatedAt must not be earlier than date: ${data.updatedAt} < ${data.date}`, file);
+      }
+    }
+
+    if (typeof data.title === 'string') {
+      const normalizedTitle = data.title.trim().toLowerCase();
+      const existingFile = seenTitles.get(normalizedTitle);
+      if (existingFile) {
+        addIssue(`Duplicate blog title also used in ${existingFile}`, file);
+      } else {
+        seenTitles.set(normalizedTitle, file);
+      }
+    }
+
     if (!Array.isArray(data.tags) || data.tags.length === 0 || data.tags.some((tag) => typeof tag !== 'string' || tag.trim() === '')) {
       addIssue('Frontmatter tags must be a non-empty string array', file);
+    } else {
+      for (const tag of data.tags) {
+        const normalizedTag = tag.trim().toLowerCase();
+        const existingTag = tagCasing.get(normalizedTag);
+        if (existingTag && existingTag !== tag) {
+          addIssue(`Tag casing is inconsistent: "${tag}" also appears as "${existingTag}"`, file);
+        } else {
+          tagCasing.set(normalizedTag, tag);
+        }
+      }
     }
 
     if (typeof data.description === 'string' && data.description.trim().length < 20) {
@@ -129,6 +185,31 @@ function checkPostFrontmatter(ctx: CheckContext): void {
 
     if (typeof data.image === 'string' && data.image.startsWith('/') && !publicPathExists(data.image)) {
       addIssue(`Frontmatter image does not exist: ${data.image}`, file);
+    }
+
+    const headings = ctx.extractPostHeadings(content);
+    const headingIds = new Set<string>();
+    for (const heading of headings) {
+      const headingId = slugifyHeading(heading);
+      if (!headingId) {
+        addIssue(`Heading cannot produce a stable anchor: ${heading}`, file);
+        continue;
+      }
+      if (headingIds.has(headingId)) {
+        addIssue(`Duplicate heading anchor in article: #${headingId}`, file);
+      }
+      headingIds.add(headingId);
+    }
+
+    const searchText = ctx.buildPostSearchText({
+      title: typeof data.title === 'string' ? data.title : '',
+      description: typeof data.description === 'string' ? data.description : '',
+      tags: Array.isArray(data.tags) ? data.tags.filter((tag): tag is string => typeof tag === 'string') : [],
+      category: typeof data.category === 'string' ? data.category : undefined,
+      series: typeof data.series === 'string' ? data.series : undefined,
+    }, content);
+    if (searchText.length < 80) {
+      addIssue('Generated search text is too short to support useful discovery', file);
     }
 
     checkMdxReferences(content, file);
@@ -205,6 +286,8 @@ async function main(): Promise<void> {
     siteUrl: constantsModule.SITE_CONFIG.url,
     parseFrontmatter: frontmatterModule.parseFrontmatter,
     filenameToSlug: postsModule.filenameToSlug,
+    extractPostHeadings: postsModule.extractPostHeadings,
+    buildPostSearchText: postsModule.buildPostSearchText,
     getAllPosts: postsModule.getAllPosts,
     getAllCategories: categoriesModule.getAllCategories,
     getAllProjects: projectsModule.getAllProjects,

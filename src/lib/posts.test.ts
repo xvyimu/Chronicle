@@ -1,12 +1,16 @@
 import { describe, it, expect } from 'vitest';
 import {
   filenameToSlug,
+  buildPostSearchText,
+  extractPostExcerpt,
+  extractPostHeadings,
   getAllPosts,
   getFeaturedPosts,
   getPostBySlug,
   getAllPostSlugs,
   getPostsByTag,
   getAdjacentPosts,
+  getRelatedPosts,
   getPaginatedPosts,
 } from '@/lib/posts';
 
@@ -26,6 +30,46 @@ describe('filenameToSlug', () => {
   });
 });
 
+describe('post content extraction', () => {
+  const mdx = [
+    '> Opening note',
+    '',
+    '## First Section',
+    'The first paragraph links to [Next.js](https://nextjs.org).',
+    '',
+    '### Nested Topic ###',
+    'Inline `code` should remain searchable.',
+    '',
+    '```ts',
+    'const hidden = true;',
+    '```',
+  ].join('\n');
+
+  it('extracts h2 and h3 headings without trailing hashes', () => {
+    expect(extractPostHeadings(mdx)).toEqual(['First Section', 'Nested Topic']);
+  });
+
+  it('builds a plain-text excerpt from MDX content', () => {
+    expect(extractPostExcerpt(mdx, 80)).toContain('Opening note');
+    expect(extractPostExcerpt(mdx, 80)).not.toContain('hidden');
+  });
+
+  it('builds search text from frontmatter, headings, and body content', () => {
+    const searchText = buildPostSearchText({
+      title: 'Searchable Title',
+      description: 'Searchable description',
+      tags: ['Next.js'],
+      category: 'Frontend',
+      series: 'App Router',
+    }, mdx);
+
+    expect(searchText).toContain('Searchable Title');
+    expect(searchText).toContain('First Section');
+    expect(searchText).toContain('Next.js');
+    expect(searchText).toContain('code should remain searchable');
+  });
+});
+
 describe('getAllPosts', () => {
   it('returns an array of PostMeta', () => {
     const posts = getAllPosts();
@@ -42,6 +86,9 @@ describe('getAllPosts', () => {
       expect(Array.isArray(p.tags)).toBe(true);
       expect(typeof p.slug).toBe('string');
       expect(typeof p.readingTime).toBe('string');
+      expect(typeof p.excerpt).toBe('string');
+      expect(Array.isArray(p.headings)).toBe(true);
+      expect(typeof p.searchText).toBe('string');
     }
   });
 
@@ -102,6 +149,13 @@ describe('getPostBySlug', () => {
     expect(typeof post!.content).toBe('string');
     expect(post!.content.length).toBeGreaterThan(0);
   });
+
+  it('preserves optional source and license metadata', () => {
+    const post = getPostBySlug('cloudflare-workers-guide');
+    expect(post).not.toBeNull();
+    expect(post!.source).toBe('https://github.com/yuanjia1314/domain-check');
+    expect(post!.license).toBe('MIT');
+  });
 });
 
 describe('getPostsByTag', () => {
@@ -152,6 +206,22 @@ describe('getAdjacentPosts', () => {
     const { prev, next } = getAdjacentPosts('does-not-exist');
     expect(prev).toBeNull();
     expect(next).toBeNull();
+  });
+});
+
+describe('getRelatedPosts', () => {
+  it('returns related posts without including the current post', () => {
+    const related = getRelatedPosts('docker-deploy-guide');
+    expect(related.length).toBeGreaterThan(0);
+    expect(related.every((post) => post.slug !== 'docker-deploy-guide')).toBe(true);
+  });
+
+  it('respects the requested limit', () => {
+    expect(getRelatedPosts('docker-deploy-guide', 2).length).toBeLessThanOrEqual(2);
+  });
+
+  it('returns an empty array for an unknown slug', () => {
+    expect(getRelatedPosts('does-not-exist')).toEqual([]);
   });
 });
 

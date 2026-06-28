@@ -40,7 +40,7 @@ export function blogPostingSchema(post: PostMeta) {
     headline: post.title,
     description: post.description,
     datePublished: post.date,
-    dateModified: post.date,
+    dateModified: post.updatedAt ?? post.date,
     author: {
       '@type': 'Person',
       name: SITE_CONFIG.author.name,

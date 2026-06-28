@@ -5,13 +5,17 @@ import { PostFrontmatter, PostMeta, PostFull } from '@/types';
 import { CONTENT_DIR } from './constants';
 import { getContentSource } from './content-source';
 import { createCache } from './cache';
+import { inferCategory } from './category-rules';
 
 /** Zod schema for post frontmatter — consistent with projects.ts validation */
 const postFrontmatterSchema = z.object({
   title: z.string().min(1),
   description: z.string().min(1),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'date 必须为 YYYY-MM-DD 格式'),
+  updatedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'updatedAt 必须为 YYYY-MM-DD 格式').optional(),
   tags: z.array(z.string()).optional().default([]),
+  category: z.string().min(1).optional(),
+  series: z.string().min(1).optional(),
   published: z.boolean().optional().default(true),
   featured: z.boolean().optional().default(false),
   image: z.string()
@@ -20,6 +24,8 @@ const postFrontmatterSchema = z.object({
       'image 必须是 http(s):// URL 或 / 开头的绝对路径',
     )
     .optional(),
+  source: z.string().min(1).optional(),
+  license: z.string().min(1).optional(),
 });
 
 /** 文件名 → slug：去掉 YYYY-MM- 前缀和 .mdx 后缀（导出供 RSS 脚本等复用） */
@@ -27,6 +33,54 @@ export function filenameToSlug(filename: string): string {
   return filename
     .replace(/^\d{4}-\d{2}-/, '')
     .replace(/\.mdx$/, '');
+}
+
+export function extractPostHeadings(content: string): string[] {
+  return Array.from(content.matchAll(/^#{2,3}\s+(.+)$/gm))
+    .map((match) => match[1])
+    .map((heading) => heading.replace(/\s+#+$/, '').trim())
+    .filter(Boolean);
+}
+
+function stripMdxForSearch(content: string): string {
+  return content
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/!\[[^\]]*]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]+)]\([^)]*\)/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/^>\s?/gm, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/[{}[\]()*_~|]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export function extractPostExcerpt(content: string, maxLength = 180): string {
+  const text = stripMdxForSearch(content);
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, maxLength).trimEnd()}...`;
+}
+
+export function buildPostSearchText(
+  post: Pick<PostFrontmatter, 'title' | 'description' | 'tags' | 'category' | 'series'>,
+  content: string,
+): string {
+  const headings = extractPostHeadings(content).join(' ');
+  const excerpt = extractPostExcerpt(content);
+  return [
+    post.title,
+    post.description,
+    post.category,
+    post.series,
+    ...post.tags,
+    headings,
+    excerpt,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 /** 读取并解析单篇文章（含 frontmatter zod 校验） */
@@ -49,14 +103,22 @@ function readPostFile(filename: string): PostFull {
   }
 
   const frontmatter: PostFrontmatter = parsed.data;
+  const normalizedFrontmatter: PostFrontmatter = {
+    ...frontmatter,
+    category: frontmatter.category ?? inferCategory(frontmatter.tags) ?? undefined,
+  };
 
   const stats = readingTime(content);
+  const headings = extractPostHeadings(content);
 
   return {
-    ...frontmatter,
+    ...normalizedFrontmatter,
     slug: filenameToSlug(filename),
     readingTime: stats.text,
     wordCount: stats.words,
+    excerpt: extractPostExcerpt(content),
+    headings,
+    searchText: buildPostSearchText(normalizedFrontmatter, content),
     content,
   };
 }
@@ -133,6 +195,32 @@ export function getAdjacentPosts(slug: string): {
     prev: all[index + 1] ?? null,
     next: all[index - 1] ?? null,
   };
+}
+
+export function getRelatedPosts(slug: string, limit = 3): PostMeta[] {
+  const current = getPostBySlug(slug);
+  if (!current) return [];
+
+  const currentTags = new Set(current.tags.map((tag) => tag.toLowerCase()));
+  return getAllPosts()
+    .filter((post) => post.slug !== slug)
+    .map((post) => {
+      const sharedTags = post.tags.filter((tag) => currentTags.has(tag.toLowerCase())).length;
+      const sameCategory = current.category && post.category === current.category ? 1 : 0;
+      const sameSeries = current.series && post.series === current.series ? 2 : 0;
+      return {
+        post,
+        score: sharedTags * 3 + sameCategory + sameSeries,
+      };
+    })
+    .filter((item) => item.score > 0)
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      if (a.post.date !== b.post.date) return a.post.date > b.post.date ? -1 : 1;
+      return a.post.slug.localeCompare(b.post.slug);
+    })
+    .slice(0, limit)
+    .map((item) => item.post);
 }
 
 /** 分页 */

@@ -2,7 +2,10 @@ export interface PostFrontmatter {
   title: string;
   description: string;
   date: string;          // YYYY-MM-DD
+  updatedAt?: string;    // YYYY-MM-DD
   tags: string[];
+  category?: string;
+  series?: string;
   published: boolean;
   featured: boolean;
   image?: string;
@@ -14,6 +17,9 @@ export interface PostMeta extends PostFrontmatter {
   slug: string;
   readingTime: string;   // 由 reading-time 计算，如 "5 min read"
   wordCount: number;     // 字数（中文按字符计，英文按单词计）
+  excerpt: string;
+  headings: string[];
+  searchText: string;
 }
 
 export interface PostFull extends PostMeta {

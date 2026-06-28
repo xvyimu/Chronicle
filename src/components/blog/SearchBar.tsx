@@ -18,9 +18,13 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
   // Fuse.js options — stable reference for reuse
   const fuseOptions = useMemo(() => ({
     keys: [
-      { name: 'title', weight: 0.5 },
-      { name: 'description', weight: 0.3 },
-      { name: 'tags', weight: 0.2 },
+      { name: 'title', weight: 0.36 },
+      { name: 'description', weight: 0.22 },
+      { name: 'tags', weight: 0.16 },
+      { name: 'category', weight: 0.1 },
+      { name: 'series', weight: 0.08 },
+      { name: 'headings', weight: 0.05 },
+      { name: 'searchText', weight: 0.03 },
     ],
     threshold: 0.4,
     ignoreLocation: true,
@@ -205,12 +209,18 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
               >
                 <div className="flex items-center gap-2 text-xs text-[var(--text-dim)] mb-0.5">
                   <time dateTime={post.date}>{post.date}</time>
+                  {post.category && (
+                    <span>{post.category}</span>
+                  )}
+                  {post.series && (
+                    <span>{post.series}</span>
+                  )}
                   {post.featured && (
                     <span className="text-[var(--brand)] font-semibold text-[10px]">精选</span>
                   )}
                 </div>
                 <h4 className="font-semibold text-sm">{post.title}</h4>
-                <p className="text-xs text-[var(--text-dim)] line-clamp-1 mt-0.5">{post.description}</p>
+                <p className="text-xs text-[var(--text-dim)] line-clamp-1 mt-0.5">{post.excerpt || post.description}</p>
               </Link>
             ))
           ) : fuse && results.length === 0 ? (

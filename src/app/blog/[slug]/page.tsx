@@ -5,7 +5,7 @@ import TableOfContents from '@/components/blog/TableOfContents';
 import ReadingProgress from '@/components/blog/ReadingProgress';
 import ReadingPreferences from '@/components/blog/ReadingPreferences';
 import TagLink from '@/components/blog/TagLink';
-import { getPostBySlug, getAllPostSlugs, getAdjacentPosts } from '@/lib/posts';
+import { getPostBySlug, getAllPostSlugs, getAdjacentPosts, getRelatedPosts } from '@/lib/posts';
 import { inferCategory } from '@/lib/categories';
 import { formatDate, slugifyTag } from '@/lib/utils';
 import { SITE_CONFIG } from '@/lib/constants';
@@ -34,6 +34,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       description: post.description,
       type: 'article',
       publishedTime: post.date,
+      modifiedTime: post.updatedAt ?? post.date,
       images: post.image ? [{ url: post.image }] : [],
     },
   };
@@ -45,7 +46,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   if (!post) notFound();
 
   const { prev, next } = getAdjacentPosts(slug);
-  const category = inferCategory(post.tags);
+  const relatedPosts = getRelatedPosts(slug);
+  const category = post.category ?? inferCategory(post.tags);
 
   const articleLd = toJsonLd(blogPostingSchema(post));
   const breadcrumbLd = toJsonLd(breadcrumbSchema([
@@ -72,6 +74,12 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                   <time dateTime={post.date}>{formatDate(post.date)}</time>
                 </span>
+                {post.updatedAt && post.updatedAt !== post.date && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+                    更新于 <time dateTime={post.updatedAt}>{formatDate(post.updatedAt)}</time>
+                  </span>
+                )}
                 <span className="inline-flex items-center gap-1.5">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                   {post.readingTime}
@@ -83,6 +91,11 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               </div>
               {post.tags.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-2">
+                  {post.series && (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] px-3 py-1 text-xs font-medium text-[var(--text-soft)]">
+                      {post.series}
+                    </span>
+                  )}
                   {category && (
                     <Link href={`/categories/${encodeURIComponent(category)}`} className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] px-3 py-1 text-xs font-medium text-[var(--text-soft)] hover:text-[var(--brand)] hover:border-[var(--brand)] transition-colors">
                       {category}
@@ -100,6 +113,33 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             </div>
 
             <Giscus />
+
+            {relatedPosts.length > 0 && (
+              <section className="mt-16 border-t border-[var(--border)] pt-8" aria-labelledby="related-posts-title">
+                <h2 id="related-posts-title" className="text-lg font-semibold">相关文章</h2>
+                <div className="mt-4 grid gap-3">
+                  {relatedPosts.map((related) => (
+                    <Link
+                      key={related.slug}
+                      href={`/blog/${related.slug}`}
+                      className="group block rounded-lg border border-[var(--border)] p-4 transition-colors hover:border-[var(--brand)] hover:bg-[var(--bg-soft)]"
+                    >
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--text-dim)]">
+                        <time dateTime={related.date}>{formatDate(related.date)}</time>
+                        {related.category && <span>{related.category}</span>}
+                        {related.tags[0] && <span>{related.tags[0]}</span>}
+                      </div>
+                      <h3 className="mt-1 text-sm font-semibold text-[var(--text)] group-hover:text-[var(--brand)] transition-colors">
+                        {related.title}
+                      </h3>
+                      <p className="mt-1 line-clamp-2 text-xs text-[var(--text-dim)]">
+                        {related.description}
+                      </p>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
 
             <nav className="mt-16 flex items-center justify-between border-t border-[var(--border)] pt-8">
               <div>
