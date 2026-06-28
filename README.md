@@ -37,6 +37,7 @@ NEXT_PUBLIC_GISCUS_CATEGORY_ID=your_category_id
 | `pnpm test` | Vitest 单元/集成测试 |
 | `pnpm test:watch` | Vitest 监听模式 |
 | `pnpm test:e2e` | Playwright E2E 测试（自动启动 dev server） |
+| `pnpm check:seo` | 内容、资源、sitemap 与 SEO 完整性检查 |
 | `pnpm lint` | ESLint |
 | `pnpm analyze` | Bundle 体积分析 |
 

@@ -220,6 +220,7 @@ RSS 由 `scripts/generate-rss.ts` 在构建前生成（`npx tsx scripts/generate
 
 ```bash
 pnpm lint
+pnpm check:seo
 pnpm test
 pnpm build
 ```
