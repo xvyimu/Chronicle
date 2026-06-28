@@ -38,7 +38,7 @@ describe('HomePage', () => {
     render(<HomePage />);
     expect(screen.getByText('Technical Notes')).toBeInTheDocument();
     expect(screen.getByText('Open Source Work')).toBeInTheDocument();
-    expect(screen.getByText('Curated Links')).toBeInTheDocument();
+    expect(screen.getAllByText('Curated Links').length).toBeGreaterThan(0);
   });
 
   it('renders latest posts section with up to 4 posts', () => {
@@ -47,10 +47,36 @@ describe('HomePage', () => {
 
     expect(screen.getByText('最新文章')).toBeInTheDocument();
 
-    const renderedTitles = allPosts.slice(0, 4).map((p) => p.title);
+    const renderedTitles = [
+      ...allPosts.filter((post) => post.featured),
+      ...allPosts.filter((post) => !post.featured),
+    ].slice(0, 6).map((p) => p.title);
     for (const title of renderedTitles) {
       expect(screen.getByText(title)).toBeInTheDocument();
     }
+  });
+
+  it('renders the manifesto and reading path sections', () => {
+    render(<HomePage />);
+
+    expect(screen.getByText('把零散经验整理成下一次能直接复用的入口。')).toBeInTheDocument();
+    expect(screen.getByText('少一点噪音，多一点可复用经验')).toBeInTheDocument();
+    expect(screen.getByText('按主题进入')).toBeInTheDocument();
+    expect(screen.getByText('个人服务部署路线')).toBeInTheDocument();
+    expect(screen.getByText('Web 性能与体验')).toBeInTheDocument();
+    expect(screen.getByText('数据层实践')).toBeInTheDocument();
+    expect(screen.getByText('TypeScript 与全栈')).toBeInTheDocument();
+  });
+
+  it('renders curated links preview', () => {
+    render(<HomePage />);
+
+    expect(screen.getByText('个人收藏入口')).toBeInTheDocument();
+    expect(screen.getByText('AI 工具')).toBeInTheDocument();
+    expect(screen.getByText('技术文档与工程实践')).toBeInTheDocument();
+    expect(screen.getByText('自托管与可观测性')).toBeInTheDocument();
+    expect(screen.getByText('VPS 与主机商')).toBeInTheDocument();
+    expect(screen.getByText('BandwagonHost')).toBeInTheDocument();
   });
 
   it('renders featured projects section', () => {
@@ -58,7 +84,7 @@ describe('HomePage', () => {
     const featured = getFeaturedProjects();
 
     if (featured.length > 0) {
-      expect(screen.getByText('精选作品')).toBeInTheDocument();
+      expect(screen.getByText('作品验证场')).toBeInTheDocument();
       for (const project of featured) {
         expect(screen.getByText(project.title)).toBeInTheDocument();
       }

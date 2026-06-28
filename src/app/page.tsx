@@ -1,15 +1,62 @@
 import Link from 'next/link';
 import { getAllPosts } from '@/lib/posts';
 import { getFeaturedProjects } from '@/lib/projects';
+import { linkCategories } from '@/lib/links';
+import { slugifyTag } from '@/lib/utils';
 import { organizationSchema, websiteSchema, toJsonLd } from '@/lib/jsonld';
-import BlogList from '@/components/blog/BlogList';
 import ProjectCard from '@/components/projects/ProjectCard';
 import EditorialHero from '@/components/home/EditorialHero';
+import ManifestoSection from '@/components/home/ManifestoSection';
+import ReadingPathSection, { ReadingPathItem } from '@/components/home/ReadingPathSection';
+import FeaturedArticleRail from '@/components/home/FeaturedArticleRail';
+import CuratedLinksPreview from '@/components/home/CuratedLinksPreview';
+
+const homeLinkCategoryIds = ['ai', 'engineering-docs', 'self-hosted', 'vps'];
+
+function buildReadingPaths(): ReadingPathItem[] {
+  return [
+    {
+      title: '个人服务部署路线',
+      description: '从新 VPS、安全加固、反向代理到 CI/CD，把个人服务跑稳。',
+      href: '/blog/vps-initial-setup',
+      meta: 'Series',
+      topics: ['VPS', 'Docker', 'Nginx', 'CI/CD'],
+    },
+    {
+      title: 'Web 性能与体验',
+      description: '用 Core Web Vitals、Lighthouse 和浏览器工具定位首屏体验问题。',
+      href: `/tags/${slugifyTag('性能优化')}`,
+      meta: 'Topic',
+      topics: ['LCP', 'INP', 'CLS', 'Lighthouse'],
+    },
+    {
+      title: '数据层实践',
+      description: '围绕 PostgreSQL、Redis、Supabase 梳理缓存、索引和后端数据边界。',
+      href: '/categories/数据库',
+      meta: 'Category',
+      topics: ['PostgreSQL', 'Redis', 'Supabase'],
+    },
+    {
+      title: 'TypeScript 与全栈',
+      description: '把类型系统、App Router 和前端工程实践连接成更稳定的开发体验。',
+      href: `/tags/${slugifyTag('TypeScript')}`,
+      meta: 'Topic',
+      topics: ['TypeScript', 'Next.js', 'React'],
+    },
+  ];
+}
 
 export default function HomePage() {
   const allPosts = getAllPosts();
-  const latestPosts = allPosts.slice(0, 4);
+  const featuredArticlePosts = [
+    ...allPosts.filter((post) => post.featured),
+    ...allPosts.filter((post) => !post.featured),
+  ].slice(0, 6);
   const featuredProjects = getFeaturedProjects();
+  const previewLinkCategories = homeLinkCategoryIds
+    .map((id) => linkCategories.find((category) => category.id === id))
+    .filter((category): category is NonNullable<typeof category> => Boolean(category));
+  const readingPaths = buildReadingPaths();
 
   const orgLd = toJsonLd(organizationSchema());
   const siteLd = toJsonLd(websiteSchema());
@@ -23,39 +70,20 @@ export default function HomePage() {
         projectCount={featuredProjects.length}
       />
 
-      {/* ── 最新文章 ── */}
-      {latestPosts.length > 0 && (
-        <section className="section">
-          <div className="section__inner">
-            <div className="section__head">
-              <div>
-                <span className="section__eyebrow">Blog</span>
-                <h2 className="section__title">最新文章</h2>
-                <p className="section__subtitle">记录踩过的坑、想清楚的道理</p>
-              </div>
-              <div className="section__action">
-                <Link href="/blog" className="section__link">
-                  查看全部
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M5 12h14M12 5l7 7-7 7" />
-                  </svg>
-                </Link>
-              </div>
-            </div>
-            <BlogList posts={latestPosts} columns={2} />
-          </div>
-        </section>
-      )}
+      <ManifestoSection />
+      <ReadingPathSection paths={readingPaths} />
+      <FeaturedArticleRail posts={featuredArticlePosts} />
+      <CuratedLinksPreview categories={previewLinkCategories} />
 
       {/* ── 精选作品 ── */}
       {featuredProjects.length > 0 && (
-        <section className="section">
+        <section className="section home-projects">
           <div className="section__inner">
             <div className="section__head">
               <div>
                 <span className="section__eyebrow">Projects</span>
-                <h2 className="section__title">精选作品</h2>
-                <p className="section__subtitle">一些有趣的开源项目和工具</p>
+                <h2 className="section__title">作品验证场</h2>
+                <p className="section__subtitle">把文章里的做法落到真实项目里，留下可以继续迭代的样本。</p>
               </div>
               <div className="section__action">
                 <Link href="/projects" className="section__link">
