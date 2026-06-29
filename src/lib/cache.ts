@@ -20,11 +20,16 @@
  *   resetAllCaches(); // 恢复
  */
 
-import { getContentSource } from './content-source';
+import { getContentSource, type ContentSource } from './content-source';
 
 export interface CacheOptions {
   /** 监听的文件/目录路径（相对项目根），mtime 变化时自动失效（仅开发环境） */
   watchPath?: string;
+  /**
+   * 显式注入 ContentSource, 用于测试场景传入 in-memory source.
+   * 不传则使用全局 getContentSource() (向后兼容).
+   */
+  source?: ContentSource;
 }
 
 export interface Cache<T> {
@@ -80,7 +85,7 @@ export function createCache<T>(options?: CacheOptions): Cache<T> {
     getOrCompute(factory: () => T): T {
       // 开发环境：检查 watchPath 的 mtime，变化时自动失效
       if (options?.watchPath && process.env.NODE_ENV !== 'production') {
-        const source = getContentSource();
+        const source = options.source ?? getContentSource();
         // 对于目录，遍历内部文件取最大 mtime（目录 mtime 不随文件内容变化）
         const files = source.readDir(options.watchPath);
         let currentMtime: number | null = null;

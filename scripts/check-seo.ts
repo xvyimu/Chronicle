@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import type { parseFrontmatter as parseFrontmatterType } from '../src/lib/parse-frontmatter';
+import type { postFrontmatterSchema as postFrontmatterSchemaType } from '../src/lib/schemas/post-frontmatter';
 import type {
   buildPostSearchText as buildPostSearchTextType,
   extractPostHeadings as extractPostHeadingsType,
@@ -21,6 +22,7 @@ type CheckContext = {
   contentDir: { blog: string; projects: string };
   siteUrl: string;
   parseFrontmatter: typeof parseFrontmatterType;
+  postFrontmatterSchema: typeof postFrontmatterSchemaType;
   filenameToSlug: typeof filenameToSlugType;
   extractPostHeadings: typeof extractPostHeadingsType;
   buildPostSearchText: typeof buildPostSearchTextType;
@@ -37,10 +39,6 @@ const publicDir = path.join(rootDir, 'public');
 
 function addIssue(message: string, file?: string): void {
   issues.push({ file, message });
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
 function publicPathExists(publicPath: string): boolean {
@@ -132,61 +130,55 @@ function checkPostFrontmatter(ctx: CheckContext): void {
       addIssue(`Blog slug should use lowercase kebab-case ASCII: ${slug}`, file);
     }
 
-    if (!isRecord(data)) {
-      addIssue('Frontmatter must be a YAML object', file);
+    // 共享 schema 校验 — 替换原 9 个 if 分支 (title/description/date/updatedAt/tags 等)
+    const parsed = ctx.postFrontmatterSchema.safeParse(data);
+    if (!parsed.success) {
+      for (const issue of parsed.error.issues) {
+        addIssue(`Frontmatter ${issue.path.join('.') || '(root)'}: ${issue.message}`, file);
+      }
+      // schema 校验失败时, 跳过后续依赖字段的检查
       continue;
     }
+    const fm = parsed.data;
 
-    for (const key of ['title', 'description', 'date'] as const) {
-      if (typeof data[key] !== 'string' || data[key].trim().length === 0) {
-        addIssue(`Frontmatter ${key} is required`, file);
-      }
+    // SEO-specific 检查 (不在 schema 范围内, 保留手动实现)
+
+    // updatedAt 不能早于 date
+    if (typeof fm.updatedAt === 'string' && compareDateStrings(fm.updatedAt, fm.date) < 0) {
+      addIssue(`Frontmatter updatedAt must not be earlier than date: ${fm.updatedAt} < ${fm.date}`, file);
     }
 
-    if (typeof data.date === 'string' && !/^\d{4}-\d{2}-\d{2}$/.test(data.date)) {
-      addIssue(`Frontmatter date must use YYYY-MM-DD: ${data.date}`, file);
-    }
-
-    if (typeof data.updatedAt === 'string') {
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(data.updatedAt)) {
-        addIssue(`Frontmatter updatedAt must use YYYY-MM-DD: ${data.updatedAt}`, file);
-      } else if (typeof data.date === 'string' && compareDateStrings(data.updatedAt, data.date) < 0) {
-        addIssue(`Frontmatter updatedAt must not be earlier than date: ${data.updatedAt} < ${data.date}`, file);
-      }
-    }
-
-    if (typeof data.title === 'string') {
-      const normalizedTitle = data.title.trim().toLowerCase();
-      const existingFile = seenTitles.get(normalizedTitle);
-      if (existingFile) {
-        addIssue(`Duplicate blog title also used in ${existingFile}`, file);
-      } else {
-        seenTitles.set(normalizedTitle, file);
-      }
-    }
-
-    if (!Array.isArray(data.tags) || data.tags.length === 0 || data.tags.some((tag) => typeof tag !== 'string' || tag.trim() === '')) {
-      addIssue('Frontmatter tags must be a non-empty string array', file);
+    // 标题去重 (大小写不敏感)
+    const normalizedTitle = fm.title.trim().toLowerCase();
+    const existingFile = seenTitles.get(normalizedTitle);
+    if (existingFile) {
+      addIssue(`Duplicate blog title also used in ${existingFile}`, file);
     } else {
-      for (const tag of data.tags) {
-        const normalizedTag = tag.trim().toLowerCase();
-        const existingTag = tagCasing.get(normalizedTag);
-        if (existingTag && existingTag !== tag) {
-          addIssue(`Tag casing is inconsistent: "${tag}" also appears as "${existingTag}"`, file);
-        } else {
-          tagCasing.set(normalizedTag, tag);
-        }
+      seenTitles.set(normalizedTitle, file);
+    }
+
+    // 标签大小写一致性 (跨文章)
+    for (const tag of fm.tags) {
+      const normalizedTag = tag.trim().toLowerCase();
+      const existingTag = tagCasing.get(normalizedTag);
+      if (existingTag && existingTag !== tag) {
+        addIssue(`Tag casing is inconsistent: "${tag}" also appears as "${existingTag}"`, file);
+      } else {
+        tagCasing.set(normalizedTag, tag);
       }
     }
 
-    if (typeof data.description === 'string' && data.description.trim().length < 20) {
+    // description 长度 (SEO 建议)
+    if (fm.description.trim().length < 20) {
       addIssue('Frontmatter description should be at least 20 characters for search snippets', file);
     }
 
-    if (typeof data.image === 'string' && data.image.startsWith('/') && !publicPathExists(data.image)) {
-      addIssue(`Frontmatter image does not exist: ${data.image}`, file);
+    // image 路径存在性
+    if (typeof fm.image === 'string' && fm.image.startsWith('/') && !publicPathExists(fm.image)) {
+      addIssue(`Frontmatter image does not exist: ${fm.image}`, file);
     }
 
+    // 标题 anchor 唯一性
     const headings = ctx.extractPostHeadings(content);
     const headingIds = new Set<string>();
     for (const heading of headings) {
@@ -201,12 +193,13 @@ function checkPostFrontmatter(ctx: CheckContext): void {
       headingIds.add(headingId);
     }
 
+    // 搜索文本长度
     const searchText = ctx.buildPostSearchText({
-      title: typeof data.title === 'string' ? data.title : '',
-      description: typeof data.description === 'string' ? data.description : '',
-      tags: Array.isArray(data.tags) ? data.tags.filter((tag): tag is string => typeof tag === 'string') : [],
-      category: typeof data.category === 'string' ? data.category : undefined,
-      series: typeof data.series === 'string' ? data.series : undefined,
+      title: fm.title,
+      description: fm.description,
+      tags: fm.tags,
+      category: fm.category,
+      series: fm.series,
     }, content);
     if (searchText.length < 80) {
       addIssue('Generated search text is too short to support useful discovery', file);
@@ -265,6 +258,7 @@ async function main(): Promise<void> {
 
   const [
     frontmatterModule,
+    schemaModule,
     constantsModule,
     postsModule,
     categoriesModule,
@@ -273,6 +267,7 @@ async function main(): Promise<void> {
     sitemapModule,
   ] = await Promise.all([
     import('../src/lib/parse-frontmatter'),
+    import('../src/lib/schemas/post-frontmatter'),
     import('../src/lib/constants'),
     import('../src/lib/posts'),
     import('../src/lib/categories'),
@@ -285,6 +280,7 @@ async function main(): Promise<void> {
     contentDir: constantsModule.CONTENT_DIR,
     siteUrl: constantsModule.SITE_CONFIG.url,
     parseFrontmatter: frontmatterModule.parseFrontmatter,
+    postFrontmatterSchema: schemaModule.postFrontmatterSchema,
     filenameToSlug: postsModule.filenameToSlug,
     extractPostHeadings: postsModule.extractPostHeadings,
     buildPostSearchText: postsModule.buildPostSearchText,

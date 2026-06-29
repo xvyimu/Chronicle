@@ -1,18 +1,11 @@
-export interface PostFrontmatter {
-  title: string;
-  description: string;
-  date: string;          // YYYY-MM-DD
-  updatedAt?: string;    // YYYY-MM-DD
-  tags: string[];
-  category?: string;
-  series?: string;
-  seriesOrder?: number;
-  published: boolean;
-  featured: boolean;
-  image?: string;
-  source?: string;       // URL or description of the source material
-  license?: string;      // License type (e.g. "MIT", "CC-BY-4.0", "Original")
-}
+import type { z } from 'zod';
+import type { postFrontmatterSchema } from '@/lib/schemas/post-frontmatter';
+
+/**
+ * PostFrontmatter — 从 zod schema 派生 (单一来源).
+ * Schema 定义在 src/lib/schemas/post-frontmatter.ts.
+ */
+export type PostFrontmatter = z.infer<typeof postFrontmatterSchema>;
 
 export interface PostMeta extends PostFrontmatter {
   slug: string;

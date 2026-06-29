@@ -27,7 +27,7 @@ describe('filesystemSource', () => {
       expect(files).not.toBeNull();
       expect(Array.isArray(files)).toBe(true);
       expect(files!.length).toBeGreaterThan(0);
-      expect(files).toContain('posts.ts');
+      expect(files).toContain('cache.ts');
     });
 
     it('returns null for non-existent directory (ENOENT)', () => {
