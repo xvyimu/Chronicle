@@ -728,6 +728,8 @@
   inset: 0;
   z-index: -2;
   overflow: hidden;
+  transform: translate(var(--parallax-x, 0px), var(--parallax-y, 0px));
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .editorial-hero__plane {
@@ -760,6 +762,7 @@
   height: 620px;
   border: 1px dashed rgba(255, 255, 255, 0.24);
   border-radius: 50%;
+  animation: hero-mesh-rotate 60s linear infinite;
 }
 
 .editorial-hero__mesh::after {
@@ -779,6 +782,7 @@
   background: rgba(255, 255, 255, 0.06);
   font-family: var(--font-jetbrains-mono), monospace;
   font-size: 0.8rem;
+  animation: hero-code-float 4s ease-in-out infinite;
 }
 
 .editorial-hero__code--one {
@@ -1255,6 +1259,56 @@
 
 .home-projects .cards {
   align-items: stretch;
+}
+
+/* ---------- Home CTA ---------- */
+.home-cta__card {
+  padding: 56px 48px;
+  border-radius: var(--radius);
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+}
+.home-cta__content {
+  flex: 1;
+  max-width: 520px;
+}
+.home-cta__title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-top: 6px;
+  letter-spacing: -0.02em;
+}
+.home-cta__desc {
+  margin-top: 10px;
+  font-size: 0.93rem;
+  color: var(--text-dim);
+  line-height: 1.65;
+}
+.home-cta__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.home-cta__reveal {
+  padding-bottom: 0;
+}
+
+@media (max-width: 767px) {
+  .home-cta__card {
+    flex-direction: column;
+    padding: 32px 24px;
+    gap: 24px;
+    text-align: center;
+  }
+  .home-cta__actions {
+    justify-content: center;
+  }
 }
 
 /* ---------- Buttons ---------- */
@@ -1809,6 +1863,48 @@
   margin-top: 8px;
 }
 
+/* ---------- Section Reveal (Phase 3) ---------- */
+/* Wrapper: invisible until scrolled into view */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.5s var(--ease-out), transform 0.5s var(--ease-out);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal-on-scroll.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger children of an is-visible reveal container */
+.reveal-on-scroll.is-visible > * {
+  animation: reveal-stagger-in 0.35s var(--ease-out) both;
+}
+.reveal-on-scroll.is-visible > *:nth-child(1) { animation-delay: 60ms; }
+.reveal-on-scroll.is-visible > *:nth-child(2) { animation-delay: 120ms; }
+.reveal-on-scroll.is-visible > *:nth-child(3) { animation-delay: 180ms; }
+.reveal-on-scroll.is-visible > *:nth-child(4) { animation-delay: 240ms; }
+.reveal-on-scroll.is-visible > *:nth-child(5) { animation-delay: 300ms; }
+.reveal-on-scroll.is-visible > *:nth-child(6) { animation-delay: 360ms; }
+
+@keyframes reveal-stagger-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Respect reduced motion — global rule already kills animations,
+   but make reveal explicitly instant for screen readers */
+@media (prefers-reduced-motion: reduce) {
+  .reveal-on-scroll {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .reveal-on-scroll.is-visible > * {
+    animation: none;
+  }
+}
+
 /* ---------- Page Transitions ---------- */
 @keyframes fade-in-up {
   from { opacity: 0; transform: translateY(12px); }
@@ -1832,6 +1928,116 @@
 .blog__item:nth-child(4) { animation-delay: 120ms; }
 .blog__item:nth-child(5) { animation-delay: 160ms; }
 .blog__item:nth-child(6) { animation-delay: 200ms; }
+
+/* ---------- Hero Mesh Rotate (concentric ring slow rotation) ---------- */
+@keyframes hero-mesh-rotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ---------- Hero Code Float (subtle breathe) ---------- */
+@keyframes hero-code-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .editorial-hero__mesh {
+    animation: none;
+  }
+  .editorial-hero__code {
+    animation: none;
+  }
+}
+
+/* ---------- Loading Intro (Phase 3) ---------- */
+.loading-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--hero-panel);
+  opacity: 0;
+  transition: opacity 0.3s var(--ease-out);
+  pointer-events: none;
+}
+.loading-intro--visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.loading-intro__frame {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.loading-intro__logo {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--brand);
+  border: 2px solid var(--brand);
+  border-radius: var(--radius);
+  font-family: var(--font-display), Georgia, serif;
+}
+
+.loading-intro__text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.loading-intro__title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+
+.loading-intro__tagline {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 500;
+}
+
+.loading-intro__bar {
+  width: 160px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.loading-intro__bar-inner {
+  width: 100%;
+  height: 100%;
+  background: var(--brand-gradient);
+  border-radius: 1px;
+  animation: loading-intro-bar 1.2s ease-in-out infinite;
+  transform-origin: left;
+}
+
+@keyframes loading-intro-bar {
+  0%   { transform: scaleX(0); }
+  50%  { transform: scaleX(1); }
+  100% { transform: scaleX(0); transform-origin: right; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-intro__bar-inner {
+    animation: none;
+    width: 60%;
+  }
+}
 
 /* ---------- Touch target expansion (WCAG 2.5.5: ≥44px) ---------- */
 /* Icon-only buttons keep compact visual size; ::before expands the hit area */

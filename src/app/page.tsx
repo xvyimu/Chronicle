@@ -10,6 +10,8 @@ import ManifestoSection from '@/components/home/ManifestoSection';
 import ReadingPathSection, { ReadingPathItem } from '@/components/home/ReadingPathSection';
 import FeaturedArticleRail from '@/components/home/FeaturedArticleRail';
 import CuratedLinksPreview from '@/components/home/CuratedLinksPreview';
+import HomeCtaSection from '@/components/home/HomeCtaSection';
+import RevealOnScroll from '@/components/home/RevealOnScroll';
 
 const homeLinkCategoryIds = ['ai', 'engineering-docs', 'self-hosted', 'vps'];
 
@@ -71,13 +73,22 @@ export default function HomePage() {
       />
 
       <ManifestoSection />
-      <ReadingPathSection paths={readingPaths} />
-      <FeaturedArticleRail posts={featuredArticlePosts} />
-      <CuratedLinksPreview categories={previewLinkCategories} />
+
+      <RevealOnScroll as="section" className="home-path__reveal">
+        <ReadingPathSection paths={readingPaths} />
+      </RevealOnScroll>
+
+      <RevealOnScroll as="section" className="home-article-rail__reveal">
+        <FeaturedArticleRail posts={featuredArticlePosts} />
+      </RevealOnScroll>
+
+      <RevealOnScroll as="section" className="home-links-preview__reveal">
+        <CuratedLinksPreview categories={previewLinkCategories} />
+      </RevealOnScroll>
 
       {/* ── 精选作品 ── */}
       {featuredProjects.length > 0 && (
-        <section className="section home-projects">
+        <RevealOnScroll as="section" className="home-projects section">
           <div className="section__inner">
             <div className="section__head">
               <div>
@@ -100,8 +111,12 @@ export default function HomePage() {
               ))}
             </div>
           </div>
-        </section>
+        </RevealOnScroll>
       )}
+
+      <RevealOnScroll as="section" className="home-cta__reveal">
+        <HomeCtaSection />
+      </RevealOnScroll>
     </>
   );
 }

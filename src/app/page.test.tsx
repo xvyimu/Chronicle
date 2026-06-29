@@ -29,9 +29,10 @@ describe('HomePage', () => {
 
   it('renders hero CTA links', () => {
     render(<HomePage />);
-    expect(screen.getByText('精选文章').closest('a')).toHaveAttribute('href', '/blog');
-    expect(screen.getByText('导航收藏').closest('a')).toHaveAttribute('href', '/links');
-    expect(screen.getByText('关于本站').closest('a')).toHaveAttribute('href', '/about');
+    const heroActions = document.querySelector('.editorial-hero__actions');
+    expect(heroActions!.querySelector('a[href="/blog"]')).toHaveTextContent('精选文章');
+    expect(heroActions!.querySelector('a[href="/links"]')).toHaveTextContent('导航收藏');
+    expect(heroActions!.querySelector('a[href="/about"]')).toHaveTextContent('关于本站');
   });
 
   it('renders editorial hero signal rail', () => {

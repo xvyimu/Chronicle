@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import { useEffect, useRef } from 'react';
 
 interface EditorialHeroProps {
   postCount: number;
@@ -15,6 +18,41 @@ export default function EditorialHero({
   postCount,
   projectCount,
 }: EditorialHeroProps) {
+  const stageRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    const prefersReduced = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches;
+    if (prefersReduced) return;
+
+    const media = stage.querySelector('.editorial-hero__media') as HTMLElement;
+    if (!media) return;
+
+    const handleMove = (e: MouseEvent) => {
+      const rect = stage.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+      const y = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+      media.style.setProperty('--parallax-x', `${x * 8}px`);
+      media.style.setProperty('--parallax-y', `${y * 8}px`);
+    };
+
+    const handleLeave = () => {
+      media.style.setProperty('--parallax-x', '0px');
+      media.style.setProperty('--parallax-y', '0px');
+    };
+
+    stage.addEventListener('mousemove', handleMove);
+    stage.addEventListener('mouseleave', handleLeave);
+    return () => {
+      stage.removeEventListener('mousemove', handleMove);
+      stage.removeEventListener('mouseleave', handleLeave);
+    };
+  }, []);
+
   return (
     <section className="editorial-hero" aria-labelledby="home-hero-title">
       <div className="editorial-hero__topline" aria-hidden="true">
@@ -22,7 +60,7 @@ export default function EditorialHero({
         <span>云原生 · 全栈 · 自动化</span>
       </div>
 
-      <div className="editorial-hero__stage">
+      <div ref={stageRef} className="editorial-hero__stage">
         <div className="editorial-hero__media" aria-hidden="true">
           <div className="editorial-hero__plane editorial-hero__plane--back" />
           <div className="editorial-hero__plane editorial-hero__plane--front" />

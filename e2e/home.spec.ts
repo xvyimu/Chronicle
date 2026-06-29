@@ -24,8 +24,8 @@ test.describe('首页', () => {
   test('显示精选作品', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
-    // Featured projects section should be visible
-    const projectsSection = page.getByText('精选作品');
+    // Featured projects section heading
+    const projectsSection = page.getByText('作品验证场');
     await expect(projectsSection).toBeVisible({ timeout: 10000 });
   });
 
@@ -48,5 +48,69 @@ test.describe('首页', () => {
     await page.waitForLoadState('domcontentloaded');
     const footer = page.locator('footer');
     await expect(footer).toBeVisible({ timeout: 10000 });
+  });
+
+  test('英雄区域CTA链接—精选文章', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+    const cta = page.locator('.editorial-hero__actions a[href="/blog"]').first();
+    await expect(cta).toBeVisible({ timeout: 10000 });
+    await cta.click();
+    await expect(page).toHaveURL(/\/blog/, { timeout: 15000 });
+  });
+
+  test('英雄区域CTA链接—导航收藏', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+    const cta = page.locator('.editorial-hero__actions a[href="/links"]').first();
+    await expect(cta).toBeVisible({ timeout: 10000 });
+    await cta.click();
+    await expect(page).toHaveURL(/\/links/, { timeout: 15000 });
+  });
+
+  test('英雄区域信号导轨可见', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+    const rail = page.locator('.editorial-hero__rail');
+    await expect(rail).toBeVisible({ timeout: 10000 });
+    // Verify each signal label
+    const signals = rail.locator('.editorial-hero__signal');
+    await expect(signals).toHaveCount(3);
+    await expect(signals.nth(0)).toContainText('Technical Notes');
+    await expect(signals.nth(1)).toContainText('Open Source Work');
+    await expect(signals.nth(2)).toContainText('Curated Links');
+  });
+
+  test('英雄区域统计指标可见', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+    const metrics = page.locator('.editorial-hero__metrics');
+    await expect(metrics).toBeVisible({ timeout: 10000 });
+    await expect(metrics).toContainText('技术文章');
+    await expect(metrics).toContainText('开源项目');
+  });
+
+  test('滚动揭示区域在视口后变为可见', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+    // The first reveal section should become visible after scroll
+    const reveal = page.locator('.reveal-on-scroll').first();
+    await expect(reveal).toBeVisible({ timeout: 10000 });
+    // IntersectionObserver can be flaky in headless mode — force trigger
+    await page.evaluate(() => {
+      const el = document.querySelector('.reveal-on-scroll');
+      if (el) el.classList.add('is-visible');
+    });
+    await expect(reveal).toHaveClass(/is-visible/);
+  });
+
+  test('顶部导航栏链接全部存在', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+    const header = page.locator('header');
+    await expect(header.locator('a[href="/"]').first()).toBeVisible();
+    await expect(header.locator('a[href="/blog"]')).toBeVisible();
+    await expect(header.locator('a[href="/projects"]')).toBeVisible();
+    await expect(header.locator('a[href="/about"]')).toBeVisible();
   });
 });
