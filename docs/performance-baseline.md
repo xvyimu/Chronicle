@@ -26,6 +26,8 @@ These budgets are enforced in CI today (all green on 2026-06-28):
 | Lighthouse SEO | `>= 0.90` | `lighthouse.config.js` (error) → 同上 |
 | Lighthouse LCP | `<= 3500 ms` | `lighthouse.config.js` (error) → 同上 |
 | Lighthouse CLS | `<= 0.1` | `lighthouse.config.js` (error) → 同上 |
+| Lighthouse TBT | `<= 300 ms` | `lighthouse.config.js` (error) → 同上 |
+| Lighthouse FCP | `<= 2000 ms` | `lighthouse.config.js` (warn) → 同上 |
 | Largest JS chunk | `<= 300 KB` | `scripts/check-bundle-budget.ts` → `ci.yml` `quality` job |
 | Largest CSS bundle | `<= 300 KB` | `scripts/check-bundle-budget.ts` → 同上 |
 | Total JS/CSS static output | `<= 2 MB` | `scripts/check-bundle-budget.ts` → 同上 |
