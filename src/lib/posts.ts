@@ -1,33 +1,11 @@
 import { parseFrontmatter } from './parse-frontmatter';
 import readingTime from 'reading-time';
-import { z } from 'zod';
 import { PostFrontmatter, PostMeta, PostFull } from '@/types';
 import { CONTENT_DIR } from './constants';
 import { getContentSource } from './content-source';
 import { createCache } from './cache';
 import { inferCategory } from './category-rules';
-
-/** Zod schema for post frontmatter — consistent with projects.ts validation */
-const postFrontmatterSchema = z.object({
-  title: z.string().min(1),
-  description: z.string().min(1),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'date 必须为 YYYY-MM-DD 格式'),
-  updatedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'updatedAt 必须为 YYYY-MM-DD 格式').optional(),
-  tags: z.array(z.string()).optional().default([]),
-  category: z.string().min(1).optional(),
-  series: z.string().min(1).optional(),
-  seriesOrder: z.number().int().positive().optional(),
-  published: z.boolean().optional().default(true),
-  featured: z.boolean().optional().default(false),
-  image: z.string()
-    .refine(
-      (v) => !v || /^https?:\/\//.test(v) || v.startsWith('/'),
-      'image 必须是 http(s):// URL 或 / 开头的绝对路径',
-    )
-    .optional(),
-  source: z.string().min(1).optional(),
-  license: z.string().min(1).optional(),
-});
+import { postFrontmatterSchema } from './schemas/post-frontmatter';
 
 /** 文件名 → slug：去掉 YYYY-MM- 前缀和 .mdx 后缀（导出供 RSS 脚本等复用） */
 export function filenameToSlug(filename: string): string {
