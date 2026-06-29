@@ -139,7 +139,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: [quality, e2e]
+    needs: [quality, e2e, lighthouse]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     env:
       NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
