@@ -4,6 +4,8 @@ import { headers } from "next/headers";
 import "./globals.css";
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import SiteBackdropStage from '@/components/layout/SiteBackdropStage';
+import SiteBackdropParallax from '@/components/layout/SiteBackdropParallax';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { SITE_CONFIG } from '@/lib/constants';
@@ -65,8 +67,8 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content="#0d0d14" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#111426" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#070913" media="(prefers-color-scheme: dark)" />
         <script
           nonce={nonce}
           dangerouslySetInnerHTML={{
@@ -83,7 +85,9 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <body className="flex min-h-full flex-col bg-[var(--bg)] text-[var(--text)]" style={{ fontFamily: 'var(--font-noto-sans-sc), system-ui, sans-serif' }}>
+      <body className="flex min-h-full flex-col text-[var(--text)]" style={{ fontFamily: 'var(--font-noto-sans-sc), system-ui, sans-serif' }}>
+        <SiteBackdropStage />
+        <SiteBackdropParallax />
         <a href="#main-content" className="skip-link">跳到主要内容</a>
         <Header />
         <main id="main-content" className="flex-1 animate-fade-in">{children}</main>

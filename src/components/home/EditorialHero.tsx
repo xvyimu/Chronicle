@@ -1,7 +1,4 @@
-'use client';
-
 import Link from 'next/link';
-import { useEffect, useRef } from 'react';
 
 interface EditorialHeroProps {
   postCount: number;
@@ -14,45 +11,19 @@ const heroSignals = [
   { label: 'Curated Links', value: '个人收藏' },
 ];
 
+/**
+ * EditorialHero — 首页 hero 区域.
+ *
+ * 视觉背景 (深蓝渐变 + 装饰元素 + 鼠标视差) 由全局背景层提供:
+ *   - body::before/after (渐变 + 网格遮罩, 纯 CSS 伪元素, SSG 静态)
+ *   - <SiteBackdropStage/> + <SiteBackdropParallax/> (装饰元素 + 视差)
+ * 本组件只负责 hero 自身的内容布局 (标题/CTA/metrics/rail).
+ * stage 元素保留为内容容器, 背景透明以透出全站背景.
+ */
 export default function EditorialHero({
   postCount,
   projectCount,
 }: EditorialHeroProps) {
-  const stageRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const stage = stageRef.current;
-    if (!stage) return;
-
-    const prefersReduced = window.matchMedia(
-      '(prefers-reduced-motion: reduce)',
-    ).matches;
-    if (prefersReduced) return;
-
-    const media = stage.querySelector('.editorial-hero__media') as HTMLElement;
-    if (!media) return;
-
-    const handleMove = (e: MouseEvent) => {
-      const rect = stage.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
-      const y = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
-      media.style.setProperty('--parallax-x', `${x * 8}px`);
-      media.style.setProperty('--parallax-y', `${y * 8}px`);
-    };
-
-    const handleLeave = () => {
-      media.style.setProperty('--parallax-x', '0px');
-      media.style.setProperty('--parallax-y', '0px');
-    };
-
-    stage.addEventListener('mousemove', handleMove);
-    stage.addEventListener('mouseleave', handleLeave);
-    return () => {
-      stage.removeEventListener('mousemove', handleMove);
-      stage.removeEventListener('mouseleave', handleLeave);
-    };
-  }, []);
-
   return (
     <section className="editorial-hero" aria-labelledby="home-hero-title">
       <div className="editorial-hero__topline" aria-hidden="true">
@@ -60,19 +31,7 @@ export default function EditorialHero({
         <span>云原生 · 全栈 · 自动化</span>
       </div>
 
-      <div ref={stageRef} className="editorial-hero__stage">
-        <div className="editorial-hero__media" aria-hidden="true">
-          <div className="editorial-hero__plane editorial-hero__plane--back" />
-          <div className="editorial-hero__plane editorial-hero__plane--front" />
-          <div className="editorial-hero__mesh" />
-          <div className="editorial-hero__code editorial-hero__code--one">
-            pnpm test
-          </div>
-          <div className="editorial-hero__code editorial-hero__code--two">
-            deploy --quiet
-          </div>
-        </div>
-
+      <div className="editorial-hero__stage">
         <div className="editorial-hero__content">
           <p className="editorial-hero__kicker">Zero-noise knowledge base</p>
           <h1 id="home-hero-title" className="editorial-hero__title">
