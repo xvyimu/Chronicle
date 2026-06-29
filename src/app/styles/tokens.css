@@ -1,0 +1,112 @@
+/* ============================================================
+   设计令牌 · 明暗双主题变量
+   精美简约风格 · 柔和配色 + 精致阴影 + 统一间距
+   ============================================================ */
+
+@theme {
+  --color-primary: var(--brand);
+  --color-primary-soft: var(--brand-soft);
+}
+
+/* ---------- 亮色（默认） ---------- */
+/* 注: 全站启用深色 stage 背景 (body::before/after + SiteBackdropStage) 后,
+   亮色模式的 body 文字需要在深色背景上保持可读性, 因此 --text 系列改为浅色.
+   卡片 --surface 保持半透明深色, 与暗色模式视觉接近但保留切换差异. */
+:root {
+  --bg: transparent;
+  --bg-soft: rgba(28, 28, 40, 0.72);
+  --bg-elevated: rgba(28, 28, 40, 0.88);
+  --surface: rgba(28, 28, 40, 0.72);
+  --surface-hover: rgba(36, 36, 52, 0.82);
+  --bg-rgb: 17, 20, 38;
+  --text: #f0f0f8;
+  --text-soft: #c4c4d8;
+  --text-dim: #9090a8;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --brand: #818cf8;
+  --brand-hover: #a5b4fc;
+  --brand-soft: rgba(129, 140, 248, 0.12);
+  --brand-gradient: linear-gradient(135deg, #5457e0, #818cf8);
+  --featured: #fbbf24;
+  --featured-soft: rgba(251, 191, 36, 0.12);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.35), 0 4px 8px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 20px 48px rgba(0, 0, 0, 0.4), 0 8px 16px rgba(0, 0, 0, 0.2);
+  --shadow-brand: 0 4px 14px rgba(129, 140, 248, 0.25);
+  --radius: 14px;
+  --radius-sm: 10px;
+  --radius-xs: 6px;
+  --radius-full: 9999px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --transition-fast: 0.15s var(--ease-out);
+  --transition: 0.25s var(--ease-out);
+  --transition-slow: 0.4s var(--ease-out);
+}
+
+.dark {
+  --bg: transparent;
+  --bg-soft: rgba(22, 22, 31, 0.82);
+  --bg-elevated: rgba(28, 28, 40, 0.92);
+  --surface: rgba(24, 24, 32, 0.82);
+  --surface-hover: rgba(32, 32, 44, 0.92);
+  --bg-rgb: 13, 13, 20;
+  --text: #f0f0f8;
+  --text-soft: #c4c4d8;
+  --text-dim: #9090a8;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --brand: #818cf8;
+  --brand-hover: #a5b4fc;
+  --brand-soft: rgba(129, 140, 248, 0.16);
+  --brand-gradient: linear-gradient(135deg, #5b5ee8, #a5b4fc);
+  --featured: #fbbf24;
+  --featured-soft: rgba(251, 191, 36, 0.16);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.45), 0 4px 8px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 48px rgba(0, 0, 0, 0.5), 0 8px 16px rgba(0, 0, 0, 0.3);
+  --shadow-brand: 0 4px 14px rgba(129, 140, 248, 0.3);
+}
+
+/* ── View Transitions ── */
+@view-transition {
+  navigation: auto;
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim);
+}
