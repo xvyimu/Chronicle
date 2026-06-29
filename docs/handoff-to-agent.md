@@ -169,9 +169,9 @@ page.tsx
 - `bundle-analyze` job 上传 `.next/analyze/` 报告为 artifact
 
 剩余待办（小）：
-- Lighthouse 分数 baseline 待 `lighthouse` job 首次运行后从 artifact 回填到 `performance-baseline.md`
+- ~~Lighthouse 分数 baseline 待回填~~ ✅ 已于 2026-06-29 从 CI run `28362770380` artifact 回填到 `performance-baseline.md`（5 页 desktop 预设 2 次均值，全绿；`/blog/nextjs-app-router` CLS=0.13 略超阈值但 CI 取中位数通过，列为后续优化关注点）
 - Speed Insights p75 baseline 待生产流量后回填（按 `performance-baseline.md` 的 Refresh Procedure）
-- 可选增强：增加 mobile preset（当前仅 desktop）。注：TBT 已于 2026-06-29 从 warn 提升为 error（commit `63f31dc`）。mobile preset 需新建 `lighthouse.mobile.config.js` + 在 CI 加第二个 job/matrix，会使 lighthouse 运行时间翻倍（10→20 次），建议待 Lighthouse 分数 baseline 建立后再评估
+- 可选增强：增加 mobile preset（当前仅 desktop）。注：TBT 已于 2026-06-29 从 warn 提升为 error（commit `63f31dc`）；实测 TBT 全部 0–3 ms，余量充足。mobile preset 需新建 `lighthouse.mobile.config.js` + 在 CI 加第二个 job/matrix，会使 lighthouse 运行时间翻倍（10→20 次），建议待 Speed Insights p75 baseline 建立后再评估
 
 关键文件：`lighthouse.config.js`、`scripts/check-bundle-budget.ts`、`.github/workflows/ci.yml`、`docs/performance-baseline.md`
 
