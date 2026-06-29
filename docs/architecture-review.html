@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>架构优化候选报告 — d:\blog</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<style>
+  body { font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; }
+  .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 28px; margin: 28px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .badge { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; padding: 3px 10px; border-radius: 999px; text-transform: uppercase; }
+  .badge-strong { background: #fee2e2; color: #991b1b; }
+  .badge-worth { background: #fef3c7; color: #92400e; }
+  .badge-spec { background: #e0e7ff; color: #3730a3; }
+  .badge-leverage { background: #dbeafe; color: #1e40af; }
+  h2.section { font-size: 28px; font-weight: 700; margin-top: 56px; margin-bottom: 8px; border-bottom: 2px solid #111; padding-bottom: 8px; }
+  h3.cand-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+  .meta-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; font-size: 13px; color: #4b5563; }
+  .meta-label { font-weight: 600; color: #111; }
+  .mermaid { background: #fafafa; border-radius: 8px; padding: 16px; margin-top: 8px; }
+  .file-pill { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; background: #f3f4f6; padding: 2px 6px; border-radius: 4px; }
+  .highlight-box { background: linear-gradient(to right, #fef3c7, #fef9e7); border-left: 4px solid #f59e0b; padding: 16px 20px; margin: 24px 0; border-radius: 4px; }
+  .top-rec { background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); color: #fff; padding: 32px; border-radius: 16px; margin-top: 48px; }
+  .top-rec h3 { color: #fbbf24; }
+  .top-rec a { color: #fde68a; }
+  .top-rec .meta-row { color: #cbd5e1; }
+  .top-rec .meta-label { color: #fff; }
+</style>
+</head>
+<body class="bg-gray-50 text-gray-900 max-w-6xl mx-auto px-6 py-12">
+
+<header class="mb-12">
+  <div class="text-sm text-gray-500 mb-2">2026-06-29 · 基于 improve-codebase-architecture skill · 4 维度并行审查</div>
+  <h1 class="text-4xl font-bold mb-3">架构优化候选报告</h1>
+  <p class="text-lg text-gray-700 mb-4">
+    项目：<span class="file-pill">d:\blog</span> · Next.js 16.2 + React 19 + Tailwind 4 · 221 测试 / 38 E2E / 0 TS 错误 / CI 全绿
+  </p>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+    <div class="bg-white rounded-lg p-5 border border-gray-200">
+      <div class="text-3xl font-bold text-red-600">6</div>
+      <div class="text-sm text-gray-600 mt-1">Strong 候选</div>
+      <div class="text-xs text-gray-400 mt-1">高 ROI，建议优先 deepening</div>
+    </div>
+    <div class="bg-white rounded-lg p-5 border border-gray-200">
+      <div class="text-3xl font-bold text-amber-600">11</div>
+      <div class="text-sm text-gray-600 mt-1">Worth exploring</div>
+      <div class="text-xs text-gray-400 mt-1">中等 ROI，可评估后推进</div>
+    </div>
+    <div class="bg-white rounded-lg p-5 border border-gray-200">
+      <div class="text-3xl font-bold text-indigo-600">11</div>
+      <div class="text-sm text-gray-600 mt-1">Speculative</div>
+      <div class="text-xs text-gray-400 mt-1">低 ROI，待验证</div>
+    </div>
+    <div class="bg-white rounded-lg p-5 border border-gray-200">
+      <div class="text-3xl font-bold text-blue-600">28</div>
+      <div class="text-sm text-gray-600 mt-1">总 friction points</div>
+      <div class="text-xs text-gray-400 mt-1">来自 4 维度审查</div>
+    </div>
+  </div>
+</header>
+
+<div class="highlight-box">
+  <div class="font-semibold text-gray-900 mb-2">整体评价（来自 4 维度审查汇总）</div>
+  <p class="text-gray-800 text-sm leading-relaxed">
+    项目在 <strong>security headers / CSP nonce / ContentSource seam / E2E retry / bundle budget</strong> 这些方向上做得相当扎实，架构有清晰的
+    <em>seam + adapter + cache</em> 分层。<strong>主要摩擦集中在两类</strong>，而非"地基不稳"：
+  </p>
+  <ol class="text-sm text-gray-800 mt-2 ml-5 list-decimal space-y-1">
+    <li><strong>已建好 seam 但未充分利用</strong> — ContentSource 已是合格抽象但 posts.test 仍读真实 fs；safeLocalStorage 已是合格 adapter 但 cycle/校验模式散在 caller 里。</li>
+    <li><strong>CI 拓扑与安全 seam 未优化</strong> — 5 个 job 重复 build；Lighthouse 不是 deploy gate；proxy.ts 命名非 Next.js 约定（潜在死代码）。</li>
+  </ol>
+  <p class="text-gray-800 text-sm mt-3">值得继续 <strong>deepening</strong> 而非推倒重来。</p>
+</div>
+
+<h2 class="section">Strong 候选（建议优先 deepening）</h2>
+
+<article class="card">
+  <div class="meta-row">
+    <span class="badge badge-strong">S1 · Strong</span>
+    <span class="badge badge-leverage">Security + Performance 双修</span>
+    <span class="badge badge-leverage">验证成本极低</span>
+  </div>
+  <h3 class="cand-title">CSP seam 命名偏离 + RootLayout 把全站拖入 dynamic</h3>
+
+  <div class="meta-row">
+    <span><span class="meta-label">涉及文件：</span><span class="file-pill">src/proxy.ts</span> · <span class="file-pill">src/app/layout.tsx</span> · <span class="file-pill">next.config.ts</span></span>
+  </div>
+
+  <div class="grid-2 mt-4">
+    <div>
+      <div class="meta-label mb-2">Problem</div>
+      <p class="text-sm text-gray-700 leading-relaxed">
+        CSP nonce 的 adapter 暴露在 <span class="file-pill">src/proxy.ts</span> 的 <code>proxy()</code> 上，但 <strong>Next.js 约定的 seam 是 <code>src/middleware.ts</code> 的 <code>middleware()</code></strong>。
+        全仓 grep <code>middleware</code> 仅命中 proxy.ts 内部一条注释；<span class="file-pill">src/middleware.ts</span> 不存在。<br><br>
+        若 Next 16.2 不识别 proxy.ts，则：x-nonce 永不被设置 → layout.tsx 的 <code>headers().get('x-nonce')</code> 永远 null → 内联主题脚本无 nonce 渲染 → 由于 next.config 的 securityHeaders 也不含 CSP，<strong>生产站点实际无任何 CSP</strong>。<br><br>
+        与此同时，RootLayout 是 <code>async</code> 且调用 <code>headers()</code>，<strong>这会让所有子路由继承 dynamic rendering</strong>，瓦解 AGENTS.md 宣称的 SSG。
+      </p>
+    </div>
+    <div>
+      <div class="meta-label mb-2">Solution（两条路）</div>
+      <p class="text-sm text-gray-700 leading-relaxed">
+        <strong>路线 A — 接受 dynamic：</strong>把 <code>proxy.ts</code> 重命名为 <code>middleware.ts</code> + <code>middleware()</code>，显式 <code>export const dynamic = 'force-dynamic'</code>。保留 per-request nonce，但放弃整站 SSG。<br><br>
+        <strong>路线 B — 恢复 SSG（推荐）：</strong>外移主题探测脚本到 <code>/theme-init.js</code> 静态资产，CSP 改用 <code>script-src 'self'</code>（无需 nonce），layout 恢复 static。next.config 加静态 CSP header。<br><br>
+        <span class="meta-label">第一步（零成本验证）：</span>跑一次 <code>next build && next start</code>，curl 任意页面看 response header 是否含 <code>Content-Security-Policy</code>。
+      </p>
+    </div>
+  </div>
+
+  <div class="mt-6">
+    <div class="meta-label mb-2">Before / After（路线 B）</div>
+    <div class="mermaid">
+flowchart LR
+  subgraph BEFORE["Before — 隐式死代码 + 全站 dynamic"]
+    A1["next.config.ts<br/>securityHeaders[]<br/>无 CSP"] --> A2["src/proxy.ts<br/>proxy() ❓未识别"]
+    A2 -.-> A3["src/app/layout.tsx<br/>async + headers()<br/>全站 dynamic"]
+    A3 --> A4["内联 theme script<br/>无 nonce = 无 CSP"]
+  end
+  subgraph AFTER["After — 显式静态 CSP + SSG 恢复"]
+    B1["next.config.ts<br/>securityHeaders[]<br/>+ Content-Security-Policy"] --> B2["public/theme-init.js<br/>静态资产"]
+    B2 --> B3["src/app/layout.tsx<br/>sync + static<br/>&lt;Script src=/theme-init.js&gt;"]
+    B3 --> B4["script-src 'self'<br/>全站 SSG"]
+  end
+    </div>
+  </div>
+
+  <div class="mt-6">
+    <div class="meta-label mb-2">Benefits（locality + leverage）</div>
+    <ul class="text-sm text-gray-700 ml-5 list-disc space-y-1">
+      <li><strong>Locality：</strong>CSP 真相从"3 跳追踪"（next.config 注释 → proxy.ts → layout headers()）收敛到单文件 <code>next.config.ts</code>。</li>
+      <li><strong>Leverage：</strong>10 行静态脚本外移 → 全站恢复 SSG 预渲染（更快的 build + 更可缓存的响应）+ CSP 真正生效。</li>
+      <li><strong>ADR callout：</strong>project_memory 的"Middleware must set CSP"已陈旧，应改为"next.config.ts sets static CSP"。</li>
+    </ul>
+  </div>
+</article>
+
+<article class="card">
+  <div class="meta-row">
+    <span class="badge badge-strong">S2 · Strong</span>
+    <span class="badge badge-leverage">一次重构解决 5 个 friction</span>
+  </div>
+  <h3 class="cand-title">posts.ts god module 拆分 + zod schema 单一来源</h3>
+
+  <div class="meta-row">
+    <span><span class="meta-label">涉及文件：</span><span class="file-pill">src/lib/posts.ts (255 行 / 13 export)</span> · <span class="file-pill">src/types/index.ts</span> · <span class="file-pill">scripts/generate-rss.ts</span> · <span class="file-pill">scripts/check-seo.ts</span></span>
+  </div>
+
+  <div class="grid-2 mt-4">
+    <div>
+      <div class="meta-label mb-2">Problem</div>
+      <p class="text-sm text-gray-700 leading-relaxed">
+        <span class="file-pill">posts.ts</span> 单文件承载 5 类职责：<br>
+        (a) frontmatter zod schema 定义与校验<br>
+        (b) MDX 正文清洗（stripMdxForSearch / extractPostExcerpt / buildPostSearchText / extractPostHeadings）<br>
+        (c) reading-time 副作用集成<br>
+        (d) 缓存生命周期管理（_cache + isVisible 环境判定）<br>
+        (e) 查询/筛选/排序/分页（getPostsByTag / getAdjacentPosts / getRelatedPosts / getSeriesPosts / getPaginatedPosts）<br><br>
+        同时 <strong>zod schema 与 TS interface 双源</strong>：schema 里 <code>published</code> 是 <code>.optional().default(true)</code>，types 里是 <code>boolean</code>（必填）— 已出现语义漂移。<br><br>
+        <strong>RSS/check-seo 各自重写 schema 子集</strong>：generate-rss.ts 只校验 5 字段；check-seo.ts 用 9 个 if 分支重做校验。posts.ts 加新必填字段时，RSS 静默接受缺字段文件，check-seo 不会报错。
+      </p>
+    </div>
+    <div>
+      <div class="meta-label mb-2">Solution</div>
+      <p class="text-sm text-gray-700 leading-relaxed">
+        拆分为 3 层 + 1 个 schema source：<br><br>
+        <span class="file-pill">src/lib/posts/schema.ts</span> — 唯一 zod schema + <code>export type PostFrontmatter = z.infer&lt;typeof postFrontmatterSchema&gt;</code> 派生类型<br>
+        <span class="file-pill">src/lib/posts/repository.ts</span> — 缓存 + 读写（getAllPosts / getPostBySlug）<br>
+        <span class="file-pill">src/lib/posts/query.ts</span> — 筛选/排序/分页（getPostsByTag / getAdjacentPosts / getRelatedPosts / getSeriesPosts / getPaginatedPosts）<br>
+        <span class="file-pill">src/lib/posts/search-text.ts</span> — MDX 清洗（stripMdxForSearch / extractPostExcerpt / buildPostSearchText / extractPostHeadings）<br><br>
+        <strong>RSS/check-seo 直接 import 同一 schema</strong>，不再各自重写子集。<br>
+        <span class="file-pill">src/types/index.ts</span> 从 zod 派生类型，删除手写 interface。<br><br>
+        顺手解决：<em>F8 zod/TS 双源</em>、<em>scripts #2 schema 复制</em>、<em>lib F6 排序模式重复</em>（提炼 comparePostsByDate）、<em>lib F12 isVisible 直接读 env</em>。
+      </p>
+    </div>
+  </div>
+
+  <div class="mt-6">
+    <div class="meta-label mb-2">Before / After</div>
+    <div class="mermaid">
+flowchart TB
+  subgraph BEFORE["Before — god module + 3 处 schema 复制"]
+    direction TB
+    P1["posts.ts (255 行)<br/>schema + 清洗 + 缓存 + 查询 + reading-time"]
+    P2["types/index.ts<br/>手写 PostFrontmatter interface"]
+    P3["scripts/generate-rss.ts<br/>rssFrontmatterSchema (5 字段子集)"]
+    P4["scripts/check-seo.ts<br/>9 个 if 重做校验"]
+    P1 -.drift.- P2
+    P1 -.drift.- P3
+    P1 -.drift.- P4
+  end
+  subgraph AFTER["After — 3 层 + 1 个 schema source"]
+    direction TB
+    S1["posts/schema.ts<br/>zod schema + z.infer 派生类型"]
+    S2["posts/repository.ts<br/>缓存 + 读写"]
+    S3["posts/query.ts<br/>筛选/排序/分页"]
+    S4["posts/search-text.ts<br/>MDX 清洗"]
+    S5["types/index.ts<br/>re-export from posts/schema"]
+    S6["scripts/generate-rss.ts<br/>import schema"]
+    S7["scripts/check-seo.ts<br/>import schema"]
+    S1 --> S5
+    S1 --> S6
+    S1 --> S7
+  end
+    </div>
+  </div>
+
+  <div class="mt-6">
+    <div class="meta-label mb-2">Benefits</div>
+    <ul class="text-sm text-gray-700 ml-5 list-disc space-y-1">
+      <li><strong>Locality：</strong>5 类职责各有归属，schema 演进只改 1 处，编译期检查 RSS/check-seo 同步。</li>
+      <li><strong>Leverage：</strong>测试 getRelatedPosts 不再需要准备 frontmatter / reading-time 无关上下文。</li>
+      <li><strong>消除 drift：</strong>published 字段语义、canonical 编码等"已 drift"的细节一次性收敛。</li>
+      <li><strong>ADR callout：</strong>建议产出 ADR "Post module 分层 + zod single-source-of-truth"。</li>
+    </ul>
+  </div>
+</article>
+
+<article class="card">
+  <div class="meta-row">
+    <span class="badge badge-strong">S3 · Strong</span>
+    <span class="badge badge-leverage">CI 时间 -50%</span>
+    <span class="badge badge-leverage">性能回归守门</span>
+  </div>
+  <h3 class="cand-title">CI build artifact 共享 + Lighthouse 接入 deploy gate</h3>
+
+  <div class="meta-row">
+    <span><span class="meta-label">涉及文件：</span><span class="file-pill">.github/workflows/ci.yml</span></span>
+  </div>
+
+  <div class="grid-2 mt-4">
+    <div>
+      <div class="meta-label mb-2">Problem</div>
+      <p class="text-sm text-gray-700 leading-relaxed">
+        <strong>5 个 job 各自 build：</strong>quality / bundle-analyze / e2e / lighthouse / deploy 每个都跑 <code>pnpm install --frozen-lockfile</code> + <code>pnpm build</code>。<br>
+        bundle-analyze 与 quality 的差别只是 <code>ANALYZE=true</code> 环境变量，却完全重跑。<br><br>
+        <strong>Lighthouse 不是 deploy gate：</strong>deploy 的 needs 是 <code>[quality, e2e]</code>，lighthouse 失败不阻断生产部署。方向 B 的工作只完成一半 — 阈值升级到 error，但 deploy 路径绕过它。<strong>性能回归可悄悄进生产</strong>。<br><br>
+        <strong>bundle-analyze 是孤儿 job：</strong>它失败不影响任何 job，唯一产物是 14 天保留的 artifact，没人会主动看。
+      </p>
+    </div>
+    <div>
+      <div class="meta-label mb-2">Solution</div>
+      <p class="text-sm text-gray-700 leading-relaxed">
+        <strong>三步改造：</strong><br><br>
+        (1) 新增 <code>build</code> job 作为公共依赖：跑 <code>pnpm build</code> 一次，<code>actions/upload-artifact@v4</code> 上传 <code>.next/</code>。<br>
+        (2) quality / e2e / lighthouse / deploy 都 <code>needs: [build]</code>，用 <code>actions/download-artifact@v4</code> 拉取构建产物（不再各自 build）。<br>
+        (3) deploy 改为 <code>needs: [quality, e2e, lighthouse]</code>，让性能回归也阻断生产。<br><br>
+        bundle-analyze 保留 needs: [build]，但用 <code>ANALYZE=true</code> 重新构建（因为需要 analyzer 输出，不能用普通 build artifact）。
+      </p>
+    </div>
+  </div>
+
+  <div class="mt-6">
+    <div class="meta-label mb-2">Before / After（CI 拓扑）</div>
+    <div class="mermaid">
+flowchart LR
+  subgraph BEFORE["Before — 5 个并行 job 各自 build"]
+    direction TB
+    B0["push"] --> B1["quality<br/>install + build"]
+    B0 --> B2["bundle-analyze<br/>install + ANALYZE build"]
+    B0 --> B3["e2e<br/>install + build + playwright"]
+    B0 --> B4["lighthouse<br/>install + build + LHCI"]
+    B1 --> B5["deploy"]
+    B3 --> B5
+    B4 -.绕过.-> B5
+  end
+  subgraph AFTER["After — build 共享 + Lighthouse 守门"]
+    direction TB
+    A0["push"] --> A1["build<br/>install + build + upload artifact"]
+    A1 --> A2["quality<br/>download + lint + test + tsc"]
+    A1 --> A3["e2e<br/>download + playwright"]
+    A1 --> A4["lighthouse<br/>download + LHCI"]
+    A1 --> A5["bundle-analyze<br/>ANALYZE rebuild"]
+    A2 --> A6["deploy"]
+    A3 --> A6
+    A4 --> A6
+  end
+    </div>
+  </div>
+
+  <div class="mt-6">
+    <div class="meta-label mb-2">Benefits</div>
+    <ul class="text-sm text-gray-700 ml-5 list-disc space-y-1">
+      <li><strong>Leverage：</strong>build 从 5 次 → 1 次（+ bundle-analyze 单独 1 次），CI 总时间预计 -40~50%。</li>
+      <li><strong>Interface 收紧：</strong>性能回归（Lighthouse error）真正阻断 deploy，方向 B 的 TBT error 守门才完整。</li>
+      <li><strong>消除孤儿：</strong>bundle-analyze 失败现在有意义（虽然不阻断 deploy，至少可观察）。</li>
+    </ul>
+  </div>
+</article>
+
+<article class="card">
+  <div class="meta-row">
+    <span class="badge badge-strong">S4 · Strong</span>
+    <span class="badge badge-leverage">解耦内容编辑与代码测试反馈循环</span>
+  </div>
+  <h3 class="cand-title">ContentSource seam 显式化 + cache 可重置</h3>
+
+  <div class="meta-row">
+    <span><span class="meta-label">涉及文件：</span><span class="file-pill">src/lib/cache.ts</span> · <span class="file-pill">src/lib/content-source.ts</span> · <span class="file-pill">src/lib/posts.ts</span> · <span class="file-pill">src/lib/projects.ts</span> · <span class="file-pill">src/lib/posts.test.ts</span></span>
+  </div>
+
+  <div class="grid-2 mt-4">
+    <div>
+      <div class="meta-label mb-2">Problem</div>
+      <p class="text-sm text-gray-700 leading-relaxed">
+        <strong>Cache 隐式 import 全局单例：</strong>cache.ts 的 <code>getOrCompute</code> 直接 <code>import { getContentSource }</code> 调 <code>source.readDir</code> / <code>source.getMtime</code> 判断失效。ContentSource 的 <code>_activeSource</code> 是 service locator 全局态。<br><br>
+        <strong>setContentSource 不通知 cache：</strong>切换 source 时 cache 持有旧 source 的过期数据。<br><br>
+        <strong>_cache 未导出：</strong>posts.test.ts 调真实 <code>getAllPosts</code> 后无法直接 invalidate，必须靠 mtime 变化间接触发。测试间污染风险高。<br><br>
+        <strong>测试读真实 fs：</strong><code>posts.test.ts</code> 断言 <code>getPostBySlug('go-cli-tool').title contains 'Go'</code>、<code>getSeriesPosts('vps-initial-setup')</code> 返回固定 5 篇 — <strong>内容改动会让 6+ 测试断裂</strong>，把内容编辑和代码测试的反馈循环耦合在一起。
+      </p>
+    </div>
+    <div>
+      <div class="meta-label mb-2">Solution</div>
+      <p class="text-sm text-gray-700 leading-relaxed">
+        <strong>显式注入：</strong><code>createCache&lt;T&gt;({ source, watchPath })</code> 把 ContentSource 作为构造参数注入，删除 cache.ts 对 <code>getContentSource</code> 的隐式 import。<br><br>
+        <strong>cache 可重置：</strong>导出 <code>invalidatePostsCache()</code> / <code>invalidateProjectsCache()</code> 单行函数，或注册全局 <code>resetAllCaches()</code>。<br><br>
+        <strong>source 切换触发失效：</strong><code>setContentSource(newSource)</code> 内部调用 <code>resetAllCaches()</code>，确保 source 变更后 cache 必失效。<br><br>
+        <strong>posts.test.ts 用 in-memory source：</strong>把 schema-related 断言改为 <code>setContentSource(inMemorySource({fixtures}))</code> 注入夹具；保留 1-2 个真实 fs 集成测试。<br><br>
+        顺手解决：<em>lib F1/F3/F11</em>、<em>scripts #4 ContentSource 未利用</em>。
+      </p>
+    </div>
+  </div>
+
+  <div class="mt-6">
+    <div class="meta-label mb-2">Before / After</div>
+    <div class="mermaid">
+flowchart LR
+  subgraph BEFORE["Before — 隐式全局态 + 测试读真实 fs"]
+    direction TB
+    C1["content-source.ts<br/>let _activeSource = filesystemSource"]
+    C2["cache.ts<br/>import { getContentSource }<br/>读全局态"]
+    C3["posts.ts<br/>const _cache = createCache<br/>未导出"]
+    C4["posts.test.ts<br/>读真实 content/blog/*.mdx"]
+    C1 -.隐式耦合.- C2
+    C2 -.隐式耦合.- C3
+    C3 -.不可重置.- C4
+  end
+  subgraph AFTER["After — 显式注入 + 测试可重置"]
+    direction TB
+    A1["content-source.ts<br/>createPostRepository(source)<br/>工厂函数"]
+    A2["cache.ts<br/>createCache({ source, watchPath })<br/>显式注入"]
+    A3["posts.ts<br/>invalidatePostsCache()<br/>导出"]
+    A4["posts.test.ts<br/>setContentSource(inMemory)<br/>注入夹具"]
+    A1 --> A2
+    A2 --> A3
+    A3 --> A4
+  end
+    </div>
+  </div>
+
+  <div class="mt-6">
+    <div class="meta-label mb-2">Benefits</div>
+    <ul class="text-sm text-gray-700 ml-5 list-disc space-y-1">
+      <li><strong>Locality：</strong>cache 与 ContentSource 的依赖从"全局态隐式"变为"构造参数显式"。</li>
+      <li><strong>Leverage：</strong>测试用 in-memory fixture 后，内容编辑不再让 6+ 测试断裂，"内容变更是否破坏代码"的信号清晰化。</li>
+      <li><strong>消除隐患：</strong>setContentSource 不再静默持有过期数据；并发场景下的污染风险消除。</li>
+    </ul>
+  </div>
+</article>
+
+<article class="card">
+  <div class="meta-row">
+    <span class="badge badge-strong">S5 · Strong</span>
+    <span class="badge badge-leverage">9 个未测试组件退化为可测</span>
+    <span class="badge badge-leverage">无障碍审计收敛</span>
+  </div>
+  <h3 class="cand-title">客户端 hooks 提炼（reduced-motion + persisted-enum + in-view）</h3>
+
+  <div class="meta-row">
+    <span><span class="meta-label">涉及文件：</span><span class="file-pill">ui/ParticleCanvas.tsx</span> · <span class="file-pill">ui/MagneticCard.tsx</span> · <span class="file-pill">ui/BackToTop.tsx</span> · <span class="file-pill">home/EditorialHero.tsx</span> · <span class="file-pill">home/RevealOnScroll.tsx</span> · <span class="file-pill">blog/ReadingPreferences.tsx</span> · <span class="file-pill">ui/ThemeToggle.tsx</span> · <span class="file-pill">blog/TableOfContents.tsx</span> · <span class="file-pill">comments/Giscus.tsx</span></span>
+  </div>
+
+  <div class="grid-2 mt-4">
+    <div>
+      <div class="meta-label mb-2">Problem</div>
+      <p class="text-sm text-gray-700 leading-relaxed">
+        <strong>prefers-reduced-motion 在 4 处重复</strong>（ParticleCanvas / MagneticCard / EditorialHero / RevealOnScroll），且降级策略不一致 — 一个跳出 effect、一个跳过 transform、一个立即添加 is-visible、一个直接 return。<br><br>
+        <strong>localStorage + 枚举循环在 2 处重复</strong>（ThemeToggle 3 态 theme / ReadingPreferences 3 态 fontSize + 3 态 width），共享完全相同的形状但 interface 是隐式的。<br><br>
+        <strong>IntersectionObserver 在 4 处重复</strong>（RevealOnScroll / TableOfContents / Giscus / ParticleCanvas），4 套样板 + 4 种 rootMargin/threshold。<br><br>
+        <strong>横切问题：</strong>9/13 个 client 组件无单元测试，恰好是浏览器 API 密集的那批。当前测试面是"容易测的面"，不是"实际出 bug 的面"。
+      </p>
+    </div>
+    <div>
+      <div class="meta-label mb-2">Solution</div>
+      <p class="text-sm text-gray-700 leading-relaxed">
+        提炼 3 个薄 hook：<br><br>
+        <code>usePrefersReducedMotion(): boolean</code><br>
+        <code>usePersistedEnum&lt;T&gt;(key, defaultValue, validValues): [T, next: () =&gt; void]</code><br>
+        <code>useInView(ref, options): boolean</code>（options: { threshold, rootMargin, once }）<br><br>
+        9 个未测试组件退化为 "render hook → assert return"，jsdom 不再需要 mock 全套浏览器 API。<br><br>
+        <strong>风险：</strong>useInView 边缘浅（deletion test），价值在于集中 "unmount 时 disconnect" 契约而非代码缩减。需要一次 interface 设计对话确认 hook 形状。
+      </p>
+    </div>
+  </div>
+
+  <div class="mt-6">
+    <div class="meta-label mb-2">Before / After（hook 提炼影响图）</div>
+    <div class="mermaid">
+flowchart TB
+  subgraph BEFORE["Before — 10 个组件各自处理浏览器 API"]
+    direction LR
+    subgraph motion["prefers-reduced-motion ×4"]
+      M1[ParticleCanvas]
+      M2[MagneticCard]
+      M3[EditorialHero]
+      M4[RevealOnScroll]
+    end
+    subgraph ls["localStorage enum ×2"]
+      L1[ThemeToggle]
+      L2[ReadingPreferences]
+    end
+    subgraph iv["IntersectionObserver ×4"]
+      I1[RevealOnScroll]
+      I2[TableOfContents]
+      I3[Giscus]
+      I4[ParticleCanvas]
+    end
+  end
+  subgraph AFTER["After — 3 个 hook 集中契约"]
+    direction LR
+    H1["usePrefersReducedMotion"]
+    H2["usePersistedEnum"]
+    H3["useInView"]
+    H1 --> M1
+    H1 --> M2
+    H1 --> M3
+    H1 --> M4
+    H2 --> L1
+    H2 --> L2
+    H3 --> I1
+    H3 --> I2
+    H3 --> I3
+    H3 --> I4
+  end
+    </div>
+  </div>
+
+  <div class="mt-6">
+    <div class="meta-label mb-2">Benefits</div>
+    <ul class="text-sm text-gray-700 ml-5 list-disc space-y-1">
+      <li><strong>Locality：</strong>无障碍策略（reduced-motion）从 4 处分散收敛到单 hook，审计单文件即可。</li>
+      <li><strong>Leverage：</strong>3 个 hook → 9 个组件可单测（无 jsdom 全套 mock），测试覆盖率提升空间巨大。</li>
+      <li><strong>契约统一：</strong>unmount 时 disconnect / cleanup 契约集中到 hook 层，project_memory 的硬约束真正落实。</li>
+      <li><strong>ADR callout：</strong>建议产出 ADR "客户端交互 hooks 分层 + 浏览器 API seam"。</li>
+    </ul>
+  </div>
+</article>
+
+<article class="card">
+  <div class="meta-row">
+    <span class="badge badge-strong">S6 · Strong</span>
+    <span class="badge badge-leverage">route 层契约统一</span>
+  </div>
+  <h3 class="cand-title">动态路由 adapter + listing metadata 一致化</h3>
+
+  <div class="meta-row">
+    <span><span class="meta-label">涉及文件：</span><span class="file-pill">src/app/blog/[slug]/page.tsx</span> · <span class="file-pill">src/app/projects/[id]/page.tsx</span> · <span class="file-pill">src/app/tags/[tag]/page.tsx</span> · <span class="file-pill">src/app/categories/[category]/page.tsx</span> · <span class="file-pill">src/app/{blog,projects,tags,categories,about,links}/page.tsx</span></span>
+  </div>
+
+  <div class="grid-2 mt-4">
+    <div>
+      <div class="meta-label mb-2">Problem</div>
+      <p class="text-sm text-gray-700 leading-relaxed">
+        4 条动态路由独立实现同构的 3 段式 interface：<br>
+        (a) <code>generateStaticParams</code> 调 <code>getAllXSlugs</code><br>
+        (b) <code>generateMetadata</code> 调 <code>getXBySlug</code> + 拼 canonical/title<br>
+        (c) default page 调 <code>getXBySlug</code> + <code>notFound()</code> 守卫<br><br>
+        <strong>形状一致但已 drift：</strong><br>
+        • canonical URL 编码不一致（tags 用 encodeURIComponent(tagSlug)、categories 用 encodeURIComponent(categoryName)、projects 完全省略 canonical、blog 用裸 slug）<br>
+        • title 模板不一致（blog 用 <code>title: post.title</code> 依赖 root template，其余用 <code>${name} | ${SITE_CONFIG.name}</code>）<br>
+        • <code>notFound()</code> 守卫位置不一致（blog/projects 在 generateMetadata、tags/categories 在组件内）<br><br>
+        <strong>6 个 listing 页无 metadata：</strong>/blog /projects /tags /categories /about /links 全部依赖 root layout 的 title.default，浏览器 tab 和 OG title 显示裸 "Site Name"。
+      </p>
+    </div>
+    <div>
+      <div class="meta-label mb-2">Solution</div>
+      <p class="text-sm text-gray-700 leading-relaxed">
+        <strong>createDynamicRoute adapter：</strong><br>
+        <code>createDynamicRoute({ getAllSlugs, getBySlug, buildMetadata, render })</code><br>
+        返回 <code>{ generateStaticParams, generateMetadata, default: Page }</code> 三件套。adapter 内集中 canonical 编码、title 模板、notFound 守卫。<br><br>
+        <strong>listingMetadata helper：</strong><br>
+        <code>listingMetadata(title, description, path): Metadata</code><br>
+        6 个 listing 页一行 import。<br><br>
+        <strong>顺带解决 App #4：</strong>删除 <code>blog/[slug]/opengraph-image.tsx</code> 的 <code>generateStaticParams</code>（让父路由供给 params）。<br><br>
+        <strong>顺带解决 App #6：</strong>所有 listing 页补 metadata。
+      </p>
+    </div>
+  </div>
+
+  <div class="mt-6">
+    <div class="meta-label mb-2">Before / After</div>
+    <div class="mermaid">
+flowchart LR
+  subgraph BEFORE["Before — 4 处手写 + drift"]
+    direction TB
+    R1["blog/[slug]/page.tsx<br/>canonical: 裸 slug<br/>title: post.title"]
+    R2["projects/[id]/page.tsx<br/>canonical: 无<br/>title: ${name} | site"]
+    R3["tags/[tag]/page.tsx<br/>canonical: encodeURIComponent<br/>notFound: 组件内"]
+    R4["categories/[category]/page.tsx<br/>canonical: encodeURIComponent<br/>notFound: 组件内"]
+    R5["6 listing pages<br/>无 metadata"]
+  end
+  subgraph AFTER["After — adapter 集中契约"]
+    direction TB
+    AD["createDynamicRoute({ getAllSlugs, getBySlug, buildMetadata, render })<br/>返回 { generateStaticParams, generateMetadata, default }"]
+    AD --> A1["blog/[slug]/page.tsx<br/>3 行 adapter 调用"]
+    AD --> A2["projects/[id]/page.tsx<br/>3 行 adapter 调用"]
+    AD --> A3["tags/[tag]/page.tsx<br/>3 行 adapter 调用"]
+    AD --> A4["categories/[category]/page.tsx<br/>3 行 adapter 调用"]
+    LM["listingMetadata(title, desc, path)"]
+    LM --> L1["6 listing pages<br/>1 行 import"]
+  end
+    </div>
+  </div>
+
+  <div class="mt-6">
+    <div class="meta-label mb-2">Benefits</div>
+    <ul class="text-sm text-gray-700 ml-5 list-disc space-y-1">
+      <li><strong>Locality：</strong>canonical 编码、title 模板、notFound 守卫 3 个契约从 4 处分散收敛到 1 个 adapter。</li>
+      <li><strong>Leverage：</strong>bug 修复（如 canonical 编码）从改 4 处 → 改 1 处 adapter。</li>
+      <li><strong>消除 drift：</strong>现有 canonical/title/notFound 的不一致一次性收敛。</li>
+    </ul>
+  </div>
+</article>
+
+<h2 class="section">Worth exploring（值得评估）</h2>
+
+<div class="grid-2">
+  <article class="card" style="margin: 16px 0;">
+    <div class="meta-row"><span class="badge badge-worth">W1 · Worth</span></div>
+    <h3 class="cand-title">constants.ts 拆分 + category-rules 内联</h3>
+    <p class="text-sm text-gray-700"><span class="meta-label">涉及：</span><span class="file-pill">src/lib/constants.ts</span> · <span class="file-pill">src/lib/category-rules.ts</span> · <span class="file-pill">src/lib/categories.ts</span></p>
+    <p class="text-sm text-gray-700 mt-3"><span class="meta-label">Problem：</span>constants.ts 混合 5 类无关 config（site identity / routing / taxonomy / pagination / env resolver）。category-rules.ts 是 7 行 shallow module，TAG_TO_CATEGORY 数据在 constants、规则在 category-rules，强行制造两个文件。</p>
+    <p class="text-sm text-gray-700 mt-2"><span class="meta-label">Solution：</span>拆 <code>config/site.ts</code> + <code>config/content.ts</code>；把 TAG_TO_CATEGORY + inferCategory 合并进 <code>categories.ts</code>；删除 category-rules.ts。</p>
+  </article>
+
+  <article class="card" style="margin: 16px 0;">
+    <div class="meta-row"><span class="badge badge-worth">W2 · Worth</span></div>
+    <h3 class="cand-title">links.ts 迁移到 data/links.json</h3>
+    <p class="text-sm text-gray-700"><span class="meta-label">涉及：</span><span class="file-pill">src/lib/links.ts (633 行纯数据)</span> · <span class="file-pill">data/projects.json</span></p>
+    <p class="text-sm text-gray-700 mt-3"><span class="meta-label">Problem：</span>links.ts 是数据文件伪装成 lib 模块，0 函数 633 行常量。违反 ContentSource 抽象 — projects 走 readFile，links 走硬编码。编辑链接要改 .ts 触发重编译。</p>
+    <p class="text-sm text-gray-700 mt-2"><span class="meta-label">Solution：</span>迁到 <code>data/links.json</code>，interface 移到 <code>types/index.ts</code>，可加 zod 校验保持类型安全。</p>
+  </article>
+
+  <article class="card" style="margin: 16px 0;">
+    <div class="meta-row"><span class="badge badge-worth">W3 · Worth</span></div>
+    <h3 class="cand-title">SectionHeader + ArrowIcon primitive</h3>
+    <p class="text-sm text-gray-700"><span class="meta-label">涉及：</span>5 处 <span class="file-pill">home/*Section.tsx</span> · 6 处箭头 SVG path</p>
+    <p class="text-sm text-gray-700 mt-3"><span class="meta-label">Problem：</span>section__head + eyebrow + title + subtitle + action + arrow SVG 在 5+ 处重复。project_memory 已显式文档化"标题块 + 查看全部链接 flex 布局"为约定，但未提取为 primitive。</p>
+    <p class="text-sm text-gray-700 mt-2"><span class="meta-label">Solution：</span><code>&lt;SectionHeader eyebrow title subtitle action? /&gt;</code> + <code>&lt;ArrowIcon /&gt;</code>。需要设计对话确认是 layout 还是 presentational primitive。</p>
+  </article>
+
+  <article class="card" style="margin: 16px 0;">
+    <div class="meta-row"><span class="badge badge-worth">W4 · Worth</span></div>
+    <h3 class="cand-title">JsonLd 组件抽象</h3>
+    <p class="text-sm text-gray-700"><span class="meta-label">涉及：</span><span class="file-pill">src/lib/jsonld.ts</span> · <span class="file-pill">src/app/page.tsx:68-69</span> · <span class="file-pill">src/app/blog/[slug]/page.tsx:63-64</span></p>
+    <p class="text-sm text-gray-700 mt-3"><span class="meta-label">Problem：</span>toJsonLd 做了难的部分（&lt; 转义），简单的部分（包 script 标签）反而每个 page 重写 1-liner。改渲染策略要逐页改。</p>
+    <p class="text-sm text-gray-700 mt-2"><span class="meta-label">Solution：</span>约 10 行 <code>&lt;JsonLd schema={...} /&gt;</code> client-safe 组件，集中序列化 + 渲染 + key 去重。</p>
+  </article>
+
+  <article class="card" style="margin: 16px 0;">
+    <div class="meta-row"><span class="badge badge-worth">W5 · Worth</span></div>
+    <h3 class="cand-title">ESLint react-hooks 规则全局豁免收紧</h3>
+    <p class="text-sm text-gray-700"><span class="meta-label">涉及：</span><span class="file-pill">eslint.config.mjs:21-24</span></p>
+    <p class="text-sm text-gray-700 mt-3"><span class="meta-label">Problem：</span><code>react-hooks/set-state-in-effect</code> 注释说只对 3 个组件合理，却用全局 'off' 关闭。新组件引入 effect-setState 反模式时 lint 不报警。leverage 错位。</p>
+    <p class="text-sm text-gray-700 mt-2"><span class="meta-label">Solution：</span>改成 per-file <code>eslint-disable-next-line</code> 或 overrides 块，把豁免收窄到具体文件。</p>
+  </article>
+
+  <article class="card" style="margin: 16px 0;">
+    <div class="meta-row"><span class="badge badge-worth">W6 · Worth</span></div>
+    <h3 class="cand-title">安全/分类 module 补单元测试</h3>
+    <p class="text-sm text-gray-700"><span class="meta-label">涉及：</span><span class="file-pill">src/lib/storage.ts</span> · <span class="file-pill">src/lib/category-rules.ts</span></p>
+    <p class="text-sm text-gray-700 mt-3"><span class="meta-label">Problem：</span>storage.ts 是 security-boundary module（捕获 localStorage 异常防止组件崩溃），三方法都靠 try/catch 吞错误，无测试。category-rules.ts 唯一用于 posts.ts 推断 category，无测试。project_memory 已把"核心库必须对应单元测试"列为硬约束。</p>
+    <p class="text-sm text-gray-700 mt-2"><span class="meta-label">Solution：</span>各补 ~5 个用例即可。零成本但补全硬约束。</p>
+  </article>
+</div>
+
+<h2 class="section">Speculative（待验证）</h2>
+
+<div class="bg-white rounded-lg p-6 border border-gray-200">
+  <ul class="text-sm text-gray-700 space-y-2 ml-4 list-disc">
+    <li><strong>observability.ts</strong> 7 行 shallow module，名称承诺大于实现 — 暂留，6 个月内仍只有一函数则并入 config。</li>
+    <li><strong>jsonld.ts</strong> 各 schema 工厂无校验，悄悄产出畸形 JSON-LD — SEO 失效排查成本高时再加最小校验。</li>
+    <li><strong>content-source.ts</strong> 的 <code>/* turbopackIgnore: true */</code> 注释 hack 泄漏构建工具关注 — 加注释说明"为何"或抽 resolvePath 包装。</li>
+    <li><strong>tsconfig target: ES2017</strong> 与 Node 22 不匹配 — 升到 ES2022/ESNext 减少 polyfill。</li>
+    <li><strong>sitemap.ts</strong> 用 <code>new Date()</code> 给 static-page lastModified — 从内容派生或省略该字段。</li>
+    <li><strong>E2E 仅 chromium</strong>，无 mobile/webkit — 加 Mobile Chrome project 几乎零成本。</li>
+    <li><strong>E2E 强制串行</strong> <code>workers: 1</code> — 加 <code>test.describe.configure({ mode: 'serial' })</code>。</li>
+    <li><strong>E2E waitForTimeout(3000)</strong> 等 React hydration — 抽 waitForHydration helper。</li>
+    <li><strong>check-seo.ts vs check-bundle-budget.ts</strong> 模式不一致 — 给后者引入 context 对象。</li>
+    <li><strong>vitest.setup.ts</strong> 的 IntersectionObserver mock 不触发 callback — 用 <code>@vitest/intersection-observer</code>。</li>
+    <li><strong>Giscus ↔ ThemeToggle</strong> 通过 MutationObserver 隐式耦合 — 出现第二个 theme-sync 需求时再重构。</li>
+  </ul>
+</div>
+
+<div class="top-rec">
+  <div class="text-sm text-amber-300 mb-2">TOP RECOMMENDATION</div>
+  <h3 class="text-3xl font-bold mb-3">从 S1（CSP seam 验证）开始</h3>
+  <p class="text-base leading-relaxed mb-4">
+    <strong>理由：</strong>S1 是<strong>潜在安全缺口</strong>且<strong>验证成本极低</strong>（一次 <code>next build && next start</code> + curl）。
+    若确认 proxy.ts 是死代码，生产站点实际无 CSP，方向 B 的所有性能工作建立在不存在的安全基础上。
+    验证后无论走路线 A（接受 dynamic）还是路线 B（恢复 SSG），都是后续 S2-S6 的前置条件 —
+    因为 S2 拆 posts.ts、S6 route adapter 都需要先确定渲染模式边界。
+  </p>
+  <div class="meta-row">
+    <span><span class="meta-label">第一步：</span>验证（10 分钟）</span>
+    <span><span class="meta-label">若死代码确认：</span>路线 B 外移 theme 脚本（半天）</span>
+    <span><span class="meta-label">若 proxy.ts 有效：</span>显式声明 force-dynamic（10 分钟）</span>
+  </div>
+  <div class="mt-6 pt-6 border-t border-blue-700">
+    <p class="text-base">
+      <strong>推荐推进顺序：</strong>S1（安全前置） → S3（CI 改造，独立） → S2（lib 重构，依赖 S1 的渲染模式） → S4（seam 显式化，S2 的自然延伸） → S6（route adapter，S2 后顺做） → S5（hooks 提炼，独立可并行）
+    </p>
+  </div>
+</div>
+
+<footer class="mt-16 pt-8 border-t border-gray-300 text-sm text-gray-500">
+  <p>本报告由 improve-codebase-architecture skill 流程产出。4 个并行 search subagent 分别审查 lib/ / components/ / app/ / 测试与配置，共识别 28 个 friction points。</p>
+  <p class="mt-2">下一步：选定一个候选进入 <strong>Grilling loop</strong>（约束 / 依赖 / deepened module 形状 / seam 背后是什么 / 哪些测试能在重构中存活）。</p>
+</footer>
+
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: 'neutral', flowchart: { curve: 'basis', useMaxWidth: true } });
+</script>
+
+</body>
+</html>
