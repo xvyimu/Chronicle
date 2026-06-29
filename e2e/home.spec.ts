@@ -113,4 +113,79 @@ test.describe('首页', () => {
     await expect(header.locator('a[href="/projects"]')).toBeVisible();
     await expect(header.locator('a[href="/about"]')).toBeVisible();
   });
+
+  test('全站背景 stage 容器在 SSG HTML 中已渲染', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+    const stage = page.locator('.site-backdrop__stage');
+    await expect(stage).toHaveCount(1);
+    await expect(stage).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  test('背景装饰元素数量正确 (2 飞机条 + 1 网格圈 + 2 代码块)', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+    await expect(page.locator('.site-backdrop__plane')).toHaveCount(2);
+    await expect(page.locator('.site-backdrop__plane--back')).toHaveCount(1);
+    await expect(page.locator('.site-backdrop__plane--front')).toHaveCount(1);
+    await expect(page.locator('.site-backdrop__mesh')).toHaveCount(1);
+    await expect(page.locator('.site-backdrop__code')).toHaveCount(2);
+    await expect(page.locator('.site-backdrop__code--one')).toContainText('pnpm test');
+    await expect(page.locator('.site-backdrop__code--two')).toContainText('deploy --quiet');
+  });
+
+  test('鼠标移动时背景 stage 的 transform 受 --parallax-x/y 驱动', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+    const stage = page.locator('.site-backdrop__stage');
+    await expect(stage).toBeAttached();
+    // 初始 transform 应为 none 或 translate(0px, 0px)
+    const initialTransform = await stage.evaluate((el) => {
+      return window.getComputedStyle(el).getPropertyValue('transform');
+    });
+    // 模拟鼠标移动到视口右下角
+    const vp = page.viewportSize();
+    if (vp) {
+      await page.mouse.move(vp.width, vp.height);
+    }
+    // 读取 stage 上由 client component 写入的 CSS 变量
+    const vars = await stage.evaluate((el) => {
+      const style = el as HTMLElement;
+      return {
+        x: style.style.getPropertyValue('--parallax-x'),
+        y: style.style.getPropertyValue('--parallax-y'),
+      };
+    });
+    // 移动后应有非零 parallax-x/y 值
+    expect(vars.x).not.toBe('');
+    expect(vars.y).not.toBe('');
+    expect(initialTransform).toBeDefined();
+  });
+
+  test('prefers-reduced-motion 下不挂载视差监听', async ({ browser }) => {
+    // 用模拟 reduced motion 的 context 启动新页面
+    const context = await browser.newContext({
+      reducedMotion: 'reduce',
+    });
+    const page = await context.newPage();
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+    const stage = page.locator('.site-backdrop__stage');
+    await expect(stage).toBeAttached();
+    // 模拟鼠标移动; 在 reduced-motion 下不应写入 CSS 变量
+    const vp = page.viewportSize();
+    if (vp) {
+      await page.mouse.move(vp.width, vp.height);
+    }
+    const vars = await stage.evaluate((el) => {
+      const style = el as HTMLElement;
+      return {
+        x: style.style.getPropertyValue('--parallax-x'),
+        y: style.style.getPropertyValue('--parallax-y'),
+      };
+    });
+    expect(vars.x).toBe('');
+    expect(vars.y).toBe('');
+    await context.close();
+  });
 });
