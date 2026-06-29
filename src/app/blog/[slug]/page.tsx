@@ -1,29 +1,29 @@
-import { notFound } from 'next/navigation';
-import type { Metadata } from 'next';
+import Link from 'next/link';
 import MdxContent from '@/components/blog/MdxContent';
 import TableOfContents from '@/components/blog/TableOfContents';
 import ReadingProgress from '@/components/blog/ReadingProgress';
 import ReadingPreferences from '@/components/blog/ReadingPreferences';
 import TagLink from '@/components/blog/TagLink';
-import { getPostBySlug, getAllPostSlugs, getAdjacentPosts, getRelatedPosts, getSeriesPosts } from '@/lib/posts';
+import {
+  postRepository,
+  getAdjacentPosts,
+  getRelatedPosts,
+  getSeriesPosts,
+} from '@/lib/posts';
 import { inferCategory } from '@/lib/categories';
 import { formatDate, slugifyTag } from '@/lib/utils';
 import { SITE_CONFIG } from '@/lib/constants';
 import { blogPostingSchema, breadcrumbSchema, toJsonLd } from '@/lib/jsonld';
 import { buildPageMetadata } from '@/lib/metadata';
-import Link from 'next/link';
+import { createDynamicRoute } from '@/lib/route-adapter';
 import Giscus from '@/components/comments/Giscus';
+import type { PostFull } from '@/types';
 
-export async function generateStaticParams() {
-  return getAllPostSlugs().map((slug) => ({ slug }));
-}
-
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const { slug } = await params;
-  const post = getPostBySlug(slug);
-  if (!post) return {};
-
-  return {
+const { generateStaticParams, generateMetadata, default: BlogPostPage } = createDynamicRoute<PostFull>({
+  paramKey: 'slug',
+  getAllSlugs: () => postRepository.getAllPostSlugs(),
+  getBySlug: (slug) => postRepository.getPostBySlug(slug),
+  buildMetadata: (post) => ({
     ...buildPageMetadata({
       title: post.title,
       description: post.description,
@@ -34,14 +34,15 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       modifiedTime: post.updatedAt ?? post.date,
     }),
     keywords: post.tags.join(', '),
-  };
-}
+  }),
+  render: (post) => <BlogPostContent post={post} />,
+});
 
-export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const post = getPostBySlug(slug);
-  if (!post) notFound();
+export { generateStaticParams, generateMetadata };
+export default BlogPostPage;
 
+function BlogPostContent({ post }: { post: PostFull }) {
+  const slug = post.slug;
   const { prev, next } = getAdjacentPosts(slug);
   const relatedPosts = getRelatedPosts(slug);
   const seriesPosts = getSeriesPosts(slug);
