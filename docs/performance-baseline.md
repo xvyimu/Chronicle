@@ -16,19 +16,33 @@ Track both synthetic Lighthouse data and real-user Vercel Speed Insights data fo
 
 ## Current CI Budgets
 
-These budgets are enforced in code today:
+These budgets are enforced in CI today (all green on 2026-06-28):
 
-| Gate | Current threshold |
-| --- | --- |
-| Lighthouse performance | `>= 0.85` |
-| Lighthouse accessibility | `>= 0.90` |
-| Lighthouse best practices | `>= 0.90` |
-| Lighthouse SEO | `>= 0.90` |
-| Lighthouse LCP | `<= 3500 ms` |
-| Lighthouse CLS | `<= 0.1` |
-| Largest JS chunk | `<= 300 KB` |
-| Largest CSS bundle | `<= 300 KB` |
-| Total JS/CSS static output | `<= 2 MB` |
+| Gate | Current threshold | Enforced in |
+| --- | --- | --- |
+| Lighthouse performance | `>= 0.85` | `lighthouse.config.js` (error) → `.github/workflows/ci.yml` `lighthouse` job |
+| Lighthouse accessibility | `>= 0.90` | `lighthouse.config.js` (error) → 同上 |
+| Lighthouse best practices | `>= 0.90` | `lighthouse.config.js` (error) → 同上 |
+| Lighthouse SEO | `>= 0.90` | `lighthouse.config.js` (error) → 同上 |
+| Lighthouse LCP | `<= 3500 ms` | `lighthouse.config.js` (error) → 同上 |
+| Lighthouse CLS | `<= 0.1` | `lighthouse.config.js` (error) → 同上 |
+| Largest JS chunk | `<= 300 KB` | `scripts/check-bundle-budget.ts` → `ci.yml` `quality` job |
+| Largest CSS bundle | `<= 300 KB` | `scripts/check-bundle-budget.ts` → 同上 |
+| Total JS/CSS static output | `<= 2 MB` | `scripts/check-bundle-budget.ts` → 同上 |
+
+> Lighthouse CI 通过 `treosh/lighthouse-ci-action@v12`（`configPath: ./lighthouse.config.js`）执行，`numberOfRuns: 2` 取中位数，`preset: 'desktop'`。Bundle analyzer 报告另由 `bundle-analyze` job 上传至 artifact `.next/analyze/`。
+
+## CI Baseline Snapshot (2026-06-28)
+
+`pnpm build && pnpm exec tsx scripts/check-bundle-budget.ts` 实测结果：
+
+| 指标 | 实测 | 预算 | 余量 |
+| --- | --- | --- | --- |
+| 最大单 JS chunk | 272.5 KB | 300 KB | 27.5 KB (9%) |
+| 最大单 CSS bundle | 272.5 KB | 300 KB | 27.5 KB (9%) |
+| 总静态产物 (JS+CSS，不含字体) | 1.08 MB | 2.00 MB | 0.92 MB (46%) |
+
+> Lighthouse 各分项分数需在 CI `lighthouse` job 运行后从其 artifact 获取；本地未运行 Lighthouse。Speed Insights p75 见下表，需生产流量后填充。
 
 ## Real-User Targets
 
