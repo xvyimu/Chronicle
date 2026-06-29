@@ -10,6 +10,7 @@ import { inferCategory } from '@/lib/categories';
 import { formatDate, slugifyTag } from '@/lib/utils';
 import { SITE_CONFIG } from '@/lib/constants';
 import { blogPostingSchema, breadcrumbSchema, toJsonLd } from '@/lib/jsonld';
+import { buildPageMetadata } from '@/lib/metadata';
 import Link from 'next/link';
 import Giscus from '@/components/comments/Giscus';
 
@@ -23,20 +24,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!post) return {};
 
   return {
-    title: post.title,
-    description: post.description,
-    keywords: post.tags.join(', '),
-    alternates: {
-      canonical: `${SITE_CONFIG.url}/blog/${post.slug}`,
-    },
-    openGraph: {
+    ...buildPageMetadata({
       title: post.title,
       description: post.description,
+      path: `/blog/${post.slug}`,
       type: 'article',
+      image: post.image,
       publishedTime: post.date,
       modifiedTime: post.updatedAt ?? post.date,
-      images: post.image ? [{ url: post.image }] : [],
-    },
+    }),
+    keywords: post.tags.join(', '),
   };
 }
 

@@ -4,6 +4,7 @@ import BlogList from '@/components/blog/BlogList';
 import { getAllCategorySlugs, getPostsByCategory, isValidCategory } from '@/lib/categories';
 import { SITE_CONFIG } from '@/lib/constants';
 import { decodeRouteSegment } from '@/lib/utils';
+import { buildPageMetadata } from '@/lib/metadata';
 
 export async function generateStaticParams() {
   return getAllCategorySlugs().map((slug) => ({ category: slug }));
@@ -12,12 +13,11 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ category: string }> }): Promise<Metadata> {
   const { category } = await params;
   const categoryName = decodeRouteSegment(category);
-  return {
-    title: `${categoryName} | ${SITE_CONFIG.name}`,
-    alternates: {
-      canonical: `${SITE_CONFIG.url}/categories/${encodeURIComponent(categoryName)}`,
-    },
-  };
+  return buildPageMetadata({
+    title: `分类：${categoryName}`,
+    description: `分类「${categoryName}」下的全部文章 — ${SITE_CONFIG.name}`,
+    path: `/categories/${encodeURIComponent(categoryName)}`,
+  });
 }
 
 export default async function CategoryPage({ params }: { params: Promise<{ category: string }> }) {

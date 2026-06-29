@@ -1,4 +1,12 @@
+import type { Metadata } from 'next';
 import { linkCategories } from '@/lib/links';
+import { buildPageMetadata } from '@/lib/metadata';
+
+export const metadata: Metadata = buildPageMetadata({
+  title: '导航',
+  description: '精选技术文档、VPS 官网、开发工具和趣味小站 — 工程师的阅读收藏夹。',
+  path: '/links',
+});
 
 export default function LinksPage() {
   return (

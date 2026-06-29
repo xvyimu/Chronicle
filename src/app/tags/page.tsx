@@ -1,5 +1,13 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getAllTags } from '@/lib/tags';
+import { buildPageMetadata } from '@/lib/metadata';
+
+export const metadata: Metadata = buildPageMetadata({
+  title: '标签',
+  description: '按主题浏览文章 — 所有标签按权重排列，快速定位感兴趣的内容。',
+  path: '/tags',
+});
 
 export default function TagsPage() {
   const tags = getAllTags();

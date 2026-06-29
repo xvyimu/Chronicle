@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getAllProjectIds, getProjectById } from '@/lib/projects';
-import { SITE_CONFIG } from '@/lib/constants';
+import { buildPageMetadata } from '@/lib/metadata';
 
 export async function generateStaticParams() {
   return getAllProjectIds().map((id) => ({ id }));
@@ -14,16 +14,12 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const project = getProjectById(id);
   if (!project) return {};
 
-  return {
-    title: `${project.title} | ${SITE_CONFIG.name}`,
+  return buildPageMetadata({
+    title: project.title,
     description: project.description,
-    openGraph: {
-      title: project.title,
-      description: project.description,
-      type: 'website',
-      images: project.image ? [{ url: project.image }] : [],
-    },
-  };
+    path: `/projects/${project.id}`,
+    image: project.image,
+  });
 }
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
