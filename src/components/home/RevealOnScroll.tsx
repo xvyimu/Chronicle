@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useRef, type ReactNode } from 'react';
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
+import { useInView } from '@/hooks/useInView';
 
 interface RevealOnScrollProps {
   children: ReactNode;
@@ -16,35 +18,31 @@ export default function RevealOnScroll({
   delay = 0,
 }: RevealOnScrollProps) {
   const ref = useRef<HTMLElement>(null);
+  const reduced = usePrefersReducedMotion();
+  const inView = useInView(ref, {
+    once: true,
+    threshold: 0.08,
+    rootMargin: '0px 0px -48px 0px',
+  });
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
 
-    const prefersReduced = window.matchMedia(
-      '(prefers-reduced-motion: reduce)',
-    ).matches;
-    if (prefersReduced) {
+    // Respect prefers-reduced-motion: reveal immediately without transition
+    if (reduced) {
       el.classList.add('is-visible');
       return;
     }
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          if (delay > 0) {
-            el.style.setProperty('--reveal-delay', `${delay}ms`);
-          }
-          el.classList.add('is-visible');
-          observer.unobserve(el);
-        }
-      },
-      { threshold: 0.08, rootMargin: '0px 0px -48px 0px' },
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [delay]);
+    // Reveal when the element scrolls into view
+    if (inView) {
+      if (delay > 0) {
+        el.style.setProperty('--reveal-delay', `${delay}ms`);
+      }
+      el.classList.add('is-visible');
+    }
+  }, [reduced, inView, delay]);
 
   return (
     <Tag ref={ref as never} className={`reveal-on-scroll ${className}`}>

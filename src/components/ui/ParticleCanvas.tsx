@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 
 interface Particle {
   x: number;
@@ -16,10 +17,11 @@ const CONNECTION_DIST = 120;
 
 export default function ParticleCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const reduced = usePrefersReducedMotion();
 
   useEffect(() => {
     // 尊重用户系统无障碍设置：关闭动画
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (reduced) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -137,7 +139,7 @@ export default function ParticleCanvas() {
       window.removeEventListener('resize', handleResize);
       intersectionObserver.disconnect();
     };
-  }, []);
+  }, [reduced]);
 
   return (
     <canvas

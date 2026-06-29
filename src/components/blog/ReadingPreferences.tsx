@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { safeLocalStorage } from '@/lib/storage';
+import { useEffect } from 'react';
+import { usePersistedEnum } from '@/hooks/usePersistedEnum';
 
 type FontSize = 'sm' | 'md' | 'lg';
 type Width = 'narrow' | 'normal' | 'wide';
@@ -16,18 +16,16 @@ const FONT_TITLES: Record<FontSize, string> = { sm: '小字号', md: '标准字�
 const WIDTH_TITLES: Record<Width, string> = { narrow: '窄栏', normal: '标准', wide: '宽栏' };
 
 export default function ReadingPreferences({ targetId = 'article-content' }: { targetId?: string }) {
-  const [fontSize, setFontSize] = useState<FontSize>('md');
-  const [width, setWidth] = useState<Width>('normal');
-  const [hydrated, setHydrated] = useState(false);
-
-  // Restore from localStorage on mount — must run before apply
-  useEffect(() => {
-    const savedSize = safeLocalStorage.getItem('reading-font-size') as FontSize | null;
-    const savedWidth = safeLocalStorage.getItem('reading-width') as Width | null;
-    if (savedSize && FONT_SIZES.includes(savedSize)) setFontSize(savedSize);
-    if (savedWidth && WIDTHS.includes(savedWidth)) setWidth(savedWidth);
-    setHydrated(true);
-  }, []);
+  const { value: fontSize, cycle: cycleFontSize, hydrated } = usePersistedEnum<FontSize>({
+    key: 'reading-font-size',
+    defaultValue: 'md',
+    validValues: FONT_SIZES,
+  });
+  const { value: width, cycle: cycleWidth } = usePersistedEnum<Width>({
+    key: 'reading-width',
+    defaultValue: 'normal',
+    validValues: WIDTHS,
+  });
 
   // Apply font size + width to the prose container (skip until restored)
   useEffect(() => {
@@ -36,17 +34,7 @@ export default function ReadingPreferences({ targetId = 'article-content' }: { t
     if (!el) return;
     el.style.setProperty('--reading-font-size', FONT_SIZE_MAP[fontSize]);
     el.style.setProperty('--reading-width', WIDTH_MAP[width]);
-    safeLocalStorage.setItem('reading-font-size', fontSize);
-    safeLocalStorage.setItem('reading-width', width);
   }, [fontSize, width, targetId, hydrated]);
-
-  const cycleFontSize = () => {
-    setFontSize((prev) => FONT_SIZES[(FONT_SIZES.indexOf(prev) + 1) % FONT_SIZES.length]);
-  };
-
-  const cycleWidth = () => {
-    setWidth((prev) => WIDTHS[(WIDTHS.indexOf(prev) + 1) % WIDTHS.length]);
-  };
 
   return (
     <div className="reading-prefs" aria-label="阅读偏好">

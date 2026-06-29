@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import type { ReactNode } from 'react';
-import { safeLocalStorage } from '@/lib/storage';
+import { usePersistedEnum } from '@/hooks/usePersistedEnum';
 
 type Theme = 'system' | 'light' | 'dark';
 
@@ -32,17 +32,26 @@ const ICONS: Record<Theme, ReactNode> = {
   ),
 };
 
+// Cycle order matches the original toggle(): light → dark → system → light
+const THEME_CYCLE: Theme[] = ['light', 'dark', 'system'];
+
 export default function ThemeToggle() {
-  const [mounted, setMounted] = useState(false);
-  const [theme, setTheme] = useState<Theme>('system');
+  const { value: theme, cycle, hydrated: mounted } = usePersistedEnum<Theme>({
+    key: 'theme',
+    defaultValue: 'system',
+    validValues: THEME_CYCLE,
+    // 'system' clears storage so the OS preference is followed on next visit;
+    // explicit choices are persisted.
+    persist: (value, storage) => {
+      if (value === 'system') {
+        storage.removeItem('theme');
+      } else {
+        storage.setItem('theme', value);
+      }
+    },
+  });
 
-  useEffect(() => {
-    const VALID_THEMES: Theme[] = ['light', 'dark', 'system'];
-    const stored = safeLocalStorage.getItem('theme') as Theme | null;
-    if (stored && VALID_THEMES.includes(stored)) setTheme(stored);
-    setMounted(true);
-  }, []);
-
+  // Apply theme to documentElement + View Transition API
   useEffect(() => {
     if (!mounted) return;
     const root = document.documentElement;
@@ -57,12 +66,6 @@ export default function ThemeToggle() {
     } else {
       apply();
     }
-
-    if (theme === 'system') {
-      safeLocalStorage.removeItem('theme');
-    } else {
-      safeLocalStorage.setItem('theme', theme);
-    }
   }, [theme, mounted]);
 
   // Listen for OS theme changes when in system mode
@@ -76,12 +79,6 @@ export default function ThemeToggle() {
     return () => mq.removeEventListener('change', handler);
   }, [theme, mounted]);
 
-  const toggle = () => {
-    const cycle: Theme[] = ['light', 'dark', 'system'];
-    const next = (cycle.indexOf(theme) + 1) % cycle.length;
-    setTheme(cycle[next]);
-  };
-
   if (!mounted) {
     return (
       <button type="button" className="icon-btn" aria-label="切换主题">
@@ -93,7 +90,7 @@ export default function ThemeToggle() {
   return (
     <button
       type="button"
-      onClick={toggle}
+      onClick={cycle}
       className="icon-btn"
       aria-label="切换主题"
       title={LABELS[theme]}
