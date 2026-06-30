@@ -2,8 +2,8 @@
 .home-manifesto {
   margin-top: 64px;
   padding: 88px 24px;
-  background: var(--text);
-  color: var(--bg);
+  background: var(--bg-soft);
+  color: var(--text);
 }
 
 .home-manifesto__inner {
