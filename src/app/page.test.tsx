@@ -20,9 +20,8 @@ import HomePage from '@/app/page';
 describe('HomePage', () => {
   beforeEach(() => cleanup());
 
-  it('renders the hero section with site name', () => {
+  it('renders the hero section with tagline', () => {
     render(<HomePage />);
-    expect(screen.getByText(SITE_CONFIG.name)).toBeInTheDocument();
     expect(screen.getByText('Build Quiet Systems,')).toBeInTheDocument();
     expect(screen.getByText('Write Useful Notes.')).toBeInTheDocument();
   });

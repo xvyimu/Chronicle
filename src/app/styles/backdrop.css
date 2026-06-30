@@ -145,7 +145,7 @@ body::after {
 
 .editorial-hero__topline {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 24px;
   min-height: 168px;
   color: var(--text);
