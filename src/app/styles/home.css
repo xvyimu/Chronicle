@@ -168,12 +168,35 @@
 .home-article-rail__track {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(300px, 380px);
+  /* 卡片宽度让最后一张半露出 (scroll affordance): 1440px 下 4.5 张可见 */
+  grid-auto-columns: minmax(260px, 1fr);
   gap: 16px;
   overflow-x: auto;
-  padding: 4px 0 18px;
+  padding: 4px 4px 18px;
   scroll-snap-type: x proximity;
+  scroll-padding-inline: 4px;
   scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+/* 自定义滚动条 (WebKit) — 深色主题适配 */
+.home-article-rail__track::-webkit-scrollbar {
+  height: 6px;
+}
+.home-article-rail__track::-webkit-scrollbar-track {
+  background: transparent;
+}
+.home-article-rail__track::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 3px;
+  transition: background var(--transition-fast);
+}
+.home-article-rail__track:hover::-webkit-scrollbar-thumb,
+.home-article-rail__track:focus-within::-webkit-scrollbar-thumb {
+  background: var(--brand);
+}
+.home-article-rail__track::-webkit-scrollbar-thumb:hover {
+  background: var(--brand-hover);
 }
 
 .home-article-rail__card {

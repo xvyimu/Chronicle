@@ -52,6 +52,12 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  /* Article rail: 平板下卡片缩到 240px 让 3 张可见 (768px track 728px / 240 = 3 张) */
+  .home-article-rail__track {
+    grid-auto-columns: 240px;
+    gap: 12px;
+  }
+
   .footer__inner {
     grid-template-columns: 1fr;
     gap: 24px;
