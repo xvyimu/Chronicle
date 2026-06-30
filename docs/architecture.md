@@ -1,5 +1,17 @@
 # 项目架构说明
 
+> ⚠️ **状态：部分过时**（2026-06-30）
+> 本文档写于 `src/lib/posts.ts` 单文件时代，未反映以下后续重构：
+> - `src/lib/posts.ts` 已拆分为 `src/lib/posts/` 4 子模块（schema/repository/query/search-text）
+> - 新增 `src/lib/observability.ts` / `metadata.ts` / `route-adapter.ts` / `category-rules.ts` / `schemas/` / `test-utils/`
+> - 新增 `src/hooks/` 目录（useInView / usePersistedEnum / usePrefersReducedMotion）
+> - 新增全站三层背景架构（`SiteBackdropStage` + `SiteBackdropParallax` + `body::before/after`）
+> - `src/app/globals.css` 已拆为 10 个语义 CSS 模块（见 `src/app/styles/`）
+> - 新增首页 8 个组件（`src/components/home/`）
+>
+> 当前架构权威来源：[`docs/handoff-to-agent.md`](./handoff-to-agent.md) 的"三、架构速览"小节。
+> 本文档保留作为历史参考，不再同步更新。
+
 ## 1. 项目定位
 
 这是一个以内容展示为主的个人博客项目，核心目标不是复杂后台，而是通过本地文件驱动站点内容。

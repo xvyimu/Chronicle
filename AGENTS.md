@@ -13,7 +13,7 @@ A personal blog built with Next.js 16.2 (App Router), React 19, and Tailwind CSS
 - **Content**: MDX with custom frontmatter parser (`lib/parse-frontmatter.ts`, js-yaml 4.x), next-mdx-remote
 - **Syntax Highlighting**: Shiki via rehype-pretty-code
 - **Search**: fuse.js (client-side fuzzy search)
-- **Testing**: Vitest (unit/integration, 198 tests), Playwright (E2E, 32 tests)
+- **Testing**: Vitest (unit/integration, 291 tests, 31 files), Playwright (E2E, 42 tests, 4 spec files)
 - **CI**: GitHub Actions (lint / test / tsc / build / bundle-budget / e2e)
 - **Deployment**: Vercel
 
@@ -55,17 +55,27 @@ src/
 │   └── error.tsx           # Error boundary (production-safe)
 ├── components/
 │   ├── blog/               # Blog-specific (SearchBar, BlogCard, CodeBlock, TOC, etc.)
+│   ├── home/               # Home-only (EditorialHero, Manifesto, ReadingPath, ArticleRail, CTA, RevealOnScroll, LoadingIntro)
 │   ├── layout/             # Header, Footer, SiteBackdropStage (server), SiteBackdropParallax (client)
 │   ├── projects/           # ProjectCard
 │   ├── comments/           # Giscus comments
 │   └── ui/                 # Reusable UI (ThemeToggle, BackToTop, MagneticCard, ParticleCanvas)
+├── hooks/                  # React hooks (useInView, usePersistedEnum, usePrefersReducedMotion)
 ├── lib/                    # Business logic
 │   ├── posts/              # Post modules (schema, repository, query, search-text — 4 submodules)
+│   ├── schemas/            # Zod schemas (post-frontmatter)
+│   ├── test-utils/         # Test fixtures (in-memory ContentSource)
 │   ├── projects.ts         # Project data (uses createCache<T>, zod validation)
 │   ├── tags.ts             # Tag management
+│   ├── categories.ts       # Category aggregation
+│   ├── category-rules.ts   # TAG_TO_CATEGORY mapping
 │   ├── about.ts            # About page content
-│   ├── content-source.ts   # ContentSource interface (fs abstraction)
+│   ├── links.ts            # Curated links data (6 categories, 67 entries)
+│   ├── content-source.ts   # ContentSource interface (fs abstraction) + createPostRepository factory
 │   ├── parse-frontmatter.ts # MDX frontmatter parser (js-yaml 4.x, gray-matter parity)
+│   ├── route-adapter.ts    # createDynamicRoute adapter for [slug|id|tag|category] routes
+│   ├── metadata.ts         # SEO metadata helpers
+│   ├── observability.ts    # Logging / telemetry helpers
 │   ├── cache.ts            # createCache<T> utility + resetAllCaches() for test isolation
 │   ├── storage.ts          # safeLocalStorage wrapper (SSR-safe)
 │   ├── jsonld.ts           # JSON-LD structured data
@@ -89,12 +99,15 @@ src/
 ## Commands
 
 ```bash
-pnpm dev          # Start dev server (port 3000)
+pnpm dev          # Start dev server (port 3000; Turbopack)
 pnpm build        # Generate RSS + production build (91 static pages)
 pnpm test         # Run unit/integration tests (291 tests, 31 files)
-pnpm test:e2e     # Run E2E tests (42 tests, auto-starts dev server on port 3001)
+pnpm test:e2e     # Run E2E tests (42 tests, 4 spec files; auto-starts dev/prod server on port 3001)
+pnpm test:e2e:raw # Playwright raw (pass-through flags, e.g. --ui)
 pnpm lint         # ESLint
-pnpm analyze     # Bundle size analysis
+pnpm check:seo    # SEO audit (tsx scripts/check-seo.ts)
+pnpm analyze      # Bundle size analysis (ANALYZE=true next build)
+tsc --noEmit      # TypeScript check
 ```
 
 ## E2E Testing Notes

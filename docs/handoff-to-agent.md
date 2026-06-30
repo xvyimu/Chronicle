@@ -16,7 +16,7 @@
 | 字体 | Noto Sans SC (中文) + JetBrains Mono (代码) + Cormorant Garamond (展示) |
 | 数据 | 本地 MDX 文件 (`content/blog/`) + JSON (`data/projects.json`) |
 | 构建 | `pnpm build` → `tsx scripts/generate-rss.ts && next build` |
-| 运行 | `pnpm dev` → dev 模式 :3001 |
+| 运行 | `pnpm dev` → dev 模式 :3000 (Turbopack);E2E 用 :3001 |
 | 测试 | Vitest (单元) + Playwright (E2E) |
 | 部署 | Vercel (需设 `NEXT_PUBLIC_SITE_URL`) |
 | 评论 | Giscus (GitHub Discussions) |
@@ -123,22 +123,33 @@ D:\blog\
 │   │       ├── animations.css    # 动画（reveal、fade-in-up、loading-intro）
 │   │       └── responsive.css     # 响应式断点（最后加载,覆盖前面）
 │   ├── components/
-│   │   ├── home/               # 首页专属组件（8 个）
-│   │   ├── blog/               # 博客组件（BlogCard/SearchBar/Pagination/CodeBlock 等）
+│   │   ├── home/               # 首页专属组件（8 个:EditorialHero/Manifesto/ReadingPath/ArticleRail/CuratedLinks/HomeCta/RevealOnScroll/LoadingIntro）
+│   │   ├── blog/               # 博客组件（BlogCard/SearchBar/Pagination/CodeBlock/TOC/ReadingProgress/ReadingPreferences/ImageZoom/MdxContent/TagLink）
 │   │   ├── layout/             # Header/Footer + SiteBackdropStage + SiteBackdropParallax
 │   │   ├── ui/                 # ThemeToggle/ParticleCanvas/BackToTop/MagneticCard
 │   │   ├── projects/           # ProjectCard
 │   │   └── comments/           # Giscus
+│   ├── hooks/                  # React hooks（useInView/usePersistedEnum/usePrefersReducedMotion,均带测试）
 │   ├── lib/                    # 数据层
 │   │   ├── posts/              # 文章模块（schema/repository/query/search-text,4 子模块）
+│   │   ├── schemas/            # 共享 Zod schema（post-frontmatter）
+│   │   ├── test-utils/         # 测试夹具（in-memory ContentSource）
 │   │   ├── projects.ts         # 项目数据
 │   │   ├── links.ts            # 导航收藏数据（6 分类 67 条）
 │   │   ├── tags.ts             # 标签聚合
 │   │   ├── categories.ts       # 分类聚合
-│   │   ├── constants.ts        # SITE_CONFIG / CONTENT_DIR / TAG_TO_CATEGORY
+│   │   ├── category-rules.ts   # TAG_TO_CATEGORY 映射
+│   │   ├── about.ts            # 关于页内容
+│   │   ├── content-source.ts   # ContentSource 接口 + createPostRepository 工厂
+│   │   ├── parse-frontmatter.ts # MDX frontmatter 解析（js-yaml 4.x）
+│   │   ├── route-adapter.ts    # createDynamicRoute 适配器（4 条动态路由收敛）
+│   │   ├── metadata.ts         # SEO metadata 辅助
+│   │   ├── observability.ts    # 日志/遥测辅助
 │   │   ├── cache.ts            # 内存缓存工具 + resetAllCaches() 测试隔离
+│   │   ├── storage.ts          # safeLocalStorage 包装（SSR-safe）
 │   │   ├── jsonld.ts           # JSON-LD 结构化数据
-│   │   └── utils.ts            # 工具函数
+│   │   ├── constants.ts        # SITE_CONFIG / CONTENT_DIR / 分页大小
+│   │   └── utils.ts            # slugify / formatDate
 │   └── types/
 │       └── index.ts            # PostFrontmatter / PostMeta / PostFull / Project / TagInfo
 ├── content/
@@ -151,19 +162,38 @@ D:\blog\
 │   ├── navigation.spec.ts      # 10 tests
 │   └── extended.spec.ts        # 8 tests
 ├── docs/                       # 设计/规范文档
+│   ├── handoff-to-agent.md     # ← 当前文档（权威架构来源）
+│   ├── architecture.md         # 历史架构概览（已标注部分过时,保留参考）
+│   ├── overview.md             # 文档总览与阅读顺序
+│   ├── content-workflow.md     # 内容工作流（新增/修改文章的规范）
+│   ├── css-conventions.md      # CSS 约定（BEM + Tailwind 分工）
+│   ├── cache-components-migration.md # createCache<T> 与 Cache Components 迁移
+│   ├── salesdex-inspired-redesign.md # 首页改版设计（Phase 1-3 已完成）
+│   ├── performance-baseline.md # 性能预算与 Lighthouse baseline
+│   ├── architecture-review.html # 架构审查快照（2026-06-29,作为 specs/posts-deepening 输入）
 │   ├── specs/                  # 设计文档目录
-│   │   ├── 2026-06-29-site-backdrop-architecture-design.md
-│   │   └── 2026-06-29-css-import-fix-design.md
-│   ├── salesdex-inspired-redesign.md
-│   ├── css-conventions.md
-│   ├── cache-components-migration.md
-│   ├── performance-baseline.md
-│   └── handoff-to-agent.md
+│   │   ├── 2026-06-29-site-backdrop-architecture-design.md # 三层背景架构
+│   │   ├── 2026-06-29-css-import-fix-design.md              # Tailwind v4 import 修复
+│   │   └── 2026-06-29-posts-deepening-design.md             # posts.ts 拆分 + 路由 adapter（已实施）
+│   └── adr/
+│       └── 0001-csp-nonce-vs-ssg.md # ADR: CSP nonce 在 SSG 下的取舍
+├── scripts/
+│   ├── generate-rss.ts         # RSS 生成（构建前调用）
+│   ├── check-bundle-budget.ts  # Bundle 预算检查（CI 中强制执行）
+│   ├── check-seo.ts            # SEO 审计脚本
+│   └── run-e2e.mjs             # E2E 启动包装（处理 build + start）
+├── public/
+│   ├── feed.xml / feed.json    # RSS 输出（构建时生成）
+│   ├── images/projects/        # 项目截图（6 张 PNG）
+│   └── icon.svg
 ├── next.config.ts              # viewTransition + security headers
 ├── vitest.config.ts            # jsdom + @ alias
-├── playwright.config.ts        # :3001 + chromium
+├── vitest.setup.ts             # 测试环境初始化（@testing-library/jest-dom）
+├── playwright.config.ts        # :3001 + chromium + CI 用 next start
 ├── eslint.config.mjs
-└── tsconfig.json               # strict + bundler resolution
+├── tsconfig.json               # strict + bundler resolution
+├── lighthouse.config.js        # Lighthouse CI 预算（5 页 × 2 次跑,desktop preset）
+└── postcss.config.mjs          # @tailwindcss/postcss（⚠️ 静默丢弃 @import,见 CSS 约定）
 ```
 
 ### 组件层级
@@ -234,7 +264,7 @@ page.tsx
 - 可增加：文章的 `updatedAt` 字段在 RSS 中体现
 - SEO：检查每个页面当前 metadata 是否完整（title、description、OG）
 
-关键文件：`src/scripts/generate-rss.ts`、`src/app/blog/[slug]/page.tsx`（metadata 动态生成）
+关键文件：`scripts/generate-rss.ts`、`src/app/blog/[slug]/page.tsx`（metadata 动态生成）、`scripts/check-seo.ts`
 
 ### 方向 E：暗色主题打磨
 
@@ -280,17 +310,18 @@ page.tsx
 ```bash
 # 开发
 cd D:\blog
-pnpm dev                    # → localhost:3001 (Turbopack)
-pnpm dev --port 3001
+pnpm dev                    # → localhost:3000 (Turbopack)
+pnpm dev --port 3001        # 显式指定端口（E2E 默认用 3001）
 
 # 测试
-pnpm test                   # Vitest 单元测试（221 tests）
-pnpm test:e2e               # Playwright E2E（38 tests）
+pnpm test                   # Vitest 单元测试（291 tests, 31 files）
+pnpm test:e2e               # Playwright E2E（42 tests, 4 spec files;自动启动 :3001）
 pnpm test:e2e:raw -- --ui   # 带 UI 模式调试
 
 # 构建/检查
-pnpm build                  # 生产构建（含 RSS 生成）
+pnpm build                  # 生产构建（含 RSS 生成,91 static pages）
 pnpm lint                   # ESLint
+pnpm check:seo              # SEO 审计（tsx scripts/check-seo.ts）
 tsc --noEmit                # TypeScript 检查
 
 # bundle 分析
@@ -309,3 +340,85 @@ pnpm analyze                # 生成 .next/analyze/
 6. **测试**：新组件必须配套测试（Vitest + 必要时 Playwright）
 7. **评论**：Giscus 配置在 `SITE_CONFIG.giscus`
 8. **安全**：CSP nonce 通过 `src/proxy.ts` 动态生成
+
+---
+
+## 七、给 Claude Code 的接手指引
+
+本节为 Claude Code（或任何接手的 AI 编码助手）准备的快速启动清单。读完上一至六节后,按此清单完成接手。
+
+### 7.1 环境与工具链
+
+| 项 | 要求 |
+|----|------|
+| Node.js | ≥ 20（参考 `.nvmrc`） |
+| 包管理器 | pnpm 11.8.0（`package.json` 的 `packageManager` 字段已锁） |
+| 操作系统 | Windows / macOS / Linux 均可（路径分隔符用 `path` 模块,不要硬编码 `\` 或 `/`） |
+| 编辑器 | VS Code 推荐（启用 ESLint + TypeScript 插件） |
+| 浏览器 | Chromium（E2E 用,`npx playwright install chromium`） |
+
+### 7.2 接手后第一步：基线验证
+
+```bash
+cd D:\blog
+pnpm install                 # 确认依赖装得上（注意：pnpm v11 store 偶尔会损坏,见 Lessons Learned）
+pnpm test                    # 期望:291 tests / 31 files 全绿
+pnpm lint                    # 期望:0 errors
+tsc --noEmit                 # 期望:0 errors
+pnpm build                   # 期望:生成 RSS + 91 static pages
+pnpm test:e2e                # 期望:42 tests / 4 spec files 全绿（首次会自动 build + start :3001）
+```
+
+> 任一项失败时,先看 `project_memory.md` 的 Lessons Learned 段；再读 `docs/specs/` 下相关设计文档。
+
+### 7.3 上下文加载顺序
+
+按以下顺序读文档,可在 15 分钟内建立完整心智模型:
+
+1. `AGENTS.md` — 项目结构与约定速览
+2. 本文件（`docs/handoff-to-agent.md`）— 当前状态 + 架构 + 后续方向
+3. `docs/specs/2026-06-29-site-backdrop-architecture-design.md` — 三层背景架构
+4. `docs/specs/2026-06-29-css-import-fix-design.md` — Tailwind v4 CSS 加载约束
+5. `docs/css-conventions.md` — 写样式前必读
+6. `docs/performance-baseline.md` — 改性能预算前必读
+
+**不必读**:`docs/architecture.md`（已标注部分过时,保留作历史参考）、`docs/architecture-review.html`（历史架构扫描快照,作为 specs/posts-deepening-design 的输入）。
+
+### 7.4 高频踩坑点
+
+- **Tailwind v4 `@import` 失效**：`globals.css` 不能用 `@import "./styles/xxx.css"`,会被静默丢弃。所有 CSS 模块必须在 `layout.tsx` 顶部显式 `import`。
+- **反相设计失效**：禁止 `background: var(--text); color: var(--bg)`,改用 `--bg-soft` / `--surface` 等 surface token。
+- **E2E 视差测试**：用 `page.waitForFunction` 等 hydration,然后 `page.evaluate(() => window.dispatchEvent(new MouseEvent('mousemove')))` 触发,不要用 `page.mouse.move`。
+- **Blog card 点击被 `::after` 拦截**：用 `focus()` + `keyboard.type()` 处理搜索输入,`dispatchEvent('click')` 处理按钮,`page.goto()` 处理导航。
+- **pnpm store 损坏**：`pnpm install --lockfile-only --no-frozen-lockfile --store-dir="<local-tmp>"` 可在不依赖损坏 store 的情况下重新生成 lockfile。
+- **CSS 验证缺失**：build 成功 ≠ CSS 生效。改 CSS 后必须验证 `.next/static/css/*.css` bundle 含关键选择器（如 `.editorial-hero`、`body:before`、`--hero-ink`）。
+
+### 7.5 提交与分支
+
+- 当前分支：`codex/blog-hardening-tooling`（基于 `master`）
+- 默认 base 分支：`master`（不是 `main`）—— CI 配置已订正,见 `project_memory.md`
+- 提交规范：`type(scope): subject`（见 `git log --oneline` 历史样式,如 `feat(home):` / `fix(css):` / `refactor(layout):` / `docs:`）
+- 提交信息在 Windows PowerShell 下用临时文件：`git commit -F tmp/commit-msg.txt`（HEREDOC 不支持）
+
+### 7.6 网络代理（仅 Windows + 需要访问 GitHub 时）
+
+如果 `git push` 报 `Failed to connect to github.com port 443`,说明本地需要走代理。可临时为单次 push 设置：
+
+```bash
+git -c http.proxy=socks5h://127.0.0.1:7897 -c https.proxy=socks5h://127.0.0.1:7897 push origin <branch>
+```
+
+如果 schannel 握手失败,追加 `-c http.sslBackend=openssl`。**不要写入全局 config**,会污染其他仓库；接手完成时应清除：`git config --global --unset http.proxy; git config --global --unset https.proxy; git config --global --unset http.sslBackend`。
+
+### 7.7 接手清单
+
+完成以下步骤后,视为成功接手：
+
+- [ ] 跑通 7.2 的 5 条基线命令,全绿
+- [ ] 读完 7.3 的 6 份文档
+- [ ] 理解三层背景架构（body::before/after + SiteBackdropStage + SiteBackdropParallax）的职责分离
+- [ ] 理解 CSS 10 模块的加载顺序约束（tokens 最先,responsive 最后）
+- [ ] 在 `src/app/styles/home.css` 中找到 ArticleRail 的自定义滚动条样式
+- [ ] 在 `src/lib/posts/` 中找到文章查询的 4 个子模块
+- [ ] 在 `src/components/home/` 中找到首页 8 个组件的渲染顺序（参考本文件 §三的"组件层级"）
+- [ ] 知道改 CSP 相关代码时,要看 `docs/adr/0001-csp-nonce-vs-ssg.md`
