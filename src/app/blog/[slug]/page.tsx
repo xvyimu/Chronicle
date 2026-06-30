@@ -1,51 +1,53 @@
-import { notFound } from 'next/navigation';
-import type { Metadata } from 'next';
+import Link from 'next/link';
 import MdxContent from '@/components/blog/MdxContent';
 import TableOfContents from '@/components/blog/TableOfContents';
 import ReadingProgress from '@/components/blog/ReadingProgress';
 import ReadingPreferences from '@/components/blog/ReadingPreferences';
 import TagLink from '@/components/blog/TagLink';
-import { getPostBySlug, getAllPostSlugs, getAdjacentPosts } from '@/lib/posts';
+import {
+  postRepository,
+  getAdjacentPosts,
+  getRelatedPosts,
+  getSeriesPosts,
+} from '@/lib/posts';
 import { inferCategory } from '@/lib/categories';
 import { formatDate, slugifyTag } from '@/lib/utils';
 import { SITE_CONFIG } from '@/lib/constants';
 import { blogPostingSchema, breadcrumbSchema, toJsonLd } from '@/lib/jsonld';
-import Link from 'next/link';
+import { buildPageMetadata } from '@/lib/metadata';
+import { createDynamicRoute } from '@/lib/route-adapter';
 import Giscus from '@/components/comments/Giscus';
+import type { PostFull } from '@/types';
 
-export async function generateStaticParams() {
-  return getAllPostSlugs().map((slug) => ({ slug }));
-}
-
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const { slug } = await params;
-  const post = getPostBySlug(slug);
-  if (!post) return {};
-
-  return {
-    title: `${post.title} | ${SITE_CONFIG.name}`,
-    description: post.description,
-    keywords: post.tags.join(', '),
-    alternates: {
-      canonical: `${SITE_CONFIG.url}/blog/${post.slug}`,
-    },
-    openGraph: {
+const { generateStaticParams, generateMetadata, default: BlogPostPage } = createDynamicRoute<PostFull>({
+  paramKey: 'slug',
+  getAllSlugs: () => postRepository.getAllPostSlugs(),
+  getBySlug: (slug) => postRepository.getPostBySlug(slug),
+  buildMetadata: (post) => ({
+    ...buildPageMetadata({
       title: post.title,
       description: post.description,
+      path: `/blog/${post.slug}`,
       type: 'article',
+      image: post.image,
       publishedTime: post.date,
-      images: post.image ? [{ url: post.image }] : [],
-    },
-  };
-}
+      modifiedTime: post.updatedAt ?? post.date,
+    }),
+    keywords: post.tags.join(', '),
+  }),
+  render: (post) => <BlogPostContent post={post} />,
+});
 
-export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const post = getPostBySlug(slug);
-  if (!post) notFound();
+export { generateStaticParams, generateMetadata };
+export default BlogPostPage;
 
+function BlogPostContent({ post }: { post: PostFull }) {
+  const slug = post.slug;
   const { prev, next } = getAdjacentPosts(slug);
-  const category = inferCategory(post.tags);
+  const relatedPosts = getRelatedPosts(slug);
+  const seriesPosts = getSeriesPosts(slug);
+  const seriesIndex = seriesPosts.findIndex((item) => item.slug === post.slug);
+  const category = post.category ?? inferCategory(post.tags);
 
   const articleLd = toJsonLd(blogPostingSchema(post));
   const breadcrumbLd = toJsonLd(breadcrumbSchema([
@@ -72,6 +74,12 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                   <time dateTime={post.date}>{formatDate(post.date)}</time>
                 </span>
+                {post.updatedAt && post.updatedAt !== post.date && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+                    更新于 <time dateTime={post.updatedAt}>{formatDate(post.updatedAt)}</time>
+                  </span>
+                )}
                 <span className="inline-flex items-center gap-1.5">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                   {post.readingTime}
@@ -83,6 +91,11 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               </div>
               {post.tags.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-2">
+                  {post.series && (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] px-3 py-1 text-xs font-medium text-[var(--text-soft)]">
+                      {post.series}
+                    </span>
+                  )}
                   {category && (
                     <Link href={`/categories/${encodeURIComponent(category)}`} className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] px-3 py-1 text-xs font-medium text-[var(--text-soft)] hover:text-[var(--brand)] hover:border-[var(--brand)] transition-colors">
                       {category}
@@ -99,7 +112,106 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               <MdxContent source={post.content} />
             </div>
 
+            {seriesPosts.length > 1 && (
+              <section className="mt-16 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-xs)]" aria-labelledby="series-posts-title">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--brand)]">
+                      Reading Path
+                    </p>
+                    <h2 id="series-posts-title" className="mt-1 text-lg font-semibold">
+                      专题阅读路径
+                    </h2>
+                    <p className="mt-1 text-sm text-[var(--text-dim)]">
+                      {post.series}
+                    </p>
+                  </div>
+                  {seriesIndex >= 0 && (
+                    <span className="rounded-full border border-[var(--border)] px-3 py-1 text-xs font-medium text-[var(--text-soft)]">
+                      第 {seriesIndex + 1} / {seriesPosts.length} 篇
+                    </span>
+                  )}
+                </div>
+
+                <ol className="mt-5 grid gap-2">
+                  {seriesPosts.map((item, index) => {
+                    const isCurrent = item.slug === post.slug;
+                    const inner = (
+                      <>
+                        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                          isCurrent
+                            ? 'bg-[var(--brand)] text-white'
+                            : 'bg-[var(--bg-soft)] text-[var(--text-dim)]'
+                        }`}>
+                          {index + 1}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className={`block text-sm font-medium ${
+                            isCurrent ? 'text-[var(--text)]' : 'text-[var(--text-soft)] group-hover:text-[var(--brand)]'
+                          }`}>
+                            {item.title}
+                          </span>
+                          <span className="mt-0.5 block text-xs text-[var(--text-dim)]">
+                            {item.readingTime}
+                          </span>
+                        </span>
+                        {isCurrent && (
+                          <span className="shrink-0 rounded-full bg-[var(--brand-soft)] px-2.5 py-1 text-xs font-medium text-[var(--brand)]">
+                            当前阅读
+                          </span>
+                        )}
+                      </>
+                    );
+
+                    return (
+                      <li key={item.slug}>
+                        {isCurrent ? (
+                          <div className="flex items-center gap-3 rounded-[var(--radius-sm)] border border-[var(--brand)] bg-[var(--brand-soft)] p-3">
+                            {inner}
+                          </div>
+                        ) : (
+                          <Link
+                            href={`/blog/${item.slug}`}
+                            className="group flex items-center gap-3 rounded-[var(--radius-sm)] border border-[var(--border)] p-3 transition-colors hover:border-[var(--brand)] hover:bg-[var(--bg-soft)]"
+                          >
+                            {inner}
+                          </Link>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ol>
+              </section>
+            )}
+
             <Giscus />
+
+            {relatedPosts.length > 0 && (
+              <section className="mt-16 border-t border-[var(--border)] pt-8" aria-labelledby="related-posts-title">
+                <h2 id="related-posts-title" className="text-lg font-semibold">相关文章</h2>
+                <div className="mt-4 grid gap-3">
+                  {relatedPosts.map((related) => (
+                    <Link
+                      key={related.slug}
+                      href={`/blog/${related.slug}`}
+                      className="group block rounded-lg border border-[var(--border)] p-4 transition-colors hover:border-[var(--brand)] hover:bg-[var(--bg-soft)]"
+                    >
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--text-dim)]">
+                        <time dateTime={related.date}>{formatDate(related.date)}</time>
+                        {related.category && <span>{related.category}</span>}
+                        {related.tags[0] && <span>{related.tags[0]}</span>}
+                      </div>
+                      <h3 className="mt-1 text-sm font-semibold text-[var(--text)] group-hover:text-[var(--brand)] transition-colors">
+                        {related.title}
+                      </h3>
+                      <p className="mt-1 line-clamp-2 text-xs text-[var(--text-dim)]">
+                        {related.description}
+                      </p>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
 
             <nav className="mt-16 flex items-center justify-between border-t border-[var(--border)] pt-8">
               <div>

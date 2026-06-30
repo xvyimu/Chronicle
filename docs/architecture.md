@@ -1,5 +1,17 @@
 # 项目架构说明
 
+> ⚠️ **状态：部分过时**（2026-06-30）
+> 本文档写于 `src/lib/posts.ts` 单文件时代，未反映以下后续重构：
+> - `src/lib/posts.ts` 已拆分为 `src/lib/posts/` 4 子模块（schema/repository/query/search-text）
+> - 新增 `src/lib/observability.ts` / `metadata.ts` / `route-adapter.ts` / `category-rules.ts` / `schemas/` / `test-utils/`
+> - 新增 `src/hooks/` 目录（useInView / usePersistedEnum / usePrefersReducedMotion）
+> - 新增全站三层背景架构（`SiteBackdropStage` + `SiteBackdropParallax` + `body::before/after`）
+> - `src/app/globals.css` 已拆为 10 个语义 CSS 模块（见 `src/app/styles/`）
+> - 新增首页 8 个组件（`src/components/home/`）
+>
+> 当前架构权威来源：[`docs/handoff-to-agent.md`](./handoff-to-agent.md) 的"三、架构速览"小节。
+> 本文档保留作为历史参考，不再同步更新。
+
 ## 1. 项目定位
 
 这是一个以内容展示为主的个人博客项目，核心目标不是复杂后台，而是通过本地文件驱动站点内容。
@@ -115,8 +127,10 @@ public/* + RSS + sitemap + metadata
 - 解析 frontmatter 与正文
 - 计算文章 slug
 - 计算阅读时长
+- 推导分类、正文摘录、小标题列表和搜索文本
+- 根据标签、分类、系列计算相关文章
 - 在生产环境中过滤草稿
-- 提供文章列表、详情、分页、标签过滤、前后篇查询
+- 提供文章列表、详情、分页、标签过滤、前后篇查询、相关文章查询
 
 这意味着博客功能的大多数数据逻辑都应该优先落在这里，而不是散落到页面组件中。
 
@@ -174,7 +188,7 @@ src/components/blog/* 渲染列表与详情
 实际职责拆分：
 
 - 内容文件负责表达内容本身
-- posts.ts 负责把内容变成稳定数据结构
+- posts.ts 负责把内容变成稳定数据结构，并生成搜索/发现所需的派生字段
 - 页面负责选择查询方式
 - 组件负责最终呈现
 

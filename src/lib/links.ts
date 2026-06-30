@@ -167,6 +167,108 @@ export const linkCategories: LinkCategory[] = [
     ],
   },
   {
+    id: 'engineering-docs',
+    title: '技术文档与工程实践',
+    description: '长期值得反复查阅的官方文档、安全清单和工程博客',
+    items: [
+      {
+        title: 'Next.js 文档',
+        url: 'https://nextjs.org/docs',
+        description: 'App Router、渲染模式、部署和性能优化的官方参考',
+      },
+      {
+        title: 'React Learn',
+        url: 'https://react.dev/learn',
+        description: 'React 官方学习路径，适合系统梳理组件、状态和 Hooks',
+      },
+      {
+        title: 'Node.js 文档',
+        url: 'https://nodejs.org/docs/latest/api/',
+        description: 'Node.js 官方 API 文档，运行时、文件系统和网络模块速查入口',
+      },
+      {
+        title: 'Docker Docs',
+        url: 'https://docs.docker.com/',
+        description: 'Docker 官方文档，容器、Compose、镜像构建和运行环境排查都能查到',
+      },
+      {
+        title: 'Kubernetes 文档',
+        url: 'https://kubernetes.io/docs/home/',
+        description: 'Kubernetes 官方文档，集群、工作负载、网络、存储和安全配置的权威入口',
+      },
+      {
+        title: 'web.dev',
+        url: 'https://web.dev/',
+        description: 'Google 维护的 Web 性能、可访问性和最佳实践资料库',
+      },
+      {
+        title: 'TypeScript Handbook',
+        url: 'https://www.typescriptlang.org/docs/',
+        description: 'TypeScript 官方手册，类型系统和配置问题优先查这里',
+      },
+      {
+        title: 'Tailwind CSS 文档',
+        url: 'https://tailwindcss.com/docs',
+        description: 'Tailwind 官方文档，工具类、主题变量和响应式规则都很全',
+      },
+      {
+        title: 'OWASP Cheat Sheet Series',
+        url: 'https://cheatsheetseries.owasp.org/',
+        description: 'Web 安全工程清单，认证、输入校验和部署加固都能按图索骥',
+      },
+      {
+        title: 'Google SRE Books',
+        url: 'https://sre.google/books/',
+        description: 'Google 公开的 SRE 体系书籍，适合系统学习可靠性、值班和事故复盘',
+      },
+      {
+        title: 'The Twelve-Factor App',
+        url: 'https://12factor.net/',
+        description: '云原生应用设计的经典十二要素，部署、配置和可移植性原则很耐读',
+      },
+      {
+        title: 'GitHub Actions 文档',
+        url: 'https://docs.github.com/actions',
+        description: 'CI/CD 工作流、权限、缓存和发布自动化的官方说明',
+      },
+      {
+        title: 'Playwright 文档',
+        url: 'https://playwright.dev/docs/intro',
+        description: '端到端测试和浏览器自动化的官方指南，定位前端回归很顺手',
+      },
+      {
+        title: 'Vitest 指南',
+        url: 'https://vitest.dev/guide/',
+        description: 'Vite 生态测试框架文档，适合单元测试和组件测试查漏补缺',
+      },
+      {
+        title: 'Lighthouse 文档',
+        url: 'https://developer.chrome.com/docs/lighthouse',
+        description: '性能、SEO、可访问性和最佳实践评分背后的官方解释',
+      },
+      {
+        title: 'Martin Fowler',
+        url: 'https://martinfowler.com/',
+        description: '软件架构、重构和团队工程实践的经典文章库',
+      },
+      {
+        title: 'GitHub Engineering',
+        url: 'https://github.blog/engineering/',
+        description: 'GitHub 工程团队的基础设施、协作和规模化实践分享',
+      },
+      {
+        title: 'Cloudflare Blog',
+        url: 'https://blog.cloudflare.com/',
+        description: '网络、安全、边缘计算和全球基础设施的一手技术文章',
+      },
+      {
+        title: 'Vercel Blog',
+        url: 'https://vercel.com/blog',
+        description: '前端框架、部署平台和 Web 性能方向的产品与工程文章',
+      },
+    ],
+  },
+  {
     id: 'cloud',
     title: '云服务与基础设施',
     description: '主流云平台、域名注册和网站加速服务',
@@ -249,6 +351,135 @@ export const linkCategories: LinkCategory[] = [
     ],
   },
   {
+    id: 'self-hosted',
+    title: '自托管与可观测性',
+    description: '适合个人服务器长期收藏的部署、监控、网关和身份认证工具',
+    items: [
+      {
+        title: 'Coolify',
+        url: 'https://coolify.io/',
+        description: '开源自托管 PaaS，把应用、数据库和常用服务部署到自己的服务器上',
+      },
+      {
+        title: 'Portainer',
+        url: 'https://www.portainer.io/',
+        description: 'Docker、Podman 和 Kubernetes 的图形化管理入口，适合管理多台容器主机',
+      },
+      {
+        title: 'Dockge',
+        url: 'https://dockge.kuma.pet/',
+        description: '轻量的 Docker Compose 栈管理工具，适合小服务器集中维护 Compose 项目',
+      },
+      {
+        title: 'Dokploy',
+        url: 'https://dokploy.com/',
+        description: '面向自托管部署的开源平台，支持应用、数据库和 Compose 工作流',
+      },
+      {
+        title: 'CapRover',
+        url: 'https://caprover.com/',
+        description: '自托管 PaaS，适合在 VPS 上快速部署 Node、静态站和数据库服务',
+      },
+      {
+        title: 'Uptime Kuma',
+        url: 'https://uptime.kuma.pet/',
+        description: '开源监控面板，用来做 HTTP、TCP、Ping 和证书到期监控',
+      },
+      {
+        title: 'Grafana',
+        url: 'https://grafana.com/',
+        description: '可观测性仪表盘平台，适合统一展示指标、日志和告警数据',
+      },
+      {
+        title: 'Prometheus',
+        url: 'https://prometheus.io/',
+        description: '开源监控和时序数据库，服务器指标与服务告警的事实标准之一',
+      },
+      {
+        title: 'Caddy',
+        url: 'https://caddyserver.com/',
+        description: '自动 HTTPS 的 Web 服务器和反向代理，个人服务暴露很省心',
+      },
+      {
+        title: 'Authelia',
+        url: 'https://www.authelia.com/',
+        description: '开源身份认证与访问控制网关，适合给自托管服务加统一登录',
+      },
+      {
+        title: 'Keycloak',
+        url: 'https://www.keycloak.org/',
+        description: '开源 IAM 与 SSO 平台，适合需要 OIDC、SAML 和统一账号体系的场景',
+      },
+    ],
+  },
+  {
+    id: 'vps',
+    title: 'VPS 与主机商',
+    description: '参考库存监控清单整理的 VPS 官网入口，统一去掉推广参数',
+    items: [
+      {
+        title: 'BandwagonHost',
+        url: 'https://bandwagonhost.com/',
+        description: '常被用来关注 CN2 GIA、洛杉矶和日本优化线路的 VPS 商家',
+      },
+      {
+        title: 'DMIT',
+        url: 'https://www.dmit.io/',
+        description: '以洛杉矶、香港等优化线路产品出名，适合对网络质量敏感的用途',
+      },
+      {
+        title: 'RackNerd',
+        url: 'https://www.racknerd.com/',
+        description: '北美 VPS 商家，节日促销机型多，适合作为入门和测试节点备选',
+      },
+      {
+        title: 'netcup',
+        url: 'https://www.netcup.com/en',
+        description: '德国主机商，VPS、Root Server 和域名产品线完整',
+      },
+      {
+        title: 'V.PS',
+        url: 'https://v.ps/',
+        description: 'xTom 旗下 VPS 品牌，覆盖香港、东京、圣何塞等常用节点',
+      },
+      {
+        title: 'CloudCone',
+        url: 'https://cloudcone.com/',
+        description: '洛杉矶机房起家的云服务商，适合关注小时计费和特价云主机',
+      },
+      {
+        title: 'ColoCrossing',
+        url: 'https://www.colocrossing.com/',
+        description: '美国数据中心与服务器服务商，提供独立服务器、托管和 VPS 相关产品',
+      },
+      {
+        title: 'AkkoCloud',
+        url: 'https://www.akkocloud.com/',
+        description: '小众 VPS 商家，适合对国内访问优化线路做备选观察',
+      },
+      {
+        title: 'BageVM',
+        url: 'https://www.bagevm.com/',
+        description: '主打高性能实例和网络优化场景的小众云主机服务',
+      },
+      {
+        title: 'YINNET',
+        url: 'https://www.yin-net.com/',
+        description: '提供多地区服务器和 IP 资源的小众商家，适合先观察口碑再下单',
+      },
+      {
+        title: 'JUSTG',
+        url: 'https://www.justg.com/',
+        description: '提供多地区 VPS 与优化线路产品，可作为特殊地区节点备选',
+      },
+      {
+        title: 'LegacyVPS 监控',
+        url: 'https://legacyvps.com/scanidc',
+        description: '库存与补货监控入口，用来观察热门套餐，不直接使用推广链接',
+      },
+    ],
+  },
+  {
     id: 'dev-tools',
     title: '开发工具箱',
     description: '日常开发中常用的在线工具和服务',
@@ -294,6 +525,16 @@ export const linkCategories: LinkCategory[] = [
         description: '网站性能分析平台，提供详细的加载瓶颈和改进建议',
       },
       {
+        title: 'PageSpeed Insights',
+        url: 'https://pagespeed.web.dev/',
+        description: 'Google 官方网页性能检测工具，适合快速看 Core Web Vitals 与优化建议',
+      },
+      {
+        title: 'SSL Labs',
+        url: 'https://www.ssllabs.com/ssltest/',
+        description: 'HTTPS 配置检测工具，证书链、协议版本和加密套件问题一眼定位',
+      },
+      {
         title: 'IT Dog',
         url: 'https://www.itdog.cn/',
         description: '国内网络诊断工具，多节点 Ping 和路由追踪很方便',
@@ -312,6 +553,16 @@ export const linkCategories: LinkCategory[] = [
         title: 'FOFA',
         url: 'https://en.fofa.info/',
         description: '网络空间搜索引擎，探测公网资产和暴露服务',
+      },
+      {
+        title: 'crt.sh',
+        url: 'https://crt.sh/',
+        description: '证书透明度日志搜索工具，排查域名证书签发记录很方便',
+      },
+      {
+        title: 'Who.is',
+        url: 'https://who.is/',
+        description: '域名 WHOIS、DNS 和站点信息查询入口，适合做域名基础排查',
       },
     ],
   },

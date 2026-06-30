@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { createCache } from './cache';
+import { createCache, resetAllCaches } from './cache';
 import { setContentSource, type ContentSource } from './content-source';
 
 /** Create a mock ContentSource with controllable mtime values */
@@ -164,6 +164,69 @@ describe('createCache', () => {
       expect(factory).toHaveBeenCalledTimes(1);
 
       setContentSource(prevSource);
+    });
+  });
+
+  describe('resetAllCaches', () => {
+    it('invalidates all registered caches', () => {
+      const cacheA = createCache<string>();
+      const cacheB = createCache<number>();
+
+      cacheA.set('a-value');
+      cacheB.set(42);
+
+      expect(cacheA.get()).toBe('a-value');
+      expect(cacheB.get()).toBe(42);
+
+      resetAllCaches();
+
+      expect(cacheA.get()).toBeNull();
+      expect(cacheB.get()).toBeNull();
+    });
+
+    it('clears cached factory results so next getOrCompute recomputes', () => {
+      const cache = createCache<string>();
+      const factory = vi.fn(() => 'computed');
+
+      cache.getOrCompute(factory);
+      cache.getOrCompute(factory);
+      expect(factory).toHaveBeenCalledTimes(1);
+
+      resetAllCaches();
+
+      cache.getOrCompute(factory);
+      expect(factory).toHaveBeenCalledTimes(2);
+    });
+
+    it('is safe to call when no caches are registered', () => {
+      // The registry accumulates across tests, but calling reset on whatever
+      // is currently registered must not throw.
+      expect(() => resetAllCaches()).not.toThrow();
+    });
+
+    it('enforces the swap-source-then-reset contract', () => {
+      // Simulate the documented test pattern:
+      //   1. populate cache with default source
+      //   2. swap to mock source
+      //   3. without resetAllCaches, cache returns stale data
+      //   4. with resetAllCaches, cache recomputes against new source
+      const cache = createCache<string>();
+      const factory = vi.fn(() => 'from-default-source');
+
+      // Populate with default source
+      cache.getOrCompute(factory);
+      expect(cache.get()).toBe('from-default-source');
+
+      // Swap to mock source (returns different value)
+      const newFactory = vi.fn(() => 'from-mock-source');
+      // Without reset: cache still holds old value
+      expect(cache.getOrCompute(newFactory)).toBe('from-default-source');
+      expect(newFactory).not.toHaveBeenCalled();
+
+      // With reset: cache recomputes
+      resetAllCaches();
+      expect(cache.getOrCompute(newFactory)).toBe('from-mock-source');
+      expect(newFactory).toHaveBeenCalledTimes(1);
     });
   });
 });

@@ -1,6 +1,14 @@
+import type { Metadata } from 'next';
 import MdxContent from '@/components/blog/MdxContent';
 import { SITE_CONFIG } from '@/lib/constants';
 import { getAboutContent } from '@/lib/about';
+import { buildPageMetadata } from '@/lib/metadata';
+
+export const metadata: Metadata = buildPageMetadata({
+  title: '关于',
+  description: `了解 ${SITE_CONFIG.name} — ${SITE_CONFIG.description}`,
+  path: '/about',
+});
 
 export default function AboutPage() {
   const content = getAboutContent();

@@ -38,8 +38,9 @@ module.exports = {
         'first-contentful-paint': ['warn', { maxNumericValue: 2000 }],
         'largest-contentful-paint': ['error', { maxNumericValue: 3500 }],
         'cumulative-layout-shift': ['error', { maxNumericValue: 0.1 }],
-        'total-blocking-time': ['warn', { maxNumericValue: 300 }],
-        'interactive': ['warn', { maxNumericValue: 5000 }],
+        // TBT 是 Lighthouse 10+ 中交互响应性的现代指标（替代已移除的 TTI/interactive）
+        // SSG 静态站 TBT 通常 < 50ms，300ms 阈值留足余量；error 级防止回归
+        'total-blocking-time': ['error', { maxNumericValue: 300 }],
 
         // 最佳实践 — 无阻塞
         'errors-in-console': ['error', { maxLength: 0 }],

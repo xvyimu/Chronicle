@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { SITE_CONFIG } from '@/lib/constants';
+import { useInView } from '@/hooks/useInView';
 
 interface GiscusProps {
   repoId?: string;
@@ -26,26 +27,7 @@ export default function Giscus({
 }: GiscusProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-
-  // Lazy-load: only mount Giscus when the comment section scrolls into view
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          setVisible(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: '200px' }
-    );
-
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, []);
+  const visible = useInView(sentinelRef, { once: true, rootMargin: '200px' });
 
   // Load Giscus script when visible
   useEffect(() => {

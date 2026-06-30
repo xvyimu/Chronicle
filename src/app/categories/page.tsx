@@ -1,5 +1,13 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getAllCategories } from '@/lib/categories';
+import { buildPageMetadata } from '@/lib/metadata';
+
+export const metadata: Metadata = buildPageMetadata({
+  title: '分类',
+  description: '按领域浏览文章 — 前端、后端、数据库、DevOps、CI/CD、云服务等。',
+  path: '/categories',
+});
 
 export default function CategoriesPage() {
   const categories = getAllCategories();

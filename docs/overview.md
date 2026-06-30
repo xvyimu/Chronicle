@@ -12,9 +12,11 @@
    适合准备写文章、改关于页、维护作品集、检查 RSS 或做内容发布时阅读。
 4. docs/css-conventions.md
    适合准备写或修改样式时阅读，明确 BEM 与 Tailwind 的分工边界和设计令牌系统。
-5. docs/cache-components-migration.md
+5. docs/salesdex-inspired-redesign.md
+   适合准备按 sales-dex.jp 的视觉方向改造首页时阅读，明确可迁移模式、技术落点、阶段计划和验收标准。
+6. docs/cache-components-migration.md
    适合考虑引入外部数据源或迁移到 Cache Components 时阅读。
-6. docs/项目审查与改进文档.md
+7. docs/项目审查与改进文档.md
    历史审查记录和问题清单，适合作为治理与重构参考，不适合作为首次入门文档。
 
 ## 文档分工
@@ -69,6 +71,15 @@
 - 新组件的 CSS 应该放在哪个文件
 - 响应式和暗色主题怎么处理
 
+### docs/salesdex-inspired-redesign.md
+
+解决这些问题：
+
+- 如何把 sales-dex.jp 的强首屏、滚动叙事和横向内容流转译到个人博客
+- 哪些视觉模式可以借鉴，哪些企业站内容不应照搬
+- 首页改版应该拆成哪些阶段
+- 新组件、样式、测试和浏览器验收应如何安排
+
 ### docs/cache-components-migration.md
 
 解决这些问题：
@@ -77,15 +88,15 @@
 - 什么时候需要迁移到 Cache Components
 - 迁移步骤和风险评估
 
-### docs/项目审查与改进文档.md
+### docs/architecture-review.html
 
 解决这些问题：
 
-- 历史扫描发现了哪些问题
-- 问题优先级如何划分
+- 历史架构扫描发现了哪些候选改进点（Strong / Worth / Speculative 三档分级）
+- 各候选项的优先级、影响范围、技术落点
 - 后续工程治理可以从哪些点下手
 
-> 注意：此文档为 2026-06-22 的历史审查记录，其中的测试数量等统计数据已过时。当前项目有 115 个单元测试和 30 个 E2E 测试。
+> 注意：此为 2026-06-29 的架构审查快照，作为 `docs/specs/2026-06-29-posts-deepening-design.md` 的输入文档生成。其中的测试数量等统计数据已过时，请以 `docs/handoff-to-agent.md` 的"质量门禁"表为准。
 
 ## 当前文档策略
 

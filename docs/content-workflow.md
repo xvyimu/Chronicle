@@ -52,12 +52,17 @@ YYYY-MM-主题名.mdx
 title: Cloudflare Workers 实践笔记
 description: 从部署方式到常见坑位的一次整理
 date: 2026-06-23
+updatedAt: 2026-06-28
+category: 云服务
+series: Cloudflare 实战
 tags:
   - Cloudflare
   - Workers
 published: true
 featured: true
 image: /images/posts/cloudflare-workers-cover.jpg
+source: https://github.com/yuanjia1314/domain-check
+license: MIT
 ---
 
 正文从这里开始。
@@ -70,10 +75,26 @@ image: /images/posts/cloudflare-workers-cover.jpg
 | title | string | 是 | 文章标题 |
 | description | string | 是 | 摘要，用于列表与 SEO |
 | date | string | 是 | 建议使用 YYYY-MM-DD |
+| updatedAt | string | 否 | 文章有实质更新时填写，格式 YYYY-MM-DD，不应早于 date |
 | tags | string[] | 否 | 标签列表，默认空数组 |
+| category | string | 否 | 显式分类；不填时会根据标签映射自动推断 |
+| series | string | 否 | 系列名，用于文章页展示和相关文章排序 |
 | published | boolean | 否 | false 时表示草稿 |
 | featured | boolean | 否 | true 时可在首页等位置突出展示 |
 | image | string | 否 | 封面图或 OG 图 |
+| source | string | 否 | 参考项目、原始资料或来源说明 |
+| license | string | 否 | 内容或示例代码许可，例如 MIT、CC-BY-4.0、Original |
+
+### 自动生成的内容索引
+
+构建期会从 MDX 正文自动推导这些派生信息：
+
+- `excerpt`：用于搜索结果和内容发现的正文摘录
+- `headings`：文章内 h2/h3 小标题列表
+- `searchText`：融合标题、摘要、标签、分类、系列、小标题和正文摘录的本地搜索文本
+- 相关文章：根据共享标签、分类和系列自动排序
+
+因此新增文章时不需要手写这些字段，但要保证标题层级清晰、标签命名稳定。
 
 ### 草稿机制
 
@@ -169,7 +190,9 @@ image: /images/posts/cloudflare-workers-cover.jpg
 3. published 是否符合预期
 4. 图片路径是否真实存在
 5. 标签拼写是否统一
-6. 本地页面是否能正常打开
+6. 小标题是否重复，避免生成重复锚点
+7. `updatedAt` 是否不早于 `date`
+8. 本地页面是否能正常打开
 
 ### 作品集发布前
 
@@ -205,6 +228,8 @@ RSS 由 `scripts/generate-rss.ts` 在构建前生成（`npx tsx scripts/generate
 
 - 先写 frontmatter，再写正文
 - 标签命名尽量统一，例如不要混用 Next.js、NextJS
+- 有系列关系的文章填写相同的 series，相关文章排序会优先考虑它
+- 大幅修订正文时补 updatedAt，小改错别字通常不需要
 - 如果文章会被首页推荐，再显式加上 featured: true
 
 ### 改站点信息时
@@ -220,6 +245,7 @@ RSS 由 `scripts/generate-rss.ts` 在构建前生成（`npx tsx scripts/generate
 
 ```bash
 pnpm lint
+pnpm check:seo
 pnpm test
 pnpm build
 ```

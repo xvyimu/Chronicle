@@ -1,36 +1,27 @@
-import { notFound } from 'next/navigation';
-import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getAllProjectIds, getProjectById } from '@/lib/projects';
-import { SITE_CONFIG } from '@/lib/constants';
+import { buildPageMetadata } from '@/lib/metadata';
+import { createDynamicRoute } from '@/lib/route-adapter';
+import type { Project } from '@/types';
 
-export async function generateStaticParams() {
-  return getAllProjectIds().map((id) => ({ id }));
-}
-
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-  const { id } = await params;
-  const project = getProjectById(id);
-  if (!project) return {};
-
-  return {
-    title: `${project.title} | ${SITE_CONFIG.name}`,
+const { generateStaticParams, generateMetadata, default: ProjectDetailPage } = createDynamicRoute<Project>({
+  paramKey: 'id',
+  getAllSlugs: () => getAllProjectIds(),
+  getBySlug: (id) => getProjectById(id),
+  buildMetadata: (project) => buildPageMetadata({
+    title: project.title,
     description: project.description,
-    openGraph: {
-      title: project.title,
-      description: project.description,
-      type: 'website',
-      images: project.image ? [{ url: project.image }] : [],
-    },
-  };
-}
+    path: `/projects/${project.id}`,
+    image: project.image,
+  }),
+  render: (project) => <ProjectDetailContent project={project} />,
+});
 
-export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const project = getProjectById(id);
-  if (!project) notFound();
+export { generateStaticParams, generateMetadata };
+export default ProjectDetailPage;
 
+function ProjectDetailContent({ project }: { project: Project }) {
   return (
     <section className="section">
       <div className="section__inner">

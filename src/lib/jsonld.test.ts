@@ -18,6 +18,9 @@ const mockPost: PostMeta = {
   slug: 'test-post',
   readingTime: '5 min read',
   wordCount: 1000,
+  excerpt: '用于测试的摘要',
+  headings: ['测试章节'],
+  searchText: '测试文章 测试章节',
 };
 
 describe('toJsonLd', () => {
@@ -114,6 +117,11 @@ describe('blogPostingSchema', () => {
     const postWithNoTags = { ...mockPost, tags: [] };
     const schema = blogPostingSchema(postWithNoTags);
     expect(schema.keywords).toBe('');
+  });
+
+  it('uses updatedAt as dateModified when present', () => {
+    const schema = blogPostingSchema({ ...mockPost, updatedAt: '2026-06-28' });
+    expect(schema.dateModified).toBe('2026-06-28');
   });
 });
 

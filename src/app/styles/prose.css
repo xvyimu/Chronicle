@@ -1,0 +1,306 @@
+/* ============================================================
+   MDX 排版 & 代码块增强
+   精美简约 · 阅读优先 · 优雅代码块
+   ============================================================ */
+
+/* ---------- Prose ---------- */
+.prose {
+  max-width: var(--reading-width, 720px);
+  margin: 0 auto;
+  font-size: var(--reading-font-size, 1rem);
+  line-height: 1.85;
+  color: var(--text);
+  transition: font-size var(--transition);
+  letter-spacing: 0.005em;
+}
+
+/* 标题 — 更清晰的层级 */
+.prose h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 48px 0 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  letter-spacing: -0.01em;
+  scroll-margin-top: 80px;
+}
+.prose h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 36px 0 14px;
+  color: var(--text);
+  letter-spacing: -0.005em;
+  scroll-margin-top: 80px;
+}
+.prose h4 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 28px 0 10px;
+  color: var(--text);
+  scroll-margin-top: 80px;
+}
+
+/* 段落 */
+.prose p {
+  margin-bottom: 18px;
+}
+
+/* 链接 — 更优雅的下划线 */
+.prose a {
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  transition: text-decoration-thickness var(--transition-fast), color var(--transition-fast);
+}
+.prose a:hover {
+  text-decoration-thickness: 2px;
+  color: var(--brand-hover, var(--brand));
+}
+
+/* 强调 */
+.prose strong {
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* 列表 — 更好的缩进和间距 */
+.prose ul, .prose ol {
+  margin: 0 0 18px 24px;
+}
+.prose li {
+  margin-bottom: 6px;
+}
+.prose ul li::marker {
+  color: var(--text-dim);
+}
+.prose ol li::marker {
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+/* 引用块 — 更有设计感 */
+.prose blockquote {
+  margin: 0 0 18px;
+  padding: 16px 24px;
+  border-left: 3px solid var(--brand);
+  background: var(--bg-soft);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--text-soft);
+  font-style: italic;
+  position: relative;
+}
+.prose blockquote p:last-child {
+  margin-bottom: 0;
+}
+.prose blockquote::before {
+  content: '"';
+  position: absolute;
+  top: -4px;
+  left: 12px;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--brand);
+  opacity: 0.15;
+  font-style: normal;
+  line-height: 1;
+}
+
+/* 行内代码 — 更精致的胶囊 */
+.prose code:not(pre code) {
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+  background: var(--bg-soft);
+  color: var(--brand);
+  font-size: 0.86em;
+  font-family: var(--font-jetbrains-mono), 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  border: 1px solid var(--border);
+  font-weight: 500;
+}
+
+/* 代码块 — 暗色主题优先 */
+.prose pre {
+  margin: 0 0 20px;
+  border-radius: var(--radius);
+  overflow-x: auto;
+}
+
+/* Code blocks: dark in both themes for readability */
+.prose pre {
+  background: #0d1117;
+}
+html:not(.dark) .prose pre {
+  background: #1e1e2e;
+  border: 1px solid var(--border);
+}
+
+.prose pre code {
+  display: block;
+  padding: 20px;
+  font-size: 0.86rem;
+  line-height: 1.7;
+  font-family: var(--font-jetbrains-mono), 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  counter-reset: step;
+  color: #e4e4ed;
+}
+
+/* 表格 — 更优雅 */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.prose th, .prose td {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+.prose th {
+  background: var(--bg-soft);
+  font-weight: 600;
+  color: var(--text);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.prose tbody tr:last-child td {
+  border-bottom: none;
+}
+.prose tbody tr:hover {
+  background: var(--bg-soft);
+}
+
+/* 图片 */
+.prose img {
+  border-radius: var(--radius);
+  margin: 24px 0;
+  box-shadow: var(--shadow-sm);
+}
+
+/* 分割线 */
+.prose hr {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-strong), transparent);
+  margin: 36px 0;
+}
+
+/* ---------- Code block enhancements ---------- */
+.code-block-wrapper {
+  position: relative;
+  margin-bottom: 20px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+html:not(.dark) .code-block-wrapper {
+  background: #f6f8fa;
+}
+html:not(.dark) .code-block-wrapper .code-block-header {
+  background: rgba(0, 0, 0, 0.03);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+html:not(.dark) .code-block-wrapper .code-block-lang {
+  color: rgba(0, 0, 0, 0.4);
+}
+html:not(.dark) .code-block-wrapper .code-block-copy {
+  color: rgba(0, 0, 0, 0.5);
+}
+html:not(.dark) .code-block-wrapper .code-block-copy:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.code-block-copy--copied {
+  color: #4ade80 !important;
+}
+
+/* ---------- Code toolbar (copy button + language label) ---------- */
+.code-toolbar {
+  position: relative;
+  margin-bottom: 20px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.code-toolbar pre {
+  margin-bottom: 0;
+}
+.code-block-header {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.code-block-lang {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.4);
+  font-family: var(--font-jetbrains-mono), monospace;
+}
+.copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 10px;
+  border-radius: var(--radius-xs);
+  font-size: 0.75rem;
+  font-family: inherit;
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--transition), background var(--transition-fast), color var(--transition-fast);
+  z-index: 1;
+  backdrop-filter: blur(8px);
+}
+.code-toolbar:hover .copy-btn {
+  opacity: 1;
+}
+.copy-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.9);
+}
+html:not(.dark) .copy-btn {
+  color: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+html:not(.dark) .copy-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.8);
+}
+
+/* Line numbers */
+.code-line {
+  display: block;
+  padding-left: 3.5em;
+  position: relative;
+}
+.code-line::before {
+  content: counter(step);
+  counter-increment: step;
+  position: absolute;
+  left: 0;
+  width: 3em;
+  text-align: right;
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 0.8em;
+  user-select: none;
+}
+.code-line--highlighted {
+  background: rgba(255, 255, 255, 0.04);
+  display: block;
+}
+.code-line--highlighted::before {
+  color: rgba(255, 255, 255, 0.35);
+}

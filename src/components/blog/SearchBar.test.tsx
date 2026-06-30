@@ -20,6 +20,9 @@ const MOCK_POSTS: PostMeta[] = [
     slug: 'nextjs-app-router',
     readingTime: '5 min read',
     wordCount: 1200,
+    excerpt: 'A comprehensive guide to App Router',
+    headings: ['Routing', 'Streaming'],
+    searchText: 'Next.js App Router Guide Routing Streaming React Server Components',
   },
   {
     title: 'Redis Caching Strategies',
@@ -31,6 +34,9 @@ const MOCK_POSTS: PostMeta[] = [
     slug: 'redis-caching-strategies',
     readingTime: '8 min read',
     wordCount: 2000,
+    excerpt: 'Deep dive into Redis caching patterns',
+    headings: ['Cache Aside', 'Invalidation'],
+    searchText: 'Redis Caching Strategies Cache Aside Invalidation backend cache',
   },
   {
     title: 'Linux Server Setup',
@@ -42,6 +48,9 @@ const MOCK_POSTS: PostMeta[] = [
     slug: 'linux-server-setup',
     readingTime: '10 min read',
     wordCount: 2500,
+    excerpt: 'Setting up a Linux server from scratch',
+    headings: ['SSH', 'Firewall'],
+    searchText: 'Linux Server Setup SSH Firewall operations server',
   },
 ];
 
@@ -69,7 +78,7 @@ describe('SearchBar', () => {
     fireEvent.change(input, { target: { value: 'Redis' } });
 
     await waitFor(() => {
-      expect(screen.getByText('Redis Caching Strategies')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Redis Caching Strategies' })).toBeInTheDocument();
     }, { timeout: 3000 });
   });
 
@@ -79,7 +88,17 @@ describe('SearchBar', () => {
     fireEvent.change(input, { target: { value: 'Linux' } });
 
     await waitFor(() => {
-      expect(screen.getByText('Linux Server Setup')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Linux Server Setup' })).toBeInTheDocument();
+    }, { timeout: 3000 });
+  });
+
+  it('filters posts by generated heading and body search text', async () => {
+    render(<SearchBar posts={MOCK_POSTS} />);
+    const input = screen.getByPlaceholderText(/搜索文章/);
+    fireEvent.change(input, { target: { value: 'Invalidation' } });
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Redis Caching Strategies' })).toBeInTheDocument();
     }, { timeout: 3000 });
   });
 
@@ -99,7 +118,8 @@ describe('SearchBar', () => {
     fireEvent.change(input, { target: { value: 'server' } });
 
     await waitFor(() => {
-      expect(screen.getByText(/找到 1 篇/)).toBeInTheDocument();
+      expect(screen.getByText(/找到 \d+ 篇/)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Linux Server Setup' })).toBeInTheDocument();
     }, { timeout: 3000 });
   });
 
@@ -125,7 +145,7 @@ describe('SearchBar', () => {
 
     // Wait for Fuse.js to load and results to render
     await waitFor(() => {
-      expect(screen.getByText('Redis Caching Strategies')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Redis Caching Strategies' })).toBeInTheDocument();
     }, { timeout: 3000 });
 
     // Arrow down to select first result
@@ -175,5 +195,44 @@ describe('SearchBar', () => {
     await waitFor(() => {
       expect(screen.queryByText('正在加载搜索…')).not.toBeInTheDocument();
     }, { timeout: 3000 });
+  });
+
+  it('focuses the input when Ctrl+K is pressed', () => {
+    render(<SearchBar posts={MOCK_POSTS} />);
+    const input = screen.getByPlaceholderText(/搜索文章/);
+    expect(document.activeElement).not.toBe(input);
+
+    fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
+    expect(document.activeElement).toBe(input);
+  });
+
+  it('focuses the input when Cmd+K (metaKey) is pressed', () => {
+    render(<SearchBar posts={MOCK_POSTS} />);
+    const input = screen.getByPlaceholderText(/搜索文章/);
+
+    fireEvent.keyDown(window, { key: 'k', metaKey: true });
+    expect(document.activeElement).toBe(input);
+  });
+
+  it('advertises the Ctrl+K shortcut in the placeholder', () => {
+    render(<SearchBar posts={MOCK_POSTS} />);
+    expect(screen.getByPlaceholderText(/Ctrl\+K/)).toBeInTheDocument();
+  });
+
+  it('highlights the matched substring in the result title', async () => {
+    render(<SearchBar posts={MOCK_POSTS} />);
+    const input = screen.getByPlaceholderText(/搜索文章/);
+    fireEvent.change(input, { target: { value: 'Redis' } });
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Redis Caching Strategies' })).toBeInTheDocument();
+    }, { timeout: 3000 });
+
+    // The matched term should be wrapped in a <mark class="search-hl">
+    const marks = document.querySelectorAll('mark.search-hl');
+    expect(marks.length).toBeGreaterThan(0);
+    expect(
+      Array.from(marks).some((m) => /Redis/i.test(m.textContent ?? '')),
+    ).toBe(true);
   });
 });

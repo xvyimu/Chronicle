@@ -4,6 +4,7 @@
  *
  * 常量来源：@/lib/constants
  * slug 提取：@/lib/posts (filenameToSlug)
+ * frontmatter 校验：@/lib/schemas/post-frontmatter (共享 schema, 与站点一致)
  */
 
 import fs from 'fs';
@@ -11,20 +12,11 @@ import path from 'path';
 import { Feed } from 'feed';
 import { parseFrontmatter } from '@/lib/parse-frontmatter';
 import readingTime from 'reading-time';
-import { z } from 'zod';
 import { SITE_CONFIG } from '@/lib/constants';
 import { filenameToSlug } from '@/lib/posts';
+import { postFrontmatterSchema } from '@/lib/schemas/post-frontmatter';
 
 const POSTS_DIR = path.join(process.cwd(), 'content/blog');
-
-/** Frontmatter schema — mirrors posts.ts validation for RSS generation */
-const rssFrontmatterSchema = z.object({
-  title: z.string().min(1),
-  description: z.string().min(1),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'date 必须为 YYYY-MM-DD 格式'),
-  published: z.boolean().optional().default(true),
-  featured: z.boolean().optional().default(false),
-});
 
 function generateRss() {
   if (!fs.existsSync(POSTS_DIR)) {
@@ -54,8 +46,8 @@ function generateRss() {
     const raw = fs.readFileSync(path.join(POSTS_DIR, filename), 'utf-8');
     const { data, content } = parseFrontmatter(raw);
 
-    // Validate frontmatter before use — prevents Invalid Date / undefined title
-    const parsed = rssFrontmatterSchema.safeParse(data);
+    // 共享 schema 校验 — 与站点 (lib/posts/repository.ts) 完全一致
+    const parsed = postFrontmatterSchema.safeParse(data);
     if (!parsed.success) {
       const issues = parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ');
       console.warn(`[RSS] 跳过 ${filename}: ${issues}`);
