@@ -388,7 +388,7 @@ pnpm test:e2e                # 期望:42 tests / 4 spec files 全绿（首次会
 
 - **Tailwind v4 `@import` 失效**：`globals.css` 不能用 `@import "./styles/xxx.css"`,会被静默丢弃。所有 CSS 模块必须在 `layout.tsx` 顶部显式 `import`。
 - **反相设计失效**：禁止 `background: var(--text); color: var(--bg)`,改用 `--bg-soft` / `--surface` 等 surface token。
-- **E2E 视差测试**：用 `page.waitForFunction` 等 hydration,然后 `page.evaluate(() => window.dispatchEvent(new MouseEvent('mousemove')))` 触发,不要用 `page.mouse.move`。
+- **E2E 视差测试**：`.site-backdrop__stage` 是 SSG 静态 DOM,hydration 前即存在,所以**只等该节点出现不足以保证 `mousemove` 监听器就绪**（监听器在 `SiteBackdropParallax` 的 `useEffect` 中、hydration 后才挂载）。正确做法:用 `page.waitForFunction` **反复 dispatch 并轮询**,直到 `--parallax-x` 被写入再断言（见 `e2e/home.spec.ts:137`）;不要单次 `page.evaluate` 触发,也不要用 `page.mouse.move`。
 - **Blog card 点击被 `::after` 拦截**：用 `focus()` + `keyboard.type()` 处理搜索输入,`dispatchEvent('click')` 处理按钮,`page.goto()` 处理导航。
 - **pnpm store 损坏**：`pnpm install --lockfile-only --no-frozen-lockfile --store-dir="<local-tmp>"` 可在不依赖损坏 store 的情况下重新生成 lockfile。
 - **CSS 验证缺失**：build 成功 ≠ CSS 生效。改 CSS 后必须验证 `.next/static/css/*.css` bundle 含关键选择器（如 `.editorial-hero`、`body:before`、`--hero-ink`）。

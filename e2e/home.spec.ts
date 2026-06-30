@@ -136,15 +136,18 @@ test.describe('首页', () => {
 
   test('鼠标移动时背景 stage 的 transform 受 --parallax-x/y 驱动', async ({ page }) => {
     await page.goto('/');
-    // 等待 React hydration 完成 (SiteBackdropParallax 在 useEffect 挂载 mousemove listener)
+    // 等待 stage 节点存在 (SSG 静态 DOM, hydration 前即可见)
     await page.waitForFunction(() => {
       return !!document.querySelector('.site-backdrop__stage');
     }, { timeout: 5000 });
-    // 直接 dispatchEvent 确保触发 window 的 mousemove listener
-    await page.evaluate(() => {
-      const ev = new MouseEvent('mousemove', { clientX: 1000, clientY: 500 });
-      window.dispatchEvent(ev);
-    });
+    // mousemove 监听器在 SiteBackdropParallax 的 useEffect (hydration 后) 才挂载,
+    // 仅等 stage 存在不足以保证监听就绪。反复 dispatch 并轮询, 直到 CSS 变量被写入,
+    // 避免在监听器挂载前触发事件的竞态 (见 handoff §7.4)。
+    await page.waitForFunction(() => {
+      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 1000, clientY: 500 }));
+      const stage = document.querySelector<HTMLElement>('.site-backdrop__stage');
+      return !!stage && stage.style.getPropertyValue('--parallax-x') !== '';
+    }, { timeout: 5000 });
     // 读取 stage 上由 client component 写入的 CSS 变量
     const vars = await page.locator('.site-backdrop__stage').evaluate((el) => {
       const style = el as HTMLElement;
