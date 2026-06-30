@@ -6,6 +6,33 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PostMeta } from '@/types';
 
+type FuseMatch = { key?: string; value?: string; indices: readonly [number, number][] };
+
+/**
+ * Render `text` with the character ranges in `indices` wrapped in <mark>.
+ * Indices come from Fuse.js (inclusive ranges). Falls back to plain text
+ * when no matches are present for this field.
+ */
+function highlight(text: string, indices: readonly [number, number][]) {
+  if (!indices || indices.length === 0) return text;
+  // Sort + merge to guard against overlapping/unordered ranges.
+  const sorted = [...indices].sort((a, b) => a[0] - b[0]);
+  const segments: React.ReactNode[] = [];
+  let cursor = 0;
+  sorted.forEach(([start, end], i) => {
+    if (start > cursor) segments.push(text.slice(cursor, start));
+    const safeStart = Math.max(start, cursor);
+    if (end + 1 > safeStart) {
+      segments.push(
+        <mark key={`m-${i}`} className="search-hl">{text.slice(safeStart, end + 1)}</mark>,
+      );
+      cursor = end + 1;
+    }
+  });
+  if (cursor < text.length) segments.push(text.slice(cursor));
+  return segments;
+}
+
 export default function SearchBar({ posts }: { posts: PostMeta[] }) {
   const [query, setQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -29,6 +56,8 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
     threshold: 0.4,
     ignoreLocation: true,
     includeScore: true,
+    includeMatches: true,
+    minMatchCharLength: 2,
   }), []);
 
   // Lazy load Fuse.js on first keystroke, rebuild index when posts change.
@@ -62,7 +91,10 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
 
   const results = useMemo(() => {
     if (!query.trim() || !fuse) return [];
-    return fuse.search(query.trim(), { limit: 10 }).map((r) => r.item);
+    return fuse.search(query.trim(), { limit: 10 }).map((r) => ({
+      item: r.item,
+      matches: r.matches ?? [],
+    }));
   }, [query, fuse]);
 
   useEffect(() => {
@@ -73,6 +105,13 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
     const handleKey = (e: KeyboardEvent) => {
       const el = document.activeElement as HTMLElement | null;
       const editable = el?.tagName === 'INPUT' || el?.tagName === 'TEXTAREA' || el?.isContentEditable;
+      // Ctrl/Cmd+K — global summon, works even from inside other inputs
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        inputRef.current?.focus();
+        inputRef.current?.select();
+        return;
+      }
       if (e.key === '/' && !editable && document.activeElement !== inputRef.current) {
         e.preventDefault();
         inputRef.current?.focus();
@@ -106,7 +145,7 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
       e.preventDefault();
       navigate('up');
     } else if (e.key === 'Enter' && activeIndex >= 0 && activeIndex < results.length) {
-      const href = `/blog/${results[activeIndex].slug}`;
+      const href = `/blog/${results[activeIndex].item.slug}`;
       router.push(href);
     }
   };
@@ -139,7 +178,7 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
         <input
           ref={inputRef}
           type="text"
-          placeholder="搜索文章…（按 / 聚焦）"
+          placeholder="搜索文章…（按 / 或 Ctrl+K 聚焦）"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -193,7 +232,9 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
             )}
           </p>
           {fuse && results.length > 0 ? (
-            results.map((post, i) => (
+            results.map(({ item: post, matches }, i) => {
+              const titleMatch = (matches as FuseMatch[]).find((m) => m.key === 'title');
+              return (
               <Link
                 key={post.slug}
                 href={`/blog/${post.slug}`}
@@ -219,10 +260,13 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
                     <span className="text-[var(--brand)] font-semibold text-[10px]">精选</span>
                   )}
                 </div>
-                <h4 className="font-semibold text-sm">{post.title}</h4>
+                <h4 className="font-semibold text-sm">
+                  {titleMatch ? highlight(post.title, titleMatch.indices) : post.title}
+                </h4>
                 <p className="text-xs text-[var(--text-dim)] line-clamp-1 mt-0.5">{post.excerpt || post.description}</p>
               </Link>
-            ))
+              );
+            })
           ) : fuse && results.length === 0 ? (
             <p className="text-sm text-[var(--text-soft)] px-4 py-4">没有匹配的文章</p>
           ) : null}

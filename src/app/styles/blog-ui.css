@@ -222,6 +222,13 @@
   font-size: 0.8rem;
   color: var(--text-dim);
 }
+.search-hl {
+  background: var(--brand-soft);
+  color: var(--brand);
+  border-radius: 3px;
+  padding: 0 1px;
+  font-weight: 700;
+}
 
 /* ---------- Theme Toggle ---------- */
 .theme-toggle {
