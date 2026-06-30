@@ -2,6 +2,18 @@ import type { Metadata } from "next";
 import { Cormorant_Garamond, Noto_Sans_SC, JetBrains_Mono } from "next/font/google";
 import { headers } from "next/headers";
 import "./globals.css";
+// CSS 语义模块按顺序显式 import (Tailwind v4 下 postcss-import 失效,
+// 详见 docs/specs/2026-06-29-css-import-fix-design.md)
+import "./styles/tokens.css";        // 设计令牌 (CSS 变量定义)
+import "./styles/base.css";          // 全局基础 (skip-link, header, footer)
+import "./styles/components.css";    // 通用组件 (card, button, hero 容器)
+import "./styles/blog-ui.css";       // 博客 UI (SearchBar, TOC, CodeBlock)
+import "./styles/backdrop.css";      // 背景层 (body::before/after + stage)
+import "./styles/home.css";          // 首页 (Manifesto, ReadingPath, CTA)
+import "./styles/prose.css";        // 文章排版 (.prose, code block)
+import "./styles/project-detail.css"; // 项目详情
+import "./styles/animations.css";    // 动画 (reveal, fade-in-up)
+import "./styles/responsive.css";    // 响应式断点 (最后,覆盖前面)
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SiteBackdropStage from '@/components/layout/SiteBackdropStage';

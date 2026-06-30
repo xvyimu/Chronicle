@@ -1,13 +1,7 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
-@import "./styles/tokens.css";
-@import "./styles/base.css";
-@import "./styles/components.css";
-@import "./styles/blog-ui.css";
-@import "./styles/backdrop.css";
-@import "./styles/home.css";
-@import "./styles/prose.css";
-@import "./styles/project-detail.css";
-@import "./styles/animations.css";
-@import "./styles/responsive.css";
+/* 语义模块通过 layout.tsx 显式 import 加载 (postcss-import 在 Tailwind v4
+   下失效,详见 docs/specs/2026-06-29-css-import-fix-design.md):
+   styles/tokens.css → base → components → blog-ui → backdrop → home
+   → prose → project-detail → animations → responsive (最后) */

@@ -136,30 +136,28 @@ test.describe('首页', () => {
 
   test('鼠标移动时背景 stage 的 transform 受 --parallax-x/y 驱动', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
-    const stage = page.locator('.site-backdrop__stage');
-    await expect(stage).toBeAttached();
-    // 初始 transform 应为 none 或 translate(0px, 0px)
-    const initialTransform = await stage.evaluate((el) => {
-      return window.getComputedStyle(el).getPropertyValue('transform');
+    // 等待 React hydration 完成 (SiteBackdropParallax 在 useEffect 挂载 mousemove listener)
+    await page.waitForFunction(() => {
+      return !!document.querySelector('.site-backdrop__stage');
+    }, { timeout: 5000 });
+    // 直接 dispatchEvent 确保触发 window 的 mousemove listener
+    await page.evaluate(() => {
+      const ev = new MouseEvent('mousemove', { clientX: 1000, clientY: 500 });
+      window.dispatchEvent(ev);
     });
-    // 模拟鼠标移动到视口右下角
-    const vp = page.viewportSize();
-    if (vp) {
-      await page.mouse.move(vp.width, vp.height);
-    }
     // 读取 stage 上由 client component 写入的 CSS 变量
-    const vars = await stage.evaluate((el) => {
+    const vars = await page.locator('.site-backdrop__stage').evaluate((el) => {
       const style = el as HTMLElement;
       return {
         x: style.style.getPropertyValue('--parallax-x'),
         y: style.style.getPropertyValue('--parallax-y'),
       };
     });
-    // 移动后应有非零 parallax-x/y 值
+    // 移动后应有非零 parallax-x/y 值 (8px 幅度)
     expect(vars.x).not.toBe('');
     expect(vars.y).not.toBe('');
-    expect(initialTransform).toBeDefined();
+    expect(vars.x).toContain('px');
+    expect(vars.y).toContain('px');
   });
 
   test('prefers-reduced-motion 下不挂载视差监听', async ({ browser }) => {

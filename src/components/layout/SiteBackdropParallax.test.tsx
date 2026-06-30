@@ -47,7 +47,7 @@ describe('SiteBackdropParallax', () => {
 
   it('attaches mousemove and mouseleave listeners when motion allowed', () => {
     render(<SiteBackdropParallax />);
-    const calls = addSpy.mock.calls.map((c) => c[0]);
+    const calls = addSpy.mock.calls.map((c: unknown[]) => c[0]);
     expect(calls).toContain('mousemove');
     expect(calls).toContain('mouseleave');
   });
@@ -61,7 +61,7 @@ describe('SiteBackdropParallax', () => {
     Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: 1000 });
     Object.defineProperty(window, 'innerHeight', { writable: true, configurable: true, value: 500 });
 
-    const handler = addSpy.mock.calls.find((c) => c[0] === 'mousemove')?.[1] as (e: MouseEvent) => void;
+    const handler = addSpy.mock.calls.find((c: unknown[]) => c[0] === 'mousemove')?.[1] as (e: MouseEvent) => void;
     expect(handler).toBeDefined();
 
     handler({
@@ -78,7 +78,7 @@ describe('SiteBackdropParallax', () => {
     const setPropSpy = vi.spyOn(stage.style, 'setProperty');
 
     render(<SiteBackdropParallax />);
-    const handler = addSpy.mock.calls.find((c) => c[0] === 'mouseleave')?.[1] as () => void;
+    const handler = addSpy.mock.calls.find((c: unknown[]) => c[0] === 'mouseleave')?.[1] as () => void;
     expect(handler).toBeDefined();
 
     handler();
@@ -90,7 +90,7 @@ describe('SiteBackdropParallax', () => {
   it('removes listeners on unmount', () => {
     const { unmount } = render(<SiteBackdropParallax />);
     unmount();
-    const removedEvents = removeSpy.mock.calls.map((c) => c[0]);
+    const removedEvents = removeSpy.mock.calls.map((c: unknown[]) => c[0]);
     expect(removedEvents).toContain('mousemove');
     expect(removedEvents).toContain('mouseleave');
   });
