@@ -27,7 +27,6 @@ export default function EditorialHero({
   return (
     <section className="editorial-hero" aria-labelledby="home-hero-title">
       <div className="editorial-hero__topline" aria-hidden="true">
-        <span>西江月</span>
         <span>云原生 · 全栈 · 自动化</span>
       </div>
 

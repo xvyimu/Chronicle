@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
-import { getPaginatedPosts } from '@/lib/posts';
+import { getPaginatedPosts, getAllPosts } from '@/lib/posts';
 import { PAGE_SIZE } from '@/lib/constants';
 
 // Mock next/link
@@ -24,21 +24,18 @@ describe('BlogPage', () => {
     mockPush.mockClear();
   });
 
-  it('renders the blog page title', async () => {
-    const jsx = await BlogPage({ searchParams: Promise.resolve({}) });
-    render(jsx);
+  it('renders the blog page title', () => {
+    render(<BlogPage />);
     expect(screen.getByText('博客')).toBeInTheDocument();
   });
 
-  it('renders search bar with all posts', async () => {
-    const jsx = await BlogPage({ searchParams: Promise.resolve({}) });
-    render(jsx);
+  it('renders search bar with all posts', () => {
+    render(<BlogPage />);
     expect(screen.getByPlaceholderText(/搜索文章/)).toBeInTheDocument();
   });
 
-  it('renders blog post cards for the first page', async () => {
-    const jsx = await BlogPage({ searchParams: Promise.resolve({}) });
-    render(jsx);
+  it('renders blog post cards for the first page', () => {
+    render(<BlogPage />);
 
     const { posts } = getPaginatedPosts(1, PAGE_SIZE);
     for (const post of posts) {
@@ -46,42 +43,22 @@ describe('BlogPage', () => {
     }
   });
 
-  it('shows page info in subtitle', async () => {
-    const jsx = await BlogPage({ searchParams: Promise.resolve({}) });
-    render(jsx);
+  it('shows total post count in subtitle', () => {
+    render(<BlogPage />);
 
-    const { totalPages, currentPage } = getPaginatedPosts(1, PAGE_SIZE);
-    if (totalPages > 0) {
-      expect(screen.getByText(new RegExp(`第 ${currentPage}/${totalPages} 页`))).toBeInTheDocument();
+    const allPosts = getAllPosts();
+    if (allPosts.length > 0) {
+      expect(screen.getByText(new RegExp(`共 ${allPosts.length} 篇`))).toBeInTheDocument();
     }
   });
 
-  it('renders pagination when multiple pages exist', async () => {
+  it('renders pagination when multiple pages exist', () => {
     const { totalPages } = getPaginatedPosts(1, PAGE_SIZE);
-    const jsx = await BlogPage({ searchParams: Promise.resolve({}) });
-    render(jsx);
+    render(<BlogPage />);
 
     if (totalPages > 1) {
-      // Pagination should be visible
       const nav = screen.getByRole('navigation', { hidden: true });
       expect(nav).toBeInTheDocument();
     }
-  });
-
-  it('handles page parameter correctly', async () => {
-    const jsx = await BlogPage({ searchParams: Promise.resolve({ page: '2' }) });
-    render(jsx);
-
-    const { currentPage } = getPaginatedPosts(2, PAGE_SIZE);
-    if (currentPage > 1) {
-      expect(screen.getByText(new RegExp(`第 ${currentPage}/`))).toBeInTheDocument();
-    }
-  });
-
-  it('falls back to page 1 for invalid page parameter', async () => {
-    const jsx = await BlogPage({ searchParams: Promise.resolve({ page: 'abc' }) });
-    render(jsx);
-
-    expect(screen.getByText(new RegExp('第 1/'))).toBeInTheDocument();
   });
 });

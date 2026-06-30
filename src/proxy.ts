@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * Proxy (replaces deprecated middleware) — generates per-request CSP nonce.
+ * Proxy (replaces deprecated middleware) — sets per-request CSP headers.
  *
- * Next.js automatically reads the `x-nonce` header and adds it to
- * all framework-generated <script> tags. Inline scripts in layout.tsx
- * also receive the nonce via the `headers()` API.
+ * Dark mode script moved from inline <script nonce> in layout.tsx
+ * to a client component (DarkModeScript), eliminating the need for
+ * headers() in root layout — allowing all pages to SSG.
  *
- * This eliminates `script-src 'unsafe-inline'`, closing the XSS
- * injection vector while keeping Next.js hydration functional.
+ * Since layout no longer uses nonce, CSP script-src uses 'self' only.
+ * Giscus iframe scripts are handled by frame-src + connect-src allowances.
  */
 export function proxy(request: NextRequest) {
   const isDev = process.env.NODE_ENV === 'development';
@@ -16,12 +16,9 @@ export function proxy(request: NextRequest) {
   // In dev, skip CSP — Turbopack HMR needs inline scripts and websocket
   if (isDev) return NextResponse.next();
 
-  // Generate cryptographically random nonce
-  const nonce = btoa(crypto.randomUUID());
-
   const csp = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' https://giscus.app`,
+    "script-src 'self' https://giscus.app",
     // style-src keeps 'unsafe-inline' — Tailwind v4 injects inline styles
     // that are harder to nonce. Styles are lower risk than scripts for XSS.
     "style-src 'self' 'unsafe-inline'",
@@ -38,15 +35,9 @@ export function proxy(request: NextRequest) {
     "upgrade-insecure-requests",
   ].join('; ');
 
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set('x-nonce', nonce);
+  const response = NextResponse.next();
 
-  const response = NextResponse.next({
-    request: { headers: requestHeaders },
-  });
-
-  // CSP goes on response only — setting it on request headers is unnecessary
-  // and can cause double-processing in Next.js internals.
+  // CSP goes on response only
   response.headers.set('Content-Security-Policy', csp);
   return response;
 }

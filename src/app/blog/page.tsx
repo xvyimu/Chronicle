@@ -12,11 +12,9 @@ export const metadata: Metadata = buildPageMetadata({
   path: '/blog',
 });
 
-export default async function BlogPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
-  const params = await searchParams;
-  const page = Math.max(1, Math.floor(Number(params.page) || 1));
-  const { posts, totalPages, currentPage } = getPaginatedPosts(page, PAGE_SIZE);
+export default function BlogPage() {
   const allPosts = getAllPosts();
+  const { posts, totalPages, currentPage } = getPaginatedPosts(1, PAGE_SIZE);
 
   return (
     <section className="section">
@@ -25,7 +23,7 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
           <div>
             <span className="section__eyebrow">Blog</span>
             <h2 className="section__title">博客</h2>
-            <p className="section__subtitle">{totalPages > 0 ? `第 ${currentPage}/${totalPages} 页` : ''}</p>
+            <p className="section__subtitle">{totalPages > 0 ? `共 ${allPosts.length} 篇` : ''}</p>
           </div>
         </div>
         <SearchBar posts={allPosts} />
