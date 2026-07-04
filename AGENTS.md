@@ -119,6 +119,7 @@ tsc --noEmit      # TypeScript check
 ## E2E Testing Notes
 
 - Playwright config uses port 3001 with `reuseExistingServer: true`
+- To test against an already-running local server, set `PLAYWRIGHT_BASE_URL`, for example `pnpm exec cross-env PLAYWRIGHT_BASE_URL=http://localhost:7897 pnpm test:e2e`
 - Blog card `::after` overlays can intercept clicks — use `focus()` + `keyboard.type()` for search inputs, `dispatchEvent('click')` for buttons, and `page.goto()` for navigation
 - React hydration in dev mode requires waiting for `button[aria-label="切换主题"]` to have a `title` attribute
 - Use `getByRole('heading', { name: '...', exact: true })` to avoid substring matches on Chinese headings

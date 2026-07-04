@@ -2,8 +2,9 @@ import { spawn, spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 
-const PORT = 3001;
-const BASE_URL = `http://localhost:${PORT}`;
+const PORT = process.env.E2E_PORT ?? '3001';
+const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${PORT}`;
+const useExternalServer = Boolean(process.env.PLAYWRIGHT_BASE_URL);
 const isCI = Boolean(process.env.CI);
 const isWindows = process.platform === 'win32';
 const forwardedArgs = process.argv.slice(2);
@@ -78,11 +79,31 @@ async function stopProcessTree(child) {
 async function main() {
   const nextBin = packageFile('next', path.join('dist', 'bin', 'next'));
   const playwrightCli = packageFile('playwright', 'cli.js');
+
+  if (useExternalServer) {
+    await waitForServer();
+    const result = spawnSync(
+      process.execPath,
+      [playwrightCli, 'test', ...forwardedArgs],
+      {
+        cwd: process.cwd(),
+        env: {
+          ...process.env,
+          PLAYWRIGHT_BASE_URL: BASE_URL,
+          PLAYWRIGHT_SKIP_WEB_SERVER: '1',
+        },
+        stdio: 'inherit',
+      },
+    );
+    if (result.error) throw result.error;
+    process.exit(result.status ?? (result.signal ? 1 : 0));
+  }
+
   const server = spawnManaged(process.execPath, [
     nextBin,
     isCI ? 'start' : 'dev',
     '--port',
-    String(PORT),
+    PORT,
   ]);
 
   const shutdown = async (exitCode) => {
@@ -105,7 +126,11 @@ async function main() {
       [playwrightCli, 'test', ...forwardedArgs],
       {
         cwd: process.cwd(),
-        env: { ...process.env, PLAYWRIGHT_SKIP_WEB_SERVER: '1' },
+        env: {
+          ...process.env,
+          PLAYWRIGHT_BASE_URL: BASE_URL,
+          PLAYWRIGHT_SKIP_WEB_SERVER: '1',
+        },
         stdio: 'inherit',
       },
     );

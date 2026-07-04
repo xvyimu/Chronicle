@@ -1,7 +1,11 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const isCI = !!process.env.CI;
-const skipWebServer = process.env.PLAYWRIGHT_SKIP_WEB_SERVER === '1';
+const baseURL =
+  process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${process.env.E2E_PORT ?? '3001'}`;
+const skipWebServer =
+  process.env.PLAYWRIGHT_SKIP_WEB_SERVER === '1' ||
+  Boolean(process.env.PLAYWRIGHT_BASE_URL);
 
 /**
  * Playwright E2E configuration
@@ -24,7 +28,7 @@ export default defineConfig({
   timeout: 60_000,
 
   use: {
-    baseURL: 'http://localhost:3001',
+    baseURL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
@@ -41,8 +45,10 @@ export default defineConfig({
     : {
         // CI uses production build for realistic behavior; local uses dev for HMR.
         // CI job must run `pnpm build` before `pnpm test:e2e`.
-        command: isCI ? 'next start --port 3001' : 'next dev --port 3001',
-        url: 'http://localhost:3001',
+        command: isCI
+          ? `next start --port ${process.env.E2E_PORT ?? '3001'}`
+          : `next dev --port ${process.env.E2E_PORT ?? '3001'}`,
+        url: baseURL,
         reuseExistingServer: true,
         timeout: 60_000,
       },
