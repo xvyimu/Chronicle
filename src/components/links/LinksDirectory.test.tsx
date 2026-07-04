@@ -58,6 +58,7 @@ describe('LinksDirectory', () => {
 
     expect(screen.getByText('2 个站点')).toBeInTheDocument();
     expect(screen.getByText('1 个站点')).toBeInTheDocument();
+    expect(screen.getByText('2 个站点')).toHaveAttribute('data-slot', 'badge');
     expect(screen.getByText('openai.com')).toBeInTheDocument();
     expect(screen.getByText('hetzner.com')).toBeInTheDocument();
   });

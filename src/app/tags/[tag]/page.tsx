@@ -1,4 +1,5 @@
 import BlogList from '@/components/blog/BlogList';
+import PageSection from '@/components/layout/PageSection';
 import { getTagNameBySlug, getAllTagSlugs } from '@/lib/tags';
 import { getPostsByTag } from '@/lib/posts';
 import { SITE_CONFIG } from '@/lib/site';
@@ -22,17 +23,13 @@ const {
   render: (tagName) => {
     const posts = getPostsByTag(tagName);
     return (
-      <section className="section">
-        <div className="section__inner">
-          <div className="section__head" style={{ marginBottom: 24 }}>
-            <div>
-              <h2 className="section__title">标签：{tagName}</h2>
-              <p className="section__subtitle">{posts.length} 篇文章</p>
-            </div>
-          </div>
-          <BlogList posts={posts} columns={2} />
-        </div>
-      </section>
+      <PageSection
+        title={`标签：${tagName}`}
+        subtitle={`${posts.length} 篇文章`}
+        compactHeader
+      >
+        <BlogList posts={posts} columns={2} />
+      </PageSection>
     );
   },
 });

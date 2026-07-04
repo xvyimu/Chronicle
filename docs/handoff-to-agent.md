@@ -71,7 +71,7 @@
 | ---------- | ------------------------------------------------------ | -------------------------- |
 | TypeScript | 0 errors                                               | `tsc --noEmit`             |
 | Lint       | 0 errors                                               | `eslint`                   |
-| 单元测试   | 511 tests, 59 files 全绿                               | `vitest run`               |
+| 单元测试   | 514 tests, 63 files 全绿                               | `vitest run`               |
 | E2E 测试   | 43 tests, 4 spec files 全绿                            | `node scripts/run-e2e.mjs` |
 | 生产构建   | 编译成功 (93 个页面工件；CSP nonce 使路由按需动态渲染) | `pnpm build`               |
 | 代码清洁   | 无 `.only`/`@ts-*`；仅保留数据缺失保护性 `test.skip`   | 已验证                     |
@@ -102,7 +102,7 @@ Claude Code 接手后按以下顺序推进：
 - `pnpm lint`
 - `pnpm typecheck`
 - `pnpm check:seo`
-- `pnpm test`（511 tests / 59 files）
+- `pnpm test`（514 tests / 63 files）
 - `pnpm build`（93 个页面工件）
 - `pnpm test:e2e -- e2e/blog.spec.ts`（pnpm 透传额外 `--` 后实际跑完全量 43 tests，全绿）
 
@@ -126,12 +126,38 @@ Claude Code 接手后按以下顺序推进：
 - `src/components/layout/SiteBackdropStage.tsx` (server component, aria-hidden)
 - `src/components/layout/SiteBackdropParallax.tsx` (client component, returns null)
 - `src/app/styles/backdrop.css` (`body::before/after` + `.site-backdrop__stage` 选择器)
-- `src/app/layout.tsx` (接入三层 + 显式 import 10 个 CSS 模块)
+- `src/app/layout.tsx` (接入三层 + 显式 import 11 个 CSS 模块)
 
 设计文档:
 
 - `docs/specs/2026-06-29-site-backdrop-architecture-design.md` (三层架构设计)
 - `docs/specs/2026-06-29-css-import-fix-design.md` (CSS 加载机制修复)
+
+### shadcn / Paper Gallery 视觉组件收口（2026-07-04）
+
+权威增量文档：`docs/specs/2026-07-04-shadcn-visual-architecture-design.md`。
+
+本轮已完成的架构收口：
+
+- 新增 `src/components/layout/PageSection.tsx`，统一列表页、归档页、关于页等 section 外壳。
+- 新增 `src/components/layout/ArchiveCard.tsx`，统一分类页和专题页的整卡链接结构。
+- 新增 `src/components/ui/MetaBadge.tsx`，统一标签、计数、精选标记等 metadata chip。
+- `src/components/ui/card.tsx` 增加 `asChild` 支持，用于 shadcn Card 与 `next/link` 组合。
+- 博客卡片、搜索结果、首页精选、相关文章、标签页、链接目录、项目卡片、项目详情均已迁移到 `MetaBadge`。
+- 项目卡片媒体层改为 `card__media` / `card__image`，并加低饱和滤镜以贴合 Paper Gallery 方向。
+
+环境注意：
+
+- shadcn CLI 在当前 Node 24 + zod exports 组合下仍会报 `ERR_PACKAGE_PATH_NOT_EXPORTED`。
+- 当前策略是沿用本地已落地的 shadcn 源码组件，不运行 CLI 覆盖或安装。
+
+已验证：
+
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm test`（514 tests / 63 files）
+- `pnpm build`
+- Chrome 访问 `http://localhost:7897` 的 `/`、`/blog`、`/blog/docker-deploy-guide`、`/tags`、`/links`、`/projects/nav-site`，无 console error/warning、无横向溢出。
 
 ---
 
@@ -146,7 +172,7 @@ D:\blog\
 │   │   ├── page.tsx            # 首页
 │   │   ├── layout.tsx          # 根布局（Header + Footer + 字体 + CSS 显式 import）
 │   │   ├── globals.css         # CSS 入口（仅 @tailwindcss + @plugin,12 行）
-│   │   └── styles/             # 语义化 CSS 模块（每个 ≤500 行,共 10 个）
+│   │   └── styles/             # 语义化 CSS 模块（每个 ≤500 行,共 11 个）
 │   │       ├── tokens.css          # 设计令牌（明暗主题变量、间距、阴影）
 │   │       ├── base.css            # 全局基础（skip-link、header、footer、reduced-motion）
 │   │       ├── components.css     # 通用组件（card、button、section、hero 容器）
@@ -357,7 +383,7 @@ pnpm dev                    # → localhost:3000 (Turbopack)
 pnpm dev --port 3001        # 显式指定端口（E2E 默认用 3001）
 
 # 测试
-pnpm test                   # Vitest 单元测试（511 tests, 59 files）
+pnpm test                   # Vitest 单元测试（514 tests, 63 files）
 pnpm test:e2e               # Playwright E2E（43 tests, 4 spec files;自动启动 :3001）
 pnpm test:e2e:raw -- --ui   # 带 UI 模式调试
 
@@ -405,7 +431,7 @@ pnpm analyze                # 生成 .next/analyze/
 ```bash
 cd D:\blog
 pnpm install                 # 确认依赖装得上（注意：pnpm v11 store 偶尔会损坏,见 Lessons Learned）
-pnpm test                    # 期望:511 tests / 59 files 全绿
+pnpm test                    # 期望:514 tests / 63 files 全绿
 pnpm lint                    # 期望:0 errors
 tsc --noEmit                 # 期望:0 errors
 pnpm build                   # 期望:生成 RSS + 93 个页面工件；build output 中页面为 ƒ Dynamic（CSP nonce 的预期结果）
@@ -422,8 +448,9 @@ pnpm test:e2e                # 期望:43 tests / 4 spec files 全绿（首次会
 2. 本文件（`docs/handoff-to-agent.md`）— 当前状态 + 架构 + 后续方向
 3. `docs/specs/2026-06-29-site-backdrop-architecture-design.md` — 三层背景架构
 4. `docs/specs/2026-06-29-css-import-fix-design.md` — Tailwind v4 CSS 加载约束
-5. `docs/css-conventions.md` — 写样式前必读
-6. `docs/performance-baseline.md` — 改性能预算前必读
+5. `docs/specs/2026-07-04-shadcn-visual-architecture-design.md` — shadcn / Paper Gallery 视觉组件收口
+6. `docs/css-conventions.md` — 写样式前必读
+7. `docs/performance-baseline.md` — 改性能预算前必读
 
 **不必读**:`docs/architecture.md`（已标注部分过时,保留作历史参考）、`docs/architecture-review.html`（历史架构扫描快照,作为 specs/posts-deepening-design 的输入）。
 

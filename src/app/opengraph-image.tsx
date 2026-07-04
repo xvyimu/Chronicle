@@ -13,26 +13,26 @@ export default function OGImage() {
         flexDirection: 'column',
         width: '100%',
         height: '100%',
-        background: '#0f0f1a',
-        color: '#e4e4f0',
+        background: '#f1f0eb',
+        color: '#242827',
         padding: '80px',
         justifyContent: 'center',
         alignItems: 'center',
         fontFamily: 'sans-serif',
       }}
     >
-      <div style={{ fontSize: 72, fontWeight: 700, color: '#818cf8', marginBottom: 20 }}>
+      <div style={{ fontSize: 72, fontWeight: 700, color: '#425c55', marginBottom: 20 }}>
         {SITE_CONFIG.name}
       </div>
-      <div style={{ fontSize: 32, color: '#8e8ea0' }}>{SITE_CONFIG.description}</div>
+      <div style={{ fontSize: 32, color: '#4d5652' }}>{SITE_CONFIG.description}</div>
       <div
         style={{
           display: 'flex',
           marginTop: 40,
           padding: '8px 24px',
           borderRadius: 12,
-          background: 'rgba(129,140,248,0.15)',
-          color: '#818cf8',
+          background: 'rgba(89,117,109,0.12)',
+          color: '#425c55',
           fontSize: 24,
         }}
       >

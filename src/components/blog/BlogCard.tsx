@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { PostMeta } from '@/types';
 import { formatDate } from '@/lib/utils';
 import MagneticCard from '@/components/ui/MagneticCard';
+import MetaBadge from '@/components/ui/MetaBadge';
 
 export default function BlogCard({ post }: { post: PostMeta }) {
   const category = post.category;
@@ -12,9 +13,15 @@ export default function BlogCard({ post }: { post: PostMeta }) {
         <time className="blog__date" dateTime={post.date}>
           {formatDate(post.date)}
         </time>
-        {category && <span className="blog__category">{category}</span>}
-        {post.tags.length > 0 && <span className="blog__tag">{post.tags[0]}</span>}
-        {post.featured && <span className="blog__featured">精选</span>}
+        {category && <MetaBadge className="blog__category">{category}</MetaBadge>}
+        {post.tags.length > 0 && (
+          <MetaBadge className="blog__tag">{post.tags[0]}</MetaBadge>
+        )}
+        {post.featured && (
+          <MetaBadge variant="secondary" className="blog__featured">
+            精选
+          </MetaBadge>
+        )}
       </div>
       <h3 className="blog__title group-hover:text-[var(--brand)] transition-colors duration-300">
         <Link href={`/blog/${post.slug}`} className="after:absolute after:inset-0">

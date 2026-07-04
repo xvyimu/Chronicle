@@ -79,19 +79,19 @@ describe('BlogCard', () => {
   it('renders category badge when present', () => {
     const post = makePost({ slug: 'p', category: '前端' });
     render(<BlogCard post={post} />);
-    expect(screen.getByText('前端')).toBeInTheDocument();
+    expect(screen.getByText('前端')).toHaveAttribute('data-slot', 'badge');
   });
 
   it('renders first tag when present', () => {
     const post = makePost({ slug: 'p', tags: ['react', 'typescript'] });
     render(<BlogCard post={post} />);
-    expect(screen.getByText('react')).toBeInTheDocument();
+    expect(screen.getByText('react')).toHaveAttribute('data-slot', 'badge');
   });
 
   it('renders featured badge for featured posts', () => {
     const post = makePost({ slug: 'p', featured: true });
     render(<BlogCard post={post} />);
-    expect(screen.getByText('精选')).toBeInTheDocument();
+    expect(screen.getByText('精选')).toHaveAttribute('data-slot', 'badge');
   });
 
   it('does not render featured badge for non-featured posts', () => {

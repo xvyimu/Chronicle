@@ -1,123 +1,176 @@
 /* ============================================================
-   Links directory · dense personal collection index
+   Links directory · personal collection index
    ============================================================ */
 
 .links-directory {
   max-width: 1080px;
   margin: 0 auto;
 }
+
 .links-directory__summary {
   display: grid;
-  grid-template-columns: repeat(2, minmax(120px, 160px)) minmax(0, 1fr);
+  grid-template-columns: repeat(2, minmax(120px, 150px)) minmax(0, 1fr);
   gap: 12px;
-  margin-bottom: 40px;
+  margin-bottom: 46px;
 }
+
 .links-directory__metric,
 .links-directory__nav-link,
 .links-directory__card {
   border: 1px solid var(--border);
-  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 76%, transparent);
   box-shadow: var(--shadow-xs);
 }
+
 .links-directory__metric {
+  border-radius: var(--radius);
   padding: 16px;
-  border-radius: var(--radius-sm);
 }
+
 .links-directory__metric span,
 .links-directory__metric small,
 .links-directory__host,
 .links-directory__count {
   color: var(--text-dim);
   font-size: 0.76rem;
+  height: auto;
 }
+
 .links-directory__metric strong {
   display: block;
-  margin-top: 6px;
+  margin-top: 7px;
   color: var(--text);
-  font-size: 1.65rem;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 2rem;
+  font-weight: 500;
+  line-height: 1;
 }
+
 .links-directory__nav {
   display: flex;
   flex-wrap: wrap;
   align-content: start;
   gap: 8px;
 }
+
 .links-directory__nav-link {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   min-height: 38px;
-  padding: 8px 12px;
   border-radius: var(--radius-full);
   color: var(--text-soft);
   font-size: 0.86rem;
+  font-weight: 700;
+  padding: 8px 12px;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
 }
-.links-directory__nav-link:hover,
-.links-directory__card:hover {
-  border-color: var(--border-strong);
-  background: var(--surface-hover);
+
+.links-directory__nav-link:hover {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  color: var(--brand-hover);
 }
+
 .links-directory__sections {
   display: grid;
-  gap: 48px;
+  gap: 54px;
 }
+
 .links-directory__category {
   scroll-margin-top: 96px;
 }
+
 .links-directory__category-head {
   margin-bottom: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
 }
+
 .links-directory__category h3 {
+  margin-top: 8px;
   color: var(--text);
-  font-size: 1.45rem;
-  font-weight: 700;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: clamp(1.65rem, 3vw, 2.6rem);
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1;
 }
+
 .links-directory__category p {
-  margin-top: 6px;
+  max-width: 680px;
+  margin-top: 10px;
   color: var(--text-soft);
+  line-height: 1.75;
 }
+
 .links-directory__grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
 }
+
 .links-directory__item {
   list-style: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
 }
+
 .links-directory__card {
   display: flex;
-  min-height: 148px;
+  min-height: 152px;
   flex-direction: column;
   gap: 10px;
-  padding: 18px;
   border-radius: inherit;
+  padding: 18px;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
 }
+
+.links-directory__card:hover {
+  border-color: var(--brand);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-2px);
+}
+
 .links-directory__title {
   color: var(--text);
   font-size: 1rem;
+  line-height: 1.35;
 }
+
 .links-directory__desc {
   color: var(--text-dim);
   font-size: 0.88rem;
   line-height: 1.65;
 }
+
 @media (max-width: 1023px) {
   .links-directory__summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
   .links-directory__nav {
     grid-column: 1 / -1;
   }
+
   .links-directory__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
 @media (max-width: 767px) {
   .links-directory__summary,
   .links-directory__grid {
     grid-template-columns: 1fr;
   }
+
   .links-directory__card {
     min-height: auto;
   }

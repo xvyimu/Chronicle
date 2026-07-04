@@ -82,10 +82,10 @@ export default async function RootLayout({
       <head>
         <meta
           name="theme-color"
-          content="#111426"
+          content="#f1f0eb"
           media="(prefers-color-scheme: light)"
         />
-        <meta name="theme-color" content="#070913" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#141716" media="(prefers-color-scheme: dark)" />
         <DarkModeScript nonce={nonce} />
       </head>
       <body

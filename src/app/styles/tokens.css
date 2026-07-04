@@ -1,6 +1,6 @@
 /* ============================================================
-   设计令牌 · 明暗双主题变量
-   精美简约风格 · 柔和配色 + 精致阴影 + 统一间距
+   设计令牌 · Paper Gallery 全站主题
+   低饱和纸张底色 + 鼠尾草蓝灰强调色 + 细线层级
    ============================================================ */
 
 @theme {
@@ -21,28 +21,25 @@
   --color-destructive: var(--destructive);
 }
 
-/* ---------- 亮色（默认） ---------- */
-/* 注: 全站启用深色 stage 背景 (body::before/after + SiteBackdropStage) 后,
-   亮色模式的 body 文字需要在深色背景上保持可读性, 因此 --text 系列改为浅色.
-   卡片 --surface 保持半透明深色, 与暗色模式视觉接近但保留切换差异. */
 :root {
-  --bg: transparent;
-  --bg-soft: rgba(28, 28, 40, 0.72);
-  --bg-elevated: rgba(28, 28, 40, 0.88);
-  --surface: rgba(28, 28, 40, 0.72);
-  --surface-hover: rgba(36, 36, 52, 0.82);
-  --bg-rgb: 17, 20, 38;
-  --text: #f0f0f8;
-  --text-soft: #c4c4d8;
-  --text-dim: #9090a8;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.16);
-  --brand: #818cf8;
-  --brand-hover: #a5b4fc;
-  --brand-soft: rgba(129, 140, 248, 0.12);
-  --brand-gradient: linear-gradient(135deg, #5457e0, #818cf8);
-  --featured: #fbbf24;
-  --featured-soft: rgba(251, 191, 36, 0.12);
+  --bg: #f1f0eb;
+  --bg-soft: #e7e7df;
+  --bg-elevated: #fbfaf5;
+  --surface: #f8f7f2;
+  --surface-hover: #f2f1eb;
+  --bg-rgb: 241, 240, 235;
+  --text: #242827;
+  --text-soft: #4d5652;
+  --text-dim: #737b72;
+  --border: rgba(36, 40, 39, 0.13);
+  --border-strong: rgba(36, 40, 39, 0.24);
+  --brand: #59756d;
+  --brand-2: #78918a;
+  --brand-hover: #425c55;
+  --brand-soft: rgba(89, 117, 109, 0.12);
+  --brand-gradient: linear-gradient(135deg, #425c55, #78918a);
+  --featured: #806c3c;
+  --featured-soft: rgba(128, 108, 60, 0.13);
   --background: var(--bg);
   --foreground: var(--text);
   --card: var(--surface);
@@ -50,23 +47,23 @@
   --muted: var(--bg-soft);
   --muted-foreground: var(--text-dim);
   --primary: var(--brand);
-  --primary-foreground: #fff;
+  --primary-foreground: #f8f7f2;
   --secondary: var(--bg-soft);
   --secondary-foreground: var(--text-soft);
   --input: var(--border);
   --ring: var(--brand);
-  --destructive: #f87171;
-  --radius-md: var(--radius-sm);
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2);
-  --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.35), 0 4px 8px rgba(0, 0, 0, 0.2);
-  --shadow-xl: 0 20px 48px rgba(0, 0, 0, 0.4), 0 8px 16px rgba(0, 0, 0, 0.2);
-  --shadow-brand: 0 4px 14px rgba(129, 140, 248, 0.25);
+  --destructive: #a2463f;
   --radius: 14px;
+  --radius-md: var(--radius-sm);
   --radius-sm: 10px;
   --radius-xs: 6px;
   --radius-full: 9999px;
+  --shadow-xs: 0 1px 2px rgba(43, 48, 46, 0.06);
+  --shadow-sm: 0 8px 28px rgba(43, 48, 46, 0.08);
+  --shadow-md: 0 18px 48px rgba(43, 48, 46, 0.1);
+  --shadow-lg: 0 24px 68px rgba(43, 48, 46, 0.12);
+  --shadow-xl: 0 30px 80px rgba(43, 48, 46, 0.14);
+  --shadow-brand: 0 12px 28px rgba(89, 117, 109, 0.2);
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -85,37 +82,38 @@
 }
 
 .dark {
-  --bg: transparent;
-  --bg-soft: rgba(22, 22, 31, 0.82);
-  --bg-elevated: rgba(28, 28, 40, 0.92);
-  --surface: rgba(24, 24, 32, 0.82);
-  --surface-hover: rgba(32, 32, 44, 0.92);
-  --bg-rgb: 13, 13, 20;
-  --text: #f0f0f8;
-  --text-soft: #c4c4d8;
-  --text-dim: #9090a8;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.16);
-  --brand: #818cf8;
-  --brand-hover: #a5b4fc;
-  --brand-soft: rgba(129, 140, 248, 0.16);
-  --brand-gradient: linear-gradient(135deg, #5b5ee8, #a5b4fc);
-  --featured: #fbbf24;
-  --featured-soft: rgba(251, 191, 36, 0.16);
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.45), 0 4px 8px rgba(0, 0, 0, 0.3);
-  --shadow-xl: 0 20px 48px rgba(0, 0, 0, 0.5), 0 8px 16px rgba(0, 0, 0, 0.3);
-  --shadow-brand: 0 4px 14px rgba(129, 140, 248, 0.3);
+  --bg: #141716;
+  --bg-soft: #1c211f;
+  --bg-elevated: #202522;
+  --surface: #1a1f1d;
+  --surface-hover: #202724;
+  --bg-rgb: 20, 23, 22;
+  --text: #eceee8;
+  --text-soft: #c4cbc3;
+  --text-dim: #8e978f;
+  --border: rgba(236, 238, 232, 0.12);
+  --border-strong: rgba(236, 238, 232, 0.22);
+  --brand: #9db6ad;
+  --brand-2: #c3d2cc;
+  --brand-hover: #c3d2cc;
+  --brand-soft: rgba(157, 182, 173, 0.14);
+  --brand-gradient: linear-gradient(135deg, #8aa69d, #c3d2cc);
+  --featured: #d6bd7a;
+  --featured-soft: rgba(214, 189, 122, 0.14);
+  --primary-foreground: #141716;
+  --destructive: #e08b83;
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.28);
+  --shadow-sm: 0 8px 28px rgba(0, 0, 0, 0.24);
+  --shadow-md: 0 18px 48px rgba(0, 0, 0, 0.28);
+  --shadow-lg: 0 24px 68px rgba(0, 0, 0, 0.32);
+  --shadow-xl: 0 30px 80px rgba(0, 0, 0, 0.38);
+  --shadow-brand: 0 12px 28px rgba(157, 182, 173, 0.14);
 }
 
-/* ── View Transitions ── */
 @view-transition {
   navigation: auto;
 }
 
-/* Respect reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(root),
   ::view-transition-new(root) {
@@ -127,13 +125,16 @@
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: var(--border-strong);
   border-radius: 3px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-dim);
 }

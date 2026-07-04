@@ -4,6 +4,7 @@ import TableOfContents from '@/components/blog/TableOfContents';
 import ReadingProgress from '@/components/blog/ReadingProgress';
 import ReadingPreferences from '@/components/blog/ReadingPreferences';
 import TagLink from '@/components/blog/TagLink';
+import MetaBadge from '@/components/ui/MetaBadge';
 import {
   getAllPostSlugs,
   getPostBySlug,
@@ -82,16 +83,13 @@ async function BlogPostContent({ post }: { post: PostFull }) {
       <ReadingPreferences targetId="article-content" />
       <section className="section">
         <div className="section__inner">
-          <div className="lg:flex lg:gap-12">
+          <div className="article-layout">
             {/* Article */}
-            <article
-              className="min-w-0 flex-1"
-              style={{ maxWidth: 720, margin: '0 auto' }}
-            >
-              <header className="mb-10">
-                <h1 className="text-3xl font-bold leading-tight">{post.title}</h1>
-                <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-[var(--text-dim)]">
-                  <span className="inline-flex items-center gap-1.5">
+            <article className="article-shell">
+              <header className="article__header">
+                <h1 className="article__title">{post.title}</h1>
+                <div className="article__meta">
+                  <span className="article__meta-item">
                     <svg
                       width="15"
                       height="15"
@@ -110,7 +108,7 @@ async function BlogPostContent({ post }: { post: PostFull }) {
                     <time dateTime={post.date}>{formatDate(post.date)}</time>
                   </span>
                   {post.updatedAt && post.updatedAt !== post.date && (
-                    <span className="inline-flex items-center gap-1.5">
+                    <span className="article__meta-item">
                       <svg
                         width="15"
                         height="15"
@@ -128,7 +126,7 @@ async function BlogPostContent({ post }: { post: PostFull }) {
                       <time dateTime={post.updatedAt}>{formatDate(post.updatedAt)}</time>
                     </span>
                   )}
-                  <span className="inline-flex items-center gap-1.5">
+                  <span className="article__meta-item">
                     <svg
                       width="15"
                       height="15"
@@ -144,7 +142,7 @@ async function BlogPostContent({ post }: { post: PostFull }) {
                     </svg>
                     {post.readingTime}
                   </span>
-                  <span className="inline-flex items-center gap-1.5">
+                  <span className="article__meta-item">
                     <svg
                       width="15"
                       height="15"
@@ -165,16 +163,12 @@ async function BlogPostContent({ post }: { post: PostFull }) {
                   </span>
                 </div>
                 {hasMetadataBadges && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {post.series && (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] px-3 py-1 text-xs font-medium text-[var(--text-soft)]">
-                        {post.series}
-                      </span>
-                    )}
+                  <div className="article__badges">
+                    {post.series && <span className="article__badge">{post.series}</span>}
                     {category && (
                       <Link
                         href={`/categories/${encodeURIComponent(category)}`}
-                        className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] px-3 py-1 text-xs font-medium text-[var(--text-soft)] hover:text-[var(--brand)] hover:border-[var(--brand)] transition-colors"
+                        className="article__badge"
                       >
                         {category}
                       </Link>
@@ -191,59 +185,34 @@ async function BlogPostContent({ post }: { post: PostFull }) {
               </div>
 
               {seriesPosts.length > 1 && (
-                <section
-                  className="mt-16 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-xs)]"
-                  aria-labelledby="series-posts-title"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
+                <section className="article-panel" aria-labelledby="series-posts-title">
+                  <div className="article-panel__head">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--brand)]">
-                        Reading Path
-                      </p>
-                      <h2 id="series-posts-title" className="mt-1 text-lg font-semibold">
+                      <p className="article-panel__label">Reading Path</p>
+                      <h2 id="series-posts-title" className="article-panel__title">
                         专题阅读路径
                       </h2>
-                      <p className="mt-1 text-sm text-[var(--text-dim)]">{post.series}</p>
+                      <p className="article-panel__desc">{post.series}</p>
                     </div>
                     {seriesIndex >= 0 && (
-                      <span className="rounded-full border border-[var(--border)] px-3 py-1 text-xs font-medium text-[var(--text-soft)]">
+                      <MetaBadge className="article-panel__count">
                         第 {seriesIndex + 1} / {seriesPosts.length} 篇
-                      </span>
+                      </MetaBadge>
                     )}
                   </div>
 
-                  <ol className="mt-5 grid gap-2">
+                  <ol className="article-path">
                     {seriesPosts.map((item, index) => {
                       const isCurrent = item.slug === post.slug;
                       const inner = (
                         <>
-                          <span
-                            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
-                              isCurrent
-                                ? 'bg-[var(--brand)] text-white'
-                                : 'bg-[var(--bg-soft)] text-[var(--text-dim)]'
-                            }`}
-                          >
-                            {index + 1}
-                          </span>
-                          <span className="min-w-0 flex-1">
-                            <span
-                              className={`block text-sm font-medium ${
-                                isCurrent
-                                  ? 'text-[var(--text)]'
-                                  : 'text-[var(--text-soft)] group-hover:text-[var(--brand)]'
-                              }`}
-                            >
-                              {item.title}
-                            </span>
-                            <span className="mt-0.5 block text-xs text-[var(--text-dim)]">
-                              {item.readingTime}
-                            </span>
+                          <span className="article-path__index">{index + 1}</span>
+                          <span className="article-path__body">
+                            <span className="article-path__title">{item.title}</span>
+                            <span className="article-path__meta">{item.readingTime}</span>
                           </span>
                           {isCurrent && (
-                            <span className="shrink-0 rounded-full bg-[var(--brand-soft)] px-2.5 py-1 text-xs font-medium text-[var(--brand)]">
-                              当前阅读
-                            </span>
+                            <span className="article-path__current">当前阅读</span>
                           )}
                         </>
                       );
@@ -251,13 +220,13 @@ async function BlogPostContent({ post }: { post: PostFull }) {
                       return (
                         <li key={item.slug}>
                           {isCurrent ? (
-                            <div className="flex items-center gap-3 rounded-[var(--radius-sm)] border border-[var(--brand)] bg-[var(--brand-soft)] p-3">
+                            <div className="article-path__item article-path__item--current">
                               {inner}
                             </div>
                           ) : (
                             <Link
                               href={`/blog/${item.slug}`}
-                              className="group flex items-center gap-3 rounded-[var(--radius-sm)] border border-[var(--border)] p-3 transition-colors hover:border-[var(--brand)] hover:bg-[var(--bg-soft)]"
+                              className="article-path__item"
                             >
                               {inner}
                             </Link>
@@ -273,54 +242,54 @@ async function BlogPostContent({ post }: { post: PostFull }) {
 
               {relatedPosts.length > 0 && (
                 <section
-                  className="mt-16 border-t border-[var(--border)] pt-8"
+                  className="article-related"
                   aria-labelledby="related-posts-title"
                 >
-                  <h2 id="related-posts-title" className="text-lg font-semibold">
+                  <h2 id="related-posts-title" className="article-related__title">
                     相关文章
                   </h2>
-                  <div className="mt-4 grid gap-3">
+                  <div className="article-related__list">
                     {relatedPosts.map((related) => (
                       <Link
                         key={related.slug}
                         href={`/blog/${related.slug}`}
-                        className="group block rounded-lg border border-[var(--border)] p-4 transition-colors hover:border-[var(--brand)] hover:bg-[var(--bg-soft)]"
+                        className="article-related__card"
                       >
-                        <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--text-dim)]">
+                        <div className="article-related__meta">
                           <time dateTime={related.date}>{formatDate(related.date)}</time>
-                          {related.category && <span>{related.category}</span>}
-                          {related.tags[0] && <span>{related.tags[0]}</span>}
+                          {related.category && (
+                            <MetaBadge className="article-related__badge">
+                              {related.category}
+                            </MetaBadge>
+                          )}
+                          {related.tags[0] && (
+                            <MetaBadge className="article-related__badge">
+                              {related.tags[0]}
+                            </MetaBadge>
+                          )}
                         </div>
-                        <h3 className="mt-1 text-sm font-semibold text-[var(--text)] group-hover:text-[var(--brand)] transition-colors">
-                          {related.title}
-                        </h3>
-                        <p className="mt-1 line-clamp-2 text-xs text-[var(--text-dim)]">
-                          {related.description}
-                        </p>
+                        <h3 className="article-related__name">{related.title}</h3>
+                        <p className="article-related__desc">{related.description}</p>
                       </Link>
                     ))}
                   </div>
                 </section>
               )}
 
-              <nav className="mt-16 flex items-center justify-between border-t border-[var(--border)] pt-8">
-                <div>
+              <nav className="article-nav">
+                <div className="article-nav__item">
                   {prev && (
-                    <Link href={`/blog/${prev.slug}`} className="group text-sm">
-                      <span className="text-[var(--text-dim)]">← 上一篇</span>
-                      <p className="mt-1 text-[var(--text)] group-hover:text-[var(--brand)] transition-colors">
-                        {prev.title}
-                      </p>
+                    <Link href={`/blog/${prev.slug}`} className="article-nav__link">
+                      <span className="article-nav__kicker">← 上一篇</span>
+                      <p className="article-nav__title">{prev.title}</p>
                     </Link>
                   )}
                 </div>
-                <div className="text-right">
+                <div className="article-nav__item article-nav__item--next">
                   {next && (
-                    <Link href={`/blog/${next.slug}`} className="group text-sm">
-                      <span className="text-[var(--text-dim)]">下一篇 →</span>
-                      <p className="mt-1 text-[var(--text)] group-hover:text-[var(--brand)] transition-colors">
-                        {next.title}
-                      </p>
+                    <Link href={`/blog/${next.slug}`} className="article-nav__link">
+                      <span className="article-nav__kicker">下一篇 →</span>
+                      <p className="article-nav__title">{next.title}</p>
                     </Link>
                   )}
                 </div>
@@ -328,7 +297,7 @@ async function BlogPostContent({ post }: { post: PostFull }) {
             </article>
 
             {/* TOC sidebar — 桌面端显示 */}
-            <aside className="hidden lg:block w-56 shrink-0">
+            <aside className="article-aside">
               <TableOfContents />
             </aside>
           </div>

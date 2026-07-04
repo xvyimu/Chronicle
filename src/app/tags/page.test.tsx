@@ -52,6 +52,7 @@ describe('TagsPage', () => {
       // Count appears in both desktop and mobile views
       const counts = screen.getAllByText(tag.count.toString());
       expect(counts.length).toBeGreaterThan(0);
+      expect(counts[0]).toHaveAttribute('data-slot', 'badge');
     }
   });
 

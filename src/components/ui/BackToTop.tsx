@@ -23,9 +23,9 @@ export default function BackToTop() {
       onClick={scrollToTop}
       aria-label="回到顶部"
       className={`fixed bottom-6 right-6 z-50 flex h-10 w-10 items-center justify-center rounded-full
-        bg-[var(--bg-soft)] text-[var(--text-soft)] shadow-md
+        bg-[var(--surface)] text-[var(--text-soft)] shadow-md
         ring-1 ring-[var(--border)]
-        transition-all duration-300 hover:bg-primary hover:text-white hover:ring-primary
+        transition-all duration-300 hover:bg-[var(--brand)] hover:text-[var(--primary-foreground)] hover:ring-[var(--brand)]
         ${visible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 pointer-events-none'}`}
     >
       <svg

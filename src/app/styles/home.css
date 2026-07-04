@@ -205,7 +205,7 @@ body:has(.home-paper) .footer {
 .editorial-hero {
   max-width: 1240px;
   margin: 0 auto;
-  padding: 80px 24px 56px;
+  padding: 48px 24px 32px;
 }
 
 .editorial-hero__stage {
@@ -214,7 +214,7 @@ body:has(.home-paper) .footer {
   grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.72fr);
   gap: clamp(36px, 6vw, 92px);
   align-items: end;
-  min-height: 600px;
+  min-height: 540px;
   overflow: visible;
   background: transparent;
   color: var(--text);
@@ -528,11 +528,22 @@ html.dark .editorial-hero__metrics div {
 .home-article-rail__meta {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 10px;
   margin-top: 26px;
   color: var(--text-dim);
   font-family: var(--font-jetbrains-mono), monospace;
   font-size: 0.74rem;
+}
+
+.home-article-rail__badge {
+  height: auto;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.72rem;
+  padding: 2px 8px;
 }
 
 .home-article-rail__title {

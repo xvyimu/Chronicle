@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import BlogList from '@/components/blog/BlogList';
 import SearchBar from '@/components/blog/SearchBar';
 import Pagination from '@/components/blog/Pagination';
+import PageSection from '@/components/layout/PageSection';
 import { getPaginatedPosts, getAllPosts } from '@/lib/posts';
 import { PAGE_SIZE } from '@/lib/content-dirs';
 import { buildPageMetadata } from '@/lib/metadata';
@@ -33,21 +34,14 @@ export default async function BlogPage({
   const { posts, totalPages, currentPage } = getPaginatedPosts(requestedPage, PAGE_SIZE);
 
   return (
-    <section className="section">
-      <div className="section__inner">
-        <div className="section__head">
-          <div>
-            <span className="section__eyebrow">Blog</span>
-            <h2 className="section__title">博客</h2>
-            <p className="section__subtitle">
-              {totalPages > 0 ? `共 ${allPosts.length} 篇` : ''}
-            </p>
-          </div>
-        </div>
-        <SearchBar posts={allPosts} />
-        <BlogList posts={posts} columns={2} />
-        <Pagination currentPage={currentPage} totalPages={totalPages} />
-      </div>
-    </section>
+    <PageSection
+      eyebrow="Blog"
+      title="博客"
+      subtitle={totalPages > 0 ? `共 ${allPosts.length} 篇` : ''}
+    >
+      <SearchBar posts={allPosts} />
+      <BlogList posts={posts} columns={2} />
+      <Pagination currentPage={currentPage} totalPages={totalPages} />
+    </PageSection>
   );
 }

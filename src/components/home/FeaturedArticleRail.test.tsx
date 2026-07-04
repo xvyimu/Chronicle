@@ -18,6 +18,7 @@ vi.mock('next/link', () => ({
 }));
 
 vi.mock('@/lib/utils', () => ({
+  cn: (...classes: unknown[]) => classes.filter(Boolean).join(' '),
   formatDate: vi.fn((date: string) => {
     const d = new Date(date);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -91,8 +92,8 @@ describe('FeaturedArticleRail', () => {
     render(<FeaturedArticleRail posts={mockPosts} />);
     expect(screen.getByText('2026-06-15')).toBeInTheDocument();
     expect(screen.getByText('2026-06-10')).toBeInTheDocument();
-    expect(screen.getByText('前端开发')).toBeInTheDocument();
-    expect(screen.getByText('React')).toBeInTheDocument();
+    expect(screen.getByText('前端开发')).toHaveAttribute('data-slot', 'badge');
+    expect(screen.getByText('React')).toHaveAttribute('data-slot', 'badge');
   });
 
   it('renders reading time', () => {

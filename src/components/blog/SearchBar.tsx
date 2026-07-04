@@ -5,6 +5,7 @@ import type Fuse from 'fuse.js';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PostMeta } from '@/types';
+import MetaBadge from '@/components/ui/MetaBadge';
 
 type FuseMatch = { key?: string; value?: string; indices: readonly [number, number][] };
 
@@ -281,12 +282,23 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
                 >
                   <div className="flex items-center gap-2 text-xs text-[var(--text-dim)] mb-0.5">
                     <time dateTime={post.date}>{post.date}</time>
-                    {post.category && <span>{post.category}</span>}
-                    {post.series && <span>{post.series}</span>}
+                    {post.category && (
+                      <MetaBadge className="search-results__badge">
+                        {post.category}
+                      </MetaBadge>
+                    )}
+                    {post.series && (
+                      <MetaBadge className="search-results__badge">
+                        {post.series}
+                      </MetaBadge>
+                    )}
                     {post.featured && (
-                      <span className="text-[var(--brand)] font-semibold text-[10px]">
+                      <MetaBadge
+                        variant="secondary"
+                        className="search-results__badge search-results__badge--featured"
+                      >
                         精选
-                      </span>
+                      </MetaBadge>
                     )}
                   </div>
                   <h4 className="font-semibold text-sm">

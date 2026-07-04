@@ -13,7 +13,7 @@ A personal blog built with Next.js 16.2 (App Router), React 19, and Tailwind CSS
 - **Content**: MDX with custom frontmatter parser (`lib/parse-frontmatter.ts`, js-yaml 4.x), next-mdx-remote
 - **Syntax Highlighting**: Shiki via rehype-pretty-code
 - **Search**: fuse.js (client-side fuzzy search)
-- **Testing**: Vitest (unit/integration, 505 tests, 59 files), Playwright (E2E, 43 tests, 4 spec files)
+- **Testing**: Vitest (unit/integration, 514 tests, 63 files), Playwright (E2E, 43 tests, 4 spec files)
 - **CI**: GitHub Actions (lint / test / tsc / build / bundle-budget / e2e)
 - **Deployment**: Vercel
 
@@ -35,10 +35,11 @@ src/
 │   ├── tags/[tag]/         # Tag archive
 │   ├── series/[series]/    # Series archive
 │   ├── about/              # About page
-│   ├── styles/             # Semantic CSS modules (10 files, each ≤500 lines)
+│   ├── styles/             # Semantic CSS modules (11 files, each ≤500 lines)
 │   │   ├── tokens.css      # Design tokens (light/dark theme vars, spacing, shadows)
 │   │   ├── base.css        # Global base (skip-link, header, footer, reduced-motion)
 │   │   ├── components.css   # Generic components (card, button, section, hero container)
+│   │   ├── links.css       # Links directory and curated resource UI
 │   │   ├── blog-ui.css     # Blog UI (SearchBar, TOC, CodeBlock, ThemeToggle)
 │   │   ├── backdrop.css    # Backdrop layer (body::before/after + .site-backdrop__stage)
 │   │   ├── home.css        # Home (Manifesto, ReadingPath, ArticleRail, CTA)
@@ -57,10 +58,10 @@ src/
 ├── components/
 │   ├── blog/               # Blog-specific (SearchBar, BlogCard, CodeBlock, TOC, etc.)
 │   ├── home/               # Home-only (EditorialHero, Manifesto, ReadingPath, ArticleRail, CTA, RevealOnScroll, LoadingIntro)
-│   ├── layout/             # Header, Footer, SiteBackdropStage (server), SiteBackdropParallax (client)
+│   ├── layout/             # Header, Footer, ArchiveCard, PageSection, SiteBackdropStage/Parallax
 │   ├── projects/           # ProjectCard
 │   ├── comments/           # Giscus comments
-│   └── ui/                 # Reusable UI (ThemeToggle, BackToTop, MagneticCard, ParticleCanvas)
+│   └── ui/                 # Reusable UI (ThemeToggle, MetaBadge, Card, BackToTop, MagneticCard, ParticleCanvas)
 ├── hooks/                  # React hooks (useInView, usePersistedEnum, usePrefersReducedMotion)
 ├── lib/                    # Business logic
 │   ├── posts/              # Post modules (schema, repository, query, search-text — 4 submodules)
@@ -91,7 +92,8 @@ src/
 ## Conventions
 
 - **CSS**: BEM for structural components, Tailwind for utilities. See `docs/css-conventions.md`
-- **CSS Module Loading**: ⚠️ Tailwind v4 `@tailwindcss/postcss` silently drops `@import "./styles/xxx.css"` in `globals.css`. All CSS modules MUST be explicitly imported in `layout.tsx` (order: tokens → base → components → blog-ui → backdrop → home → prose → project-detail → animations → responsive last). See `docs/specs/2026-06-29-css-import-fix-design.md`
+- **CSS Module Loading**: ⚠️ Tailwind v4 `@tailwindcss/postcss` silently drops `@import "./styles/xxx.css"` in `globals.css`. All CSS modules MUST be explicitly imported in `layout.tsx` (order: tokens → base → components → links → blog-ui → backdrop → home → prose → project-detail → animations → responsive last). See `docs/specs/2026-06-29-css-import-fix-design.md`
+- **shadcn Visual Composition**: Keep primitive shadcn-style components in `src/components/ui/` and page/archive composition helpers in `src/components/layout/`. Current shared pieces are `MetaBadge`, `ArchiveCard`, and `PageSection`. See `docs/specs/2026-07-04-shadcn-visual-architecture-design.md`
 - **Background Architecture**: Three-layer separation — `body::before/after` (CSS pseudo-elements) + `<SiteBackdropStage />` (server-rendered decorative DOM) + `<SiteBackdropParallax />` (client component, returns null, only side effects). See `docs/specs/2026-06-29-site-backdrop-architecture-design.md`
 - **Caching**: Use `createCache<T>` from `lib/cache.ts`. Use `resetAllCaches()` for test isolation. See `docs/cache-components-migration.md`
 - **Testing**: Unit tests in `*.test.tsx` alongside components. E2E in `e2e/` directory
@@ -105,7 +107,7 @@ src/
 ```bash
 pnpm dev          # Start dev server (port 3000; Turbopack)
 pnpm build        # Generate RSS + production build (93 page artifacts; routes are dynamic due CSP nonce)
-pnpm test         # Run unit/integration tests (505 tests, 59 files)
+pnpm test         # Run unit/integration tests (514 tests, 63 files)
 pnpm test:e2e     # Run E2E tests (43 tests, 4 spec files; auto-starts dev/prod server on port 3001)
 pnpm test:e2e:raw # Playwright raw (pass-through flags, e.g. --ui)
 pnpm lint         # ESLint

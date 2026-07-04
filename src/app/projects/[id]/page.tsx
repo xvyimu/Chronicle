@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import MetaBadge from '@/components/ui/MetaBadge';
 import { getAllProjectIds, getProjectById } from '@/lib/projects';
 import { buildPageMetadata } from '@/lib/metadata';
 import { createDynamicRoute } from '@/lib/route-adapter';
@@ -52,9 +53,9 @@ function ProjectDetailContent({ project }: { project: Project }) {
             <div className="project-detail__meta">
               <span className="project-detail__year">{project.year}</span>
               {project.tags.map((tag) => (
-                <span key={tag} className="project-detail__tag">
+                <MetaBadge key={tag} className="project-detail__tag">
                   {tag}
-                </span>
+                </MetaBadge>
               ))}
             </div>
           </header>

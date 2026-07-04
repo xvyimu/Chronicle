@@ -2,6 +2,7 @@ import { Project } from '@/types';
 import Image from 'next/image';
 import Link from 'next/link';
 import MagneticCard from '@/components/ui/MagneticCard';
+import MetaBadge from '@/components/ui/MetaBadge';
 
 export default function ProjectCard({
   project,
@@ -14,22 +15,20 @@ export default function ProjectCard({
     <MagneticCard as="article" className="card card--project group" strength={3}>
       <Link href={`/projects/${project.id}`} className="block">
         {project.image ? (
-          <div className="relative mb-4 aspect-video overflow-hidden rounded-md bg-[var(--bg-soft)]">
+          <div className="card__media">
             <Image
               src={project.image}
               alt={project.title}
               fill
-              className="object-cover transition-transform group-hover:scale-105"
+              className="card__image"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               loading={priority ? 'eager' : undefined}
               priority={priority}
             />
           </div>
         ) : (
-          <div className="mb-4 flex aspect-video items-center justify-center rounded-md bg-gradient-to-br from-[var(--brand-soft)] to-[var(--bg-soft)]">
-            <span className="text-2xl font-bold text-[var(--brand)] opacity-50">
-              {project.title.charAt(0)}
-            </span>
+          <div className="card__media card__media--placeholder">
+            <span className="card__initial">{project.title.charAt(0)}</span>
           </div>
         )}
         <div className="card__top">
@@ -40,9 +39,9 @@ export default function ProjectCard({
       <div className="card__foot">
         <div className="card__tags">
           {project.tags.map((tag) => (
-            <span key={tag} className="card__tag">
+            <MetaBadge key={tag} className="card__tag">
               {tag}
-            </span>
+            </MetaBadge>
           ))}
         </div>
         <div className="flex items-center gap-3 text-xs text-[var(--text-dim)]">

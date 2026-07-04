@@ -1,4 +1,5 @@
 import BlogList from '@/components/blog/BlogList';
+import PageSection from '@/components/layout/PageSection';
 import {
   getAllCategorySlugs,
   getPostsByCategory,
@@ -25,17 +26,13 @@ const {
   render: (categoryName) => {
     const posts = getPostsByCategory(categoryName);
     return (
-      <section className="section">
-        <div className="section__inner">
-          <div className="section__head" style={{ marginBottom: 24 }}>
-            <div>
-              <h2 className="section__title">分类：{categoryName}</h2>
-              <p className="section__subtitle">{posts.length} 篇文章</p>
-            </div>
-          </div>
-          <BlogList posts={posts} columns={2} />
-        </div>
-      </section>
+      <PageSection
+        title={`分类：${categoryName}`}
+        subtitle={`${posts.length} 篇文章`}
+        compactHeader
+      >
+        <BlogList posts={posts} columns={2} />
+      </PageSection>
     );
   },
 });

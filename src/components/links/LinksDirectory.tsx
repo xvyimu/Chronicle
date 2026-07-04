@@ -1,5 +1,6 @@
 import type { LinkCategory, LinkItem } from '@/types';
 import MagneticCard from '@/components/ui/MagneticCard';
+import MetaBadge from '@/components/ui/MetaBadge';
 
 function getLinkHost(url: string): string {
   try {
@@ -71,9 +72,9 @@ export function LinksDirectory({ categories }: { categories: LinkCategory[] }) {
           >
             <div className="links-directory__category-head">
               <div>
-                <span className="links-directory__count">
+                <MetaBadge className="links-directory__count">
                   {category.items.length} 个站点
-                </span>
+                </MetaBadge>
                 <h3>{category.title}</h3>
                 <p>{category.description}</p>
               </div>

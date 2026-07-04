@@ -12,11 +12,13 @@
    适合准备写文章、改关于页、维护作品集、检查 RSS 或做内容发布时阅读。
 4. docs/css-conventions.md
    适合准备写或修改样式时阅读，明确 BEM 与 Tailwind 的分工边界和设计令牌系统。
-5. docs/salesdex-inspired-redesign.md
+5. docs/specs/2026-07-04-shadcn-visual-architecture-design.md
+   适合继续做 shadcn、MetaBadge、PageSection、ArchiveCard 或 Paper Gallery 视觉组件收口时阅读。
+6. docs/salesdex-inspired-redesign.md
    适合准备按 sales-dex.jp 的视觉方向改造首页时阅读，明确可迁移模式、技术落点、阶段计划和验收标准。
-6. docs/cache-components-migration.md
+7. docs/cache-components-migration.md
    适合考虑引入外部数据源或迁移到 Cache Components 时阅读。
-7. docs/项目审查与改进文档.md
+8. docs/项目审查与改进文档.md
    历史审查记录和问题清单，适合作为治理与重构参考，不适合作为首次入门文档。
 
 ## 文档分工
@@ -70,6 +72,15 @@
 - 设计令牌系统怎么用
 - 新组件的 CSS 应该放在哪个文件
 - 响应式和暗色主题怎么处理
+
+### docs/specs/2026-07-04-shadcn-visual-architecture-design.md
+
+解决这些问题：
+
+- 当前 shadcn 本地组件和项目 BEM 样式如何协作
+- 什么时候使用 MetaBadge、PageSection、ArchiveCard
+- Paper Gallery 低饱和视觉收口涉及哪些文件
+- shadcn CLI 在当前 Node 24 环境下的限制是什么
 
 ### docs/salesdex-inspired-redesign.md
 

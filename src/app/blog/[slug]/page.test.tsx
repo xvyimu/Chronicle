@@ -87,7 +87,10 @@ describe('BlogPostPage', () => {
 
     const section = screen.getByRole('region', { name: '专题阅读路径' });
     expect(within(section).getByText('个人服务部署路线')).toBeInTheDocument();
-    expect(within(section).getByText('第 2 / 5 篇')).toBeInTheDocument();
+    expect(within(section).getByText('第 2 / 5 篇')).toHaveAttribute(
+      'data-slot',
+      'badge',
+    );
     expect(within(section).getByText('当前阅读')).toBeInTheDocument();
     expect(
       within(section).getByRole('link', { name: /VPS 初始化安全与运维配置清单/ }),
@@ -118,6 +121,7 @@ describe('BlogPostPage', () => {
     expect(
       within(section).getByRole('link', { name: /Nginx 反向代理与负载均衡实战/ }),
     ).toHaveAttribute('href', '/blog/nginx-reverse-proxy');
+    expect(within(section).getByText('Nginx')).toHaveAttribute('data-slot', 'badge');
     expect(
       within(section).getByRole('link', { name: /VPS 初始化安全与运维配置清单/ }),
     ).toHaveAttribute('href', '/blog/vps-initial-setup');

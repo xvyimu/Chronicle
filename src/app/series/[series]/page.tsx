@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import PageSection from '@/components/layout/PageSection';
 import { getAllSeriesSlugs, getSeriesBySlug } from '@/lib/series';
 import { SITE_CONFIG } from '@/lib/site';
 import { buildPageMetadata } from '@/lib/metadata';
@@ -21,46 +22,32 @@ const {
       path: `/series/${encodeURIComponent(series.slug)}`,
     }),
   render: (series) => (
-    <section className="section">
-      <div className="section__inner">
-        <div className="section__head" style={{ marginBottom: 24 }}>
-          <div>
-            <span className="section__eyebrow">Series</span>
-            <h2 className="section__title">专题：{series.name}</h2>
-            <p className="section__subtitle">
-              {series.count} 篇文章 · {formatDate(series.startDate)} -{' '}
-              {formatDate(series.endDate)}
-            </p>
-          </div>
-        </div>
-
-        <ol className="grid gap-4">
-          {series.posts.map((post, index) => (
-            <li key={post.slug}>
-              <Link
-                href={`/blog/${post.slug}`}
-                className="group grid gap-4 rounded-xl border border-[var(--border)] p-5 transition-all hover:-translate-y-0.5 hover:border-[var(--brand)] hover:bg-[var(--bg-soft)] md:grid-cols-[auto_1fr_auto]"
-              >
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--brand-soft)] text-sm font-semibold text-[var(--brand)]">
-                  {index + 1}
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-base font-semibold text-[var(--text)] transition-colors group-hover:text-[var(--brand)]">
-                    {post.title}
-                  </span>
-                  <span className="mt-1 line-clamp-2 block text-sm text-[var(--text-dim)]">
-                    {post.description}
-                  </span>
-                </span>
-                <span className="text-sm text-[var(--text-dim)]">
-                  {formatDate(post.date)}
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ol>
-      </div>
-    </section>
+    <PageSection
+      eyebrow="Series"
+      title={`专题：${series.name}`}
+      subtitle={`${series.count} 篇文章 · ${formatDate(series.startDate)} - ${formatDate(
+        series.endDate,
+      )}`}
+      compactHeader
+    >
+      <ol className="archive-list">
+        {series.posts.map((post, index) => (
+          <li key={post.slug}>
+            <Link
+              href={`/blog/${post.slug}`}
+              className="archive-list__item archive-list__item--series"
+            >
+              <span className="archive-list__index">{index + 1}</span>
+              <span className="min-w-0">
+                <span className="archive-list__title">{post.title}</span>
+                <span className="archive-list__desc">{post.description}</span>
+              </span>
+              <span className="archive-list__date">{formatDate(post.date)}</span>
+            </Link>
+          </li>
+        ))}
+      </ol>
+    </PageSection>
   ),
 });
 

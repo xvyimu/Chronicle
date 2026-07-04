@@ -54,6 +54,7 @@ describe('ProjectsPage', () => {
     for (const tag of allTags) {
       const elements = screen.getAllByText(tag);
       expect(elements.length).toBeGreaterThan(0);
+      expect(elements[0]).toHaveAttribute('data-slot', 'badge');
     }
   });
 

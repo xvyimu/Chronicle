@@ -44,21 +44,18 @@ export default function TableOfContents() {
   if (items.length === 0) return null;
 
   return (
-    <nav className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto">
-      <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[var(--text-dim)]">
-        目录
-      </h4>
-      <ul className="space-y-1.5 text-sm">
+    <nav className="toc" aria-label="文章目录">
+      <h4 className="toc__title">目录</h4>
+      <ul className="toc__list">
         {items.map((item) => (
-          <li key={item.id}>
+          <li
+            key={item.id}
+            className={item.level === 3 ? 'toc__item toc__item--h3' : 'toc__item'}
+          >
             <a
               href={`#${item.id}`}
-              className={`block transition-colors border-l-2 py-1 ${
+              className={`${activeId === item.id ? 'toc__link toc__link--active' : 'toc__link'} ${
                 item.level === 3 ? 'pl-5' : 'pl-3'
-              } ${
-                activeId === item.id
-                  ? 'text-[var(--brand)] border-[var(--brand)] font-medium'
-                  : 'text-[var(--text-dim)] border-transparent hover:text-[var(--text-soft)] hover:border-[var(--border-strong)]'
               }`}
               onClick={(e) => {
                 e.preventDefault();

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { PostMeta } from '@/types';
 import { formatDate } from '@/lib/utils';
+import MetaBadge from '@/components/ui/MetaBadge';
 
 interface FeaturedArticleRailProps {
   posts: PostMeta[];
@@ -39,8 +40,16 @@ export default function FeaturedArticleRail({ posts }: FeaturedArticleRailProps)
               <span className="home-article-rail__label">Lead note</span>
               <div className="home-article-rail__meta">
                 <time dateTime={featuredPost.date}>{formatDate(featuredPost.date)}</time>
-                {featuredPost.category && <span>{featuredPost.category}</span>}
-                {featuredPost.tags[0] && <span>{featuredPost.tags[0]}</span>}
+                {featuredPost.category && (
+                  <MetaBadge className="home-article-rail__badge">
+                    {featuredPost.category}
+                  </MetaBadge>
+                )}
+                {featuredPost.tags[0] && (
+                  <MetaBadge className="home-article-rail__badge">
+                    {featuredPost.tags[0]}
+                  </MetaBadge>
+                )}
               </div>
               <h3 className="home-article-rail__title">{featuredPost.title}</h3>
               <p className="home-article-rail__desc">{featuredPost.description}</p>
@@ -54,7 +63,11 @@ export default function FeaturedArticleRail({ posts }: FeaturedArticleRailProps)
                 <Link href={`/blog/${post.slug}`} className="home-article-rail__row-link">
                   <div className="home-article-rail__meta">
                     <time dateTime={post.date}>{formatDate(post.date)}</time>
-                    {post.category && <span>{post.category}</span>}
+                    {post.category && (
+                      <MetaBadge className="home-article-rail__badge">
+                        {post.category}
+                      </MetaBadge>
+                    )}
                   </div>
                   <h3 className="home-article-rail__title">{post.title}</h3>
                   <span className="home-article-rail__foot">{post.readingTime}</span>

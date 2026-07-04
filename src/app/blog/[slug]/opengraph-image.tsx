@@ -21,8 +21,8 @@ export default async function OGImage({ params }: { params: Promise<{ slug: stri
           flexDirection: 'column',
           width: '100%',
           height: '100%',
-          background: '#0f0f1a',
-          color: '#e4e4f0',
+          background: '#f1f0eb',
+          color: '#242827',
           padding: '60px',
           justifyContent: 'center',
         }}
@@ -40,8 +40,8 @@ export default async function OGImage({ params }: { params: Promise<{ slug: stri
         flexDirection: 'column',
         width: '100%',
         height: '100%',
-        background: '#0f0f1a',
-        color: '#e4e4f0',
+        background: '#f1f0eb',
+        color: '#242827',
         padding: '60px',
         justifyContent: 'space-between',
         fontFamily: 'sans-serif',
@@ -49,10 +49,10 @@ export default async function OGImage({ params }: { params: Promise<{ slug: stri
     >
       {/* 顶部：站点名 */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <div style={{ fontSize: 28, fontWeight: 700, color: '#818cf8' }}>
+        <div style={{ fontSize: 28, fontWeight: 700, color: '#425c55' }}>
           {SITE_CONFIG.name}
         </div>
-        <div style={{ fontSize: 22, color: '#6e6e88' }}>{SITE_CONFIG.description}</div>
+        <div style={{ fontSize: 22, color: '#727970' }}>{SITE_CONFIG.description}</div>
       </div>
 
       {/* 中间：文章标题 */}
@@ -68,7 +68,7 @@ export default async function OGImage({ params }: { params: Promise<{ slug: stri
         <div style={{ fontSize: 52, fontWeight: 700, lineHeight: 1.2, maxWidth: 1000 }}>
           {post.title}
         </div>
-        <div style={{ fontSize: 26, color: '#8e8ea0', maxWidth: 900 }}>
+        <div style={{ fontSize: 26, color: '#4d5652', maxWidth: 900 }}>
           {post.description}
         </div>
       </div>
@@ -77,7 +77,7 @@ export default async function OGImage({ params }: { params: Promise<{ slug: stri
       <div
         style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
       >
-        <div style={{ display: 'flex', gap: '12px', fontSize: 22, color: '#8e8ea0' }}>
+        <div style={{ display: 'flex', gap: '12px', fontSize: 22, color: '#727970' }}>
           <span>{post.date}</span>
           <span>·</span>
           <span>{post.readingTime}</span>
@@ -90,8 +90,8 @@ export default async function OGImage({ params }: { params: Promise<{ slug: stri
                 display: 'flex',
                 padding: '4px 16px',
                 borderRadius: 8,
-                background: 'rgba(129,140,248,0.15)',
-                color: '#818cf8',
+                background: 'rgba(89,117,109,0.12)',
+                color: '#425c55',
                 fontSize: 20,
               }}
             >
