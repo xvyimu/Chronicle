@@ -12,7 +12,10 @@ export default function BlogPostLoading() {
             </div>
             <div className="space-y-4">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className={`h-4 rounded bg-[var(--bg-soft)] ${i % 3 === 2 ? 'w-2/3' : 'w-full'}`} />
+                <div
+                  key={i}
+                  className={`h-4 rounded bg-[var(--bg-soft)] ${i % 3 === 2 ? 'w-2/3' : 'w-full'}`}
+                />
               ))}
             </div>
           </article>
@@ -21,7 +24,10 @@ export default function BlogPostLoading() {
           <aside className="hidden lg:block w-56 shrink-0">
             <div className="animate-pulse space-y-3">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className={`h-3 rounded bg-[var(--bg-soft)] ${i % 2 ? 'w-3/4' : 'w-full'}`} />
+                <div
+                  key={i}
+                  className={`h-3 rounded bg-[var(--bg-soft)] ${i % 2 ? 'w-3/4' : 'w-full'}`}
+                />
               ))}
             </div>
           </aside>

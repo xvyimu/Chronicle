@@ -19,7 +19,9 @@ export default function CategoriesPage() {
           <div>
             <span className="section__eyebrow">Categories</span>
             <h2 className="section__title">分类</h2>
-            <p className="section__subtitle">{categories.length} 个分类 · 按领域浏览文章</p>
+            <p className="section__subtitle">
+              {categories.length} 个分类 · 按领域浏览文章
+            </p>
           </div>
         </div>
         {categories.length === 0 ? (

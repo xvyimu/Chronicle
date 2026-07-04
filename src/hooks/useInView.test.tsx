@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import React, { useRef } from 'react';
 import { useInView, type UseInViewOptions } from './useInView';
 
@@ -47,7 +47,8 @@ class MockIntersectionObserver {
   }
 }
 
-globalThis.IntersectionObserver = MockIntersectionObserver as unknown as typeof IntersectionObserver;
+globalThis.IntersectionObserver =
+  MockIntersectionObserver as unknown as typeof IntersectionObserver;
 
 // Test component that renders a real DOM element and uses the hook
 function TestComponent({ options }: { options?: UseInViewOptions }) {
@@ -72,7 +73,9 @@ describe('useInView', () => {
 
   it('returns true after intersection fires (once: true default)', async () => {
     const { getByText } = render(<TestComponent />);
-    MockIntersectionObserver.fireIntersection(true);
+    act(() => {
+      MockIntersectionObserver.fireIntersection(true);
+    });
     await vi.waitFor(() => {
       expect(getByText('in')).toBeTruthy();
     });
@@ -80,24 +83,32 @@ describe('useInView', () => {
 
   it('does not revert to false when once is true', async () => {
     const { getByText } = render(<TestComponent options={{ once: true }} />);
-    MockIntersectionObserver.fireIntersection(true);
+    act(() => {
+      MockIntersectionObserver.fireIntersection(true);
+    });
     await vi.waitFor(() => {
       expect(getByText('in')).toBeTruthy();
     });
 
     // Element leaves viewport — should NOT revert
-    MockIntersectionObserver.fireIntersection(false);
+    act(() => {
+      MockIntersectionObserver.fireIntersection(false);
+    });
     expect(getByText('in')).toBeTruthy();
   });
 
   it('reverts to false when once is false and element leaves', async () => {
     const { getByText } = render(<TestComponent options={{ once: false }} />);
-    MockIntersectionObserver.fireIntersection(true);
+    act(() => {
+      MockIntersectionObserver.fireIntersection(true);
+    });
     await vi.waitFor(() => {
       expect(getByText('in')).toBeTruthy();
     });
 
-    MockIntersectionObserver.fireIntersection(false);
+    act(() => {
+      MockIntersectionObserver.fireIntersection(false);
+    });
     await vi.waitFor(() => {
       expect(getByText('out')).toBeTruthy();
     });

@@ -6,7 +6,9 @@ function mockMatchMedia(matches: boolean) {
   const listeners: ((e: MediaQueryListEvent) => void)[] = [];
   const mq = {
     matches,
-    addEventListener: vi.fn((_: string, cb: (e: MediaQueryListEvent) => void) => listeners.push(cb)),
+    addEventListener: vi.fn((_: string, cb: (e: MediaQueryListEvent) => void) =>
+      listeners.push(cb),
+    ),
     removeEventListener: vi.fn(),
   };
   Object.defineProperty(window, 'matchMedia', {
@@ -23,7 +25,11 @@ describe('ThemeToggle', () => {
     document.documentElement.classList.remove('dark');
     mockMatchMedia(false);
     // startViewTransition may not exist in jsdom
-    Object.defineProperty(document, 'startViewTransition', { value: undefined, configurable: true, writable: true });
+    Object.defineProperty(document, 'startViewTransition', {
+      value: undefined,
+      configurable: true,
+      writable: true,
+    });
     vi.restoreAllMocks();
   });
 

@@ -48,9 +48,10 @@ function walkDir(dir: string): string[] {
 }
 
 function getRelativePath(fullPath: string): string {
-  const staticIdx = fullPath.indexOf('.next' + '\\static') !== -1
-    ? fullPath.indexOf('.next' + '\\static')
-    : fullPath.indexOf('.next/static');
+  const staticIdx =
+    fullPath.indexOf('.next' + '\\static') !== -1
+      ? fullPath.indexOf('.next' + '\\static')
+      : fullPath.indexOf('.next/static');
   return fullPath.slice(staticIdx).replace(/\\/g, '/');
 }
 
@@ -65,10 +66,17 @@ function checkBudgets(): { passed: boolean; violations: string[] } {
 
   // Check individual file budgets
   let totalKB = 0;
-  const byPrefix = new Map<string, { files: { name: string; kb: number }[]; maxKB: number; desc: string }>();
+  const byPrefix = new Map<
+    string,
+    { files: { name: string; kb: number }[]; maxKB: number; desc: string }
+  >();
 
   for (const prefix of BUDGETS) {
-    byPrefix.set(prefix.prefix, { files: [], maxKB: prefix.maxSingleKB, desc: prefix.description });
+    byPrefix.set(prefix.prefix, {
+      files: [],
+      maxKB: prefix.maxSingleKB,
+      desc: prefix.description,
+    });
   }
 
   for (const file of files) {
@@ -77,7 +85,10 @@ function checkBudgets(): { passed: boolean; violations: string[] } {
     const sizeKB = sizeBytes / 1024;
 
     // Skip font files — they're subsetted by next/font and loaded on demand
-    const isFont = relPath.includes('/media/') || relPath.endsWith('.woff2') || relPath.endsWith('.woff');
+    const isFont =
+      relPath.includes('/media/') ||
+      relPath.endsWith('.woff2') ||
+      relPath.endsWith('.woff');
     if (!isFont) {
       totalKB += sizeKB;
     }
@@ -94,7 +105,7 @@ function checkBudgets(): { passed: boolean; violations: string[] } {
     for (const f of data.files) {
       if (f.kb > data.maxKB) {
         violations.push(
-          `[BUDGET EXCEEDED] ${f.name}: ${formatKB(f.kb)} > ${formatKB(data.maxKB)} (${data.desc})`
+          `[BUDGET EXCEEDED] ${f.name}: ${formatKB(f.kb)} > ${formatKB(data.maxKB)} (${data.desc})`,
         );
       }
     }
@@ -103,7 +114,7 @@ function checkBudgets(): { passed: boolean; violations: string[] } {
   // Check total budget
   if (totalKB > TOTAL_BUDGET_KB) {
     violations.push(
-      `[TOTAL EXCEEDED] Static output: ${formatKB(totalKB)} > ${formatKB(TOTAL_BUDGET_KB)}`
+      `[TOTAL EXCEEDED] Static output: ${formatKB(totalKB)} > ${formatKB(TOTAL_BUDGET_KB)}`,
     );
   }
 
@@ -115,7 +126,9 @@ function checkBudgets(): { passed: boolean; violations: string[] } {
     const largest = data.files.sort((a, b) => b.kb - a.kb)[0];
     if (largest) {
       const status = largest.kb > data.maxKB ? '❌' : '✅';
-      console.log(`${status} ${data.desc}: ${formatKB(prefixTotal)} (largest: ${formatKB(largest.kb)})`);
+      console.log(
+        `${status} ${data.desc}: ${formatKB(prefixTotal)} (largest: ${formatKB(largest.kb)})`,
+      );
     }
   }
   console.log('─'.repeat(60));

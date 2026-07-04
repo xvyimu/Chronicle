@@ -1,28 +1,30 @@
-import type { Metadata } from "next";
-import { Cormorant_Garamond, Noto_Sans_SC, JetBrains_Mono } from "next/font/google";
-import "./globals.css";
+import type { Metadata } from 'next';
+import { Cormorant_Garamond, Noto_Sans_SC, JetBrains_Mono } from 'next/font/google';
+import './globals.css';
 // CSS 语义模块按顺序显式 import (Tailwind v4 下 postcss-import 失效,
 // 详见 docs/specs/2026-06-29-css-import-fix-design.md)
-import "./styles/tokens.css";        // 设计令牌 (CSS 变量定义)
-import "./styles/base.css";          // 全局基础 (skip-link, header, footer)
-import "./styles/components.css";    // 通用组件 (card, button, hero 容器)
-import "./styles/blog-ui.css";       // 博客 UI (SearchBar, TOC, CodeBlock)
-import "./styles/backdrop.css";      // 背景层 (body::before/after + stage)
-import "./styles/home.css";          // 首页 (Manifesto, ReadingPath, CTA)
-import "./styles/prose.css";        // 文章排版 (.prose, code block)
-import "./styles/project-detail.css"; // 项目详情
-import "./styles/animations.css";    // 动画 (reveal, fade-in-up)
-import "./styles/responsive.css";    // 响应式断点 (最后,覆盖前面)
+import './styles/tokens.css'; // 设计令牌 (CSS 变量定义)
+import './styles/base.css'; // 全局基础 (skip-link, header, footer)
+import './styles/components.css'; // 通用组件 (card, button, hero 容器)
+import './styles/links.css'; // 收藏导航目录
+import './styles/blog-ui.css'; // 博客 UI (SearchBar, TOC, CodeBlock)
+import './styles/backdrop.css'; // 背景层 (body::before/after + stage)
+import './styles/home.css'; // 首页 (Manifesto, ReadingPath, CTA)
+import './styles/prose.css'; // 文章排版 (.prose, code block)
+import './styles/project-detail.css'; // 项目详情
+import './styles/animations.css'; // 动画 (reveal, fade-in-up)
+import './styles/responsive.css'; // 响应式断点 (最后,覆盖前面)
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SiteBackdropStage from '@/components/layout/SiteBackdropStage';
 import SiteBackdropParallax from '@/components/layout/SiteBackdropParallax';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
-import { SITE_CONFIG } from '@/lib/constants';
+import { SITE_CONFIG } from '@/lib/site';
 import { shouldRenderVercelInsights } from '@/lib/observability';
 import BackToTop from '@/components/ui/BackToTop';
 import DarkModeScript from '@/components/ui/DarkModeScript';
+import { getCspNonce } from '@/lib/csp';
 
 const notoSansSC = Noto_Sans_SC({
   subsets: ['latin'],
@@ -63,12 +65,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   const renderVercelInsights = shouldRenderVercelInsights();
+  const nonce = await getCspNonce();
 
   return (
     <html
@@ -77,16 +80,27 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        <meta name="theme-color" content="#111426" media="(prefers-color-scheme: light)" />
+        <meta
+          name="theme-color"
+          content="#111426"
+          media="(prefers-color-scheme: light)"
+        />
         <meta name="theme-color" content="#070913" media="(prefers-color-scheme: dark)" />
-        <DarkModeScript />
+        <DarkModeScript nonce={nonce} />
       </head>
-      <body className="flex min-h-full flex-col text-[var(--text)]" style={{ fontFamily: 'var(--font-noto-sans-sc), system-ui, sans-serif' }}>
+      <body
+        className="flex min-h-full flex-col text-[var(--text)]"
+        style={{ fontFamily: 'var(--font-noto-sans-sc), system-ui, sans-serif' }}
+      >
         <SiteBackdropStage />
         <SiteBackdropParallax />
-        <a href="#main-content" className="skip-link">跳到主要内容</a>
+        <a href="#main-content" className="skip-link">
+          跳到主要内容
+        </a>
         <Header />
-        <main id="main-content" className="flex-1 animate-fade-in">{children}</main>
+        <main id="main-content" className="flex-1 animate-fade-in">
+          {children}
+        </main>
         <BackToTop />
         {renderVercelInsights ? (
           <>

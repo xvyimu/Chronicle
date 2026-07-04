@@ -92,6 +92,6 @@ describe('parseFrontmatter', () => {
   it('handles quoted string values with special chars', () => {
     const raw = "---\ntitle: 'Hello: World'\ndesc: \"a 'b' c\"\n---\nBody";
     const { data } = parseFrontmatter(raw);
-    expect(data).toEqual({ title: "Hello: World", desc: "a 'b' c" });
+    expect(data).toEqual({ title: 'Hello: World', desc: "a 'b' c" });
   });
 });

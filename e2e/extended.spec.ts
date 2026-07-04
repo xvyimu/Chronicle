@@ -5,7 +5,9 @@ test.describe('作品详情页', () => {
     await page.goto('/projects');
     await page.waitForLoadState('domcontentloaded');
     // Wait for project cards to render
-    await expect(page.locator('a[href*="/projects/"]').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('a[href*="/projects/"]').first()).toBeVisible({
+      timeout: 10000,
+    });
     // Find a project detail link (not /projects itself)
     const projectLink = page.locator('a[href*="/projects/"]').first();
     const href = await projectLink.getAttribute('href');
@@ -23,7 +25,9 @@ test.describe('作品详情页', () => {
   test('作品详情页显示内容', async ({ page }) => {
     await page.goto('/projects');
     await page.waitForLoadState('domcontentloaded');
-    await expect(page.locator('a[href*="/projects/"]').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('a[href*="/projects/"]').first()).toBeVisible({
+      timeout: 10000,
+    });
     const projectLink = page.locator('a[href*="/projects/"]').first();
     const href = await projectLink.getAttribute('href');
     expect(href).toMatch(/\/projects\/[^/]+$/);
@@ -67,7 +71,9 @@ test.describe('标签详情页', () => {
     await page.goto(`/tags/${encodeURIComponent('后端')}`);
     await page.waitForLoadState('domcontentloaded');
 
-    await expect(page.getByRole('heading', { name: '标签：后端' })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('heading', { name: '标签：后端' })).toBeVisible({
+      timeout: 10000,
+    });
     await expect(page.locator('a[href*="/blog/"]').first()).toBeVisible();
   });
 });
@@ -77,7 +83,9 @@ test.describe('分类详情页', () => {
     await page.goto(`/categories/${encodeURIComponent('前端开发')}`);
     await page.waitForLoadState('domcontentloaded');
 
-    await expect(page.getByRole('heading', { name: '分类：前端开发' })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('heading', { name: '分类：前端开发' })).toBeVisible({
+      timeout: 10000,
+    });
     await expect(page.locator('a[href*="/blog/"]').first()).toBeVisible();
   });
 });
@@ -88,7 +96,9 @@ test.describe('关于页面', () => {
     await page.waitForLoadState('domcontentloaded');
 
     // Use exact match — "关于" also matches "关于西江月" as substring
-    await expect(page.getByRole('heading', { name: '关于', exact: true })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('heading', { name: '关于', exact: true })).toBeVisible({
+      timeout: 10000,
+    });
 
     // Should have meaningful content (not just empty page)
     const bodyText = await page.locator('main, article, body').first().textContent();
@@ -121,8 +131,15 @@ test.describe('RSS Feed', () => {
     const bodyText = await page.locator('body').textContent();
     const feed = JSON.parse(bodyText ?? '{}');
     expect(feed.version).toBeDefined();
+    expect(feed.feed_url).toMatch(/\/feed\.json$/);
     expect(Array.isArray(feed.items)).toBeTruthy();
     expect(feed.items.length).toBeGreaterThan(0);
+
+    const firstItem = feed.items[0];
+    expect(firstItem.date_published).toBeDefined();
+    expect(firstItem.date_modified).toBeDefined();
+    expect(Array.isArray(firstItem.tags)).toBeTruthy();
+    expect(firstItem.tags.length).toBeGreaterThan(0);
   });
 });
 
@@ -149,7 +166,7 @@ test.describe('robots.txt', () => {
     const response = await page.goto('/robots.txt');
     expect(response?.status()).toBe(200);
 
-    const bodyText = await page.locator('body').textContent() ?? '';
+    const bodyText = (await page.locator('body').textContent()) ?? '';
     // Next.js generates "User-Agent" (capital A)
     expect(bodyText.toLowerCase()).toContain('user-agent');
     expect(bodyText.toLowerCase()).toContain('allow');

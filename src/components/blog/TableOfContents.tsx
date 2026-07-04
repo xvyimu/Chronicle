@@ -13,7 +13,8 @@ export default function TableOfContents() {
   const [activeId, setActiveId] = useState<string>('');
 
   useEffect(() => {
-    const article = document.getElementById('article-content') ?? document.querySelector('article');
+    const article =
+      document.getElementById('article-content') ?? document.querySelector('article');
     if (!article) return;
 
     const headings = article.querySelectorAll('h2, h3');
@@ -33,7 +34,7 @@ export default function TableOfContents() {
           }
         }
       },
-      { rootMargin: '-80px 0px -80% 0px' }
+      { rootMargin: '-80px 0px -80% 0px' },
     );
 
     headings.forEach((h) => observer.observe(h));

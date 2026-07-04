@@ -7,21 +7,28 @@
     "build": "tsx scripts/generate-rss.ts && next build",
     "start": "next start",
     "lint": "eslint",
+    "format": "prettier --write \"src/**/*.{ts,tsx,mjs,mts,css}\" \"scripts/**/*.{ts,mjs}\" \"e2e/**/*.ts\" \"*.{ts,mjs,mts,js}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,mjs,mts,css}\" \"scripts/**/*.{ts,mjs}\" \"e2e/**/*.ts\" \"*.{ts,mjs,mts,js}\"",
+    "typecheck": "tsc --noEmit",
     "check:seo": "tsx scripts/check-seo.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "node scripts/run-e2e.mjs",
     "test:e2e:raw": "playwright test",
-    "analyze": "ANALYZE=true next build"
+    "analyze": "cross-env ANALYZE=true next build",
+    "prepare": "husky"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "feed": "^5.2.1",
     "fuse.js": "^7.4.2",
     "js-yaml": "4.2.0",
     "next": "16.2.9",
     "next-mdx-remote": "^6.0.0",
+    "radix-ui": "^1.6.1",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "reading-time": "^1.5.0",
@@ -30,11 +37,14 @@
     "rehype-slug": "^6.0.0",
     "remark-gfm": "^4.0.1",
     "shiki": "^4.2.0",
+    "tailwind-merge": "^3.6.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@next/bundle-analyzer": "^16.2.9",
     "@playwright/test": "^1.61.0",
+    "@stryker-mutator/core": "^9.6.1",
+    "@stryker-mutator/vitest-runner": "^9.6.1",
     "@tailwindcss/postcss": "^4",
     "@tailwindcss/typography": "^0.5.20",
     "@testing-library/jest-dom": "^6.9.1",
@@ -43,15 +53,30 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/ui": "^4.1.9",
+    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "husky": "^9.1.7",
     "jsdom": "^29.1.1",
+    "lint-staged": "^17.0.8",
     "playwright": "1.61.0",
     "postcss-import": "^16.1.1",
+    "prettier": "^3.9.3",
     "tailwindcss": "^4",
     "tsx": "^4",
     "typescript": "^5",
     "vitest": "^4.1.9"
   },
-  "packageManager": "pnpm@11.8.0+sha512.c1f5e7c4cb241c8f174b743851d82f42b802324afc8b0f116b96adb15aa06664948dde36960a3ba1079ba5b4b29dd0140135b94b5b5f5263592249d68e555f26"
+  "packageManager": "pnpm@11.8.0+sha512.c1f5e7c4cb241c8f174b743851d82f42b802324afc8b0f116b96adb15aa06664948dde36960a3ba1079ba5b4b29dd0140135b94b5b5f5263592249d68e555f26",
+  "lint-staged": {
+    "*.{ts,tsx,mjs,mts}": [
+      "eslint --fix"
+    ],
+    "*.{ts,tsx,mjs,mts,css,json,md}": [
+      "prettier --write"
+    ]
+  }
 }

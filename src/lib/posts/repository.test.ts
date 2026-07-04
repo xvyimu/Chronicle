@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createPostRepository } from './repository';
 import { resetAllCaches } from '@/lib/cache';
 import { createInMemorySource } from '@/lib/test-utils/in-memory-source';
-import { CONTENT_DIR } from '@/lib/constants';
+import { CONTENT_DIR } from '@/lib/content-dirs';
 
 const BLOG = CONTENT_DIR.blog; // 'content/blog'
 
@@ -99,15 +99,17 @@ describe('createPostRepository', () => {
     });
 
     it('applies zod defaults (published=true, featured=false, tags=[])', () => {
-      const repo = createPostRepository(createInMemorySource({
-        [`${BLOG}/2026-06-min.mdx`]: `---
+      const repo = createPostRepository(
+        createInMemorySource({
+          [`${BLOG}/2026-06-min.mdx`]: `---
 title: Minimal
 description: Min
 date: '2026-06-15'
 ---
 
 Body`,
-      }));
+        }),
+      );
       const post = repo.getPostBySlug('min');
       expect(post?.published).toBe(true);
       expect(post?.featured).toBe(false);
@@ -162,8 +164,9 @@ Body`,
     });
 
     it('preserves optional source and license metadata', () => {
-      const repo = createPostRepository(createInMemorySource({
-        [`${BLOG}/2026-06-attributed.mdx`]: `---
+      const repo = createPostRepository(
+        createInMemorySource({
+          [`${BLOG}/2026-06-attributed.mdx`]: `---
 title: Attributed
 description: Has source and license
 date: '2026-06-15'
@@ -173,35 +176,40 @@ license: MIT
 ---
 
 Body`,
-      }));
+        }),
+      );
       const post = repo.getPostBySlug('attributed');
       expect(post?.source).toBe('https://github.com/example/repo');
       expect(post?.license).toBe('MIT');
     });
 
     it('throws on invalid frontmatter', () => {
-      const repo = createPostRepository(createInMemorySource({
-        [`${BLOG}/2026-06-bad.mdx`]: `---
+      const repo = createPostRepository(
+        createInMemorySource({
+          [`${BLOG}/2026-06-bad.mdx`]: `---
 title: ""
 description: missing title
 date: '2026-06-15'
 ---
 
 Body`,
-      }));
+        }),
+      );
       expect(() => repo.getAllPosts()).toThrow(/内容校验失败/);
     });
 
     it('throws on malformed date', () => {
-      const repo = createPostRepository(createInMemorySource({
-        [`${BLOG}/2026-06-bad-date.mdx`]: `---
+      const repo = createPostRepository(
+        createInMemorySource({
+          [`${BLOG}/2026-06-bad-date.mdx`]: `---
 title: Bad Date
 description: invalid date format
 date: "June 15, 2026"
 ---
 
 Body`,
-      }));
+        }),
+      );
       expect(() => repo.getAllPosts()).toThrow(/date/);
     });
   });
@@ -223,15 +231,17 @@ Body`,
     });
 
     it('returns empty array when no featured posts', () => {
-      const repo = createPostRepository(createInMemorySource({
-        [`${BLOG}/2026-06-plain.mdx`]: `---
+      const repo = createPostRepository(
+        createInMemorySource({
+          [`${BLOG}/2026-06-plain.mdx`]: `---
 title: Plain
 description: not featured
 date: '2026-06-15'
 ---
 
 Body`,
-      }));
+        }),
+      );
       expect(repo.getFeaturedPosts()).toEqual([]);
     });
   });
@@ -248,15 +258,17 @@ Body`,
 
     it('isolates between different repository instances', () => {
       const repo1 = createPostRepository(createInMemorySource(makeFixture()));
-      const repo2 = createPostRepository(createInMemorySource({
-        [`${BLOG}/2026-06-other.mdx`]: `---
+      const repo2 = createPostRepository(
+        createInMemorySource({
+          [`${BLOG}/2026-06-other.mdx`]: `---
 title: Other
 description: different fixture
 date: '2026-06-15'
 ---
 
 Body`,
-      }));
+        }),
+      );
       expect(repo1.getAllPosts().map((p) => p.title)).not.toContain('Other');
       expect(repo2.getAllPosts().map((p) => p.title)).toContain('Other');
     });

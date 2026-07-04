@@ -1,17 +1,20 @@
 import Link from 'next/link';
 import { getAllPosts } from '@/lib/posts';
 import { getFeaturedProjects } from '@/lib/projects';
-import { linkCategories } from '@/lib/links';
+import { getAllLinkCategories } from '@/lib/links';
 import { slugifyTag } from '@/lib/utils';
 import { organizationSchema, websiteSchema, toJsonLd } from '@/lib/jsonld';
 import ProjectCard from '@/components/projects/ProjectCard';
 import EditorialHero from '@/components/home/EditorialHero';
 import ManifestoSection from '@/components/home/ManifestoSection';
-import ReadingPathSection, { ReadingPathItem } from '@/components/home/ReadingPathSection';
+import ReadingPathSection, {
+  ReadingPathItem,
+} from '@/components/home/ReadingPathSection';
 import FeaturedArticleRail from '@/components/home/FeaturedArticleRail';
 import CuratedLinksPreview from '@/components/home/CuratedLinksPreview';
 import HomeCtaSection from '@/components/home/HomeCtaSection';
 import RevealOnScroll from '@/components/home/RevealOnScroll';
+import { getCspNonce } from '@/lib/csp';
 
 const homeLinkCategoryIds = ['ai', 'engineering-docs', 'self-hosted', 'vps'];
 
@@ -48,13 +51,14 @@ function buildReadingPaths(): ReadingPathItem[] {
   ];
 }
 
-export default function HomePage() {
+export default async function HomePage() {
   const allPosts = getAllPosts();
   const featuredArticlePosts = [
     ...allPosts.filter((post) => post.featured),
     ...allPosts.filter((post) => !post.featured),
   ].slice(0, 6);
   const featuredProjects = getFeaturedProjects();
+  const linkCategories = getAllLinkCategories();
   const previewLinkCategories = homeLinkCategoryIds
     .map((id) => linkCategories.find((category) => category.id === id))
     .filter((category): category is NonNullable<typeof category> => Boolean(category));
@@ -62,15 +66,21 @@ export default function HomePage() {
 
   const orgLd = toJsonLd(organizationSchema());
   const siteLd = toJsonLd(websiteSchema());
+  const nonce = await getCspNonce();
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: orgLd }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: siteLd }} />
-      <EditorialHero
-        postCount={allPosts.length}
-        projectCount={featuredProjects.length}
+      <script
+        nonce={nonce}
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: orgLd }}
       />
+      <script
+        nonce={nonce}
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: siteLd }}
+      />
+      <EditorialHero postCount={allPosts.length} projectCount={featuredProjects.length} />
 
       <ManifestoSection />
 
@@ -94,12 +104,23 @@ export default function HomePage() {
               <div>
                 <span className="section__eyebrow">Projects</span>
                 <h2 className="section__title">作品验证场</h2>
-                <p className="section__subtitle">把文章里的做法落到真实项目里，留下可以继续迭代的样本。</p>
+                <p className="section__subtitle">
+                  把文章里的做法落到真实项目里，留下可以继续迭代的样本。
+                </p>
               </div>
               <div className="section__action">
                 <Link href="/projects" className="section__link">
                   查看全部
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <path d="M5 12h14M12 5l7 7-7 7" />
                   </svg>
                 </Link>

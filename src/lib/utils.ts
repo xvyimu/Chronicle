@@ -1,3 +1,10 @@
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+export function cn(...classes: ClassValue[]): string {
+  return twMerge(clsx(classes));
+}
+
 /**
  * 标签 slug 化：转小写、空格转连字符、去除非字母数字字符
  */
@@ -5,7 +12,7 @@ export function slugifyTag(tag: string): string {
   const result = tag
     .trim()
     .toLowerCase()
-    .replace(/\./g, '-')        // "Next.js" → "next-js"
+    .replace(/\./g, '-') // "Next.js" → "next-js"
     .replace(/[^\p{L}\p{N}\s-]/gu, '') // 去除特殊字符
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')

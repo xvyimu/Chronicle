@@ -3,7 +3,7 @@ import BlogList from '@/components/blog/BlogList';
 import SearchBar from '@/components/blog/SearchBar';
 import Pagination from '@/components/blog/Pagination';
 import { getPaginatedPosts, getAllPosts } from '@/lib/posts';
-import { PAGE_SIZE } from '@/lib/constants';
+import { PAGE_SIZE } from '@/lib/content-dirs';
 import { buildPageMetadata } from '@/lib/metadata';
 
 export const metadata: Metadata = buildPageMetadata({
@@ -12,9 +12,25 @@ export const metadata: Metadata = buildPageMetadata({
   path: '/blog',
 });
 
-export default function BlogPage() {
+type BlogPageSearchParams = {
+  page?: string | string[];
+};
+
+function parsePageParam(rawPage: BlogPageSearchParams['page']): number {
+  const value = Array.isArray(rawPage) ? rawPage[0] : rawPage;
+  if (!value) return 1;
+  const page = Number(value);
+  return Number.isFinite(page) ? page : 1;
+}
+
+export default async function BlogPage({
+  searchParams,
+}: {
+  searchParams?: Promise<BlogPageSearchParams>;
+} = {}) {
+  const requestedPage = parsePageParam((await searchParams)?.page);
   const allPosts = getAllPosts();
-  const { posts, totalPages, currentPage } = getPaginatedPosts(1, PAGE_SIZE);
+  const { posts, totalPages, currentPage } = getPaginatedPosts(requestedPage, PAGE_SIZE);
 
   return (
     <section className="section">
@@ -23,7 +39,9 @@ export default function BlogPage() {
           <div>
             <span className="section__eyebrow">Blog</span>
             <h2 className="section__title">博客</h2>
-            <p className="section__subtitle">{totalPages > 0 ? `共 ${allPosts.length} 篇` : ''}</p>
+            <p className="section__subtitle">
+              {totalPages > 0 ? `共 ${allPosts.length} 篇` : ''}
+            </p>
           </div>
         </div>
         <SearchBar posts={allPosts} />

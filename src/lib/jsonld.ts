@@ -1,4 +1,4 @@
-import { SITE_CONFIG } from './constants';
+import { SITE_CONFIG } from './site';
 import type { PostMeta } from '@/types';
 
 /**

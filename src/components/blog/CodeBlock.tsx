@@ -59,7 +59,9 @@ export default function CodeBlock({ children, ...props }: PreProps) {
           <span className="code-block-lang">{language}</span>
         </div>
       )}
-      <pre ref={preRef} {...props}>{children}</pre>
+      <pre ref={preRef} {...props}>
+        {children}
+      </pre>
       <button className="copy-btn" onClick={handleCopy} type="button">
         {copied ? '已复制 ✓' : '复制'}
       </button>

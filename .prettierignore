@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build output
+.next/
+out/
+build/
+
+# Generated
+public/feed.xml
+public/feed.json
+html/
+test-results/
+stryker-report/
+.stryker-tmp/
+tmp/
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+*.log
+coverage/
+project-diagnostic-report/

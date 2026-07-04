@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import { linkCategories } from '@/lib/links';
+import { LinksDirectory } from '@/components/links/LinksDirectory';
+import { getAllLinkCategories } from '@/lib/links';
 import { buildPageMetadata } from '@/lib/metadata';
 
 export const metadata: Metadata = buildPageMetadata({
@@ -9,6 +10,8 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 export default function LinksPage() {
+  const linkCategories = getAllLinkCategories();
+
   return (
     <section className="section">
       <div className="section__inner">
@@ -22,39 +25,7 @@ export default function LinksPage() {
           </div>
         </div>
 
-        <div className="mx-auto space-y-16" style={{ maxWidth: 960 }}>
-          {linkCategories.map((category) => (
-            <section key={category.id}>
-              <div className="mb-8">
-                <h3 className="text-2xl font-semibold text-[var(--text)]">
-                  {category.title}
-                </h3>
-                <p className="mt-2 text-[var(--text-soft)]">
-                  {category.description}
-                </p>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {category.items.map((item) => (
-                  <a
-                    key={item.title}
-                    href={item.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group block rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] p-5 transition-all duration-200 hover:-translate-y-1 hover:border-[var(--brand)] hover:shadow-[var(--shadow-md)]"
-                  >
-                    <h4 className="font-medium text-[var(--text)] transition-colors group-hover:text-[var(--brand)]">
-                      {item.title}
-                    </h4>
-                    <p className="mt-2 text-sm leading-relaxed text-[var(--text-dim)]">
-                      {item.description}
-                    </p>
-                  </a>
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
+        <LinksDirectory categories={linkCategories} />
       </div>
     </section>
   );

@@ -24,9 +24,7 @@ export function createInMemorySource(files: InMemoryFiles): ContentSource {
     },
 
     readDir(relativePath: string): string[] | null {
-      const prefix = relativePath.endsWith('/')
-        ? relativePath
-        : `${relativePath}/`;
+      const prefix = relativePath.endsWith('/') ? relativePath : `${relativePath}/`;
       const entries = new Set<string>();
       for (const filePath of Object.keys(files)) {
         if (!filePath.startsWith(prefix)) continue;
@@ -47,9 +45,7 @@ export function createInMemorySource(files: InMemoryFiles): ContentSource {
       // 直接文件存在?
       if (files[relativePath] !== undefined) return 0;
       // 目录存在 (任一文件以 path/ 为前缀)?
-      const prefix = relativePath.endsWith('/')
-        ? relativePath
-        : `${relativePath}/`;
+      const prefix = relativePath.endsWith('/') ? relativePath : `${relativePath}/`;
       for (const filePath of Object.keys(files)) {
         if (filePath.startsWith(prefix)) return 0;
       }
@@ -106,6 +102,9 @@ export function mdxWithBody(parts: TemplateStringsArray, ...values: unknown[]): 
     return `---\n${combined.trimEnd()}\n---\n`;
   }
   const frontmatter = lines.slice(0, closingIdx).join('\n').trimEnd();
-  const body = lines.slice(closingIdx + 1).join('\n').trimStart();
+  const body = lines
+    .slice(closingIdx + 1)
+    .join('\n')
+    .trimStart();
   return `---\n${frontmatter}\n---\n${body}`;
 }

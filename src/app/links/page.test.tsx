@@ -1,13 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
-import { linkCategories } from '@/lib/links';
+import { getAllLinkCategories } from '@/lib/links';
 
 vi.mock('next/link', () => ({
   default: ({
     href,
     children,
     ...props
-  }: { href: string; children: React.ReactNode } & React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+  }: {
+    href: string;
+    children: React.ReactNode;
+  } & React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
     <a href={href} {...props}>
       {children}
     </a>
@@ -26,23 +29,37 @@ describe('LinksPage', () => {
 
   it('renders all category titles', () => {
     render(<LinksPage />);
-    for (const cat of linkCategories) {
-      expect(screen.getByText(cat.title)).toBeInTheDocument();
+    for (const cat of getAllLinkCategories()) {
+      expect(screen.getAllByText(cat.title).length).toBeGreaterThan(0);
     }
+  });
+
+  it('renders category navigation, counts, and item hosts', () => {
+    render(<LinksPage />);
+    const categories = getAllLinkCategories();
+    const totalItems = categories.reduce((sum, cat) => sum + cat.items.length, 0);
+    const firstHost = new URL(categories[0].items[0].url).hostname.replace(/^www\./, '');
+
+    expect(screen.getByRole('navigation', { name: '链接分类' })).toBeInTheDocument();
+    expect(
+      screen.getAllByText(`${categories[0].items.length} 个站点`).length,
+    ).toBeGreaterThan(0);
+    expect(screen.getByText(String(totalItems))).toBeInTheDocument();
+    expect(screen.getByText(firstHost)).toBeInTheDocument();
   });
 
   it('renders all link items', () => {
     render(<LinksPage />);
-    for (const cat of linkCategories) {
+    for (const cat of getAllLinkCategories()) {
       for (const item of cat.items) {
-        expect(screen.getByText(item.title)).toBeInTheDocument();
+        expect(screen.getAllByText(item.title).length).toBeGreaterThan(0);
       }
     }
   });
 
   it('renders link descriptions', () => {
     render(<LinksPage />);
-    for (const cat of linkCategories) {
+    for (const cat of getAllLinkCategories()) {
       for (const item of cat.items) {
         expect(screen.getByText(item.description)).toBeInTheDocument();
       }
@@ -51,10 +68,8 @@ describe('LinksPage', () => {
 
   it('renders external links with target="_blank"', () => {
     render(<LinksPage />);
-    const allLinks = document.querySelectorAll<HTMLAnchorElement>(
-      'a[target="_blank"]',
-    );
-    const totalItems = linkCategories.reduce(
+    const allLinks = document.querySelectorAll<HTMLAnchorElement>('a[target="_blank"]');
+    const totalItems = getAllLinkCategories().reduce(
       (sum, cat) => sum + cat.items.length,
       0,
     );
@@ -62,12 +77,13 @@ describe('LinksPage', () => {
   });
 
   it('keeps curated links unique and free of tracking parameters', () => {
-    const urls = linkCategories.flatMap((cat) =>
-      cat.items.map((item) => item.url),
-    );
-    const trackingParamPattern =
-      /[?&](aff|ref|referral|utm_[^=]+|coupon|partner)=/i;
+    const categories = getAllLinkCategories();
+    const urls = categories.flatMap((cat) => cat.items.map((item) => item.url));
+    const trackingParamPattern = /[?&](aff|ref|referral|utm_[^=]+|coupon|partner)=/i;
+    const totalItems = categories.reduce((sum, cat) => sum + cat.items.length, 0);
 
+    expect(categories).toHaveLength(9);
+    expect(totalItems).toBe(111);
     expect(new Set(urls).size).toBe(urls.length);
     expect(urls).not.toEqual(
       expect.arrayContaining([expect.stringMatching(trackingParamPattern)]),
@@ -75,35 +91,25 @@ describe('LinksPage', () => {
   });
 
   it('includes the engineering docs, self-hosted, and VPS collections', () => {
-    expect(linkCategories.some((cat) => cat.id === 'engineering-docs')).toBe(
+    expect(getAllLinkCategories().some((cat) => cat.id === 'engineering-docs')).toBe(
       true,
     );
-    expect(linkCategories.some((cat) => cat.id === 'self-hosted')).toBe(true);
-    expect(linkCategories.some((cat) => cat.id === 'vps')).toBe(true);
+    expect(getAllLinkCategories().some((cat) => cat.id === 'self-hosted')).toBe(true);
+    expect(getAllLinkCategories().some((cat) => cat.id === 'vps')).toBe(true);
   });
 
   it('keeps the curated self-hosted and reliability links available', () => {
     const linksByTitle = new Map(
-      linkCategories
+      getAllLinkCategories()
         .flatMap((cat) => cat.items)
         .map((item) => [item.title, item.url]),
     );
 
-    expect(linksByTitle.get('Google SRE Books')).toBe(
-      'https://sre.google/books/',
-    );
-    expect(linksByTitle.get('The Twelve-Factor App')).toBe(
-      'https://12factor.net/',
-    );
+    expect(linksByTitle.get('Google SRE Books')).toBe('https://sre.google/books/');
+    expect(linksByTitle.get('The Twelve-Factor App')).toBe('https://12factor.net/');
     expect(linksByTitle.get('Coolify')).toBe('https://coolify.io/');
-    expect(linksByTitle.get('Uptime Kuma')).toBe(
-      'https://uptime.kuma.pet/',
-    );
-    expect(linksByTitle.get('PageSpeed Insights')).toBe(
-      'https://pagespeed.web.dev/',
-    );
-    expect(linksByTitle.get('SSL Labs')).toBe(
-      'https://www.ssllabs.com/ssltest/',
-    );
+    expect(linksByTitle.get('Uptime Kuma')).toBe('https://uptime.kuma.pet/');
+    expect(linksByTitle.get('PageSpeed Insights')).toBe('https://pagespeed.web.dev/');
+    expect(linksByTitle.get('SSL Labs')).toBe('https://www.ssllabs.com/ssltest/');
   });
 });

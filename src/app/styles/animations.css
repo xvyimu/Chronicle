@@ -3,7 +3,9 @@
 .reveal-on-scroll {
   opacity: 0;
   transform: translateY(24px);
-  transition: opacity 0.5s var(--ease-out), transform 0.5s var(--ease-out);
+  transition:
+    opacity 0.5s var(--ease-out),
+    transform 0.5s var(--ease-out);
   transition-delay: var(--reveal-delay, 0ms);
 }
 .reveal-on-scroll.is-visible {
@@ -15,16 +17,34 @@
 .reveal-on-scroll.is-visible > * {
   animation: reveal-stagger-in 0.35s var(--ease-out) both;
 }
-.reveal-on-scroll.is-visible > *:nth-child(1) { animation-delay: 60ms; }
-.reveal-on-scroll.is-visible > *:nth-child(2) { animation-delay: 120ms; }
-.reveal-on-scroll.is-visible > *:nth-child(3) { animation-delay: 180ms; }
-.reveal-on-scroll.is-visible > *:nth-child(4) { animation-delay: 240ms; }
-.reveal-on-scroll.is-visible > *:nth-child(5) { animation-delay: 300ms; }
-.reveal-on-scroll.is-visible > *:nth-child(6) { animation-delay: 360ms; }
+.reveal-on-scroll.is-visible > *:nth-child(1) {
+  animation-delay: 60ms;
+}
+.reveal-on-scroll.is-visible > *:nth-child(2) {
+  animation-delay: 120ms;
+}
+.reveal-on-scroll.is-visible > *:nth-child(3) {
+  animation-delay: 180ms;
+}
+.reveal-on-scroll.is-visible > *:nth-child(4) {
+  animation-delay: 240ms;
+}
+.reveal-on-scroll.is-visible > *:nth-child(5) {
+  animation-delay: 300ms;
+}
+.reveal-on-scroll.is-visible > *:nth-child(6) {
+  animation-delay: 360ms;
+}
 
 @keyframes reveal-stagger-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Respect reduced motion — global rule already kills animations,
@@ -42,8 +62,14 @@
 
 /* ---------- Page Transitions ---------- */
 @keyframes fade-in-up {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .animate-fade-in {
   animation: fade-in-up 0.4s var(--ease-out) both;
@@ -126,9 +152,16 @@
 }
 
 @keyframes loading-intro-bar {
-  0%   { transform: scaleX(0); }
-  50%  { transform: scaleX(1); }
-  100% { transform: scaleX(0); transform-origin: right; }
+  0% {
+    transform: scaleX(0);
+  }
+  50% {
+    transform: scaleX(1);
+  }
+  100% {
+    transform: scaleX(0);
+    transform-origin: right;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

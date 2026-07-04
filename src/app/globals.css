@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 @plugin "@tailwindcss/typography";
 
 /* 语义模块通过 layout.tsx 显式 import 加载 (postcss-import 在 Tailwind v4

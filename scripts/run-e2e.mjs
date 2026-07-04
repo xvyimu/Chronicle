@@ -10,7 +10,10 @@ const forwardedArgs = process.argv.slice(2);
 const requireFromHere = createRequire(import.meta.url);
 
 function packageFile(packageName, filename) {
-  return path.join(path.dirname(requireFromHere.resolve(`${packageName}/package.json`)), filename);
+  return path.join(
+    path.dirname(requireFromHere.resolve(`${packageName}/package.json`)),
+    filename,
+  );
 }
 
 function delay(ms) {
@@ -48,9 +51,13 @@ async function stopProcessTree(child) {
 
   if (isWindows) {
     await new Promise((resolve) => {
-      const killer = spawn('C:\\Windows\\System32\\taskkill.exe', ['/pid', String(child.pid), '/t', '/f'], {
-        stdio: 'ignore',
-      });
+      const killer = spawn(
+        'C:\\Windows\\System32\\taskkill.exe',
+        ['/pid', String(child.pid), '/t', '/f'],
+        {
+          stdio: 'ignore',
+        },
+      );
       killer.once('exit', () => resolve());
       killer.once('error', () => resolve());
     });
@@ -71,7 +78,12 @@ async function stopProcessTree(child) {
 async function main() {
   const nextBin = packageFile('next', path.join('dist', 'bin', 'next'));
   const playwrightCli = packageFile('playwright', 'cli.js');
-  const server = spawnManaged(process.execPath, [nextBin, isCI ? 'start' : 'dev', '--port', String(PORT)]);
+  const server = spawnManaged(process.execPath, [
+    nextBin,
+    isCI ? 'start' : 'dev',
+    '--port',
+    String(PORT),
+  ]);
 
   const shutdown = async (exitCode) => {
     await stopProcessTree(server);
@@ -88,11 +100,15 @@ async function main() {
   let exitCode = 0;
   try {
     await waitForServer();
-    const result = spawnSync(process.execPath, [playwrightCli, 'test', ...forwardedArgs], {
-      cwd: process.cwd(),
-      env: { ...process.env, PLAYWRIGHT_SKIP_WEB_SERVER: '1' },
-      stdio: 'inherit',
-    });
+    const result = spawnSync(
+      process.execPath,
+      [playwrightCli, 'test', ...forwardedArgs],
+      {
+        cwd: process.cwd(),
+        env: { ...process.env, PLAYWRIGHT_SKIP_WEB_SERVER: '1' },
+        stdio: 'inherit',
+      },
+    );
     if (result.error) throw result.error;
     exitCode = result.status ?? (result.signal ? 1 : 0);
   } finally {

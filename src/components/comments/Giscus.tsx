@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { SITE_CONFIG } from '@/lib/constants';
+import { SITE_CONFIG } from '@/lib/site';
 import { useInView } from '@/hooks/useInView';
 
 interface GiscusProps {
@@ -62,7 +62,16 @@ export default function Giscus({
     });
 
     container.appendChild(script);
-  }, [visible, repoId, category, categoryId, mapping, reactionsEnabled, inputPosition, lang]);
+  }, [
+    visible,
+    repoId,
+    category,
+    categoryId,
+    mapping,
+    reactionsEnabled,
+    inputPosition,
+    lang,
+  ]);
 
   // Sync theme with giscus when site theme changes
   useEffect(() => {
@@ -75,7 +84,7 @@ export default function Giscus({
       if (iframe?.contentWindow) {
         iframe.contentWindow.postMessage(
           { giscus: { setConfig: { theme: giscusTheme } } },
-          'https://giscus.app'
+          'https://giscus.app',
         );
       }
     };
@@ -98,7 +107,9 @@ export default function Giscus({
         const onLoad = () => sendTheme();
         iframe.addEventListener('load', onLoad);
         sendTheme();
-        return () => { iframe.removeEventListener('load', onLoad); };
+        return () => {
+          iframe.removeEventListener('load', onLoad);
+        };
       } else {
         const bodyObserver = new MutationObserver(() => {
           const iframe = document.querySelector<HTMLIFrameElement>('iframe.giscus-frame');
@@ -111,7 +122,10 @@ export default function Giscus({
         });
         bodyObserver.observe(document.body, { childList: true, subtree: true });
         const timeout = setTimeout(() => bodyObserver.disconnect(), 10000);
-        return () => { clearTimeout(timeout); bodyObserver.disconnect(); };
+        return () => {
+          clearTimeout(timeout);
+          bodyObserver.disconnect();
+        };
       }
     };
 

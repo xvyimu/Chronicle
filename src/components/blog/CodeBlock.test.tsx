@@ -12,7 +12,7 @@ describe('CodeBlock', () => {
     render(
       <CodeBlock>
         <code>const x = 42;</code>
-      </CodeBlock>
+      </CodeBlock>,
     );
     expect(screen.getByText('const x = 42;')).toBeInTheDocument();
   });
@@ -21,7 +21,7 @@ describe('CodeBlock', () => {
     const { container } = render(
       <CodeBlock>
         <code>hello</code>
-      </CodeBlock>
+      </CodeBlock>,
     );
     expect(container.querySelector('.code-toolbar')).toBeInTheDocument();
     expect(container.querySelector('.code-toolbar pre')).toBeInTheDocument();
@@ -31,7 +31,7 @@ describe('CodeBlock', () => {
     render(
       <CodeBlock>
         <code>test</code>
-      </CodeBlock>
+      </CodeBlock>,
     );
     expect(screen.getByRole('button', { name: '复制' })).toBeInTheDocument();
   });
@@ -43,10 +43,12 @@ describe('CodeBlock', () => {
     render(
       <CodeBlock>
         <code>console.log(&apos;hello&apos;)</code>
-      </CodeBlock>
+      </CodeBlock>,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: '复制' }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '复制' }));
+    });
     expect(writeText).toHaveBeenCalledWith("console.log('hello')");
   });
 
@@ -58,10 +60,12 @@ describe('CodeBlock', () => {
     render(
       <CodeBlock>
         <code>test</code>
-      </CodeBlock>
+      </CodeBlock>,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: '复制' }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '复制' }));
+    });
     // Wait for the promise to resolve
     await vi.waitFor(() => {
       expect(screen.getByRole('button', { name: '已复制 ✓' })).toBeInTheDocument();
@@ -83,10 +87,12 @@ describe('CodeBlock', () => {
     render(
       <CodeBlock>
         <code>test</code>
-      </CodeBlock>
+      </CodeBlock>,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: '复制' }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '复制' }));
+    });
     await vi.waitFor(() => {
       expect(screen.getByRole('button', { name: '复制' })).toBeInTheDocument();
     });
@@ -96,16 +102,18 @@ describe('CodeBlock', () => {
     const { container } = render(
       <CodeBlock data-language="typescript">
         <code>const x: number = 1;</code>
-      </CodeBlock>
+      </CodeBlock>,
     );
-    expect(container.querySelector('pre')?.getAttribute('data-language')).toBe('typescript');
+    expect(container.querySelector('pre')?.getAttribute('data-language')).toBe(
+      'typescript',
+    );
   });
 
   it('displays language label when data-language is set', () => {
     render(
       <CodeBlock data-language="typescript">
         <code>const x: number = 1;</code>
-      </CodeBlock>
+      </CodeBlock>,
     );
     expect(screen.getByText('typescript')).toBeInTheDocument();
   });
@@ -114,7 +122,7 @@ describe('CodeBlock', () => {
     const { container } = render(
       <CodeBlock>
         <code>plain text</code>
-      </CodeBlock>
+      </CodeBlock>,
     );
     expect(container.querySelector('.code-block-header')).not.toBeInTheDocument();
   });

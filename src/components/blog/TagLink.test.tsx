@@ -1,0 +1,22 @@
+import { describe, it, expect } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import TagLink from './TagLink';
+
+describe('TagLink', () => {
+  it('renders tag text', () => {
+    render(<TagLink tag="React" slug="react" />);
+    expect(screen.getByText('React')).toBeInTheDocument();
+  });
+
+  it('links to correct tag page', () => {
+    render(<TagLink tag="TypeScript" slug="typescript" />);
+    const link = screen.getByRole('link');
+    expect(link).toHaveAttribute('href', '/tags/typescript');
+  });
+
+  it('handles multi-word tag slugs', () => {
+    render(<TagLink tag="Machine Learning" slug="machine-learning" />);
+    const link = screen.getByRole('link');
+    expect(link).toHaveAttribute('href', '/tags/machine-learning');
+  });
+});

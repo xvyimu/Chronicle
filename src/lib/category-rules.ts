@@ -1,4 +1,4 @@
-import { TAG_TO_CATEGORY } from './constants';
+import { TAG_TO_CATEGORY } from './category-rules-data';
 
 export function inferCategory(tags: string[]): string | null {
   for (const tag of tags) {

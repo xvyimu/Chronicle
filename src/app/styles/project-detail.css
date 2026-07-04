@@ -10,7 +10,9 @@
   font-size: 0.85rem;
   color: var(--text-dim);
   margin-bottom: 32px;
-  transition: color var(--transition-fast), gap var(--transition-fast);
+  transition:
+    color var(--transition-fast),
+    gap var(--transition-fast);
 }
 .project-detail__back:hover {
   color: var(--brand);

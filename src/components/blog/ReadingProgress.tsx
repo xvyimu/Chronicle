@@ -30,7 +30,10 @@ export default function ReadingProgress() {
   }, []);
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[110] h-[3px] bg-transparent pointer-events-none" data-testid="reading-progress">
+    <div
+      className="fixed top-0 left-0 right-0 z-[110] h-[3px] bg-transparent pointer-events-none"
+      data-testid="reading-progress"
+    >
       <div
         ref={barRef}
         className="h-full bg-gradient-to-r from-[var(--brand)] to-[var(--brand-2)] transition-all duration-75 linear rounded-r-full"

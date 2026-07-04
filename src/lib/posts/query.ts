@@ -6,28 +6,16 @@ import type { PostMeta, PostFull } from '@/types';
  * 无 fs / cache 依赖, 易于测试.
  */
 
-/** 日期倒序排序, 同日期按 slug 升序保证确定性 */
-export function comparePostsByDate(a: PostMeta, b: PostMeta): number {
-  if (a.date < b.date) return 1;
-  if (a.date > b.date) return -1;
-  return a.slug.localeCompare(b.slug);
-}
-
-export function sortPostsByDateDesc(posts: PostMeta[]): PostMeta[] {
-  return [...posts].sort(comparePostsByDate);
-}
-
 export function filterByTag(posts: PostMeta[], tagName: string): PostMeta[] {
   return posts.filter((p) =>
     p.tags.some((t) => t.toLowerCase() === tagName.toLowerCase()),
   );
 }
 
-export function filterFeatured(posts: PostMeta[]): PostMeta[] {
-  return posts.filter((p) => p.featured);
-}
-
-export function getAdjacent(posts: PostMeta[], slug: string): {
+export function getAdjacent(
+  posts: PostMeta[],
+  slug: string,
+): {
   prev: PostMeta | null;
   next: PostMeta | null;
 } {
@@ -50,7 +38,9 @@ export function getRelated(
   return posts
     .filter((post) => post.slug !== currentSlug)
     .map((post) => {
-      const sharedTags = post.tags.filter((tag) => currentTags.has(tag.toLowerCase())).length;
+      const sharedTags = post.tags.filter((tag) =>
+        currentTags.has(tag.toLowerCase()),
+      ).length;
       const sameCategory = current.category && post.category === current.category ? 1 : 0;
       const sameSeries = current.series && post.series === current.series ? 2 : 0;
       return { post, score: sharedTags * 3 + sameCategory + sameSeries };
@@ -65,10 +55,7 @@ export function getRelated(
     .map((item) => item.post);
 }
 
-export function getSeries(
-  posts: PostMeta[],
-  current: PostFull | null,
-): PostMeta[] {
+export function getSeries(posts: PostMeta[], current: PostFull | null): PostMeta[] {
   if (!current?.series) return [];
   return posts
     .filter((post) => post.series === current.series)

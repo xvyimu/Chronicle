@@ -6,7 +6,11 @@ interface PaginationProps {
   basePath?: string;
 }
 
-export default function Pagination({ currentPage, totalPages, basePath = '/blog' }: PaginationProps) {
+export default function Pagination({
+  currentPage,
+  totalPages,
+  basePath = '/blog',
+}: PaginationProps) {
   if (totalPages <= 1) return null;
 
   return (
@@ -16,7 +20,8 @@ export default function Pagination({ currentPage, totalPages, basePath = '/blog'
           href={currentPage === 2 ? basePath : `${basePath}?page=${currentPage - 1}`}
           className="inline-flex h-9 items-center rounded-md px-3 text-sm text-[var(--text-soft)] hover:bg-[var(--bg-soft)] transition-colors"
         >
-          ← 上一页  </Link>
+          ← 上一页{' '}
+        </Link>
       )}
       {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
         const href = p === 1 ? basePath : `${basePath}?page=${p}`;
@@ -40,7 +45,8 @@ export default function Pagination({ currentPage, totalPages, basePath = '/blog'
           href={`${basePath}?page=${currentPage + 1}`}
           className="inline-flex h-9 items-center rounded-md px-3 text-sm text-[var(--text-soft)] hover:bg-[var(--bg-soft)] transition-colors"
         >
-          下一页 →  </Link>
+          下一页 →{' '}
+        </Link>
       )}
     </nav>
   );

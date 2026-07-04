@@ -24,7 +24,9 @@ function highlight(text: string, indices: readonly [number, number][]) {
     const safeStart = Math.max(start, cursor);
     if (end + 1 > safeStart) {
       segments.push(
-        <mark key={`m-${i}`} className="search-hl">{text.slice(safeStart, end + 1)}</mark>,
+        <mark key={`m-${i}`} className="search-hl">
+          {text.slice(safeStart, end + 1)}
+        </mark>,
       );
       cursor = end + 1;
     }
@@ -43,50 +45,62 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
   const router = useRouter();
 
   // Fuse.js options — stable reference for reuse
-  const fuseOptions = useMemo(() => ({
-    keys: [
-      { name: 'title', weight: 0.36 },
-      { name: 'description', weight: 0.22 },
-      { name: 'tags', weight: 0.16 },
-      { name: 'category', weight: 0.1 },
-      { name: 'series', weight: 0.08 },
-      { name: 'headings', weight: 0.05 },
-      { name: 'searchText', weight: 0.03 },
-    ],
-    threshold: 0.4,
-    ignoreLocation: true,
-    includeScore: true,
-    includeMatches: true,
-    minMatchCharLength: 2,
-  }), []);
+  const fuseOptions = useMemo(
+    () => ({
+      keys: [
+        { name: 'title', weight: 0.36 },
+        { name: 'description', weight: 0.22 },
+        { name: 'tags', weight: 0.16 },
+        { name: 'category', weight: 0.1 },
+        { name: 'series', weight: 0.08 },
+        { name: 'headings', weight: 0.05 },
+        { name: 'searchText', weight: 0.03 },
+      ],
+      threshold: 0.4,
+      ignoreLocation: true,
+      includeScore: true,
+      includeMatches: true,
+      minMatchCharLength: 2,
+    }),
+    [],
+  );
 
-  // Lazy load Fuse.js on first keystroke, rebuild index when posts change.
-  // fuseLoadedRef prevents re-importing on every keystroke without extra renders.
+  // Preload Fuse.js on mount so the first search is instant in production
+  // (the dynamic chunk would otherwise load on first keystroke, stalling the
+  // result list for several seconds). fuseLoadedRef guards against re-import.
   useEffect(() => {
-    if (!query.trim() || fuseLoadedRef.current) return;
+    if (fuseLoadedRef.current) return;
     fuseLoadedRef.current = true;
 
     let cancelled = false;
-    import('fuse.js').then(({ default: FuseLib }) => {
-      if (cancelled) return;
-      setFuse(new FuseLib(posts, fuseOptions));
-    }).catch((err) => {
-      console.error('Fuse.js 加载失败', err);
-    });
-    return () => { cancelled = true; };
-  }, [query, posts, fuseOptions]);
+    import('fuse.js')
+      .then(({ default: FuseLib }) => {
+        if (cancelled) return;
+        setFuse(new FuseLib(posts, fuseOptions));
+      })
+      .catch((err) => {
+        console.error('Fuse.js 加载失败', err);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [posts, fuseOptions]);
 
   // Rebuild index when posts array reference changes (ISR revalidation)
   useEffect(() => {
     if (!fuseLoadedRef.current) return;
     let cancelled = false;
-    import('fuse.js').then(({ default: FuseLib }) => {
-      if (cancelled) return;
-      setFuse(new FuseLib(posts, fuseOptions));
-    }).catch((err) => {
-      console.error('Fuse.js 加载失败', err);
-    });
-    return () => { cancelled = true; };
+    import('fuse.js')
+      .then(({ default: FuseLib }) => {
+        if (cancelled) return;
+        setFuse(new FuseLib(posts, fuseOptions));
+      })
+      .catch((err) => {
+        console.error('Fuse.js 加载失败', err);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [posts, fuseOptions]);
 
   const results = useMemo(() => {
@@ -104,7 +118,8 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       const el = document.activeElement as HTMLElement | null;
-      const editable = el?.tagName === 'INPUT' || el?.tagName === 'TEXTAREA' || el?.isContentEditable;
+      const editable =
+        el?.tagName === 'INPUT' || el?.tagName === 'TEXTAREA' || el?.isContentEditable;
       // Ctrl/Cmd+K — global summon, works even from inside other inputs
       if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
         e.preventDefault();
@@ -188,7 +203,9 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
           aria-expanded={query.trim().length > 0}
           aria-controls="search-results"
           aria-autocomplete="list"
-          aria-activedescendant={activeIndex >= 0 ? `search-result-${activeIndex}` : undefined}
+          aria-activedescendant={
+            activeIndex >= 0 ? `search-result-${activeIndex}` : undefined
+          }
           style={{ fontFamily: 'inherit' }}
           onFocus={(e) => {
             e.currentTarget.style.borderColor = 'var(--brand)';
@@ -203,10 +220,22 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
           <button
             type="button"
             className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-dim)] hover:text-[var(--text)] transition-colors"
-            onClick={() => { setQuery(''); setActiveIndex(-1); }}
+            onClick={() => {
+              setQuery('');
+              setActiveIndex(-1);
+            }}
             aria-label="清除搜索"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M18 6L6 18M6 6l12 12" />
             </svg>
           </button>
@@ -227,7 +256,9 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
             ) : (
               <>
                 搜索 &ldquo;{query}&rdquo;，找到 {results.length} 篇
-                {results.length > 0 && <span className="ml-2 opacity-60">↑↓ 导航 · Enter 打开 · Esc 关闭</span>}
+                {results.length > 0 && (
+                  <span className="ml-2 opacity-60">↑↓ 导航 · Enter 打开 · Esc 关闭</span>
+                )}
               </>
             )}
           </p>
@@ -235,36 +266,36 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
             results.map(({ item: post, matches }, i) => {
               const titleMatch = (matches as FuseMatch[]).find((m) => m.key === 'title');
               return (
-              <Link
-                key={post.slug}
-                href={`/blog/${post.slug}`}
-                data-result="true"
-                id={`search-result-${i}`}
-                role="option"
-                aria-selected={i === activeIndex}
-                className={`block px-4 py-3 transition-colors ${
-                  i === activeIndex
-                    ? 'bg-[var(--brand-soft)] border-l-2 border-l-[var(--brand)]'
-                    : 'border-l-2 border-l-transparent hover:bg-[var(--bg-soft)]'
-                }`}
-              >
-                <div className="flex items-center gap-2 text-xs text-[var(--text-dim)] mb-0.5">
-                  <time dateTime={post.date}>{post.date}</time>
-                  {post.category && (
-                    <span>{post.category}</span>
-                  )}
-                  {post.series && (
-                    <span>{post.series}</span>
-                  )}
-                  {post.featured && (
-                    <span className="text-[var(--brand)] font-semibold text-[10px]">精选</span>
-                  )}
-                </div>
-                <h4 className="font-semibold text-sm">
-                  {titleMatch ? highlight(post.title, titleMatch.indices) : post.title}
-                </h4>
-                <p className="text-xs text-[var(--text-dim)] line-clamp-1 mt-0.5">{post.excerpt || post.description}</p>
-              </Link>
+                <Link
+                  key={post.slug}
+                  href={`/blog/${post.slug}`}
+                  data-result="true"
+                  id={`search-result-${i}`}
+                  role="option"
+                  aria-selected={i === activeIndex}
+                  className={`block px-4 py-3 transition-colors ${
+                    i === activeIndex
+                      ? 'bg-[var(--brand-soft)] border-l-2 border-l-[var(--brand)]'
+                      : 'border-l-2 border-l-transparent hover:bg-[var(--bg-soft)]'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 text-xs text-[var(--text-dim)] mb-0.5">
+                    <time dateTime={post.date}>{post.date}</time>
+                    {post.category && <span>{post.category}</span>}
+                    {post.series && <span>{post.series}</span>}
+                    {post.featured && (
+                      <span className="text-[var(--brand)] font-semibold text-[10px]">
+                        精选
+                      </span>
+                    )}
+                  </div>
+                  <h4 className="font-semibold text-sm">
+                    {titleMatch ? highlight(post.title, titleMatch.indices) : post.title}
+                  </h4>
+                  <p className="text-xs text-[var(--text-dim)] line-clamp-1 mt-0.5">
+                    {post.excerpt || post.description}
+                  </p>
+                </Link>
               );
             })
           ) : fuse && results.length === 0 ? (

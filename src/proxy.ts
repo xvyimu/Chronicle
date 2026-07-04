@@ -1,43 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * Proxy (replaces deprecated middleware) — sets per-request CSP headers.
+ * Proxy — sets per-request CSP headers.
  *
- * Dark mode script moved from inline <script nonce> in layout.tsx
- * to a client component (DarkModeScript), eliminating the need for
- * headers() in root layout — allowing all pages to SSG.
- *
- * Since layout no longer uses nonce, CSP script-src uses 'self' only.
- * Giscus iframe scripts are handled by frame-src + connect-src allowances.
+ * Next's App Router emits inline hydration payload scripts in production.
+ * A strict CSP therefore needs a per-request nonce that is forwarded to
+ * the request and response. Root layout reads x-nonce and applies it to
+ * project-owned inline scripts; Next applies it to framework scripts.
  */
-export function proxy(request: NextRequest) {
+export function proxy(_request: NextRequest) {
   const isDev = process.env.NODE_ENV === 'development';
 
   // In dev, skip CSP — Turbopack HMR needs inline scripts and websocket
   if (isDev) return NextResponse.next();
 
+  const nonce = btoa(crypto.randomUUID());
   const csp = [
     "default-src 'self'",
-    "script-src 'self' https://giscus.app",
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://giscus.app`,
     // style-src keeps 'unsafe-inline' — Tailwind v4 injects inline styles
     // that are harder to nonce. Styles are lower risk than scripts for XSS.
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data:",
     "font-src 'self' data:",
     "connect-src 'self' https://giscus.app",
-    "frame-src https://giscus.app",
+    'frame-src https://giscus.app',
     "frame-ancestors 'self'",
     "base-uri 'self'",
     "form-action 'self'",
     "object-src 'none'",
     "manifest-src 'self'",
     "worker-src 'self'",
-    "upgrade-insecure-requests",
+    'upgrade-insecure-requests',
   ].join('; ');
 
-  const response = NextResponse.next();
+  const requestHeaders = new Headers(_request.headers);
+  requestHeaders.set('x-nonce', nonce);
+  requestHeaders.set('Content-Security-Policy', csp);
 
-  // CSP goes on response only
+  const response = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
+
   response.headers.set('Content-Security-Policy', csp);
   return response;
 }

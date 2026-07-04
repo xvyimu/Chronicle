@@ -1,18 +1,27 @@
 import BlogList from '@/components/blog/BlogList';
-import { getAllCategorySlugs, getPostsByCategory, isValidCategory } from '@/lib/categories';
-import { SITE_CONFIG } from '@/lib/constants';
+import {
+  getAllCategorySlugs,
+  getPostsByCategory,
+  isValidCategory,
+} from '@/lib/categories';
+import { SITE_CONFIG } from '@/lib/site';
 import { buildPageMetadata } from '@/lib/metadata';
 import { createDynamicRoute } from '@/lib/route-adapter';
 
-const { generateStaticParams, generateMetadata, default: CategoryPage } = createDynamicRoute<string>({
+const {
+  generateStaticParams,
+  generateMetadata,
+  default: CategoryPage,
+} = createDynamicRoute<string>({
   paramKey: 'category',
   getAllSlugs: () => getAllCategorySlugs(),
   getBySlug: (categorySlug) => (isValidCategory(categorySlug) ? categorySlug : null),
-  buildMetadata: (categoryName) => buildPageMetadata({
-    title: `分类：${categoryName}`,
-    description: `分类「${categoryName}」下的全部文章 — ${SITE_CONFIG.name}`,
-    path: `/categories/${encodeURIComponent(categoryName)}`,
-  }),
+  buildMetadata: (categoryName) =>
+    buildPageMetadata({
+      title: `分类：${categoryName}`,
+      description: `分类「${categoryName}」下的全部文章 — ${SITE_CONFIG.name}`,
+      path: `/categories/${encodeURIComponent(categoryName)}`,
+    }),
   render: (categoryName) => {
     const posts = getPostsByCategory(categoryName);
     return (

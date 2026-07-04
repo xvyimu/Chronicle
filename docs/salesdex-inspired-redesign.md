@@ -1,5 +1,8 @@
 # SalesDex 风格改版方案
 
+> 状态：Phase 1-3 已实施。当前实现已拆分为 `src/components/home/` 组件和
+> `src/app/styles/` 语义 CSS 模块；本文件保留设计意图、验收标准和后续复查清单。
+
 ## 背景
 
 参考站点：[sales-dex.jp](https://sales-dex.jp/)
@@ -192,23 +195,21 @@ src/components/home/
 ├── ReadingPathSection.tsx
 ├── FeaturedArticleRail.tsx
 ├── CuratedLinksPreview.tsx
-└── HomeCtaSection.tsx
+├── HomeCtaSection.tsx
+├── RevealOnScroll.tsx
+└── LoadingIntro.tsx
 ```
 
 ### 推荐新增样式块
 
-当前项目的 CSS 实际集中在 `src/app/globals.css`。后续实现时有两个选择：
+当前项目的 CSS 已从 `globals.css` 拆到 `src/app/styles/`，首页相关样式主要在：
 
-1. 继续在 `globals.css` 中增加 Home 专属 BEM 样式。
-2. 先按 `docs/css-conventions.md` 的方向拆分样式文件，再做改版。
+- `home.css`：首页 Hero、Manifesto、ReadingPath、ArticleRail、LinksPreview、CTA
+- `backdrop.css`：全站三层背景 stage
+- `animations.css`：加载和 reveal 动画
+- `responsive.css`：响应式覆盖
 
-为了降低一次性风险，推荐第一阶段继续使用 `globals.css`，但用清晰注释分区：
-
-```css
-/* ---------- Home Editorial Hero ---------- */
-/* ---------- Home Manifesto ---------- */
-/* ---------- Home Article Rail ---------- */
-```
+`globals.css` 只保留 Tailwind v4 入口；CSS 模块在 `src/app/layout.tsx` 显式导入。
 
 ### 数据来源
 
@@ -217,7 +218,8 @@ src/components/home/
 - 文章：`getAllPosts()`
 - 作品：`getFeaturedProjects()`
 - 站点配置：`SITE_CONFIG`
-- 链接收藏：`linkCategories`
+- 链接收藏：`getAllLinkCategories()` / `data/links.json`
+- 专题：文章 frontmatter 的 `series` 字段经 `src/lib/series.ts` 聚合
 
 如果首页要展示专题，可以从现有文章 frontmatter 的 `series` 字段派生，不新增独立数据源。
 
@@ -282,7 +284,7 @@ src/components/home/
 
 - 首页渲染站点名称、主口号和主要入口。
 - FeaturedArticleRail 渲染指定数量文章。
-- CuratedLinksPreview 渲染来自 `linkCategories` 的分类。
+- CuratedLinksPreview 渲染来自 `data/links.json` 的分类。
 
 ### E2E
 
@@ -300,6 +302,11 @@ src/components/home/
 - 滚动到文章轨道
 - 滚动到项目区
 - 暗色主题首页
+
+当前自动化覆盖：
+
+- Vitest：首页和 home 组件测试。
+- Playwright：首页关键入口、背景 stage、视差变量、reduced-motion、专题入口。
 
 ## 风险与约束
 
@@ -326,15 +333,21 @@ src/components/home/
 
 ## 验收清单
 
-- [ ] 首页 Hero 完成 SalesDex 风格转译，但保留本站身份。
-- [ ] 首页不是营销落地页，第一屏仍能进入文章和导航收藏。
-- [ ] 桌面与移动端无文本溢出、无横向滚动。
-- [ ] 动画尊重 `prefers-reduced-motion`。
-- [ ] 没有远程图片依赖。
-- [ ] 不破坏 RSS、sitemap、SEO 元数据。
-- [ ] 全量测试、lint、typecheck 通过。
-- [ ] Chrome 视觉复查通过。
+- [x] 首页 Hero 完成 SalesDex 风格转译，但保留本站身份。
+- [x] 首页不是营销落地页，第一屏仍能进入文章和导航收藏。
+- [x] 桌面与移动端无文本溢出、无横向滚动。
+- [x] 动画尊重 `prefers-reduced-motion`。
+- [x] 没有远程图片依赖。
+- [x] 不破坏 RSS、sitemap、SEO 元数据。
+- [x] 全量测试、lint、typecheck 通过。
+- [x] Chrome 视觉复查通过。
+
+复查记录（2026-07-03）：
+
+- Chrome production 模式复查 `1440x1000` 首页首屏、`390x844` 首页首屏、专题列表/详情、导航页和暗色主题首页。
+- CSP nonce 已覆盖 Next 水合脚本与 JSON-LD；控制台无 CSP 错误。
+- 移动端隐藏装饰代码标签，避免遮挡 Hero 文案；专题卡片补 `min-w-0`，避免窄屏横向滚动。
 
 ## 决策建议
 
-推荐按 Phase 1 先做，不一次性重写整站。Phase 1 只改首页首屏，能最快验证这种风格是否适合“西江月”这个个人博客；如果效果成立，再推进 Phase 2 的叙事区和文章轨道。
+后续只建议做小步视觉复查和内容补充，不再继续扩大动画复杂度。

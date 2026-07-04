@@ -77,9 +77,14 @@ describe('SearchBar', () => {
     const input = screen.getByPlaceholderText(/搜索文章/);
     fireEvent.change(input, { target: { value: 'Redis' } });
 
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Redis Caching Strategies' })).toBeInTheDocument();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(
+          screen.getByRole('heading', { name: 'Redis Caching Strategies' }),
+        ).toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
   });
 
   it('filters posts by tag', async () => {
@@ -87,9 +92,14 @@ describe('SearchBar', () => {
     const input = screen.getByPlaceholderText(/搜索文章/);
     fireEvent.change(input, { target: { value: 'Linux' } });
 
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Linux Server Setup' })).toBeInTheDocument();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(
+          screen.getByRole('heading', { name: 'Linux Server Setup' }),
+        ).toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
   });
 
   it('filters posts by generated heading and body search text', async () => {
@@ -97,9 +107,14 @@ describe('SearchBar', () => {
     const input = screen.getByPlaceholderText(/搜索文章/);
     fireEvent.change(input, { target: { value: 'Invalidation' } });
 
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Redis Caching Strategies' })).toBeInTheDocument();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(
+          screen.getByRole('heading', { name: 'Redis Caching Strategies' }),
+        ).toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
   });
 
   it('shows "没有匹配的文章" when no results match', async () => {
@@ -107,9 +122,12 @@ describe('SearchBar', () => {
     const input = screen.getByPlaceholderText(/搜索文章/);
     fireEvent.change(input, { target: { value: 'zzznomatch' } });
 
-    await waitFor(() => {
-      expect(screen.getByText('没有匹配的文章')).toBeInTheDocument();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('没有匹配的文章')).toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
   });
 
   it('shows result count in the dropdown', async () => {
@@ -117,10 +135,15 @@ describe('SearchBar', () => {
     const input = screen.getByPlaceholderText(/搜索文章/);
     fireEvent.change(input, { target: { value: 'server' } });
 
-    await waitFor(() => {
-      expect(screen.getByText(/找到 \d+ 篇/)).toBeInTheDocument();
-      expect(screen.getByRole('heading', { name: 'Linux Server Setup' })).toBeInTheDocument();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText(/找到 \d+ 篇/)).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', { name: 'Linux Server Setup' }),
+        ).toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
   });
 
   it('clears query when clear button is clicked', async () => {
@@ -144,9 +167,14 @@ describe('SearchBar', () => {
     fireEvent.change(input, { target: { value: 'Redis' } });
 
     // Wait for Fuse.js to load and results to render
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Redis Caching Strategies' })).toBeInTheDocument();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(
+          screen.getByRole('heading', { name: 'Redis Caching Strategies' }),
+        ).toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
 
     // Arrow down to select first result
     fireEvent.keyDown(input, { key: 'ArrowDown' });
@@ -162,14 +190,20 @@ describe('SearchBar', () => {
     fireEvent.change(input, { target: { value: 'a' } });
 
     // Wait for search results to load
-    await waitFor(() => {
-      expect(screen.getByRole('listbox')).toBeInTheDocument();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(screen.getByRole('listbox')).toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
 
     // Wait for results to actually appear (not loading state)
-    await waitFor(() => {
-      expect(screen.queryByText('正在加载搜索…')).not.toBeInTheDocument();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(screen.queryByText('正在加载搜索…')).not.toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
 
     // Navigate down multiple times — should wrap without error
     fireEvent.keyDown(input, { key: 'ArrowDown' });
@@ -192,9 +226,12 @@ describe('SearchBar', () => {
     });
 
     // Then results should appear after Fuse.js loads
-    await waitFor(() => {
-      expect(screen.queryByText('正在加载搜索…')).not.toBeInTheDocument();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(screen.queryByText('正在加载搜索…')).not.toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
   });
 
   it('focuses the input when Ctrl+K is pressed', () => {
@@ -224,15 +261,18 @@ describe('SearchBar', () => {
     const input = screen.getByPlaceholderText(/搜索文章/);
     fireEvent.change(input, { target: { value: 'Redis' } });
 
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Redis Caching Strategies' })).toBeInTheDocument();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(
+          screen.getByRole('heading', { name: 'Redis Caching Strategies' }),
+        ).toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
 
     // The matched term should be wrapped in a <mark class="search-hl">
     const marks = document.querySelectorAll('mark.search-hl');
     expect(marks.length).toBeGreaterThan(0);
-    expect(
-      Array.from(marks).some((m) => /Redis/i.test(m.textContent ?? '')),
-    ).toBe(true);
+    expect(Array.from(marks).some((m) => /Redis/i.test(m.textContent ?? ''))).toBe(true);
   });
 });

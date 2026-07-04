@@ -130,7 +130,7 @@ export default function ParticleCanvas() {
           cancelAnimationFrame(animId);
         }
       },
-      { threshold: 0 }
+      { threshold: 0 },
     );
     intersectionObserver.observe(canvas);
 
@@ -141,11 +141,5 @@ export default function ParticleCanvas() {
     };
   }, [reduced]);
 
-  return (
-    <canvas
-      ref={canvasRef}
-      className="hero__particles"
-      aria-hidden="true"
-    />
-  );
+  return <canvas ref={canvasRef} className="hero__particles" aria-hidden="true" />;
 }

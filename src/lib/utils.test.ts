@@ -1,5 +1,15 @@
 import { describe, it, expect } from 'vitest';
-import { slugifyTag, formatDate } from '@/lib/utils';
+import { cn, slugifyTag, formatDate } from '@/lib/utils';
+
+describe('cn', () => {
+  it('joins truthy class values', () => {
+    expect(cn('card', false, null, undefined, 'card--active')).toBe('card card--active');
+  });
+
+  it('merges Tailwind class conflicts', () => {
+    expect(cn('px-2 text-sm', 'px-4')).toBe('text-sm px-4');
+  });
+});
 
 describe('slugifyTag', () => {
   it('converts "Next.js" to "next-js"', () => {

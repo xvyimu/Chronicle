@@ -58,15 +58,25 @@ describe('SiteBackdropParallax', () => {
 
     render(<SiteBackdropParallax />);
     // Simulate mousemove at center-right of viewport
-    Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: 1000 });
-    Object.defineProperty(window, 'innerHeight', { writable: true, configurable: true, value: 500 });
+    Object.defineProperty(window, 'innerWidth', {
+      writable: true,
+      configurable: true,
+      value: 1000,
+    });
+    Object.defineProperty(window, 'innerHeight', {
+      writable: true,
+      configurable: true,
+      value: 500,
+    });
 
-    const handler = addSpy.mock.calls.find((c: unknown[]) => c[0] === 'mousemove')?.[1] as (e: MouseEvent) => void;
+    const handler = addSpy.mock.calls.find(
+      (c: unknown[]) => c[0] === 'mousemove',
+    )?.[1] as (e: MouseEvent) => void;
     expect(handler).toBeDefined();
 
     handler({
       clientX: 1000, // far right → x = (1000/1000 - 0.5) * 2 = 1 → 8px
-      clientY: 0,    // top → y = (0/500 - 0.5) * 2 = -1 → -8px
+      clientY: 0, // top → y = (0/500 - 0.5) * 2 = -1 → -8px
     } as MouseEvent);
 
     expect(setPropSpy).toHaveBeenCalledWith('--parallax-x', '8px');
@@ -78,7 +88,9 @@ describe('SiteBackdropParallax', () => {
     const setPropSpy = vi.spyOn(stage.style, 'setProperty');
 
     render(<SiteBackdropParallax />);
-    const handler = addSpy.mock.calls.find((c: unknown[]) => c[0] === 'mouseleave')?.[1] as () => void;
+    const handler = addSpy.mock.calls.find(
+      (c: unknown[]) => c[0] === 'mouseleave',
+    )?.[1] as () => void;
     expect(handler).toBeDefined();
 
     handler();

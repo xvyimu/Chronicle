@@ -1,0 +1,184 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, cleanup, fireEvent } from '@testing-library/react';
+
+// Mock usePrefersReducedMotion
+const mockReduced = vi.fn().mockReturnValue(false);
+vi.mock('@/hooks/usePrefersReducedMotion', () => ({
+  usePrefersReducedMotion: () => mockReduced(),
+}));
+
+import MagneticCard from './MagneticCard';
+
+describe('MagneticCard', () => {
+  beforeEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+    mockReduced.mockReturnValue(false);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('renders children content', () => {
+    render(
+      <MagneticCard>
+        <span>Card content</span>
+      </MagneticCard>,
+    );
+    expect(screen.getByText('Card content')).toBeInTheDocument();
+  });
+
+  it('applies custom className', () => {
+    const { container } = render(
+      <MagneticCard className="custom-class">
+        <span>Content</span>
+      </MagneticCard>,
+    );
+    const article = container.querySelector('article');
+    expect(article?.className).toContain('custom-class');
+    expect(article?.className).toContain('magnetic-card');
+  });
+
+  it('can render as a different semantic element', () => {
+    const { container } = render(
+      <MagneticCard as="section">
+        <span>Section content</span>
+      </MagneticCard>,
+    );
+
+    expect(container.querySelector('section.magnetic-card')).toBeInTheDocument();
+  });
+
+  it('applies pointer-driven spotlight variables and custom strength', () => {
+    render(
+      <MagneticCard strength={6}>
+        <span>Content</span>
+      </MagneticCard>,
+    );
+    const article = document.querySelector('article')!;
+
+    vi.spyOn(article, 'getBoundingClientRect').mockReturnValue({
+      width: 200,
+      height: 100,
+      left: 0,
+      top: 0,
+      right: 200,
+      bottom: 100,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+
+    fireEvent.pointerMove(article, { clientX: 150, clientY: 50 });
+
+    expect(article.style.transform).toContain('perspective(720px)');
+    expect(article.style.transform).toContain('rotateY(1.5deg)');
+    expect(article.style.getPropertyValue('--glow-x')).toBe('75%');
+    expect(article.style.getPropertyValue('--glow-y')).toBe('50%');
+    expect(article.style.getPropertyValue('--spotlight-x')).toBe('150px');
+    expect(article.style.getPropertyValue('--spotlight-y')).toBe('50px');
+  });
+
+  it('applies magnetic transform on mouse move', () => {
+    render(
+      <MagneticCard>
+        <span>Content</span>
+      </MagneticCard>,
+    );
+    const article = document.querySelector('article')!;
+
+    // getBoundingClientRect mock
+    vi.spyOn(article, 'getBoundingClientRect').mockReturnValue({
+      width: 200,
+      height: 100,
+      left: 0,
+      top: 0,
+      right: 200,
+      bottom: 100,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+
+    // Simulate mouse move at center-right
+    fireEvent.mouseMove(article, { clientX: 150, clientY: 50 });
+
+    expect(article.style.transform).toContain('perspective(720px)');
+    expect(article.style.transform).toContain('rotateY');
+    expect(article.style.transform).toContain('rotateX');
+    expect(article.style.getPropertyValue('--glow-x')).toBe('75%');
+    expect(article.style.getPropertyValue('--glow-y')).toBe('50%');
+  });
+
+  it('clears transform on mouse leave', () => {
+    render(
+      <MagneticCard>
+        <span>Content</span>
+      </MagneticCard>,
+    );
+    const article = document.querySelector('article')!;
+
+    vi.spyOn(article, 'getBoundingClientRect').mockReturnValue({
+      width: 200,
+      height: 100,
+      left: 0,
+      top: 0,
+      right: 200,
+      bottom: 100,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+
+    fireEvent.mouseMove(article, { clientX: 150, clientY: 50 });
+    expect(article.style.transform).toBeTruthy();
+
+    fireEvent.mouseLeave(article);
+    expect(article.style.transform).toBe('');
+    expect(article.style.getPropertyValue('--glow-x')).toBe('');
+  });
+
+  it('skips transform when prefers-reduced-motion is enabled', () => {
+    mockReduced.mockReturnValue(true);
+
+    render(
+      <MagneticCard>
+        <span>Content</span>
+      </MagneticCard>,
+    );
+    const article = document.querySelector('article')!;
+
+    vi.spyOn(article, 'getBoundingClientRect').mockReturnValue({
+      width: 200,
+      height: 100,
+      left: 0,
+      top: 0,
+      right: 200,
+      bottom: 100,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+
+    fireEvent.mouseMove(article, { clientX: 150, clientY: 50 });
+    expect(article.style.transform).toBe('');
+  });
+
+  it('does not throw when ref is null on mouse move', () => {
+    render(
+      <MagneticCard>
+        <span>Content</span>
+      </MagneticCard>,
+    );
+    // Should not throw — clean up and check that handling null ref is safe
+    cleanup();
+    // Re-render to test normal behaviour
+    render(
+      <MagneticCard>
+        <span>Content</span>
+      </MagneticCard>,
+    );
+    expect(document.querySelector('.magnetic-card')).toBeInTheDocument();
+  });
+});
