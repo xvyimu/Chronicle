@@ -1,19 +1,24 @@
 import BlogList from '@/components/blog/BlogList';
 import { getTagNameBySlug, getAllTagSlugs } from '@/lib/tags';
 import { getPostsByTag } from '@/lib/posts';
-import { SITE_CONFIG } from '@/lib/constants';
+import { SITE_CONFIG } from '@/lib/site';
 import { buildPageMetadata } from '@/lib/metadata';
 import { createDynamicRoute } from '@/lib/route-adapter';
 
-const { generateStaticParams, generateMetadata, default: TagPage } = createDynamicRoute<string>({
+const {
+  generateStaticParams,
+  generateMetadata,
+  default: TagPage,
+} = createDynamicRoute<string>({
   paramKey: 'tag',
   getAllSlugs: () => getAllTagSlugs(),
   getBySlug: (tagSlug) => getTagNameBySlug(tagSlug),
-  buildMetadata: (_tagName, tagSlug) => buildPageMetadata({
-    title: `标签：${_tagName}`,
-    description: `标签「${_tagName}」下的全部文章 — ${SITE_CONFIG.name}`,
-    path: `/tags/${encodeURIComponent(tagSlug)}`,
-  }),
+  buildMetadata: (_tagName, tagSlug) =>
+    buildPageMetadata({
+      title: `标签：${_tagName}`,
+      description: `标签「${_tagName}」下的全部文章 — ${SITE_CONFIG.name}`,
+      path: `/tags/${encodeURIComponent(tagSlug)}`,
+    }),
   render: (tagName) => {
     const posts = getPostsByTag(tagName);
     return (

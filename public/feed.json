@@ -2,6 +2,7 @@
     "version": "https://jsonfeed.org/version/1",
     "title": "西江月",
     "home_page_url": "http://localhost:3000",
+    "feed_url": "http://localhost:3000/feed.json",
     "description": "云原生 · 全栈 · 自动化",
     "author": {
         "name": "雨天狂奔",
@@ -15,6 +16,13 @@
             "title": "Web 性能优化实战：从 Core Web Vitals 到首屏加载",
             "summary": "Web 性能优化的完整指南：Core Web Vitals 指标解读、LCP/INP/CLS 优化策略、资源加载优先级、字体优化、图片懒加载、代码分割，以及如何用 Lighthouse 和 Chrome DevTools 定位性能瓶颈。",
             "date_modified": "2026-06-28T00:00:00.000Z",
+            "date_published": "2026-06-28T00:00:00.000Z",
+            "tags": [
+                "性能优化",
+                "前端",
+                "Core Web Vitals",
+                "Lighthouse"
+            ],
             "_reading_time": {
                 "readingTime": "11 min read"
             }
@@ -26,6 +34,14 @@
             "title": "VPS 初始化安全与运维配置清单",
             "summary": "拿到一台新 VPS 后应该做的安全配置和运维设置，涵盖 SSH 加固、防火墙、Fail2Ban、自动更新、Docker 安装和监控工具，一份照着执行的清单。",
             "date_modified": "2026-06-23T00:00:00.000Z",
+            "date_published": "2026-06-23T00:00:00.000Z",
+            "tags": [
+                "个人服务部署路线",
+                "VPS",
+                "Linux",
+                "安全",
+                "运维"
+            ],
             "_reading_time": {
                 "readingTime": "7 min read"
             }
@@ -37,6 +53,12 @@
             "title": "TypeScript 高级类型实战：从泛型到条件类型的进阶之路",
             "summary": "深入 TypeScript 类型系统：泛型约束、条件类型、映射类型、模板字面量类型、类型推断技巧，以及在实际项目中如何用类型驱动开发减少运行时错误。",
             "date_modified": "2026-06-26T00:00:00.000Z",
+            "date_published": "2026-06-26T00:00:00.000Z",
+            "tags": [
+                "TypeScript",
+                "前端",
+                "类型系统"
+            ],
             "_reading_time": {
                 "readingTime": "9 min read"
             }
@@ -48,6 +70,13 @@
             "title": "Supabase 实战：从数据库到实时订阅",
             "summary": "全栈式接入 Supabase 的实战指南，涵盖 PostgreSQL 数据库设计、Row Level Security 权限控制、Realtime 订阅、Storage 文件存储和 Edge Functions 无服务器函数。",
             "date_modified": "2026-06-23T00:00:00.000Z",
+            "date_published": "2026-06-23T00:00:00.000Z",
+            "tags": [
+                "Supabase",
+                "PostgreSQL",
+                "数据库",
+                "后端"
+            ],
             "_reading_time": {
                 "readingTime": "7 min read"
             }
@@ -59,6 +88,13 @@
             "title": "Redis 缓存策略：从入门到生产环境实践",
             "summary": "Redis 在 Web 应用中的核心使用场景：缓存穿透/击穿/雪崩的应对方案、热点 Key 处理、缓存与数据库一致性策略，以及常见误区和排查方法。",
             "date_modified": "2026-06-25T00:00:00.000Z",
+            "date_published": "2026-06-25T00:00:00.000Z",
+            "tags": [
+                "Redis",
+                "数据库",
+                "缓存",
+                "后端"
+            ],
             "_reading_time": {
                 "readingTime": "9 min read"
             }
@@ -70,6 +106,13 @@
             "title": "PostgreSQL 性能优化实战：慢查询排查与索引策略",
             "summary": "PostgreSQL 在生产环境中的性能优化方法：EXPLAIN 分析、索引策略（B-Tree/GIN/GiST）、连接池配置、VACUUM 与表膨胀治理、分区表实践，以及常见慢查询的排查思路。",
             "date_modified": "2026-06-27T00:00:00.000Z",
+            "date_published": "2026-06-27T00:00:00.000Z",
+            "tags": [
+                "PostgreSQL",
+                "数据库",
+                "性能优化",
+                "后端"
+            ],
             "_reading_time": {
                 "readingTime": "12 min read"
             }
@@ -81,6 +124,14 @@
             "title": "Nginx 反向代理与负载均衡实战",
             "summary": "从 Nginx 基础配置到反向代理、负载均衡、HTTPS 重定向和静态资源优化的完整指南，适合需要在生产环境部署 Web 服务的开发者。",
             "date_modified": "2026-06-24T00:00:00.000Z",
+            "date_published": "2026-06-24T00:00:00.000Z",
+            "tags": [
+                "个人服务部署路线",
+                "Nginx",
+                "Linux",
+                "运维",
+                "部署"
+            ],
             "_reading_time": {
                 "readingTime": "6 min read"
             }
@@ -92,6 +143,13 @@
             "title": "Next.js 16 App Router 实战：服务端组件与流式渲染",
             "summary": "从 Pages Router 迁移到 App Router 的实践笔记，涵盖 Server Component、Streaming SSR、Server Actions 和数据获取模式，以及生产环境常见问题的解决。",
             "date_modified": "2026-06-23T00:00:00.000Z",
+            "date_published": "2026-06-23T00:00:00.000Z",
+            "tags": [
+                "Next.js",
+                "React",
+                "前端",
+                "全栈"
+            ],
             "_reading_time": {
                 "readingTime": "8 min read"
             }
@@ -103,6 +161,13 @@
             "title": "Linux 服务器排查手册：CPU、内存、磁盘、网络",
             "summary": "当服务出问题时，从四个维度系统性地排查服务器状态——CPU 满载、内存泄漏、磁盘占满、网络异常，每种场景的排查步骤和常用命令。",
             "date_modified": "2026-06-26T00:00:00.000Z",
+            "date_published": "2026-06-26T00:00:00.000Z",
+            "tags": [
+                "Linux",
+                "运维",
+                "VPS",
+                "监控"
+            ],
             "_reading_time": {
                 "readingTime": "9 min read"
             }
@@ -114,6 +179,13 @@
             "title": "Go 语言入门：从零写一个 CLI 工具",
             "summary": "用 Go 语言从零实现一个实用的命令行工具，涵盖 flag 参数解析、文件 IO、JSON 输出、错误处理和交叉编译，让有脚本基础的开发者快速上手 Go。",
             "date_modified": "2026-06-25T00:00:00.000Z",
+            "date_published": "2026-06-25T00:00:00.000Z",
+            "tags": [
+                "Go",
+                "后端",
+                "CLI",
+                "工具"
+            ],
             "_reading_time": {
                 "readingTime": "6 min read"
             }
@@ -125,6 +197,14 @@
             "title": "用 Git Hooks 和 GitHub Actions 打造自动化代码工作流",
             "summary": "从 pre-commit 代码检查到 CI/CD 自动化部署的完整实践，用 Git Hooks + GitHub Actions 让代码质量检查和发布流程自动化，减少手动操作和人为错误。",
             "date_modified": "2026-06-24T00:00:00.000Z",
+            "date_published": "2026-06-24T00:00:00.000Z",
+            "tags": [
+                "个人服务部署路线",
+                "Git",
+                "CI/CD",
+                "GitHub Actions",
+                "自动化"
+            ],
             "_reading_time": {
                 "readingTime": "5 min read"
             }
@@ -136,6 +216,14 @@
             "title": "Docker 容器部署实战：从零搭建 Node.js 应用",
             "summary": "从安装 Docker 开始，到将一个完整的 Node.js 应用容器化并部署到服务器的全过程，包含 Dockerfile 优化、多阶段构建、Docker Compose 编排，以及生产环境的最佳实践。",
             "date_modified": "2026-06-22T00:00:00.000Z",
+            "date_published": "2026-06-22T00:00:00.000Z",
+            "tags": [
+                "个人服务部署路线",
+                "Docker",
+                "Node.js",
+                "部署",
+                "容器"
+            ],
             "_reading_time": {
                 "readingTime": "6 min read"
             }
@@ -147,6 +235,13 @@
             "title": "Cloudflare Workers 实战：构建无服务器应用",
             "summary": "从 Workers 基础概念到完整项目实战，涵盖路由、KV 存储、环境变量、定时触发器、Cron Triggers 和部署策略，带你搭建一个真正的可运行应用。",
             "date_modified": "2026-06-22T00:00:00.000Z",
+            "date_published": "2026-06-22T00:00:00.000Z",
+            "tags": [
+                "Cloudflare",
+                "Workers",
+                "Serverless",
+                "无服务器"
+            ],
             "_reading_time": {
                 "readingTime": "7 min read"
             }
@@ -158,6 +253,14 @@
             "title": "CI/CD 流水线设计：从单脚本到 GitHub Actions 多阶段流水线",
             "summary": "从零搭建 CI/CD 流水线，涵盖流水线阶段设计、并行与串行策略、缓存优化、制品管理和部署策略，以 GitHub Actions 为例。",
             "date_modified": "2026-06-25T00:00:00.000Z",
+            "date_published": "2026-06-25T00:00:00.000Z",
+            "tags": [
+                "个人服务部署路线",
+                "CI/CD",
+                "GitHub Actions",
+                "DevOps",
+                "自动化"
+            ],
             "_reading_time": {
                 "readingTime": "20 min read"
             }

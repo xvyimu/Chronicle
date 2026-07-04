@@ -1,13 +1,21 @@
 import { z } from 'zod';
 import { Project } from '@/types';
-import { CONTENT_DIR } from './constants';
-import { getContentSource } from './content-source';
+import { CONTENT_DIR } from './content-dirs';
 import { createCache } from './cache';
+import type { ContentSource } from './content-source';
+import { filesystemSource } from './content-source';
 
-const httpsUrl = z.string().optional().refine(
-  (v) => !v || /^https?:\/\//.test(v),
-  'URL must start with http:// or https://'
-);
+/**
+ * projects 模块 — 读取 + 校验 data/projects.json.
+ *
+ * 通过 createProjectsRepository(source) 注入 ContentSource, 测试可传 in-memory source.
+ * 默认实例 projectsRepository 使用 filesystemSource.
+ */
+
+const httpsUrl = z
+  .string()
+  .optional()
+  .refine((v) => !v || /^https?:\/\//.test(v), 'URL must start with http:// or https://');
 
 const ProjectSchema = z.object({
   id: z.string(),
@@ -26,35 +34,75 @@ export function parseProjects(raw: unknown): Project[] {
   return arr.sort((a, b) => b.year - a.year);
 }
 
-const _cache = createCache<Project[]>({ watchPath: CONTENT_DIR.projects });
+export interface ProjectsRepository {
+  /** 获取全部项目 (按年份倒序, 含缓存) */
+  getAll(): Project[];
+  /** 获取置顶项目 */
+  getFeatured(): Project[];
+  /** 根据 id 查找单个项目 */
+  getById(id: string): Project | null;
+  /** 获取全部项目 id (用于 generateStaticParams) */
+  getAllIds(): string[];
+}
 
-export function getAllProjects(): Project[] {
-  return _cache.getOrCompute(() => {
-    const source = getContentSource();
-    const raw = source.readFile(CONTENT_DIR.projects);
-    if (raw === null) {
-      console.warn(`[projects.ts] 数据文件不存在: ${CONTENT_DIR.projects}`);
-      return [];
-    }
-    let data: unknown;
-    try {
-      data = JSON.parse(raw);
-    } catch (e) {
-      console.error(`[projects.ts] JSON 解析失败: ${CONTENT_DIR.projects}`, e);
-      return [];
-    }
-    return parseProjects(data);
+export function createProjectsRepository(source: ContentSource): ProjectsRepository {
+  const cache = createCache<Project[]>({
+    watchPath: CONTENT_DIR.projects,
+    source,
   });
+
+  function getAll(): Project[] {
+    return cache.getOrCompute(() => {
+      const raw = source.readFile(CONTENT_DIR.projects);
+      if (raw === null) {
+        console.warn(`[projects] 数据文件不存在: ${CONTENT_DIR.projects}`);
+        return [];
+      }
+      let data: unknown;
+      try {
+        data = JSON.parse(raw);
+      } catch (e) {
+        console.error(`[projects] JSON 解析失败: ${CONTENT_DIR.projects}`, e);
+        return [];
+      }
+      return parseProjects(data);
+    });
+  }
+
+  function getFeatured(): Project[] {
+    return getAll().filter((p) => p.featured);
+  }
+
+  function getById(id: string): Project | null {
+    return getAll().find((p) => p.id === id) ?? null;
+  }
+
+  function getAllIds(): string[] {
+    return getAll().map((p) => p.id);
+  }
+
+  return { getAll, getFeatured, getById, getAllIds };
+}
+
+/** 默认 ProjectsRepository 实例 (基于 filesystemSource). */
+export const projectsRepository = createProjectsRepository(filesystemSource);
+
+/**
+ * 向后兼容便捷函数 — 委托给默认 projectsRepository.
+ * app/ 调用方可逐步迁移到 projectsRepository.getAll() 等.
+ */
+export function getAllProjects(): Project[] {
+  return projectsRepository.getAll();
 }
 
 export function getFeaturedProjects(): Project[] {
-  return getAllProjects().filter((p) => p.featured);
+  return projectsRepository.getFeatured();
 }
 
 export function getProjectById(id: string): Project | null {
-  return getAllProjects().find((p) => p.id === id) ?? null;
+  return projectsRepository.getById(id);
 }
 
 export function getAllProjectIds(): string[] {
-  return getAllProjects().map((p) => p.id);
+  return projectsRepository.getAllIds();
 }

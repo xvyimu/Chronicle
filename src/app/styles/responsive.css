@@ -129,6 +129,10 @@
     padding: 5px 12px;
   }
 
+  .site-backdrop__code {
+    display: none;
+  }
+
   .editorial-hero {
     padding: 16px 12px 0;
   }
@@ -323,7 +327,8 @@
   .prose table {
     font-size: 0.82rem;
   }
-  .prose th, .prose td {
+  .prose th,
+  .prose td {
     padding: 8px 10px;
   }
 

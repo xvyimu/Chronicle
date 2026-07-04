@@ -1,13 +1,17 @@
 import readingTime from 'reading-time';
 import type { ContentSource } from '@/lib/content-source';
 import { filesystemSource } from '@/lib/content-source';
-import { CONTENT_DIR } from '@/lib/constants';
+import { CONTENT_DIR } from '@/lib/content-dirs';
 import { parseFrontmatter } from '@/lib/parse-frontmatter';
 import { createCache } from '@/lib/cache';
 import { inferCategory } from '@/lib/category-rules';
 import { postFrontmatterSchema } from '@/lib/schemas/post-frontmatter';
 import type { PostFull, PostMeta } from '@/types';
-import { extractPostHeadings, extractPostExcerpt, buildPostSearchText } from './search-text';
+import {
+  extractPostHeadings,
+  extractPostExcerpt,
+  buildPostSearchText,
+} from './search-text';
 
 /**
  * Repository 层 — 缓存 + 读取 + frontmatter 校验 + reading-time 计算.
@@ -17,16 +21,11 @@ import { extractPostHeadings, extractPostExcerpt, buildPostSearchText } from './
 
 /** 文件名 → slug：去掉 YYYY-MM- 前缀和 .mdx 后缀 */
 export function filenameToSlug(filename: string): string {
-  return filename
-    .replace(/^\d{4}-\d{2}-/, '')
-    .replace(/\.mdx$/, '');
+  return filename.replace(/^\d{4}-\d{2}-/, '').replace(/\.mdx$/, '');
 }
 
 /** 读取并解析单篇文章 (含 frontmatter zod 校验) */
-function readPostFile(
-  source: ContentSource,
-  filename: string,
-): PostFull {
+function readPostFile(source: ContentSource, filename: string): PostFull {
   const relativePath = `${CONTENT_DIR.blog}/${filename}`;
   const raw = source.readFile(relativePath);
   if (raw === null) {

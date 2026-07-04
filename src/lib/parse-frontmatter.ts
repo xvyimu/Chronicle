@@ -61,9 +61,7 @@ export function parseFrontmatter(raw: string): ParsedFrontmatter {
 
   const parsed = yamlLoad(matterBlock);
   const data =
-    parsed !== null &&
-    typeof parsed === 'object' &&
-    !Array.isArray(parsed)
+    parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)
       ? (parsed as Record<string, unknown>)
       : {};
 

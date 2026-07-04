@@ -1,4 +1,4 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 import bundleAnalyzer from '@next/bundle-analyzer';
 
 const withBundleAnalyzer = bundleAnalyzer({
@@ -28,7 +28,7 @@ const securityHeaders = [
     key: 'Strict-Transport-Security',
     value: 'max-age=31536000; includeSubDomains',
   },
-  // CSP is set dynamically per-request in src/proxy.ts with a nonce
+  // CSP is set dynamically per-request in src/proxy.ts
 ];
 
 const nextConfig: NextConfig = {

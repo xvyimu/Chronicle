@@ -16,6 +16,7 @@
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+/tmp/
 
 # next.js
 /.next/
@@ -48,6 +49,13 @@ project-diagnostic-report/
 优化方案.html
 项目深度分析与代码审查报告.html
 
+# vitest HTML report
+/html/
+
+# stryker mutation testing
+/stryker-report/
+.stryker-tmp/
+
 # npm lockfile (project uses pnpm)
 package-lock.json
 
@@ -66,8 +74,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-.vercel
 
 # dev output
 .dev-out.log

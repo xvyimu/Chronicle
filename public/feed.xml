@@ -1,14 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">
     <channel>
         <title>西江月</title>
         <link>http://localhost:3000</link>
         <description>云原生 · 全栈 · 自动化</description>
-        <lastBuildDate>Tue, 30 Jun 2026 02:46:07 GMT</lastBuildDate>
+        <lastBuildDate>Sun, 28 Jun 2026 00:00:00 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <language>zh-CN</language>
         <copyright>All rights reserved 2026</copyright>
+        <category>性能优化</category>
+        <category>前端</category>
+        <category>Core Web Vitals</category>
+        <category>Lighthouse</category>
+        <category>个人服务部署路线</category>
+        <category>VPS</category>
+        <category>Linux</category>
+        <category>安全</category>
+        <category>运维</category>
+        <category>TypeScript</category>
+        <category>类型系统</category>
+        <category>Supabase</category>
+        <category>PostgreSQL</category>
+        <category>数据库</category>
+        <category>后端</category>
+        <category>Redis</category>
+        <category>缓存</category>
+        <category>Nginx</category>
+        <category>部署</category>
+        <category>Next.js</category>
+        <category>React</category>
+        <category>全栈</category>
+        <category>监控</category>
+        <category>Go</category>
+        <category>CLI</category>
+        <category>工具</category>
+        <category>Git</category>
+        <category>CI/CD</category>
+        <category>GitHub Actions</category>
+        <category>自动化</category>
+        <category>Docker</category>
+        <category>Node.js</category>
+        <category>容器</category>
+        <category>Cloudflare</category>
+        <category>Workers</category>
+        <category>Serverless</category>
+        <category>无服务器</category>
+        <category>DevOps</category>
+        <atom:link href="http://localhost:3000/feed.xml" rel="self" type="application/rss+xml"/>
         <item>
             <title><![CDATA[Web 性能优化实战：从 Core Web Vitals 到首屏加载]]></title>
             <link>http://localhost:3000/blog/web-performance-optimization</link>
@@ -500,6 +539,10 @@ export default function RootLayout({ children }) {
 
 性能优化不是追求 100 分，而是在用户体验和开发成本之间找到平衡点。先解决 Poor 的问题，再逐步向 Good 靠拢。
 ]]></content:encoded>
+            <category>性能优化</category>
+            <category>前端</category>
+            <category>Core Web Vitals</category>
+            <category>Lighthouse</category>
             <_reading_time>
                 <readingTime>11 min read</readingTime>
             </_reading_time>
@@ -780,6 +823,11 @@ echo "5. 调整 limits.conf 和 sysctl.conf（BBR）"
 - `apt update` 保持系统更新
 - 检查 `/var/log/auth.log` 看有没有异常登录尝试
 ]]></content:encoded>
+            <category>个人服务部署路线</category>
+            <category>VPS</category>
+            <category>Linux</category>
+            <category>安全</category>
+            <category>运维</category>
             <_reading_time>
                 <readingTime>7 min read</readingTime>
             </_reading_time>
@@ -1138,6 +1186,9 @@ const a: A = b;  // ✓ B 比 A 多属性，结构兼容
 
 类型系统的价值不在于写出更复杂的类型，而在于让错误在编译期暴露。当你发现自己在写 `as any` 时，停下来想想——大概率有更好的类型表达方式。
 ]]></content:encoded>
+            <category>TypeScript</category>
+            <category>前端</category>
+            <category>类型系统</category>
             <_reading_time>
                 <readingTime>9 min read</readingTime>
             </_reading_time>
@@ -1407,6 +1458,10 @@ Supabase 让我可以专注于前端逻辑，后端的基础设施——数据�
 - **大项目**：Supabase 做数据库+认证，单独的后端服务做复杂的业务逻辑
 
 下一篇文章会聊如何用 Supabase + Redis 构建多层的缓存架构，提升 API 响应速度。]]></content:encoded>
+            <category>Supabase</category>
+            <category>PostgreSQL</category>
+            <category>数据库</category>
+            <category>后端</category>
             <_reading_time>
                 <readingTime>7 min read</readingTime>
             </_reading_time>
@@ -1639,6 +1694,10 @@ Redis 的核心价值是把"慢"变成"快"。但缓存是双刃剑——引入�
 
 参考：[Redis 官方文档](https://redis.io/docs/)
 ]]></content:encoded>
+            <category>Redis</category>
+            <category>数据库</category>
+            <category>缓存</category>
+            <category>后端</category>
             <_reading_time>
                 <readingTime>9 min read</readingTime>
             </_reading_time>
@@ -2076,6 +2135,10 @@ PostgreSQL 性能优化的核心思路：
 
 性能优化是一个持续过程，不是一次性工作。建立监控、定期审查慢查询、保持统计信息更新，比任何单次优化都重要。
 ]]></content:encoded>
+            <category>PostgreSQL</category>
+            <category>数据库</category>
+            <category>性能优化</category>
+            <category>后端</category>
             <_reading_time>
                 <readingTime>12 min read</readingTime>
             </_reading_time>
@@ -2326,6 +2389,11 @@ Nginx 是部署流程里最值得花时间配置好的环节。一个合理的 N
 
 参考配置：[Nginx 官方文档](https://nginx.org/en/docs/)
 ]]></content:encoded>
+            <category>个人服务部署路线</category>
+            <category>Nginx</category>
+            <category>Linux</category>
+            <category>运维</category>
+            <category>部署</category>
             <_reading_time>
                 <readingTime>6 min read</readingTime>
             </_reading_time>
@@ -2611,6 +2679,10 @@ App Router 的学习曲线比 Pages Router 陡一些——概念更多（服务�
 
 参考：[Next.js 官方文档](https://nextjs.org/docs)
 ]]></content:encoded>
+            <category>Next.js</category>
+            <category>React</category>
+            <category>前端</category>
+            <category>全栈</category>
             <_reading_time>
                 <readingTime>8 min read</readingTime>
             </_reading_time>
@@ -2921,6 +2993,10 @@ ps aux --sort=-%mem | head -6
 - 给关键指标设告警（磁盘 > 80%、内存 < 20%）
 - 定期查看 `dmesg`——很多问题（OOM killer、硬件错误）只出现在内核日志里，不会在应用日志中出现
 ]]></content:encoded>
+            <category>Linux</category>
+            <category>运维</category>
+            <category>VPS</category>
+            <category>监控</category>
             <_reading_time>
                 <readingTime>9 min read</readingTime>
             </_reading_time>
@@ -3179,6 +3255,10 @@ Go 写 CLI 工具的体验很舒适——标准库够用、编译产物简单、
 - 加入彩色输出（`fatih/color`）
 - 加入进度条（`cheggaaa/pb`）
 ]]></content:encoded>
+            <category>Go</category>
+            <category>后端</category>
+            <category>CLI</category>
+            <category>工具</category>
             <_reading_time>
                 <readingTime>6 min read</readingTime>
             </_reading_time>
@@ -3408,6 +3488,11 @@ main 分支 push
 
 这两层配好之后，"提交即上线"成为常态，不需要再手动敲部署命令。
 ]]></content:encoded>
+            <category>个人服务部署路线</category>
+            <category>Git</category>
+            <category>CI/CD</category>
+            <category>GitHub Actions</category>
+            <category>自动化</category>
             <_reading_time>
                 <readingTime>5 min read</readingTime>
             </_reading_time>
@@ -3653,6 +3738,11 @@ dist
 
 下一篇会讲如何用 Docker Compose 编排更多服务，以及一些进阶的部署策略。
 ]]></content:encoded>
+            <category>个人服务部署路线</category>
+            <category>Docker</category>
+            <category>Node.js</category>
+            <category>部署</category>
+            <category>容器</category>
             <_reading_time>
                 <readingTime>6 min read</readingTime>
             </_reading_time>
@@ -3915,6 +4005,10 @@ Cloudflare Workers 是我最推荐的无服务器平台。门槛低（一个文�
 
 下一步可以探索 Workers AI、D1（边缘 SQLite）、R2 对象存储等更深度的服务，Cloudflare 正在把整个边缘平台做成一站式的应用开发环境。
 ]]></content:encoded>
+            <category>Cloudflare</category>
+            <category>Workers</category>
+            <category>Serverless</category>
+            <category>无服务器</category>
             <_reading_time>
                 <readingTime>7 min read</readingTime>
             </_reading_time>
@@ -4831,6 +4925,11 @@ jobs:
 
 参考：[GitHub Actions 文档](https://docs.github.com/en/actions)、[Docker Build Push Action](https://github.com/docker/build-push-action)、[Kubernetes 部署文档](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)
 ]]></content:encoded>
+            <category>个人服务部署路线</category>
+            <category>CI/CD</category>
+            <category>GitHub Actions</category>
+            <category>DevOps</category>
+            <category>自动化</category>
             <_reading_time>
                 <readingTime>20 min read</readingTime>
             </_reading_time>

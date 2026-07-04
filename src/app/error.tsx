@@ -25,9 +25,7 @@ export default function ErrorBoundary({
   return (
     <div className="flex min-h-[50vh] flex-col items-center justify-center px-6 text-center">
       <h2 className="text-2xl font-bold text-[var(--text)]">出错了</h2>
-      <p className="mt-3 text-[var(--text-dim)] max-w-md">
-        {displayMessage}
-      </p>
+      <p className="mt-3 text-[var(--text-dim)] max-w-md">{displayMessage}</p>
       <button
         onClick={reset}
         className="mt-6 px-5 py-2 rounded-lg bg-[var(--brand)] text-white text-sm font-medium transition-opacity hover:opacity-90"

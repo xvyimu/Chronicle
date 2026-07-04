@@ -14,14 +14,18 @@ export const postFrontmatterSchema = z.object({
   title: z.string().min(1),
   description: z.string().min(1),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'date 必须为 YYYY-MM-DD 格式'),
-  updatedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'updatedAt 必须为 YYYY-MM-DD 格式').optional(),
+  updatedAt: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'updatedAt 必须为 YYYY-MM-DD 格式')
+    .optional(),
   tags: z.array(z.string()).optional().default([]),
   category: z.string().min(1).optional(),
   series: z.string().min(1).optional(),
   seriesOrder: z.number().int().positive().optional(),
   published: z.boolean().optional().default(true),
   featured: z.boolean().optional().default(false),
-  image: z.string()
+  image: z
+    .string()
     .refine(
       (v) => !v || /^https?:\/\//.test(v) || v.startsWith('/'),
       'image 必须是 http(s):// URL 或 / 开头的绝对路径',

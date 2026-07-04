@@ -48,16 +48,34 @@ test.describe('博客列表页', () => {
   test('分页导航可用', async ({ page }) => {
     await page.goto('/blog');
     await page.waitForLoadState('domcontentloaded');
+    const firstPageFirstPost = await page
+      .locator('main .blog__item a[href^="/blog/"]')
+      .first()
+      .getAttribute('href');
     // Check if pagination exists
-    const pagination = page.locator('nav[aria-label*="分页"], .pagination, [class*="pagination"]');
+    const pagination = page.locator(
+      'nav[aria-label*="分页"], .pagination, [class*="pagination"]',
+    );
     const count = await pagination.count();
     if (count > 0) {
       // If there's a "next" button, click it
-      const nextBtn = page.getByText('下一页').or(page.getByRole('link', { name: /→|>|下一页/ }));
+      const nextBtn = page
+        .getByText('下一页')
+        .or(page.getByRole('link', { name: /→|>|下一页/ }));
       const nextCount = await nextBtn.count();
       if (nextCount > 0) {
         await nextBtn.first().click();
-        await expect(page).toHaveURL(/page/);
+        await expect(page).toHaveURL(/page=2/);
+        const secondPageFirstPost = await page
+          .locator('main .blog__item a[href^="/blog/"]')
+          .first()
+          .getAttribute('href');
+        expect(secondPageFirstPost).toBeTruthy();
+        expect(secondPageFirstPost).not.toBe(firstPageFirstPost);
+        await expect(page.getByRole('link', { name: '2' })).toHaveAttribute(
+          'aria-current',
+          'page',
+        );
       }
     }
   });
@@ -65,10 +83,14 @@ test.describe('博客列表页', () => {
 
 test.describe('博客文章详情页', () => {
   // Helper: get the first blog post slug from the blog list page
-  async function getFirstPostSlug(page: import('@playwright/test').Page): Promise<string | null> {
+  async function getFirstPostSlug(
+    page: import('@playwright/test').Page,
+  ): Promise<string | null> {
     await page.goto('/blog');
     await page.waitForLoadState('domcontentloaded');
-    await expect(page.locator('a[href*="/blog/"]').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('a[href*="/blog/"]').first()).toBeVisible({
+      timeout: 10000,
+    });
     const href = await page.locator('a[href*="/blog/"]').first().getAttribute('href');
     if (href && href.match(/\/blog\/[^/]+$/)) return href;
     return null;

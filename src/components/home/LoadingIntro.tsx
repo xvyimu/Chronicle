@@ -6,16 +6,25 @@ export default function LoadingIntro() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    // Small delay to avoid flash on fast loads
-    const idle = requestIdleCallback
-      ? (ms: number) =>
-          new Promise<void>((resolve) =>
-            requestIdleCallback(() => resolve(), { timeout: ms }),
-          )
-      : (ms: number) =>
-          new Promise<void>((resolve) => setTimeout(resolve, ms));
+    let idleId: number | null = null;
+    let timeoutId: number | null = null;
 
-    idle(80).then(() => setShow(true));
+    const reveal = () => setShow(true);
+
+    if (typeof window.requestIdleCallback === 'function') {
+      idleId = window.requestIdleCallback(reveal, { timeout: 80 });
+    } else {
+      timeoutId = window.setTimeout(reveal, 80);
+    }
+
+    return () => {
+      if (idleId !== null && typeof window.cancelIdleCallback === 'function') {
+        window.cancelIdleCallback(idleId);
+      }
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+    };
   }, []);
 
   return (
@@ -25,7 +34,9 @@ export default function LoadingIntro() {
       aria-label="页面载入中"
     >
       <div className="loading-intro__frame">
-        <span className="loading-intro__logo" aria-hidden="true">西</span>
+        <span className="loading-intro__logo" aria-hidden="true">
+          西
+        </span>
 
         <div className="loading-intro__text">
           <span className="loading-intro__title">西江月</span>

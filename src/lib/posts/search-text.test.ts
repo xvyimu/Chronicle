@@ -7,12 +7,9 @@ import {
 
 describe('extractPostHeadings', () => {
   it('extracts h2 and h3 headings without trailing hashes', () => {
-    const mdx = [
-      '## First Section',
-      'Body',
-      '### Nested Topic ###',
-      'More body',
-    ].join('\n');
+    const mdx = ['## First Section', 'Body', '### Nested Topic ###', 'More body'].join(
+      '\n',
+    );
     expect(extractPostHeadings(mdx)).toEqual(['First Section', 'Nested Topic']);
   });
 
@@ -64,19 +61,21 @@ describe('extractPostExcerpt', () => {
 });
 
 describe('buildPostSearchText', () => {
-  const mdx = [
-    '## First Section',
-    'Body content with [link](https://example.com).',
-  ].join('\n');
+  const mdx = ['## First Section', 'Body content with [link](https://example.com).'].join(
+    '\n',
+  );
 
   it('builds search text from frontmatter, headings, and body content', () => {
-    const searchText = buildPostSearchText({
-      title: 'Searchable Title',
-      description: 'Searchable description',
-      tags: ['Next.js'],
-      category: 'Frontend',
-      series: 'App Router',
-    }, mdx);
+    const searchText = buildPostSearchText(
+      {
+        title: 'Searchable Title',
+        description: 'Searchable description',
+        tags: ['Next.js'],
+        category: 'Frontend',
+        series: 'App Router',
+      },
+      mdx,
+    );
 
     expect(searchText).toContain('Searchable Title');
     expect(searchText).toContain('First Section');
@@ -85,11 +84,14 @@ describe('buildPostSearchText', () => {
   });
 
   it('handles missing optional fields', () => {
-    const searchText = buildPostSearchText({
-      title: 'Title Only',
-      description: 'Desc',
-      tags: [],
-    }, mdx);
+    const searchText = buildPostSearchText(
+      {
+        title: 'Title Only',
+        description: 'Desc',
+        tags: [],
+      },
+      mdx,
+    );
     expect(searchText).toContain('Title Only');
   });
 });

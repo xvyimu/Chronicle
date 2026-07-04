@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
+import { decodeRouteSegment } from '@/lib/utils';
 
 /**
  * createDynamicRoute — 收敛 4 条动态路由的三段式接口契约.
@@ -24,7 +25,7 @@ interface DynamicRouteConfig<TData> {
   /** 构造 metadata (caller 负责, 因 adapter 不知道 TData 形状) */
   buildMetadata(data: TData, slug: string): Metadata;
   /** 渲染页面, data 已确保非 null */
-  render(data: TData, slug: string): ReactNode;
+  render(data: TData, slug: string): ReactNode | Promise<ReactNode>;
 }
 
 export function createDynamicRoute<TData>(config: DynamicRouteConfig<TData>) {
@@ -41,33 +42,20 @@ export function createDynamicRoute<TData>(config: DynamicRouteConfig<TData>) {
   }): Promise<Metadata> {
     const resolved = await params;
     const rawSlug = resolved[paramKey];
-    const slug = decodeSlug(rawSlug);
+    const slug = decodeRouteSegment(rawSlug);
     const data = config.getBySlug(slug);
     if (!data) return {};
     return config.buildMetadata(data, slug);
   }
 
-  async function Page({
-    params,
-  }: {
-    params: Promise<{ [key: string]: string }>;
-  }) {
+  async function Page({ params }: { params: Promise<{ [key: string]: string }> }) {
     const resolved = await params;
     const rawSlug = resolved[paramKey];
-    const slug = decodeSlug(rawSlug);
+    const slug = decodeRouteSegment(rawSlug);
     const data = config.getBySlug(slug);
     if (!data) notFound();
-    return config.render(data, slug);
+    return await config.render(data, slug);
   }
 
   return { generateStaticParams, generateMetadata, default: Page };
-}
-
-/** URL slug 解码 — 容忍畸形编码, 不抛错 (与现有 decodeRouteSegment 行为一致) */
-function decodeSlug(rawSlug: string): string {
-  try {
-    return decodeURIComponent(rawSlug);
-  } catch {
-    return rawSlug;
-  }
 }

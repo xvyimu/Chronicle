@@ -4,8 +4,21 @@
    ============================================================ */
 
 @theme {
-  --color-primary: var(--brand);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
   --color-primary-soft: var(--brand-soft);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-destructive: var(--destructive);
 }
 
 /* ---------- 亮色（默认） ---------- */
@@ -30,6 +43,20 @@
   --brand-gradient: linear-gradient(135deg, #5457e0, #818cf8);
   --featured: #fbbf24;
   --featured-soft: rgba(251, 191, 36, 0.12);
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: var(--surface);
+  --card-foreground: var(--text);
+  --muted: var(--bg-soft);
+  --muted-foreground: var(--text-dim);
+  --primary: var(--brand);
+  --primary-foreground: #fff;
+  --secondary: var(--bg-soft);
+  --secondary-foreground: var(--text-soft);
+  --input: var(--border);
+  --ring: var(--brand);
+  --destructive: #f87171;
+  --radius-md: var(--radius-sm);
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2);

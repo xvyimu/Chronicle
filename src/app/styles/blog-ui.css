@@ -9,7 +9,10 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  transition: box-shadow var(--transition), border-color var(--transition), transform var(--transition);
+  transition:
+    box-shadow var(--transition),
+    border-color var(--transition),
+    transform var(--transition);
   will-change: transform;
   box-shadow: var(--shadow-xs);
 }
@@ -19,29 +22,6 @@
   transform: translateY(-2px);
 }
 
-/* Magnetic card glow */
-.magnetic-card {
-  position: relative;
-  transition: box-shadow var(--transition), border-color var(--transition);
-  will-change: transform;
-}
-.magnetic-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity var(--transition);
-  background: radial-gradient(
-    300px circle at var(--glow-x, 50%) var(--glow-y, 50%),
-    var(--brand-soft) 0%,
-    transparent 100%
-  );
-}
-.magnetic-card:hover::after {
-  opacity: 1;
-}
 .blog__meta {
   display: flex;
   align-items: center;
@@ -106,7 +86,9 @@
   gap: 4px;
   font-size: 0.85rem;
   color: var(--text-dim);
-  transition: color var(--transition-fast), gap var(--transition-fast);
+  transition:
+    color var(--transition-fast),
+    gap var(--transition-fast);
 }
 .blog__item:hover .blog__more {
   color: var(--brand);
@@ -140,7 +122,10 @@
   color: var(--text-dim);
   border-left: 2px solid transparent;
   padding: 5px 12px;
-  transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    background var(--transition-fast);
   border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
 }
 .toc__item a:hover {
@@ -173,12 +158,16 @@
   color: var(--text);
   font-size: 0.95rem;
   outline: none;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
   box-shadow: var(--shadow-xs);
 }
 .search-bar__input:focus {
   border-color: var(--brand);
-  box-shadow: 0 0 0 3px var(--brand-soft), var(--shadow-sm);
+  box-shadow:
+    0 0 0 3px var(--brand-soft),
+    var(--shadow-sm);
 }
 .search-bar__icon {
   position: absolute;
@@ -206,7 +195,10 @@
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   background: var(--surface);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
 }
 .search-result-item:hover {
   border-color: var(--brand);
@@ -239,7 +231,10 @@
   justify-content: center;
   border-radius: var(--radius-sm);
   color: var(--text-soft);
-  transition: color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast);
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast),
+    transform var(--transition-fast);
 }
 .theme-toggle:hover {
   color: var(--text);
@@ -264,7 +259,11 @@
   border: 1px solid var(--border);
   color: var(--text-soft);
   background: var(--surface);
-  transition: border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition), transform var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition),
+    transform var(--transition-fast);
 }
 .tag-cloud__item:hover {
   border-color: var(--brand);
@@ -302,7 +301,11 @@
   color: var(--text-soft);
   box-shadow: var(--shadow-md);
   border: 1px solid var(--border);
-  transition: background var(--transition-fast), color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition);
   font-weight: 700;
   line-height: 1;
 }
@@ -362,15 +365,33 @@
 
 /* Stagger animation for list items */
 @keyframes stagger-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .blog__item {
   animation: stagger-in 0.3s var(--ease-out) both;
 }
-.blog__item:nth-child(1) { animation-delay: 0ms; }
-.blog__item:nth-child(2) { animation-delay: 40ms; }
-.blog__item:nth-child(3) { animation-delay: 80ms; }
-.blog__item:nth-child(4) { animation-delay: 120ms; }
-.blog__item:nth-child(5) { animation-delay: 160ms; }
-.blog__item:nth-child(6) { animation-delay: 200ms; }
+.blog__item:nth-child(1) {
+  animation-delay: 0ms;
+}
+.blog__item:nth-child(2) {
+  animation-delay: 40ms;
+}
+.blog__item:nth-child(3) {
+  animation-delay: 80ms;
+}
+.blog__item:nth-child(4) {
+  animation-delay: 120ms;
+}
+.blog__item:nth-child(5) {
+  animation-delay: 160ms;
+}
+.blog__item:nth-child(6) {
+  animation-delay: 200ms;
+}

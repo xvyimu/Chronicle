@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import MdxContent from '@/components/blog/MdxContent';
-import { SITE_CONFIG } from '@/lib/constants';
+import { SITE_CONFIG } from '@/lib/site';
 import { getAboutContent } from '@/lib/about';
 import { buildPageMetadata } from '@/lib/metadata';
 

@@ -6,7 +6,8 @@ import { test, expect } from '@playwright/test';
  */
 async function waitForHydration(page: import('@playwright/test').Page) {
   await page.waitForFunction(
-    () => !!document.querySelector('button[aria-label="切换主题"]')?.hasAttribute('title'),
+    () =>
+      !!document.querySelector('button[aria-label="切换主题"]')?.hasAttribute('title'),
     { timeout: 15000 },
   );
 }
@@ -84,7 +85,9 @@ test.describe('项目页面', () => {
     await page.goto('/projects');
     await page.waitForLoadState('domcontentloaded');
     // Use heading role to avoid ambiguity
-    await expect(page.getByRole('heading', { name: '作品集' })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('heading', { name: '作品集' })).toBeVisible({
+      timeout: 10000,
+    });
 
     // Should have project cards
     const cards = page.locator('.card, [class*="project"]');
@@ -105,7 +108,9 @@ test.describe('标签页面', () => {
     await page.goto('/tags');
     await page.waitForLoadState('domcontentloaded');
     // Use heading role to avoid matching subtitle text
-    await expect(page.getByRole('heading', { name: '标签' })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('heading', { name: '标签' })).toBeVisible({
+      timeout: 10000,
+    });
 
     // Should have tag links
     const tagLinks = page.locator('a[href*="/tags/"]');
@@ -128,6 +133,25 @@ test.describe('标签页面', () => {
   });
 });
 
+test.describe('专题页面', () => {
+  test('显示专题列表并可进入详情页', async ({ page }) => {
+    await page.goto('/series');
+    await page.waitForLoadState('domcontentloaded');
+
+    await expect(page.getByRole('heading', { name: '专题' })).toBeVisible({
+      timeout: 10000,
+    });
+
+    const seriesLink = page.locator('a[href*="/series/"]').first();
+    await expect(seriesLink).toBeVisible({ timeout: 10000 });
+    await seriesLink.click();
+    await expect(page).toHaveURL(/\/series\/[^/]+$/);
+    await expect(page.getByRole('heading', { name: /专题：/ })).toBeVisible({
+      timeout: 10000,
+    });
+  });
+});
+
 test.describe('关于页面', () => {
   test('显示关于页面内容', async ({ page }) => {
     await page.goto('/about');
@@ -136,7 +160,9 @@ test.describe('关于页面', () => {
     await expect(page.locator('body')).toBeVisible();
     // About page uses h2 for section title (no h1 on this page)
     // Use exact match — "关于" also matches "关于西江月" as substring
-    await expect(page.getByRole('heading', { name: '关于', exact: true })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('heading', { name: '关于', exact: true })).toBeVisible({
+      timeout: 10000,
+    });
   });
 });
 

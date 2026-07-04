@@ -20,10 +20,7 @@ const heroSignals = [
  * 本组件只负责 hero 自身的内容布局 (标题/CTA/metrics/rail).
  * stage 元素保留为内容容器, 背景透明以透出全站背景.
  */
-export default function EditorialHero({
-  postCount,
-  projectCount,
-}: EditorialHeroProps) {
+export default function EditorialHero({ postCount, projectCount }: EditorialHeroProps) {
   return (
     <section className="editorial-hero" aria-labelledby="home-hero-title">
       <div className="editorial-hero__topline" aria-hidden="true">

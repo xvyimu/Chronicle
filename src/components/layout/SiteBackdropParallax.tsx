@@ -15,9 +15,7 @@ import { useEffect } from 'react';
  */
 export default function SiteBackdropParallax() {
   useEffect(() => {
-    const prefersReduced = window.matchMedia(
-      '(prefers-reduced-motion: reduce)',
-    ).matches;
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReduced) return;
 
     const stage = document.querySelector<HTMLElement>('.site-backdrop__stage');

@@ -49,7 +49,9 @@
   gap: 4px;
   font-size: 0.85rem;
   color: var(--text-dim);
-  transition: color var(--transition-fast), gap var(--transition-fast);
+  transition:
+    color var(--transition-fast),
+    gap var(--transition-fast);
 }
 .section__link:hover {
   color: var(--brand);
@@ -57,12 +59,50 @@
 }
 
 /* ---------- Card ---------- */
+.magnetic-card {
+  position: relative;
+  overflow: hidden;
+  transition:
+    box-shadow var(--transition),
+    border-color var(--transition),
+    transform var(--transition);
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.magnetic-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--transition);
+  background: radial-gradient(
+    var(--spotlight-size, 320px) circle at var(--spotlight-x, 50%) var(--spotlight-y, 50%),
+    color-mix(in srgb, var(--brand-soft) 86%, transparent) 0%,
+    transparent 72%
+  );
+}
+.magnetic-card:hover::after,
+.magnetic-card:focus-within::after {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .magnetic-card {
+    transform: none;
+    will-change: auto;
+  }
+}
+
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 24px;
-  transition: box-shadow var(--transition), border-color var(--transition), transform var(--transition);
+  transition:
+    box-shadow var(--transition),
+    border-color var(--transition),
+    transform var(--transition);
   box-shadow: var(--shadow-xs);
 }
 .card:hover {
@@ -241,7 +281,9 @@
   font-size: 0.82rem;
   color: var(--text-soft);
   box-shadow: var(--shadow-xs);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 .stat-pill:hover {
   border-color: var(--brand);
@@ -264,7 +306,11 @@
   border-radius: var(--radius-sm);
   font-size: 0.9rem;
   font-weight: 600;
-  transition: transform var(--transition-fast), box-shadow var(--transition), background var(--transition-fast), border-color var(--transition-fast);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition),
+    background var(--transition-fast),
+    border-color var(--transition-fast);
   cursor: pointer;
 }
 .btn:hover {
@@ -312,7 +358,10 @@
   font-size: 0.88rem;
   font-weight: 500;
   color: var(--text-soft);
-  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast);
   border: 1px solid transparent;
 }
 .pagination__link:hover {
@@ -343,7 +392,11 @@
   background: var(--surface);
   color: var(--text-soft);
   border: 1px solid var(--border);
-  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
 }
 .tag-link:hover {
   background: var(--brand);

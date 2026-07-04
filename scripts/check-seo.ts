@@ -10,6 +10,7 @@ import type {
 } from '../src/lib/posts';
 import type { getAllCategories as getAllCategoriesType } from '../src/lib/categories';
 import type { getAllProjects as getAllProjectsType } from '../src/lib/projects';
+import type { getAllSeries as getAllSeriesType } from '../src/lib/series';
 import type { getAllTags as getAllTagsType } from '../src/lib/tags';
 import type sitemapType from '../src/app/sitemap';
 
@@ -29,6 +30,7 @@ type CheckContext = {
   getAllPosts: typeof getAllPostsType;
   getAllCategories: typeof getAllCategoriesType;
   getAllProjects: typeof getAllProjectsType;
+  getAllSeries: typeof getAllSeriesType;
   getAllTags: typeof getAllTagsType;
   sitemap: typeof sitemapType;
 };
@@ -93,7 +95,11 @@ function checkMdxReferences(content: string, file: string): void {
 
     if (target.startsWith('/')) {
       const cleanTarget = target.split(/[?#]/, 1)[0];
-      if (cleanTarget.startsWith('/blog/') || cleanTarget.startsWith('/tags/') || cleanTarget.startsWith('/categories/')) {
+      if (
+        cleanTarget.startsWith('/blog/') ||
+        cleanTarget.startsWith('/tags/') ||
+        cleanTarget.startsWith('/categories/')
+      ) {
         continue;
       }
       if (!publicPathExists(cleanTarget)) {
@@ -134,7 +140,10 @@ function checkPostFrontmatter(ctx: CheckContext): void {
     const parsed = ctx.postFrontmatterSchema.safeParse(data);
     if (!parsed.success) {
       for (const issue of parsed.error.issues) {
-        addIssue(`Frontmatter ${issue.path.join('.') || '(root)'}: ${issue.message}`, file);
+        addIssue(
+          `Frontmatter ${issue.path.join('.') || '(root)'}: ${issue.message}`,
+          file,
+        );
       }
       // schema 校验失败时, 跳过后续依赖字段的检查
       continue;
@@ -144,8 +153,14 @@ function checkPostFrontmatter(ctx: CheckContext): void {
     // SEO-specific 检查 (不在 schema 范围内, 保留手动实现)
 
     // updatedAt 不能早于 date
-    if (typeof fm.updatedAt === 'string' && compareDateStrings(fm.updatedAt, fm.date) < 0) {
-      addIssue(`Frontmatter updatedAt must not be earlier than date: ${fm.updatedAt} < ${fm.date}`, file);
+    if (
+      typeof fm.updatedAt === 'string' &&
+      compareDateStrings(fm.updatedAt, fm.date) < 0
+    ) {
+      addIssue(
+        `Frontmatter updatedAt must not be earlier than date: ${fm.updatedAt} < ${fm.date}`,
+        file,
+      );
     }
 
     // 标题去重 (大小写不敏感)
@@ -162,7 +177,10 @@ function checkPostFrontmatter(ctx: CheckContext): void {
       const normalizedTag = tag.trim().toLowerCase();
       const existingTag = tagCasing.get(normalizedTag);
       if (existingTag && existingTag !== tag) {
-        addIssue(`Tag casing is inconsistent: "${tag}" also appears as "${existingTag}"`, file);
+        addIssue(
+          `Tag casing is inconsistent: "${tag}" also appears as "${existingTag}"`,
+          file,
+        );
       } else {
         tagCasing.set(normalizedTag, tag);
       }
@@ -170,11 +188,18 @@ function checkPostFrontmatter(ctx: CheckContext): void {
 
     // description 长度 (SEO 建议)
     if (fm.description.trim().length < 20) {
-      addIssue('Frontmatter description should be at least 20 characters for search snippets', file);
+      addIssue(
+        'Frontmatter description should be at least 20 characters for search snippets',
+        file,
+      );
     }
 
     // image 路径存在性
-    if (typeof fm.image === 'string' && fm.image.startsWith('/') && !publicPathExists(fm.image)) {
+    if (
+      typeof fm.image === 'string' &&
+      fm.image.startsWith('/') &&
+      !publicPathExists(fm.image)
+    ) {
       addIssue(`Frontmatter image does not exist: ${fm.image}`, file);
     }
 
@@ -194,13 +219,16 @@ function checkPostFrontmatter(ctx: CheckContext): void {
     }
 
     // 搜索文本长度
-    const searchText = ctx.buildPostSearchText({
-      title: fm.title,
-      description: fm.description,
-      tags: fm.tags,
-      category: fm.category,
-      series: fm.series,
-    }, content);
+    const searchText = ctx.buildPostSearchText(
+      {
+        title: fm.title,
+        description: fm.description,
+        tags: fm.tags,
+        category: fm.category,
+        series: fm.series,
+      },
+      content,
+    );
     if (searchText.length < 80) {
       addIssue('Generated search text is too short to support useful discovery', file);
     }
@@ -218,7 +246,11 @@ function checkProjects(ctx: CheckContext): void {
     }
     seenIds.add(project.id);
 
-    if (project.image && project.image.startsWith('/') && !publicPathExists(project.image)) {
+    if (
+      project.image &&
+      project.image.startsWith('/') &&
+      !publicPathExists(project.image)
+    ) {
       addIssue(`Project image does not exist: ${project.image}`, ctx.contentDir.projects);
     }
   }
@@ -239,11 +271,19 @@ function checkSitemapCoverage(ctx: CheckContext): void {
     `${ctx.siteUrl}/categories`,
     `${ctx.siteUrl}/projects`,
     `${ctx.siteUrl}/tags`,
+    `${ctx.siteUrl}/series`,
     `${ctx.siteUrl}/about`,
     ...ctx.getAllPosts().map((post) => `${ctx.siteUrl}/blog/${post.slug}`),
     ...ctx.getAllProjects().map((project) => `${ctx.siteUrl}/projects/${project.id}`),
     ...ctx.getAllTags().map((tag) => `${ctx.siteUrl}/tags/${tag.slug}`),
-    ...ctx.getAllCategories().map((category) => `${ctx.siteUrl}/categories/${encodeURIComponent(category.slug)}`),
+    ...ctx
+      .getAllSeries()
+      .map((series) => `${ctx.siteUrl}/series/${encodeURIComponent(series.slug)}`),
+    ...ctx
+      .getAllCategories()
+      .map(
+        (category) => `${ctx.siteUrl}/categories/${encodeURIComponent(category.slug)}`,
+      ),
   ];
 
   for (const url of expectedUrls) {
@@ -259,26 +299,30 @@ async function main(): Promise<void> {
   const [
     frontmatterModule,
     schemaModule,
-    constantsModule,
+    siteModule,
+    contentDirsModule,
     postsModule,
     categoriesModule,
     projectsModule,
+    seriesModule,
     tagsModule,
     sitemapModule,
   ] = await Promise.all([
     import('../src/lib/parse-frontmatter'),
     import('../src/lib/schemas/post-frontmatter'),
-    import('../src/lib/constants'),
+    import('../src/lib/site'),
+    import('../src/lib/content-dirs'),
     import('../src/lib/posts'),
     import('../src/lib/categories'),
     import('../src/lib/projects'),
+    import('../src/lib/series'),
     import('../src/lib/tags'),
     import('../src/app/sitemap'),
   ]);
 
   const ctx: CheckContext = {
-    contentDir: constantsModule.CONTENT_DIR,
-    siteUrl: constantsModule.SITE_CONFIG.url,
+    contentDir: contentDirsModule.CONTENT_DIR,
+    siteUrl: siteModule.SITE_CONFIG.url,
     parseFrontmatter: frontmatterModule.parseFrontmatter,
     postFrontmatterSchema: schemaModule.postFrontmatterSchema,
     filenameToSlug: postsModule.filenameToSlug,
@@ -287,6 +331,7 @@ async function main(): Promise<void> {
     getAllPosts: postsModule.getAllPosts,
     getAllCategories: categoriesModule.getAllCategories,
     getAllProjects: projectsModule.getAllProjects,
+    getAllSeries: seriesModule.getAllSeries,
     getAllTags: tagsModule.getAllTags,
     sitemap: sitemapModule.default,
   };

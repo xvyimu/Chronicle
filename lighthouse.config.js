@@ -47,7 +47,7 @@ module.exports = {
         'valid-source-maps': ['warn'],
 
         // SEO — 基本要求
-        'canonical': ['error'],
+        canonical: ['error'],
         'meta-description': ['error'],
         'document-title': ['error'],
         'crawlable-anchors': ['warn'],

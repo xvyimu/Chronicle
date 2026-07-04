@@ -52,7 +52,9 @@
   text-decoration: underline;
   text-underline-offset: 3px;
   text-decoration-thickness: 1px;
-  transition: text-decoration-thickness var(--transition-fast), color var(--transition-fast);
+  transition:
+    text-decoration-thickness var(--transition-fast),
+    color var(--transition-fast);
 }
 .prose a:hover {
   text-decoration-thickness: 2px;
@@ -66,7 +68,8 @@
 }
 
 /* 列表 — 更好的缩进和间距 */
-.prose ul, .prose ol {
+.prose ul,
+.prose ol {
   margin: 0 0 18px 24px;
 }
 .prose li {
@@ -114,7 +117,8 @@
   background: var(--bg-soft);
   color: var(--brand);
   font-size: 0.86em;
-  font-family: var(--font-jetbrains-mono), 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-family:
+    var(--font-jetbrains-mono), 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
   border: 1px solid var(--border);
   font-weight: 500;
 }
@@ -140,7 +144,8 @@ html:not(.dark) .prose pre {
   padding: 20px;
   font-size: 0.86rem;
   line-height: 1.7;
-  font-family: var(--font-jetbrains-mono), 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-family:
+    var(--font-jetbrains-mono), 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
   counter-reset: step;
   color: #e4e4ed;
 }
@@ -155,7 +160,8 @@ html:not(.dark) .prose pre {
   overflow: hidden;
   border: 1px solid var(--border);
 }
-.prose th, .prose td {
+.prose th,
+.prose td {
   padding: 10px 16px;
   border-bottom: 1px solid var(--border);
   text-align: left;
@@ -259,7 +265,10 @@ html:not(.dark) .code-block-wrapper .code-block-copy:hover {
   border: 1px solid rgba(255, 255, 255, 0.12);
   cursor: pointer;
   opacity: 0;
-  transition: opacity var(--transition), background var(--transition-fast), color var(--transition-fast);
+  transition:
+    opacity var(--transition),
+    background var(--transition-fast),
+    color var(--transition-fast);
   z-index: 1;
   backdrop-filter: blur(8px);
 }

@@ -1,5 +1,10 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { filesystemSource, getContentSource, setContentSource, type ContentSource } from './content-source';
+import {
+  filesystemSource,
+  getContentSource,
+  setContentSource,
+  type ContentSource,
+} from './content-source';
 
 describe('filesystemSource', () => {
   describe('readFile', () => {

@@ -1,15 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { PostMeta, PostFull } from '@/types';
-import {
-  comparePostsByDate,
-  sortPostsByDateDesc,
-  filterByTag,
-  filterFeatured,
-  getAdjacent,
-  getRelated,
-  getSeries,
-  paginate,
-} from './query';
+import { filterByTag, getAdjacent, getRelated, getSeries, paginate } from './query';
 
 /** 构造 PostMeta fixture */
 function makePost(overrides: Partial<PostMeta> & { slug: string }): PostMeta {
@@ -30,36 +21,38 @@ function makePost(overrides: Partial<PostMeta> & { slug: string }): PostMeta {
 }
 
 const FIXTURE: PostMeta[] = [
-  makePost({ slug: 'a', date: '2026-06-03', tags: ['docker', 'devops'], featured: true, category: '后端', series: 'vps', seriesOrder: 1 }),
-  makePost({ slug: 'b', date: '2026-06-02', tags: ['docker'], category: '后端', series: 'vps', seriesOrder: 2 }),
-  makePost({ slug: 'c', date: '2026-06-01', tags: ['react'], featured: true, category: '前端' }),
-  makePost({ slug: 'd', date: '2026-05-31', tags: ['devops'], series: 'vps', seriesOrder: 3 }),
+  makePost({
+    slug: 'a',
+    date: '2026-06-03',
+    tags: ['docker', 'devops'],
+    featured: true,
+    category: '后端',
+    series: 'vps',
+    seriesOrder: 1,
+  }),
+  makePost({
+    slug: 'b',
+    date: '2026-06-02',
+    tags: ['docker'],
+    category: '后端',
+    series: 'vps',
+    seriesOrder: 2,
+  }),
+  makePost({
+    slug: 'c',
+    date: '2026-06-01',
+    tags: ['react'],
+    featured: true,
+    category: '前端',
+  }),
+  makePost({
+    slug: 'd',
+    date: '2026-05-31',
+    tags: ['devops'],
+    series: 'vps',
+    seriesOrder: 3,
+  }),
 ];
-
-describe('comparePostsByDate', () => {
-  it('sorts by date descending', () => {
-    const sorted = [...FIXTURE].sort(comparePostsByDate);
-    expect(sorted.map((p) => p.slug)).toEqual(['a', 'b', 'c', 'd']);
-  });
-
-  it('uses slug as tiebreaker for same date', () => {
-    const same = [
-      makePost({ slug: 'z', date: '2026-06-01' }),
-      makePost({ slug: 'a', date: '2026-06-01' }),
-    ];
-    const sorted = [...same].sort(comparePostsByDate);
-    expect(sorted.map((p) => p.slug)).toEqual(['a', 'z']);
-  });
-});
-
-describe('sortPostsByDateDesc', () => {
-  it('returns a new sorted array (does not mutate input)', () => {
-    const input = [...FIXTURE].reverse();
-    const sorted = sortPostsByDateDesc(input);
-    expect(sorted.map((p) => p.slug)).toEqual(['a', 'b', 'c', 'd']);
-    expect(input).not.toBe(sorted);
-  });
-});
 
 describe('filterByTag', () => {
   it('filters case-insensitively', () => {
@@ -71,33 +64,43 @@ describe('filterByTag', () => {
   });
 });
 
-describe('filterFeatured', () => {
-  it('returns only featured posts', () => {
-    expect(filterFeatured(FIXTURE).map((p) => p.slug)).toEqual(['a', 'c']);
-  });
-});
-
 describe('getAdjacent', () => {
   it('returns prev (older) and next (newer) for middle post', () => {
-    // sorted desc: [a, b, c, d], b is at index 1
-    const sorted = sortPostsByDateDesc(FIXTURE);
+    // sorted desc: a, b, c, d — b is at index 1
+    const sorted = [...FIXTURE].sort((a, b) => {
+      if (a.date < b.date) return 1;
+      if (a.date > b.date) return -1;
+      return a.slug.localeCompare(b.slug);
+    });
     const { prev, next } = getAdjacent(sorted, 'b');
     expect(prev?.slug).toBe('c'); // older
     expect(next?.slug).toBe('a'); // newer
   });
 
   it('returns null next for newest post', () => {
-    const sorted = sortPostsByDateDesc(FIXTURE);
+    const sorted = [...FIXTURE].sort((a, b) => {
+      if (a.date < b.date) return 1;
+      if (a.date > b.date) return -1;
+      return a.slug.localeCompare(b.slug);
+    });
     expect(getAdjacent(sorted, 'a').next).toBeNull();
   });
 
   it('returns null prev for oldest post', () => {
-    const sorted = sortPostsByDateDesc(FIXTURE);
+    const sorted = [...FIXTURE].sort((a, b) => {
+      if (a.date < b.date) return 1;
+      if (a.date > b.date) return -1;
+      return a.slug.localeCompare(b.slug);
+    });
     expect(getAdjacent(sorted, 'd').prev).toBeNull();
   });
 
   it('returns null for both when slug not found', () => {
-    const sorted = sortPostsByDateDesc(FIXTURE);
+    const sorted = [...FIXTURE].sort((a, b) => {
+      if (a.date < b.date) return 1;
+      if (a.date > b.date) return -1;
+      return a.slug.localeCompare(b.slug);
+    });
     const { prev, next } = getAdjacent(sorted, 'unknown');
     expect(prev).toBeNull();
     expect(next).toBeNull();

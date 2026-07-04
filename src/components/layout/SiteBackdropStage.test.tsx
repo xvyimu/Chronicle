@@ -46,8 +46,9 @@ describe('SiteBackdropStage', () => {
     expect(container.querySelector('.site-backdrop__plane')?.textContent).toBe('');
     expect(container.querySelector('.site-backdrop__mesh')?.textContent).toBe('');
     // only .site-backdrop__code elements hold text
-    const codeTexts = Array.from(container.querySelectorAll('.site-backdrop__code'))
-      .map((el) => el.textContent?.trim() ?? '');
+    const codeTexts = Array.from(container.querySelectorAll('.site-backdrop__code')).map(
+      (el) => el.textContent?.trim() ?? '',
+    );
     expect(codeTexts).toEqual(['pnpm test', 'deploy --quiet']);
   });
 });

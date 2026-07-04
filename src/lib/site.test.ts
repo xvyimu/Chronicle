@@ -1,19 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { resolveSiteUrl } from '@/lib/constants';
+import { resolveSiteUrl } from '@/lib/site';
 
 describe('resolveSiteUrl', () => {
   it('uses NEXT_PUBLIC_SITE_URL when provided', () => {
-    expect(resolveSiteUrl({
-      NODE_ENV: 'production',
-      NEXT_PUBLIC_SITE_URL: 'https://example.com',
-    })).toBe('https://example.com');
+    expect(
+      resolveSiteUrl({
+        NODE_ENV: 'production',
+        NEXT_PUBLIC_SITE_URL: 'https://example.com',
+      }),
+    ).toBe('https://example.com');
   });
 
   it('trims trailing slashes from NEXT_PUBLIC_SITE_URL', () => {
-    expect(resolveSiteUrl({
-      NODE_ENV: 'production',
-      NEXT_PUBLIC_SITE_URL: 'https://example.com///',
-    })).toBe('https://example.com');
+    expect(
+      resolveSiteUrl({
+        NODE_ENV: 'production',
+        NEXT_PUBLIC_SITE_URL: 'https://example.com///',
+      }),
+    ).toBe('https://example.com');
   });
 
   it('falls back to localhost outside production', () => {
@@ -27,9 +31,11 @@ describe('resolveSiteUrl', () => {
   });
 
   it('throws when NEXT_PUBLIC_SITE_URL is not an absolute http(s) URL', () => {
-    expect(() => resolveSiteUrl({
-      NODE_ENV: 'production',
-      NEXT_PUBLIC_SITE_URL: 'example.com',
-    })).toThrow('absolute http(s) URL');
+    expect(() =>
+      resolveSiteUrl({
+        NODE_ENV: 'production',
+        NEXT_PUBLIC_SITE_URL: 'example.com',
+      }),
+    ).toThrow('absolute http(s) URL');
   });
 });

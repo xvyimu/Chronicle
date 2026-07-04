@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
-import { renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import { usePrefersReducedMotion } from './usePrefersReducedMotion';
 
 function setReducedMotion(matches: boolean) {
@@ -66,7 +66,9 @@ describe('usePrefersReducedMotion', () => {
 
     expect(listeners).toHaveLength(1);
     // Simulate OS setting change
-    listeners[0]({ matches: true });
+    act(() => {
+      listeners[0]({ matches: true });
+    });
     await vi.waitFor(() => {
       expect(result.current).toBe(true);
     });

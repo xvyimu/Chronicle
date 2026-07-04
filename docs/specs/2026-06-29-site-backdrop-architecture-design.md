@@ -555,7 +555,7 @@ curl -s http://localhost:3000/about | grep -c "site-backdrop__stage"  # 期望 �
 pnpm build && pnpm start
 # 浏览器跑 Lighthouse 5 页
 # 或触发 CI Lighthouse job
-git push origin codex/blog-hardening-tooling
+git push origin <branch>
 ```
 
 **验收**：5 页 Performance / LCP / TBT 不退化（≥ baseline）。

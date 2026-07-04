@@ -1,5 +1,73 @@
-import { describe, it, expect } from 'vitest';
-import { getAllCategories, getPostsByCategory, isValidCategory, getAllCategorySlugs, inferCategory } from '@/lib/categories';
+import { beforeEach, describe, it, expect, vi } from 'vitest';
+import type { PostMeta } from '@/types';
+
+const postsState = vi.hoisted(() => ({
+  getAllPosts: vi.fn(),
+}));
+
+vi.mock('@/lib/posts', () => ({
+  getAllPosts: postsState.getAllPosts,
+}));
+
+import {
+  getAllCategories,
+  getPostsByCategory,
+  isValidCategory,
+  getAllCategorySlugs,
+} from '@/lib/categories';
+import { inferCategory } from '@/lib/category-rules';
+
+function makePost(overrides: Partial<PostMeta> & { slug: string }): PostMeta {
+  return {
+    title: `Post ${overrides.slug}`,
+    description: 'desc',
+    date: '2026-06-01',
+    tags: [],
+    published: true,
+    featured: false,
+    readingTime: '5 min read',
+    wordCount: 100,
+    excerpt: 'excerpt',
+    headings: [],
+    searchText: 'search',
+    ...overrides,
+  };
+}
+
+const CATEGORY_FIXTURE: PostMeta[] = [
+  makePost({
+    slug: 'frontend',
+    category: '前端开发',
+    tags: ['Next.js', 'React'],
+  }),
+  makePost({
+    slug: 'explicit-empty-tags',
+    category: '自定义分类',
+    tags: [],
+  }),
+  makePost({
+    slug: 'explicit-over-inferred',
+    category: '前端开发',
+    tags: ['Docker'],
+  }),
+  makePost({
+    slug: 'devops',
+    category: 'DevOps',
+    tags: ['Docker', '部署'],
+  }),
+];
+
+function clonePosts(posts: PostMeta[]): PostMeta[] {
+  return posts.map((post) => ({
+    ...post,
+    tags: [...post.tags],
+    headings: [...post.headings],
+  }));
+}
+
+beforeEach(() => {
+  postsState.getAllPosts.mockReturnValue(clonePosts(CATEGORY_FIXTURE));
+});
 
 describe('inferCategory', () => {
   it('infers frontend category from related tags', () => {
@@ -46,7 +114,7 @@ describe('getAllCategories', () => {
   it('returns an array of CategoryInfo', () => {
     const cats = getAllCategories();
     expect(Array.isArray(cats)).toBe(true);
-    expect(cats.length).toBeGreaterThan(0);
+    expect(cats.length).toBe(3);
     for (const c of cats) {
       expect(c.name).toBeTruthy();
       expect(c.slug).toBeTruthy();
@@ -68,38 +136,46 @@ describe('getAllCategories', () => {
     expect(new Set(names).size).toBe(names.length);
   });
 
-  it('every category has at least one tag', () => {
+  it('counts explicit categories even when no tags map to that category', () => {
     const cats = getAllCategories();
-    for (const c of cats) {
-      expect(c.tags.length).toBeGreaterThan(0);
-    }
+    expect(cats.find((c) => c.name === '自定义分类')).toMatchObject({
+      count: 1,
+      tags: [],
+    });
+  });
+
+  it('uses post.category instead of re-inferring category from tags', () => {
+    const cats = getAllCategories();
+    expect(cats.find((c) => c.name === '前端开发')).toMatchObject({
+      count: 2,
+      tags: ['Next.js', 'React'],
+    });
+    expect(cats.find((c) => c.name === 'DevOps')).toMatchObject({
+      count: 1,
+      tags: ['Docker', '部署'],
+    });
   });
 });
 
 describe('getPostsByCategory', () => {
   it('returns posts for a known category', () => {
     const posts = getPostsByCategory('前端开发');
-    expect(posts.length).toBeGreaterThan(0);
-    for (const p of posts) {
-      // 确保每篇文章至少有一个标签映射到该分类
-      const inferred = inferCategory(p.tags);
-      expect(inferred).toBe('前端开发');
-    }
+    expect(posts.map((p) => p.slug)).toEqual(['frontend', 'explicit-over-inferred']);
   });
 
   it('returns posts for DevOps category', () => {
     const posts = getPostsByCategory('DevOps');
-    expect(posts.length).toBeGreaterThan(0);
+    expect(posts.map((p) => p.slug)).toEqual(['devops']);
   });
 
-  it('returns posts for 数据库 category', () => {
-    const posts = getPostsByCategory('数据库');
-    expect(posts.length).toBeGreaterThan(0);
+  it('returns posts for explicit categories without inferred tags', () => {
+    const posts = getPostsByCategory('自定义分类');
+    expect(posts.map((p) => p.slug)).toEqual(['explicit-empty-tags']);
   });
 
   it('returns posts for URL-encoded Chinese category names', () => {
-    const posts = getPostsByCategory(encodeURIComponent('数据库'));
-    expect(posts.length).toBeGreaterThan(0);
+    const posts = getPostsByCategory(encodeURIComponent('自定义分类'));
+    expect(posts.map((p) => p.slug)).toEqual(['explicit-empty-tags']);
   });
 
   it('returns empty array for non-existent category', () => {

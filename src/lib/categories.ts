@@ -1,10 +1,7 @@
 import { getAllPosts } from './posts';
-import { TAG_TO_CATEGORY } from './constants';
-import { CategoryInfo } from '@/types';
+import { TAG_TO_CATEGORY } from './category-rules-data';
+import type { CategoryInfo } from '@/types';
 import { decodeRouteSegment } from './utils';
-import { inferCategory } from './category-rules';
-
-export { inferCategory } from './category-rules';
 
 /** 聚合所有分类，附带文章数和覆盖标签，按文章数降序 */
 export function getAllCategories(): CategoryInfo[] {
@@ -12,7 +9,7 @@ export function getAllCategories(): CategoryInfo[] {
   const map = new Map<string, { count: number; tags: Set<string> }>();
 
   for (const post of posts) {
-    const category = inferCategory(post.tags);
+    const category = post.category;
     if (!category) continue;
 
     const existing = map.get(category);
@@ -24,9 +21,7 @@ export function getAllCategories(): CategoryInfo[] {
         }
       }
     } else {
-      const catTags = new Set(
-        post.tags.filter((t) => TAG_TO_CATEGORY[t] === category)
-      );
+      const catTags = new Set(post.tags.filter((t) => TAG_TO_CATEGORY[t] === category));
       map.set(category, { count: 1, tags: catTags });
     }
   }
@@ -34,7 +29,7 @@ export function getAllCategories(): CategoryInfo[] {
   return Array.from(map.entries())
     .map(([name, { count, tags }]) => ({
       name,
-      slug: name,       // 中文 URL 友好，Next.js 自动 encodeURI
+      slug: name, // 中文 URL 友好，Next.js 自动 encodeURI
       count,
       tags: Array.from(tags).sort(),
     }))
@@ -45,8 +40,7 @@ export function getAllCategories(): CategoryInfo[] {
 export function getPostsByCategory(categoryName: string) {
   const decodedCategoryName = decodeRouteSegment(categoryName);
   return getAllPosts().filter((post) => {
-    const inferred = inferCategory(post.tags);
-    return inferred === decodedCategoryName;
+    return post.category === decodedCategoryName;
   });
 }
 

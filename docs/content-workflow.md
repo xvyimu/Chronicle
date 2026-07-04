@@ -7,13 +7,14 @@
 
 ## 1. 内容入口一览
 
-当前项目的主要内容源有三类：
+当前项目的主要内容源有四类：
 
-| 位置 | 类型 | 用途 |
-| --- | --- | --- |
-| content/blog/*.mdx | MDX | 博客文章 |
-| content/about.mdx | MDX | 关于页 |
-| data/projects.json | JSON | 作品集结构化数据 |
+| 位置               | 类型 | 用途               |
+| ------------------ | ---- | ------------------ |
+| content/blog/*.mdx | MDX  | 博客文章           |
+| content/about.mdx  | MDX  | 关于页             |
+| data/projects.json | JSON | 作品集结构化数据   |
+| data/links.json    | JSON | 导航收藏结构化数据 |
 
 ## 2. 新增博客文章
 
@@ -39,7 +40,7 @@ YYYY-MM-主题名.mdx
 
 ### frontmatter 最低要求
 
-根据 src/lib/posts.ts 当前实现，这三个字段属于必填：
+根据 src/lib/schemas/post-frontmatter.ts 当前 schema，这三个字段属于必填：
 
 - title
 - description
@@ -70,20 +71,20 @@ license: MIT
 
 ### 字段说明
 
-| 字段 | 类型 | 是否必填 | 说明 |
-| --- | --- | --- | --- |
-| title | string | 是 | 文章标题 |
-| description | string | 是 | 摘要，用于列表与 SEO |
-| date | string | 是 | 建议使用 YYYY-MM-DD |
-| updatedAt | string | 否 | 文章有实质更新时填写，格式 YYYY-MM-DD，不应早于 date |
-| tags | string[] | 否 | 标签列表，默认空数组 |
-| category | string | 否 | 显式分类；不填时会根据标签映射自动推断 |
-| series | string | 否 | 系列名，用于文章页展示和相关文章排序 |
-| published | boolean | 否 | false 时表示草稿 |
-| featured | boolean | 否 | true 时可在首页等位置突出展示 |
-| image | string | 否 | 封面图或 OG 图 |
-| source | string | 否 | 参考项目、原始资料或来源说明 |
-| license | string | 否 | 内容或示例代码许可，例如 MIT、CC-BY-4.0、Original |
+| 字段        | 类型     | 是否必填 | 说明                                                 |
+| ----------- | -------- | -------- | ---------------------------------------------------- |
+| title       | string   | 是       | 文章标题                                             |
+| description | string   | 是       | 摘要，用于列表与 SEO                                 |
+| date        | string   | 是       | 建议使用 YYYY-MM-DD                                  |
+| updatedAt   | string   | 否       | 文章有实质更新时填写，格式 YYYY-MM-DD，不应早于 date |
+| tags        | string[] | 否       | 标签列表，默认空数组                                 |
+| category    | string   | 否       | 显式分类；不填时会根据标签映射自动推断               |
+| series      | string   | 否       | 系列名，用于文章页展示和相关文章排序                 |
+| published   | boolean  | 否       | false 时表示草稿                                     |
+| featured    | boolean  | 否       | true 时可在首页等位置突出展示                        |
+| image       | string   | 否       | 封面图或 OG 图                                       |
+| source      | string   | 否       | 参考项目、原始资料或来源说明                         |
+| license     | string   | 否       | 内容或示例代码许可，例如 MIT、CC-BY-4.0、Original    |
 
 ### 自动生成的内容索引
 
@@ -121,9 +122,9 @@ license: MIT
 
 如果这里新增了社交信息或身份介绍，建议同时回头检查：
 
-- src/lib/constants.ts（站点配置单一来源）
+- src/lib/site.ts（站点配置单一来源）
 
-这两处是站点名称、描述、作者、评论仓库等信息的主要影响点。
+这是站点名称、描述、作者、评论仓库等信息的主要影响点。
 
 ## 4. 维护作品集
 
@@ -133,18 +134,18 @@ license: MIT
 
 根据 src/lib/projects.ts 当前校验逻辑，可用字段包括：
 
-| 字段 | 类型 | 是否必填 | 说明 |
-| --- | --- | --- | --- |
-| id | string | 是 | 唯一标识 |
-| title | string | 是 | 项目名称 |
-| description | string | 是 | 简介 |
-| tags | string[] | 是 | 技术标签 |
-| url | string | 否 | 在线地址 |
-| github | string | 否 | 仓库地址 |
-| image | string | 是 | 封面图 |
-| featured | boolean | 是 | 是否精选 |
-| year | number | 是 | 项目年份 |
-| longDescription | boolean | 否 | 是否存在更长的说明内容 |
+| 字段            | 类型     | 是否必填 | 说明                   |
+| --------------- | -------- | -------- | ---------------------- |
+| id              | string   | 是       | 唯一标识               |
+| title           | string   | 是       | 项目名称               |
+| description     | string   | 是       | 简介                   |
+| tags            | string[] | 是       | 技术标签               |
+| url             | string   | 否       | 在线地址               |
+| github          | string   | 否       | 仓库地址               |
+| image           | string   | 是       | 封面图                 |
+| featured        | boolean  | 是       | 是否精选               |
+| year            | number   | 是       | 项目年份               |
+| longDescription | boolean  | 否       | 是否存在更长的说明内容 |
 
 ### 适合 JSON 的内容
 
@@ -164,7 +165,37 @@ license: MIT
 
 如果后续项目介绍越来越长，建议增补 content/projects/ 目录，让 JSON 只保留摘要与索引字段。
 
-## 5. 图片与静态资源
+## 5. 维护导航收藏
+
+导航收藏基础数据存放在：
+
+- data/links.json
+
+根据 src/lib/links.ts 当前校验逻辑，每个分类包含：
+
+| 字段        | 类型       | 是否必填 | 说明         |
+| ----------- | ---------- | -------- | ------------ |
+| id          | string     | 是       | 唯一分类标识 |
+| title       | string     | 是       | 分类展示名   |
+| description | string     | 是       | 分类说明     |
+| items       | LinkItem[] | 是       | 链接列表     |
+
+每个链接条目包含：
+
+| 字段        | 类型   | 是否必填 | 说明               |
+| ----------- | ------ | -------- | ------------------ |
+| title       | string | 是       | 链接名称           |
+| url         | string | 是       | 官网或原始页面 URL |
+| description | string | 是       | 收藏理由或用途说明 |
+
+维护规则：
+
+- VPS、云服务、工具类收藏优先放官网链接
+- 不写 aff、ref、utm、coupon、partner 等追踪参数
+- 同一个 URL 不重复收录
+- 新增分类后同步检查首页预览是否需要调整
+
+## 6. 图片与静态资源
 
 当前项目的静态资源放在 public/ 下，因此：
 
@@ -179,7 +210,7 @@ license: MIT
 
 这样后续排查资源缺失会更容易。
 
-## 6. 构建和发布前检查
+## 7. 构建和发布前检查
 
 ### 博客内容发布前
 
@@ -204,9 +235,19 @@ license: MIT
 4. featured 是否符合首页展示预期
 5. year 是否正确
 
-## 7. RSS 与内容发布关系
+### 导航收藏发布前
 
-RSS 由 `scripts/generate-rss.ts` 在构建前生成（`npx tsx scripts/generate-rss.ts && next build`），因此以下变更会直接影响订阅输出：
+建议至少检查：
+
+1. links.json 是否满足 zod 结构要求
+2. URL 是否为官网或原始页面
+3. 是否没有 aff、ref、utm、coupon、partner 等追踪参数
+4. 是否没有重复 URL
+5. 首页 4 个预览分类是否仍然存在
+
+## 8. RSS 与内容发布关系
+
+RSS 由 `scripts/generate-rss.ts` 在构建前生成（`tsx scripts/generate-rss.ts && next build`，对应 `pnpm build`），因此以下变更会直接影响订阅输出：
 
 - 新增文章
 - 修改文章标题、摘要、日期
@@ -219,10 +260,10 @@ RSS 由 `scripts/generate-rss.ts` 在构建前生成（`npx tsx scripts/generate
 - content/blog 文件命名
 - frontmatter
 - scripts/generate-rss.ts
-- src/lib/constants.ts
+- src/lib/site.ts
 - 环境变量 NEXT_PUBLIC_SITE_URL
 
-## 8. 建议的维护习惯
+## 9. 建议的维护习惯
 
 ### 写文章时
 
@@ -236,8 +277,9 @@ RSS 由 `scripts/generate-rss.ts` 在构建前生成（`npx tsx scripts/generate
 
 站点名称、描述、作者如果发生变化，最好一次性联查这些位置：
 
-- src/lib/constants.ts（站点配置唯一来源）
-- src/app/manifest.ts（由 constants.ts 生成 PWA manifest）
+- src/lib/site.ts（站点配置唯一来源）
+- src/lib/content-dirs.ts（内容数据路径）
+- src/app/manifest.ts（由 site.ts 生成 PWA manifest）
 
 ### 合并前
 
@@ -256,12 +298,13 @@ pnpm build
 - 页面路由是否能完成生产构建
 - 内容格式是否存在明显问题
 
-## 9. 何时需要同步更新文档
+## 10. 何时需要同步更新文档
 
 当出现以下变化时，建议同步更新本文件：
 
 - frontmatter 字段新增或删减
 - projects.json 结构调整
+- links.json 结构调整
 - 新增内容目录，例如 content/projects
 - 新增搜索索引、文章摘要生成、图片处理等构建流程
 - 内容发布流程从纯本地文件改为接 CMS

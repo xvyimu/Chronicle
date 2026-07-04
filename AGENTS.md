@@ -8,12 +8,12 @@ A personal blog built with Next.js 16.2 (App Router), React 19, and Tailwind CSS
 
 ## Tech Stack
 
-- **Framework**: Next.js 16.2 (App Router, SSG)
+- **Framework**: Next.js 16.2 (App Router; local-content driven, dynamic rendering for CSP nonce)
 - **UI**: React 19.2, Tailwind CSS 4, BEM custom CSS
 - **Content**: MDX with custom frontmatter parser (`lib/parse-frontmatter.ts`, js-yaml 4.x), next-mdx-remote
 - **Syntax Highlighting**: Shiki via rehype-pretty-code
 - **Search**: fuse.js (client-side fuzzy search)
-- **Testing**: Vitest (unit/integration, 291 tests, 31 files), Playwright (E2E, 42 tests, 4 spec files)
+- **Testing**: Vitest (unit/integration, 505 tests, 59 files), Playwright (E2E, 43 tests, 4 spec files)
 - **CI**: GitHub Actions (lint / test / tsc / build / bundle-budget / e2e)
 - **Deployment**: Vercel
 
@@ -33,6 +33,7 @@ src/
 │   ├── blog/[slug]/        # Blog post detail (with opengraph-image.tsx)
 │   ├── projects/[id]/      # Project detail
 │   ├── tags/[tag]/         # Tag archive
+│   ├── series/[series]/    # Series archive
 │   ├── about/              # About page
 │   ├── styles/             # Semantic CSS modules (10 files, each ≤500 lines)
 │   │   ├── tokens.css      # Design tokens (light/dark theme vars, spacing, shadows)
@@ -46,12 +47,12 @@ src/
 │   │   ├── animations.css # Animations (reveal, fade-in-up, loading-intro)
 │   │   └── responsive.css  # Responsive breakpoints (loaded last, overrides above)
 │   ├── globals.css         # CSS entry (Tailwind v4 only, ~12 lines, NO @import chain)
-│   ├── layout.tsx          # Root layout (fonts, theme, skip-link, CSP nonce, CSS imports)
-│   ├── manifest.ts         # PWA manifest (from constants.ts)
+│   ├── layout.tsx          # Root layout (fonts, theme, skip-link, CSS imports)
+│   ├── manifest.ts         # PWA manifest (from site config)
 │   ├── page.tsx            # Home page
 │   ├── sitemap.ts          # Dynamic sitemap
 │   ├── robots.ts           # Robots.txt
-│   ├── proxy.ts            # CSP nonce generation (per-request)
+│   ├── proxy.ts            # CSP headers (per-request)
 │   └── error.tsx           # Error boundary (production-safe)
 ├── components/
 │   ├── blog/               # Blog-specific (SearchBar, BlogCard, CodeBlock, TOC, etc.)
@@ -67,10 +68,12 @@ src/
 │   ├── test-utils/         # Test fixtures (in-memory ContentSource)
 │   ├── projects.ts         # Project data (uses createCache<T>, zod validation)
 │   ├── tags.ts             # Tag management
+│   ├── series.ts           # Series aggregation and routes
 │   ├── categories.ts       # Category aggregation
-│   ├── category-rules.ts   # TAG_TO_CATEGORY mapping
+│   ├── category-rules.ts   # Category inference helper
+│   ├── category-rules-data.ts # TAG_TO_CATEGORY mapping
 │   ├── about.ts            # About page content
-│   ├── links.ts            # Curated links data (6 categories, 67 entries)
+│   ├── links.ts            # Curated links repository (reads data/links.json)
 │   ├── content-source.ts   # ContentSource interface (fs abstraction) + createPostRepository factory
 │   ├── parse-frontmatter.ts # MDX frontmatter parser (js-yaml 4.x, gray-matter parity)
 │   ├── route-adapter.ts    # createDynamicRoute adapter for [slug|id|tag|category] routes
@@ -79,7 +82,8 @@ src/
 │   ├── cache.ts            # createCache<T> utility + resetAllCaches() for test isolation
 │   ├── storage.ts          # safeLocalStorage wrapper (SSR-safe)
 │   ├── jsonld.ts           # JSON-LD structured data
-│   ├── constants.ts        # Site config, content dirs, page size
+│   ├── site.ts             # Site config and env-aware site URL
+│   ├── content-dirs.ts     # Content file paths and page size
 │   └── utils.ts            # slugify, formatDate
 └── types/                  # TypeScript types (PostMeta, PostFull, Project, TagInfo)
 ```
@@ -88,21 +92,21 @@ src/
 
 - **CSS**: BEM for structural components, Tailwind for utilities. See `docs/css-conventions.md`
 - **CSS Module Loading**: ⚠️ Tailwind v4 `@tailwindcss/postcss` silently drops `@import "./styles/xxx.css"` in `globals.css`. All CSS modules MUST be explicitly imported in `layout.tsx` (order: tokens → base → components → blog-ui → backdrop → home → prose → project-detail → animations → responsive last). See `docs/specs/2026-06-29-css-import-fix-design.md`
-- **Background Architecture**: Three-layer separation — `body::before/after` (CSS pseudo-elements, SSG) + `<SiteBackdropStage />` (server component, SSG static DOM) + `<SiteBackdropParallax />` (client component, returns null, only side effects). See `docs/specs/2026-06-29-site-backdrop-architecture-design.md`
+- **Background Architecture**: Three-layer separation — `body::before/after` (CSS pseudo-elements) + `<SiteBackdropStage />` (server-rendered decorative DOM) + `<SiteBackdropParallax />` (client component, returns null, only side effects). See `docs/specs/2026-06-29-site-backdrop-architecture-design.md`
 - **Caching**: Use `createCache<T>` from `lib/cache.ts`. Use `resetAllCaches()` for test isolation. See `docs/cache-components-migration.md`
 - **Testing**: Unit tests in `*.test.tsx` alongside components. E2E in `e2e/` directory
-- **Security**: CSP nonce via `src/proxy.ts` (per-request). Security headers in `next.config.ts`. No remote images (`remotePatterns: []`)
+- **Security**: CSP headers via `src/proxy.ts` (per-request nonce). `layout.tsx` and JSON-LD scripts read `x-nonce` via `src/lib/csp.ts`, so routes render dynamically on demand. Security headers also live in `next.config.ts`. No remote images (`remotePatterns: []`)
 - **Fonts**: `next/font/google` only. CSS variables: `--font-noto-sans-sc`, `--font-jetbrains-mono`
 - **SEO**: JSON-LD via `lib/jsonld.ts`. OG images via `opengraph-image.tsx` file convention
-- **Site Config**: Single source of truth in `src/lib/constants.ts` (`SITE_CONFIG`)
+- **Site Config**: `SITE_CONFIG` lives in `src/lib/site.ts`; content paths and `PAGE_SIZE` live in `src/lib/content-dirs.ts`
 
 ## Commands
 
 ```bash
 pnpm dev          # Start dev server (port 3000; Turbopack)
-pnpm build        # Generate RSS + production build (91 static pages)
-pnpm test         # Run unit/integration tests (291 tests, 31 files)
-pnpm test:e2e     # Run E2E tests (42 tests, 4 spec files; auto-starts dev/prod server on port 3001)
+pnpm build        # Generate RSS + production build (93 page artifacts; routes are dynamic due CSP nonce)
+pnpm test         # Run unit/integration tests (505 tests, 59 files)
+pnpm test:e2e     # Run E2E tests (43 tests, 4 spec files; auto-starts dev/prod server on port 3001)
 pnpm test:e2e:raw # Playwright raw (pass-through flags, e.g. --ui)
 pnpm lint         # ESLint
 pnpm check:seo    # SEO audit (tsx scripts/check-seo.ts)
@@ -120,6 +124,7 @@ tsc --noEmit      # TypeScript check
 ## CI Pipeline
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on push/PR to master:
+
 1. **quality** — pnpm audit → lint → test → tsc → generate-rss → build → bundle-budget
 2. **bundle-analyze** — builds with analyzer, uploads report as artifact
 3. **e2e** — installs Chromium, runs Playwright tests (production build)
