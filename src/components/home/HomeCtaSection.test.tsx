@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 
-// Mock next/link
 vi.mock('next/link', () => ({
   default: ({
     href,
@@ -25,25 +24,19 @@ describe('HomeCtaSection', () => {
     vi.clearAllMocks();
   });
 
-  it('renders the section title', () => {
+  it('renders the signature title', () => {
     render(<HomeCtaSection />);
-    expect(screen.getByText('保持连接')).toBeInTheDocument();
+    expect(screen.getByText('留一间安静的工作室')).toBeInTheDocument();
   });
 
   it('renders the description', () => {
     render(<HomeCtaSection />);
-    expect(screen.getByText(/欢迎在评论区留言/)).toBeInTheDocument();
-  });
-
-  it('renders eyebrow text', () => {
-    render(<HomeCtaSection />);
-    expect(screen.getByText('Get in Touch')).toBeInTheDocument();
+    expect(screen.getByText(/持续整理实践、工具和项目样本/)).toBeInTheDocument();
   });
 
   it('renders about link', () => {
     render(<HomeCtaSection />);
-    const aboutLink = screen.getByText('关于我').closest('a');
-    expect(aboutLink).toHaveAttribute('href', '/about');
+    expect(screen.getByText('关于我').closest('a')).toHaveAttribute('href', '/about');
   });
 
   it('renders GitHub link with correct href', () => {
@@ -53,21 +46,13 @@ describe('HomeCtaSection', () => {
     expect(ghLink).toHaveAttribute('target', '_blank');
   });
 
-  it('renders navigation link', () => {
+  it('renders RSS link', () => {
     render(<HomeCtaSection />);
-    const navLink = screen.getByText('导航收藏').closest('a');
-    expect(navLink).toHaveAttribute('href', '/links');
+    expect(screen.getByText('RSS').closest('a')).toHaveAttribute('href', '/feed.xml');
   });
 
-  it('renders GitHub SVG icon', () => {
+  it('has accessible heading', () => {
     render(<HomeCtaSection />);
-    const ghLink = screen.getByText('GitHub');
-    expect(ghLink.closest('a')?.querySelector('svg')).toBeInTheDocument();
-  });
-
-  it('has accessible aria-label', () => {
-    render(<HomeCtaSection />);
-    const section = screen.getByLabelText('了解更多');
-    expect(section).toBeInTheDocument();
+    expect(screen.getByLabelText('留一间安静的工作室')).toBeInTheDocument();
   });
 });

@@ -27,7 +27,7 @@ export default function ProjectsPage() {
         ) : (
           <div className="cards cards--3">
             {projects.map((project, index) => (
-              <ProjectCard key={project.id} project={project} priority={index === 0} />
+              <ProjectCard key={project.id} project={project} priority={index < 2} />
             ))}
           </div>
         )}

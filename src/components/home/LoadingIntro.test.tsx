@@ -96,7 +96,7 @@ describe('LoadingIntro', () => {
 
   it('renders the tagline', () => {
     render(<LoadingIntro />);
-    expect(screen.getByText('Zero-noise knowledge base')).toBeInTheDocument();
+    expect(screen.getByText('Paper Gallery of notes')).toBeInTheDocument();
   });
 
   it('has role="status" for accessibility', () => {

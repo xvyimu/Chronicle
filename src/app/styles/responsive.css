@@ -411,6 +411,115 @@
   }
 }
 
+/* ---------- Paper Gallery homepage overrides ---------- */
+@media (max-width: 1023px) {
+  body:has(.home-paper) .editorial-hero__stage,
+  body:has(.home-paper) .home-manifesto__inner,
+  body:has(.home-paper) .home-article-rail__layout,
+  body:has(.home-paper) .home-cta__card {
+    grid-template-columns: 1fr;
+  }
+
+  body:has(.home-paper) .editorial-hero__stage {
+    min-height: auto;
+  }
+
+  body:has(.home-paper) .editorial-hero__content,
+  body:has(.home-paper) .editorial-hero__metrics {
+    position: static;
+    gap: 12px;
+  }
+
+  body:has(.home-paper) .editorial-hero__metrics div {
+    min-width: 0;
+    padding: 18px;
+  }
+
+  body:has(.home-paper) .editorial-hero__metrics strong {
+    font-size: 2.35rem;
+  }
+
+  body:has(.home-paper) .home-manifesto__item {
+    grid-template-columns: minmax(120px, 0.45fr) minmax(0, 1fr) auto;
+  }
+}
+
+@media (max-width: 767px) {
+  body:has(.home-paper) .editorial-hero {
+    padding: 52px 16px 20px;
+  }
+
+  body:has(.home-paper) .editorial-hero__stage {
+    display: grid;
+    min-height: auto;
+  }
+
+  body:has(.home-paper) .editorial-hero__content {
+    position: static;
+    display: block;
+    left: auto;
+    right: auto;
+    bottom: auto;
+  }
+
+  body:has(.home-paper) .editorial-hero__title {
+    font-size: clamp(4rem, 24vw, 6rem);
+    line-height: 0.78;
+  }
+
+  body:has(.home-paper) .editorial-hero__summary {
+    max-width: 100%;
+  }
+
+  body:has(.home-paper) .editorial-hero__actions {
+    margin-top: 24px;
+  }
+
+  body:has(.home-paper) .editorial-hero__visual {
+    min-height: auto;
+  }
+
+  body:has(.home-paper) .editorial-hero__metrics div {
+    padding: 14px;
+  }
+
+  body:has(.home-paper) .editorial-hero__metrics strong {
+    font-size: 1.85rem;
+  }
+
+  body:has(.home-paper) .editorial-hero__visual-note {
+    display: none;
+  }
+
+  body:has(.home-paper) .home-manifesto__item {
+    grid-template-columns: 1fr;
+  }
+
+  body:has(.home-paper) .home-manifesto__title {
+    font-size: clamp(2.4rem, 14vw, 4rem);
+  }
+
+  body:has(.home-paper) .home-manifesto__desc,
+  body:has(.home-paper) .home-manifesto__link {
+    grid-column: auto;
+  }
+
+  body:has(.home-paper) .home-article-rail__row-link {
+    grid-template-columns: 1fr;
+  }
+
+  body:has(.home-paper) .home-cta__card {
+    display: grid;
+    gap: 22px;
+    padding: 38px 0 48px;
+    text-align: left;
+  }
+
+  body:has(.home-paper) .home-cta__actions {
+    justify-content: flex-start;
+  }
+}
+
 /* ---------- Print ---------- */
 @media print {
   .header,

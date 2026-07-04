@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 interface EditorialHeroProps {
@@ -5,83 +6,55 @@ interface EditorialHeroProps {
   projectCount: number;
 }
 
-const heroSignals = [
-  { label: 'Technical Notes', value: '实践笔记' },
-  { label: 'Open Source Work', value: '开源作品' },
-  { label: 'Curated Links', value: '个人收藏' },
-];
-
-/**
- * EditorialHero — 首页 hero 区域.
- *
- * 视觉背景 (深蓝渐变 + 装饰元素 + 鼠标视差) 由全局背景层提供:
- *   - body::before/after (渐变 + 网格遮罩, 纯 CSS 伪元素, SSG 静态)
- *   - <SiteBackdropStage/> + <SiteBackdropParallax/> (装饰元素 + 视差)
- * 本组件只负责 hero 自身的内容布局 (标题/CTA/metrics/rail).
- * stage 元素保留为内容容器, 背景透明以透出全站背景.
- */
 export default function EditorialHero({ postCount, projectCount }: EditorialHeroProps) {
   return (
     <section className="editorial-hero" aria-labelledby="home-hero-title">
-      <div className="editorial-hero__topline" aria-hidden="true">
-        <span>云原生 · 全栈 · 自动化</span>
-      </div>
-
       <div className="editorial-hero__stage">
         <div className="editorial-hero__content">
-          <p className="editorial-hero__kicker">Zero-noise knowledge base</p>
+          <p className="editorial-hero__kicker">Paper Gallery</p>
           <h1 id="home-hero-title" className="editorial-hero__title">
-            <span>Build Quiet Systems,</span>
-            <span>Write Useful Notes.</span>
+            <span>Notes</span>
+            <span>Archive</span>
           </h1>
           <p className="editorial-hero__summary">
-            云原生、全栈、自动化与个人收藏。把踩过的坑、验证过的工具和可复用的经验，整理成能再次打开的入口。
+            这里收纳云原生、全栈、自动化和个人收藏，把验证过的经验整理成下一次能直接打开的入口。
           </p>
 
           <div className="editorial-hero__actions">
             <Link href="/blog" className="btn btn--primary">
-              精选文章
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
+              进入文章
             </Link>
             <Link href="/links" className="btn btn--ghost">
-              导航收藏
-            </Link>
-            <Link href="/about" className="editorial-hero__text-link">
-              关于本站
+              打开收藏
             </Link>
           </div>
         </div>
 
-        <div className="editorial-hero__metrics" aria-label="站点统计">
-          <div>
-            <strong>{postCount}</strong>
-            <span>技术文章</span>
+        <div className="editorial-hero__visual" aria-label="站点概览">
+          <div className="editorial-hero__image-frame">
+            <Image
+              src="/images/projects/blog.png"
+              alt="个人博客首页界面预览"
+              fill
+              priority
+              loading="eager"
+              sizes="(max-width: 767px) 82vw, 420px"
+              className="editorial-hero__image"
+            />
           </div>
-          <div>
-            <strong>{projectCount}</strong>
-            <span>开源项目</span>
-          </div>
-        </div>
-
-        <div className="editorial-hero__rail" aria-label="首页入口">
-          {heroSignals.map((signal) => (
-            <div key={signal.label} className="editorial-hero__signal">
-              <span>{signal.label}</span>
-              <strong>{signal.value}</strong>
+          <div className="editorial-hero__metrics">
+            <div>
+              <strong>{postCount}</strong>
+              <span>篇文章</span>
             </div>
-          ))}
+            <div>
+              <strong>{projectCount}</strong>
+              <span>个项目</span>
+            </div>
+          </div>
+          <p className="editorial-hero__visual-note">
+            文章、项目和链接都按长期复用来整理，少一点噪音，多一点可回访的线索。
+          </p>
         </div>
       </div>
     </section>

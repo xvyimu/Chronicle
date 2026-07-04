@@ -3,7 +3,6 @@ import { render, screen, cleanup } from '@testing-library/react';
 import { getAllPosts } from '@/lib/posts';
 import { getFeaturedProjects } from '@/lib/projects';
 
-// Mock next/link as a plain anchor
 vi.mock('next/link', () => ({
   default: ({
     href,
@@ -19,7 +18,24 @@ vi.mock('next/link', () => ({
   ),
 }));
 
-// Mock SpeedInsights and Analytics
+vi.mock('next/image', () => ({
+  default: ({
+    src,
+    alt,
+    fill: _fill,
+    priority: _priority,
+    sizes: _sizes,
+    ...props
+  }: React.ImgHTMLAttributes<HTMLImageElement> & {
+    fill?: boolean;
+    priority?: boolean;
+    sizes?: string;
+  }) => (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={String(src)} alt={alt ?? ''} {...props} />
+  ),
+}));
+
 vi.mock('@vercel/speed-insights/next', () => ({ SpeedInsights: () => null }));
 vi.mock('@vercel/analytics/react', () => ({ Analytics: () => null }));
 vi.mock('next/headers', () => ({
@@ -35,32 +51,44 @@ describe('HomePage', () => {
     render(await HomePage());
   }
 
-  it('renders the hero section with tagline', async () => {
+  it('renders the Paper Gallery hero', async () => {
     await renderHomePage();
-    expect(screen.getByText('Build Quiet Systems,')).toBeInTheDocument();
-    expect(screen.getByText('Write Useful Notes.')).toBeInTheDocument();
+    expect(screen.getByText('Paper Gallery')).toBeInTheDocument();
+    expect(screen.getByText('Notes')).toBeInTheDocument();
+    expect(screen.getByText('Archive')).toBeInTheDocument();
+  });
+
+  it('renders the homepage paper container', async () => {
+    await renderHomePage();
+    expect(document.querySelector('.home-paper')).toBeInTheDocument();
   });
 
   it('renders hero CTA links', async () => {
     await renderHomePage();
     const heroActions = document.querySelector('.editorial-hero__actions');
-    expect(heroActions!.querySelector('a[href="/blog"]')).toHaveTextContent('精选文章');
-    expect(heroActions!.querySelector('a[href="/links"]')).toHaveTextContent('导航收藏');
-    expect(heroActions!.querySelector('a[href="/about"]')).toHaveTextContent('关于本站');
+    expect(heroActions!.querySelector('a[href="/blog"]')).toHaveTextContent('进入文章');
+    expect(heroActions!.querySelector('a[href="/links"]')).toHaveTextContent('打开收藏');
   });
 
-  it('renders editorial hero signal rail', async () => {
+  it('renders entry index and reading path sections', async () => {
     await renderHomePage();
-    expect(screen.getByText('Technical Notes')).toBeInTheDocument();
-    expect(screen.getByText('Open Source Work')).toBeInTheDocument();
-    expect(screen.getAllByText('Curated Links').length).toBeGreaterThan(0);
+
+    expect(screen.getByText('从这里进入')).toBeInTheDocument();
+    expect(screen.getByText('浏览文章')).toBeInTheDocument();
+    expect(screen.getAllByText('打开导航').length).toBeGreaterThan(0);
+    expect(screen.getByText('查看作品')).toBeInTheDocument();
+    expect(screen.getByText('阅读路径')).toBeInTheDocument();
+    expect(screen.getByText('个人服务部署路线')).toBeInTheDocument();
+    expect(screen.getByText('Web 性能与体验')).toBeInTheDocument();
+    expect(screen.getByText('数据层实践')).toBeInTheDocument();
+    expect(screen.getByText('TypeScript 与全栈')).toBeInTheDocument();
   });
 
-  it('renders latest posts section with up to 4 posts', async () => {
+  it('renders recent posts section with selected posts', async () => {
     await renderHomePage();
     const allPosts = getAllPosts();
 
-    expect(screen.getByText('最新文章')).toBeInTheDocument();
+    expect(screen.getByText('最近整理')).toBeInTheDocument();
 
     const renderedTitles = [
       ...allPosts.filter((post) => post.featured),
@@ -71,20 +99,6 @@ describe('HomePage', () => {
     for (const title of renderedTitles) {
       expect(screen.getByText(title)).toBeInTheDocument();
     }
-  });
-
-  it('renders the manifesto and reading path sections', async () => {
-    await renderHomePage();
-
-    expect(
-      screen.getByText('把零散经验整理成下一次能直接复用的入口。'),
-    ).toBeInTheDocument();
-    expect(screen.getByText('少一点噪音，多一点可复用经验')).toBeInTheDocument();
-    expect(screen.getByText('按主题进入')).toBeInTheDocument();
-    expect(screen.getByText('个人服务部署路线')).toBeInTheDocument();
-    expect(screen.getByText('Web 性能与体验')).toBeInTheDocument();
-    expect(screen.getByText('数据层实践')).toBeInTheDocument();
-    expect(screen.getByText('TypeScript 与全栈')).toBeInTheDocument();
   });
 
   it('renders curated links preview', async () => {
@@ -103,7 +117,7 @@ describe('HomePage', () => {
     const featured = getFeaturedProjects();
 
     if (featured.length > 0) {
-      expect(screen.getByText('作品验证场')).toBeInTheDocument();
+      expect(screen.getByText('项目样本')).toBeInTheDocument();
       for (const project of featured) {
         expect(screen.getByText(project.title)).toBeInTheDocument();
       }

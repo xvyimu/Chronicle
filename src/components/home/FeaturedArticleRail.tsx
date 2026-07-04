@@ -9,6 +9,8 @@ interface FeaturedArticleRailProps {
 export default function FeaturedArticleRail({ posts }: FeaturedArticleRailProps) {
   if (posts.length === 0) return null;
 
+  const [featuredPost, ...latestPosts] = posts;
+
   return (
     <section
       className="section home-article-rail"
@@ -17,52 +19,49 @@ export default function FeaturedArticleRail({ posts }: FeaturedArticleRailProps)
       <div className="section__inner">
         <div className="section__head">
           <div>
-            <span className="section__eyebrow">Featured Articles</span>
             <h2 id="home-article-rail-title" className="section__title">
-              最新文章
+              最近整理
             </h2>
             <p className="section__subtitle">
-              把最近整理过的实践笔记放成一条可横向浏览的轨道。
+              一篇主笔记配合最新列表，保留日期、分类和阅读时间，方便快速判断是否继续读。
             </p>
           </div>
           <div className="section__action">
             <Link href="/blog" className="section__link">
               查看全部
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
             </Link>
           </div>
         </div>
 
-        <div className="home-article-rail__track">
-          {posts.map((post, index) => (
-            <article key={post.slug} className="home-article-rail__card">
-              <Link href={`/blog/${post.slug}`} className="home-article-rail__link">
-                <span className="home-article-rail__number">
-                  {String(index + 1).padStart(2, '0')}
-                </span>
-                <div className="home-article-rail__meta">
-                  <time dateTime={post.date}>{formatDate(post.date)}</time>
-                  {post.category && <span>{post.category}</span>}
-                  {post.tags[0] && <span>{post.tags[0]}</span>}
-                </div>
-                <h3 className="home-article-rail__title">{post.title}</h3>
-                <p className="home-article-rail__desc">{post.description}</p>
-                <span className="home-article-rail__foot">{post.readingTime}</span>
-              </Link>
-            </article>
-          ))}
+        <div className="home-article-rail__layout">
+          <article className="home-article-rail__featured">
+            <Link href={`/blog/${featuredPost.slug}`} className="home-article-rail__lead">
+              <span className="home-article-rail__label">Lead note</span>
+              <div className="home-article-rail__meta">
+                <time dateTime={featuredPost.date}>{formatDate(featuredPost.date)}</time>
+                {featuredPost.category && <span>{featuredPost.category}</span>}
+                {featuredPost.tags[0] && <span>{featuredPost.tags[0]}</span>}
+              </div>
+              <h3 className="home-article-rail__title">{featuredPost.title}</h3>
+              <p className="home-article-rail__desc">{featuredPost.description}</p>
+              <span className="home-article-rail__foot">{featuredPost.readingTime}</span>
+            </Link>
+          </article>
+
+          <div className="home-article-rail__list" aria-label="最新文章列表">
+            {latestPosts.map((post) => (
+              <article key={post.slug} className="home-article-rail__row">
+                <Link href={`/blog/${post.slug}`} className="home-article-rail__row-link">
+                  <div className="home-article-rail__meta">
+                    <time dateTime={post.date}>{formatDate(post.date)}</time>
+                    {post.category && <span>{post.category}</span>}
+                  </div>
+                  <h3 className="home-article-rail__title">{post.title}</h3>
+                  <span className="home-article-rail__foot">{post.readingTime}</span>
+                </Link>
+              </article>
+            ))}
+          </div>
         </div>
       </div>
     </section>

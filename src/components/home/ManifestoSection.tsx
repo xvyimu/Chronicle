@@ -1,50 +1,46 @@
 import Link from 'next/link';
 
-const manifestoItems = [
+const indexItems = [
   {
-    number: '01',
-    label: 'Why',
-    title: '少一点噪音，多一点可复用经验',
-    description:
-      '这里记录真实踩过的坑、复盘过的部署路径和反复会用到的工具入口。内容不追热点，更像一套可以再次打开的个人工程手册。',
-    href: '/about',
-    action: '看站点说明',
-  },
-  {
-    number: '02',
-    label: 'How',
-    title: '文章、专题、项目和收藏互相连接',
-    description:
-      '一篇文章解决一个问题，一个专题串起一条路径，一个项目验证一组做法，导航收藏则保留那些值得长期回访的外部资料。',
-    href: '/categories',
-    action: '浏览分类',
-  },
-  {
-    number: '03',
-    label: 'What',
-    title: '配置清单、性能实践和工具入口',
-    description:
-      '从 VPS 初始化、CI/CD、反向代理，到 Web 性能、数据库和自托管工具，优先沉淀能直接落地的步骤和判断依据。',
+    label: 'Articles',
+    title: '文章',
+    description: '围绕部署、性能、数据库和前端工程，把问题拆成可复用的实践笔记。',
     href: '/blog',
-    action: '进入文章',
+    action: '浏览文章',
+  },
+  {
+    label: 'Links',
+    title: '收藏',
+    description: '长期回访的官网、文档、工具和 VPS 资源，保留原始链接，方便再次查证。',
+    href: '/links',
+    action: '打开导航',
+  },
+  {
+    label: 'Projects',
+    title: '项目',
+    description: '把文章中的判断放进真实项目里验证，留下可以继续迭代的样本。',
+    href: '/projects',
+    action: '查看作品',
   },
 ];
 
 export default function ManifestoSection() {
   return (
-    <section className="home-manifesto" aria-labelledby="home-manifesto-title">
+    <section className="home-manifesto" aria-labelledby="home-index-title">
       <div className="home-manifesto__inner">
         <div className="home-manifesto__intro">
-          <span className="section__eyebrow">Manifesto</span>
-          <h2 id="home-manifesto-title" className="home-manifesto__title">
-            把零散经验整理成下一次能直接复用的入口。
+          <p className="home-manifesto__label">Index</p>
+          <h2 id="home-index-title" className="home-manifesto__title">
+            从这里进入
           </h2>
+          <p className="home-manifesto__lead">
+            首页不做热闹的入口堆叠，只保留三条最常用的路径。
+          </p>
         </div>
 
         <div className="home-manifesto__list">
-          {manifestoItems.map((item) => (
-            <article key={item.number} className="home-manifesto__item">
-              <div className="home-manifesto__number">{item.number}</div>
+          {indexItems.map((item) => (
+            <article key={item.href} className="home-manifesto__item">
               <div>
                 <p className="home-manifesto__label">{item.label}</p>
                 <h3 className="home-manifesto__item-title">{item.title}</h3>

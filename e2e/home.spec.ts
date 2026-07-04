@@ -22,8 +22,8 @@ test.describe('首页', () => {
   test('显示最新文章列表', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
-    // "最新文章" section title
-    await expect(page.getByText('最新文章')).toBeVisible({ timeout: 10000 });
+    // Paper Gallery recent notes section title
+    await expect(page.getByText('最近整理')).toBeVisible({ timeout: 10000 });
     // At least one blog card should be present
     const blogLinks = page.locator('a[href*="/blog/"]');
     await expect(blogLinks.first()).toBeVisible({ timeout: 10000 });
@@ -33,7 +33,7 @@ test.describe('首页', () => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
     // Featured projects section heading
-    const projectsSection = page.getByText('作品验证场');
+    const projectsSection = page.getByRole('heading', { name: '项目样本' });
     await expect(projectsSection).toBeVisible({ timeout: 10000 });
   });
 
@@ -76,17 +76,16 @@ test.describe('首页', () => {
     await expect(page).toHaveURL(/\/links/, { timeout: 15000 });
   });
 
-  test('英雄区域信号导轨可见', async ({ page }) => {
+  test('首页入口索引可见', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
-    const rail = page.locator('.editorial-hero__rail');
-    await expect(rail).toBeVisible({ timeout: 10000 });
-    // Verify each signal label
-    const signals = rail.locator('.editorial-hero__signal');
-    await expect(signals).toHaveCount(3);
-    await expect(signals.nth(0)).toContainText('Technical Notes');
-    await expect(signals.nth(1)).toContainText('Open Source Work');
-    await expect(signals.nth(2)).toContainText('Curated Links');
+    const index = page.locator('.home-manifesto__list');
+    await expect(index).toBeVisible({ timeout: 10000 });
+    const entries = index.locator('.home-manifesto__item');
+    await expect(entries).toHaveCount(3);
+    await expect(entries.nth(0)).toContainText('Articles');
+    await expect(entries.nth(1)).toContainText('Links');
+    await expect(entries.nth(2)).toContainText('Projects');
   });
 
   test('英雄区域统计指标可见', async ({ page }) => {
@@ -94,8 +93,8 @@ test.describe('首页', () => {
     await page.waitForLoadState('domcontentloaded');
     const metrics = page.locator('.editorial-hero__metrics');
     await expect(metrics).toBeVisible({ timeout: 10000 });
-    await expect(metrics).toContainText('技术文章');
-    await expect(metrics).toContainText('开源项目');
+    await expect(metrics).toContainText('篇文章');
+    await expect(metrics).toContainText('个项目');
   });
 
   test('滚动揭示区域在视口后变为可见', async ({ page }) => {

@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 import type { PostMeta } from '@/types';
 
-// Mock next/link
 vi.mock('next/link', () => ({
   default: ({
     href,
@@ -18,7 +17,6 @@ vi.mock('next/link', () => ({
   ),
 }));
 
-// Mock formatDate
 vi.mock('@/lib/utils', () => ({
   formatDate: vi.fn((date: string) => {
     const d = new Date(date);
@@ -72,9 +70,10 @@ describe('FeaturedArticleRail', () => {
     expect(container.innerHTML).toBe('');
   });
 
-  it('renders the section title', () => {
+  it('renders the section title and lead label', () => {
     render(<FeaturedArticleRail posts={mockPosts} />);
-    expect(screen.getByText('最新文章')).toBeInTheDocument();
+    expect(screen.getByText('最近整理')).toBeInTheDocument();
+    expect(screen.getByText('Lead note')).toBeInTheDocument();
   });
 
   it('renders all post titles', () => {
@@ -83,20 +82,15 @@ describe('FeaturedArticleRail', () => {
     expect(screen.getByText('Post Two')).toBeInTheDocument();
   });
 
-  it('renders post descriptions', () => {
+  it('renders the featured post description', () => {
     render(<FeaturedArticleRail posts={mockPosts} />);
     expect(screen.getByText('First post description')).toBeInTheDocument();
-    expect(screen.getByText('Second post description')).toBeInTheDocument();
   });
 
-  it('renders post dates', () => {
+  it('renders post dates, category and first tag', () => {
     render(<FeaturedArticleRail posts={mockPosts} />);
     expect(screen.getByText('2026-06-15')).toBeInTheDocument();
     expect(screen.getByText('2026-06-10')).toBeInTheDocument();
-  });
-
-  it('renders category and first tag', () => {
-    render(<FeaturedArticleRail posts={mockPosts} />);
     expect(screen.getByText('前端开发')).toBeInTheDocument();
     expect(screen.getByText('React')).toBeInTheDocument();
   });
@@ -107,35 +101,25 @@ describe('FeaturedArticleRail', () => {
     expect(screen.getByText('3 min read')).toBeInTheDocument();
   });
 
-  it('renders numbered indicators', () => {
-    render(<FeaturedArticleRail posts={mockPosts} />);
-    expect(screen.getByText('01')).toBeInTheDocument();
-    expect(screen.getByText('02')).toBeInTheDocument();
-  });
-
   it('renders post links to /blog/:slug', () => {
     render(<FeaturedArticleRail posts={mockPosts} />);
-    const postOneLink = screen.getByText('Post One').closest('a');
-    expect(postOneLink).toHaveAttribute('href', '/blog/post-1');
-
-    const postTwoLink = screen.getByText('Post Two').closest('a');
-    expect(postTwoLink).toHaveAttribute('href', '/blog/post-2');
+    expect(screen.getByText('Post One').closest('a')).toHaveAttribute(
+      'href',
+      '/blog/post-1',
+    );
+    expect(screen.getByText('Post Two').closest('a')).toHaveAttribute(
+      'href',
+      '/blog/post-2',
+    );
   });
 
-  it('renders "查看全部" link pointing to /blog', () => {
+  it('renders the all posts link', () => {
     render(<FeaturedArticleRail posts={mockPosts} />);
-    const allLink = screen.getByText('查看全部').closest('a');
-    expect(allLink).toHaveAttribute('href', '/blog');
-  });
-
-  it('renders the eyebrow text', () => {
-    render(<FeaturedArticleRail posts={mockPosts} />);
-    expect(screen.getByText('Featured Articles')).toBeInTheDocument();
+    expect(screen.getByText('查看全部').closest('a')).toHaveAttribute('href', '/blog');
   });
 
   it('has accessible heading', () => {
     render(<FeaturedArticleRail posts={mockPosts} />);
-    const section = screen.getByLabelText('最新文章');
-    expect(section).toBeInTheDocument();
+    expect(screen.getByLabelText('最近整理')).toBeInTheDocument();
   });
 });

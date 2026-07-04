@@ -40,7 +40,7 @@ export default function LoadingIntro() {
 
         <div className="loading-intro__text">
           <span className="loading-intro__title">西江月</span>
-          <span className="loading-intro__tagline">Zero-noise knowledge base</span>
+          <span className="loading-intro__tagline">Paper Gallery of notes</span>
         </div>
 
         <div className="loading-intro__bar">

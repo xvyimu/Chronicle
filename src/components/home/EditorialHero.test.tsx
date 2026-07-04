@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 
-// Mock next/link
 vi.mock('next/link', () => ({
   default: ({
     href,
@@ -17,6 +16,24 @@ vi.mock('next/link', () => ({
   ),
 }));
 
+vi.mock('next/image', () => ({
+  default: ({
+    src,
+    alt,
+    fill: _fill,
+    priority: _priority,
+    sizes: _sizes,
+    ...props
+  }: React.ImgHTMLAttributes<HTMLImageElement> & {
+    fill?: boolean;
+    priority?: boolean;
+    sizes?: string;
+  }) => (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={String(src)} alt={alt ?? ''} {...props} />
+  ),
+}));
+
 import EditorialHero from './EditorialHero';
 
 describe('EditorialHero', () => {
@@ -25,61 +42,42 @@ describe('EditorialHero', () => {
     vi.clearAllMocks();
   });
 
-  it('renders the title', () => {
+  it('renders the Paper Gallery title', () => {
     render(<EditorialHero postCount={5} projectCount={3} />);
-    expect(screen.getByText('Build Quiet Systems,')).toBeInTheDocument();
-    expect(screen.getByText('Write Useful Notes.')).toBeInTheDocument();
+    expect(screen.getByText('Notes')).toBeInTheDocument();
+    expect(screen.getByText('Archive')).toBeInTheDocument();
   });
 
-  it('renders the kicker', () => {
+  it('renders the kicker and summary', () => {
     render(<EditorialHero postCount={5} projectCount={3} />);
-    expect(screen.getByText('Zero-noise knowledge base')).toBeInTheDocument();
-  });
-
-  it('renders the summary', () => {
-    render(<EditorialHero postCount={5} projectCount={3} />);
-    expect(screen.getByText(/云原生、全栈、自动化与个人收藏/)).toBeInTheDocument();
+    expect(screen.getByText('Paper Gallery')).toBeInTheDocument();
+    expect(screen.getByText(/验证过的经验/)).toBeInTheDocument();
   });
 
   it('renders post and project counts', () => {
     render(<EditorialHero postCount={42} projectCount={7} />);
     expect(screen.getByText('42')).toBeInTheDocument();
     expect(screen.getByText('7')).toBeInTheDocument();
+    expect(screen.getByText('篇文章')).toBeInTheDocument();
+    expect(screen.getByText('个项目')).toBeInTheDocument();
   });
 
-  it('renders metric labels', () => {
+  it('renders the two primary CTA links', () => {
     render(<EditorialHero postCount={5} projectCount={3} />);
-    expect(screen.getByText('技术文章')).toBeInTheDocument();
-    expect(screen.getByText('开源项目')).toBeInTheDocument();
+    expect(screen.getByText('进入文章').closest('a')).toHaveAttribute('href', '/blog');
+    expect(screen.getByText('打开收藏').closest('a')).toHaveAttribute('href', '/links');
   });
 
-  it('renders CTA links', () => {
+  it('renders the local visual asset', () => {
     render(<EditorialHero postCount={5} projectCount={3} />);
-    const articlesLink = screen.getByText('精选文章').closest('a');
-    expect(articlesLink).toHaveAttribute('href', '/blog');
-
-    const navLink = screen.getByText('导航收藏').closest('a');
-    expect(navLink).toHaveAttribute('href', '/links');
-
-    const aboutLink = screen.getByText('关于本站').closest('a');
-    expect(aboutLink).toHaveAttribute('href', '/about');
+    expect(screen.getByAltText('个人博客首页界面预览')).toHaveAttribute(
+      'src',
+      '/images/projects/blog.png',
+    );
   });
 
-  it('renders hero signals', () => {
+  it('has accessible overview label', () => {
     render(<EditorialHero postCount={5} projectCount={3} />);
-    expect(screen.getByText('实践笔记')).toBeInTheDocument();
-    expect(screen.getByText('开源作品')).toBeInTheDocument();
-    expect(screen.getByText('个人收藏')).toBeInTheDocument();
-  });
-
-  it('renders the topline text', () => {
-    render(<EditorialHero postCount={5} projectCount={3} />);
-    expect(screen.getByText('云原生 · 全栈 · 自动化')).toBeInTheDocument();
-  });
-
-  it('has accessible heading', () => {
-    render(<EditorialHero postCount={5} projectCount={3} />);
-    const section = screen.getByLabelText('站点统计');
-    expect(section).toBeInTheDocument();
+    expect(screen.getByLabelText('站点概览')).toBeInTheDocument();
   });
 });
