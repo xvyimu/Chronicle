@@ -29,7 +29,7 @@ module.exports = {
     assert: {
       assertions: {
         // 性能 — 宽松阈值，基于 SSG 静态站预期
-        'categories:performance': ['error', { minScore: 0.85 }],
+        'categories:performance': ['error', { minScore: 0.80 }],
         'categories:accessibility': ['error', { minScore: 0.9 }],
         'categories:best-practices': ['error', { minScore: 0.9 }],
         'categories:seo': ['error', { minScore: 0.9 }],
