@@ -36,6 +36,14 @@ const nextConfig: NextConfig = {
   experimental: {
     viewTransition: true,
   },
+  /*
+   * The content repositories read local MDX/JSON files with fs at request time.
+   * Vercel's serverless file tracing cannot infer those dynamic paths, so keep
+   * them in every route bundle explicitly.
+   */
+  outputFileTracingIncludes: {
+    '/**': ['content/**/*', 'data/**/*'],
+  },
   /* Security headers */
   async headers() {
     return [
