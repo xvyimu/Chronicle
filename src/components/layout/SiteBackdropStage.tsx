@@ -2,7 +2,8 @@
  * SiteBackdropStage — 全站背景装饰元素静态 DOM 层.
  *
  * 纯 server component (无 'use client'), SSG 时随 HTML 发送.
- * 装饰元素: 纸张横带 × 2 + 网格圈 + 标记块 × 2.
+ * 装饰元素: 纸张横带 × 2 + 标记块 × 2.
+ * 网格圈由 .site-backdrop__stage::before 绘制, 避免冷加载时大面积 DOM 节点产生 CLS.
  * 视觉基底 (纸张渐变 + 细点阵) 由 body::before/after 提供 (见 backdrop.css).
  * 视差跟随由 <SiteBackdropParallax/> 通过 CSS 变量驱动 transform.
  */
@@ -41,20 +42,6 @@ export default function SiteBackdropStage() {
           width: '120%',
           height: 88,
           transform: 'rotate(1.4deg)',
-        }}
-      />
-      <div
-        className="site-backdrop__mesh"
-        style={{
-          position: 'absolute',
-          right: -140,
-          bottom: -180,
-          width: 620,
-          height: 620,
-          border: '1px solid var(--border, transparent)',
-          borderRadius: '50%',
-          opacity: 0.38,
-          transform: 'rotate(8deg)',
         }}
       />
       <div

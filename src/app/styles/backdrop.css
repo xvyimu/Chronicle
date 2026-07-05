@@ -103,7 +103,8 @@ html.dark .site-backdrop__plane {
   );
 }
 
-.site-backdrop__mesh {
+.site-backdrop__stage::before {
+  content: '';
   position: absolute;
   right: -140px;
   bottom: -180px;
@@ -111,24 +112,16 @@ html.dark .site-backdrop__plane {
   height: 620px;
   border: 1px solid var(--border);
   border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    transparent 0 154px,
+    var(--border) 154px 155px,
+    transparent 155px 230px,
+    var(--border) 230px 231px,
+    transparent 231px
+  );
   opacity: 0.38;
   transform: rotate(8deg);
-}
-
-.site-backdrop__mesh::before,
-.site-backdrop__mesh::after {
-  content: '';
-  position: absolute;
-  border: 1px solid var(--border);
-  border-radius: 50%;
-}
-
-.site-backdrop__mesh::before {
-  inset: 76px;
-}
-
-.site-backdrop__mesh::after {
-  inset: 154px;
 }
 
 .site-backdrop__code {

@@ -10,12 +10,12 @@ describe('SiteBackdropStage', () => {
     expect(stage?.getAttribute('aria-hidden')).toBe('true');
   });
 
-  it('renders all 5 decorative child elements (2 planes + 1 mesh + 2 codes)', () => {
+  it('renders all 4 DOM decorative child elements (2 planes + 2 codes)', () => {
     const { container } = render(<SiteBackdropStage />);
     expect(container.querySelectorAll('.site-backdrop__plane')).toHaveLength(2);
     expect(container.querySelectorAll('.site-backdrop__plane--back')).toHaveLength(1);
     expect(container.querySelectorAll('.site-backdrop__plane--front')).toHaveLength(1);
-    expect(container.querySelectorAll('.site-backdrop__mesh')).toHaveLength(1);
+    expect(container.querySelector('.site-backdrop__mesh')).toBeNull();
     expect(container.querySelectorAll('.site-backdrop__code')).toHaveLength(2);
     expect(container.querySelectorAll('.site-backdrop__code--one')).toHaveLength(1);
     expect(container.querySelectorAll('.site-backdrop__code--two')).toHaveLength(1);
@@ -40,12 +40,9 @@ describe('SiteBackdropStage', () => {
     expect(container.querySelector('.site-backdrop__stage')).not.toBeNull();
   });
 
-  it('renders only the two code elements with text content (planes/mesh are empty)', () => {
+  it('renders only the two code elements with text content (planes are empty)', () => {
     const { container } = render(<SiteBackdropStage />);
-    // planes and mesh should not carry any text content
     expect(container.querySelector('.site-backdrop__plane')?.textContent).toBe('');
-    expect(container.querySelector('.site-backdrop__mesh')?.textContent).toBe('');
-    // only .site-backdrop__code elements hold text
     const codeTexts = Array.from(container.querySelectorAll('.site-backdrop__code')).map(
       (el) => el.textContent?.trim() ?? '',
     );
