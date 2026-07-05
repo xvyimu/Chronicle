@@ -127,13 +127,25 @@ test.describe('首页', () => {
     await expect(stage).toHaveAttribute('aria-hidden', 'true');
   });
 
-  test('背景装饰元素数量正确 (2 飞机条 + 1 网格圈 + 2 代码块)', async ({ page }) => {
+  test('背景装饰元素数量正确 (2 飞机条 + CSS 网格圈 + 2 代码块)', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
     await expect(page.locator('.site-backdrop__plane')).toHaveCount(2);
     await expect(page.locator('.site-backdrop__plane--back')).toHaveCount(1);
     await expect(page.locator('.site-backdrop__plane--front')).toHaveCount(1);
-    await expect(page.locator('.site-backdrop__mesh')).toHaveCount(1);
+    await expect(page.locator('.site-backdrop__mesh')).toHaveCount(0);
+    await expect(page.locator('.site-backdrop__stage')).toHaveCSS('position', 'fixed');
+    await expect
+      .poll(async () =>
+        page.locator('.site-backdrop__stage').evaluate((element) => {
+          const meshStyle = getComputedStyle(element, '::before');
+          return {
+            content: meshStyle.content,
+            position: meshStyle.position,
+          };
+        }),
+      )
+      .toEqual({ content: '""', position: 'absolute' });
     await expect(page.locator('.site-backdrop__code')).toHaveCount(2);
     await expect(page.locator('.site-backdrop__code--one')).toContainText('pnpm test');
     await expect(page.locator('.site-backdrop__code--two')).toContainText(
