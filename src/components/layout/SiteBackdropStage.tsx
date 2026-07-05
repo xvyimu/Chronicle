@@ -8,12 +8,67 @@
  */
 export default function SiteBackdropStage() {
   return (
-    <div className="site-backdrop__stage" aria-hidden="true">
-      <div className="site-backdrop__plane site-backdrop__plane--back" />
-      <div className="site-backdrop__plane site-backdrop__plane--front" />
-      <div className="site-backdrop__mesh" />
-      <div className="site-backdrop__code site-backdrop__code--one">pnpm test</div>
-      <div className="site-backdrop__code site-backdrop__code--two">deploy --quiet</div>
+    <div
+      className="site-backdrop__stage"
+      aria-hidden="true"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: -1,
+        width: '100%',
+        height: '100%',
+        overflow: 'hidden',
+        pointerEvents: 'none',
+      }}
+    >
+      <div
+        className="site-backdrop__plane site-backdrop__plane--back"
+        style={{
+          position: 'absolute',
+          top: 132,
+          left: '-10%',
+          width: '120%',
+          height: 112,
+          transform: 'rotate(-2deg)',
+        }}
+      />
+      <div
+        className="site-backdrop__plane site-backdrop__plane--front"
+        style={{
+          position: 'absolute',
+          top: 232,
+          left: '-10%',
+          width: '120%',
+          height: 88,
+          transform: 'rotate(1.4deg)',
+        }}
+      />
+      <div
+        className="site-backdrop__mesh"
+        style={{
+          position: 'absolute',
+          right: -140,
+          bottom: -180,
+          width: 620,
+          height: 620,
+          border: '1px solid var(--border, transparent)',
+          borderRadius: '50%',
+          opacity: 0.38,
+          transform: 'rotate(8deg)',
+        }}
+      />
+      <div
+        className="site-backdrop__code site-backdrop__code--one"
+        style={{ position: 'absolute', top: 104, right: '12%' }}
+      >
+        pnpm test
+      </div>
+      <div
+        className="site-backdrop__code site-backdrop__code--two"
+        style={{ position: 'absolute', right: '32%', bottom: 268 }}
+      >
+        deploy --quiet
+      </div>
     </div>
   );
 }
