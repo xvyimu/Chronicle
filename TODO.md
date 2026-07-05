@@ -1,17 +1,15 @@
 # 西江月博客 · 项目待办
 
-> 当前状态: 523 tests / 60 files / 43 E2E 全绿；shadcn 全局重构已推送 master；CI Lighthouse 首页性能 0.84 < 0.85（见下方 P0）
-> 更新: 2026-07-04
+> 当前状态: 519 tests / 65 files / 43 E2E 全绿；CI Lighthouse / deploy / production content smoke 全绿；线上域名 `https://incca.ccwu.cc` 可用
+> 更新: 2026-07-05
 
 ---
 
-## P0 · Lighthouse 性能阈值回归
+## P0 · Lighthouse 性能阈值回归 ✅ 已完成 (2026-07-05)
 
-> CI 失败: `categories.performance` 首页 0.84 < 0.85（差 0.01）
-> 根因: shadcn 组件迁移（CuratedLinksPreview → Card/Badge/Button/Separator）+ RevealOnScroll 增加额外 DOM/CSS 层级
-> 排查方向: 首页渲染路径、Reply 评分策略、shadcn 组件额外开销
+> 最新 CI 已恢复通过: quality / e2e / lighthouse / deploy 全绿，deploy 后 `pnpm check:production-content` 线上内容烟测通过。
 
-- [ ] Lighthouse 首页性能阈值调整或优化：CI 中首页 `categories.performance` 降到 0.84，阈值当前 0.85。选项 A：降阈值到 0.80（最快）、选项 B：优化首页渲染路径让分数回 0.85+
+- [x] Lighthouse 首页性能阈值回归已解除：GitHub Actions run `28731579207` 中 Lighthouse CI audit 通过，生产部署与内容烟测同步通过。
 
 ---
 
