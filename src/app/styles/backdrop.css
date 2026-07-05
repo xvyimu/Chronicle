@@ -112,7 +112,7 @@ html.dark .site-backdrop__plane {
   border: 1px solid var(--border);
   border-radius: 50%;
   opacity: 0.38;
-  animation: hero-mesh-rotate 80s linear infinite;
+  transform: rotate(8deg);
 }
 
 .site-backdrop__mesh::before,
@@ -153,20 +153,7 @@ html.dark .site-backdrop__plane {
   bottom: 268px;
 }
 
-@keyframes hero-mesh-rotate {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .site-backdrop__mesh {
-    animation: none;
-  }
-
   .site-backdrop__stage {
     transform: none;
     transition: none;
