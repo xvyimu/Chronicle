@@ -130,5 +130,5 @@
 - [ ] 搜索增强: fuse.js 索引持久化 / 服务端搜索
 - [ ] 图片优化: 统一 next/image 配置 + 预生成 blur data URL
 - [ ] 性能基线: 回填 Speed Insights p75 基线 (依赖生产流量)
-- [ ] mobile Lighthouse preset 评估
+- [x] mobile Lighthouse preset 评估：已新增手动基线配置 `lighthouse.mobile.config.js`，暂不接入 CI 强门禁
 - [x] 导航页 `/links` UI 迭代：metadata tags + 10 分类 123 条收藏已落地
