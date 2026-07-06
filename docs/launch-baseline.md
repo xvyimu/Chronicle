@@ -10,17 +10,17 @@
 
 | 项目             | 当前值                                      | 说明                                                                      |
 | ---------------- | ------------------------------------------- | ------------------------------------------------------------------------- |
-| 最新线上提交     | `0e1fc8f feat: polish content discovery UX` | 已推送并部署                                                              |
-| CI run           | `28790352462`                               | [GitHub Actions](https://github.com/xvyimu/blog/actions/runs/28790352462) |
+| 上线功能基线提交 | `0e1fc8f feat: polish content discovery UX` | 已推送并部署                                                              |
+| 功能基线 CI run  | `28790352462`                               | [GitHub Actions](https://github.com/xvyimu/blog/actions/runs/28790352462) |
 | CI 结论          | `success`                                   | `quality`、`e2e`、`bundle-analyze`、`lighthouse`、`deploy` 全绿           |
-| CI 时间          | 2026-07-06 20:07:54 CST 至 20:16:34 CST     | GitHub 返回 UTC，已换算为北京时间                                         |
+| 功能基线 CI 时间 | 2026-07-06 20:07:54 CST 至 20:16:34 CST     | GitHub 返回 UTC，已换算为北京时间                                         |
 | 生产域名         | `https://incca.ccwu.cc`                     | `check-production-content` 已验证                                         |
 | 生产内容烟测     | 通过                                        | 首页、博客、作品、导航、RSS、Sitemap 均返回 200 并包含本地内容            |
 | 当前本地文章     | 14 篇                                       | `content/blog/*.mdx`                                                      |
 | 当前本地收藏分类 | 10 类                                       | `data/links.json`                                                         |
 | 当前本地收藏链接 | 123 条                                      | 其中 32 条已补运营元信息                                                  |
 
-> 注意：本文件的生产基线对应已部署提交 `0e1fc8f`，包含收藏页筛选、搜索空状态引导、404/错误页恢复入口等 P2 UX 收尾改动。
+> 注意：本文件记录的是功能基线提交 `0e1fc8f`，包含收藏页筛选、搜索空状态引导、404/错误页恢复入口等 P2 UX 收尾改动。纯文档刷新提交不改变功能基线，最新流水线状态以 GitHub Actions 为准。
 
 ## 2. 线上 Smoke 结果
 
