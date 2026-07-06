@@ -151,16 +151,39 @@
   line-height: 1.65;
 }
 
+.links-directory__use-case {
+  border-left: 2px solid color-mix(in srgb, var(--brand) 42%, transparent);
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  padding-left: 10px;
+}
+
+.links-directory__curation,
 .links-directory__tags {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+}
+
+.links-directory__curation {
+  align-items: center;
+  margin-top: 2px;
+}
+
+.links-directory__tags {
   margin-top: auto;
 }
 
 .links-directory__tag {
   background: color-mix(in srgb, var(--brand-soft) 72%, transparent);
   color: var(--text-soft);
+}
+
+.links-directory__checked {
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  line-height: 1;
 }
 
 @media (max-width: 1023px) {

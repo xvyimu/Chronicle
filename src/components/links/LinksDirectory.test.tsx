@@ -14,6 +14,10 @@ const categories: LinkCategory[] = [
         url: 'https://www.openai.com/',
         description: '模型、API 与产品入口',
         tags: ['model', 'api'],
+        official: true,
+        priority: 'primary',
+        useCase: '模型 API 与产品发布入口',
+        lastChecked: '2026-07-06',
       },
       {
         title: 'Claude',
@@ -69,6 +73,15 @@ describe('LinksDirectory', () => {
 
     expect(screen.getByText('model')).toHaveAttribute('data-slot', 'badge');
     expect(screen.getByText('api')).toHaveAttribute('data-slot', 'badge');
+  });
+
+  it('renders optional curation metadata for operational link assets', () => {
+    render(<LinksDirectory categories={categories} />);
+
+    expect(screen.getByText('官网')).toHaveAttribute('data-slot', 'badge');
+    expect(screen.getByText('重点')).toHaveAttribute('data-slot', 'badge');
+    expect(screen.getByText('模型 API 与产品发布入口')).toBeInTheDocument();
+    expect(screen.getByText('2026-07-06')).toBeInTheDocument();
   });
 
   it('keeps link cards as safe external links', () => {

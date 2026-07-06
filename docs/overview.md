@@ -12,16 +12,18 @@
    适合准备写文章、改关于页、维护作品集、检查 RSS 或做内容发布时阅读。
 4. docs/css-conventions.md
    适合准备写或修改样式时阅读，明确 BEM 与 Tailwind 的分工边界和设计令牌系统。
-5. docs/specs/2026-07-04-shadcn-visual-architecture-design.md
+5. docs/launch-baseline.md
+   适合上线后巡检、记录 CI/部署状态、生产 smoke、性能和内容资产基线时阅读。
+6. docs/specs/2026-07-04-shadcn-visual-architecture-design.md
    适合继续做 shadcn、MetaBadge、PageSection、ArchiveCard 或 Paper Gallery 视觉组件收口时阅读。
-6. docs/salesdex-inspired-redesign.md
+7. docs/salesdex-inspired-redesign.md
    适合准备按 sales-dex.jp 的视觉方向改造首页时阅读，明确可迁移模式、技术落点、阶段计划和验收标准。
-7. docs/optimization-roadmap-2026-07-06.md
+8. docs/optimization-roadmap-2026-07-06.md
    适合继续做架构、用户体验和视觉优化时阅读，明确阶段计划、任务拆分、验收标准和回滚策略。
-8. docs/cache-components-migration.md
+9. docs/cache-components-migration.md
    适合考虑引入外部数据源或迁移到 Cache Components 时阅读。
-9. docs/architecture-review.html
-   历史架构扫描快照，适合作为治理与重构参考，不适合作为首次入门文档。
+10. docs/architecture-review.html
+    历史架构扫描快照，适合作为治理与重构参考，不适合作为首次入门文档。
 
 ## 文档分工
 
@@ -66,6 +68,15 @@
 - 怎样维护作品集数据
 - 构建阶段 RSS 和 sitemap 受哪些内容影响
 - 内容发布前要检查什么
+
+### docs/launch-baseline.md
+
+解决这些问题：
+
+- 当前线上版本、CI 和部署是否健康
+- 生产内容烟测覆盖哪些页面
+- Lighthouse、Bundle、Speed Insights 应该如何记录
+- 收藏链接资产有哪些运营字段和质量门禁
 
 ### docs/css-conventions.md
 
@@ -141,3 +152,4 @@
 - 数据模型变化，例如 projects.json 字段或文章 frontmatter 字段变化
 - CSS 架构变化，例如新增样式文件或调整令牌系统
 - 测试策略变化，例如新增测试工具或调整覆盖率要求
+- 上线基线变化，例如生产域名、CI run、部署流程或真实用户指标来源变化

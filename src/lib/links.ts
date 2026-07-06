@@ -29,6 +29,34 @@ function hasTrackingOrAffiliateParam(url: string): boolean {
   });
 }
 
+function isIsoDateString(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return false;
+  }
+
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().startsWith(value);
+}
+
+function normalizeLinkUrl(url: string): string {
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(url);
+  } catch {
+    return url;
+  }
+
+  parsedUrl.hash = '';
+  parsedUrl.protocol = parsedUrl.protocol.toLowerCase();
+  parsedUrl.hostname = parsedUrl.hostname.toLowerCase();
+
+  if (parsedUrl.pathname !== '/') {
+    parsedUrl.pathname = parsedUrl.pathname.replace(/\/+$/, '');
+  }
+
+  return parsedUrl.toString();
+}
+
 const LinkItemSchema = z.object({
   title: z.string(),
   url: z
@@ -39,6 +67,15 @@ const LinkItemSchema = z.object({
     }),
   description: z.string(),
   tags: z.array(z.string().trim().min(1)).max(6).optional(),
+  official: z.boolean().optional(),
+  priority: z.enum(['primary', 'reference', 'watchlist']).optional(),
+  useCase: z.string().trim().min(4).max(120).optional(),
+  lastChecked: z
+    .string()
+    .refine(isIsoDateString, {
+      message: 'lastChecked must use YYYY-MM-DD',
+    })
+    .optional(),
 });
 
 const LinkCategorySchema = z.object({
@@ -50,6 +87,60 @@ const LinkCategorySchema = z.object({
 
 export function parseLinks(raw: unknown): LinkCategory[] {
   return z.array(LinkCategorySchema).parse(raw);
+}
+
+export type LinkAssetIssue = {
+  path: string;
+  message: string;
+};
+
+export function getLinkAssetIssues(categories: LinkCategory[]): LinkAssetIssue[] {
+  const issues: LinkAssetIssue[] = [];
+  const seenCategoryIds = new Set<string>();
+  const seenUrls = new Map<string, string>();
+
+  for (const category of categories) {
+    const categoryPath = `links.${category.id}`;
+
+    if (seenCategoryIds.has(category.id)) {
+      issues.push({
+        path: categoryPath,
+        message: `Duplicate link category id: ${category.id}`,
+      });
+    } else {
+      seenCategoryIds.add(category.id);
+    }
+
+    if (category.items.length === 0) {
+      issues.push({
+        path: categoryPath,
+        message: 'Link category must contain at least one item',
+      });
+    }
+
+    for (const item of category.items) {
+      const itemPath = `${categoryPath}.${item.title}`;
+      if (hasTrackingOrAffiliateParam(item.url)) {
+        issues.push({
+          path: itemPath,
+          message: `Link URL must not contain affiliate or tracking parameters: ${item.url}`,
+        });
+      }
+
+      const normalizedUrl = normalizeLinkUrl(item.url);
+      const existingTitle = seenUrls.get(normalizedUrl);
+      if (existingTitle) {
+        issues.push({
+          path: itemPath,
+          message: `Duplicate link URL also used by "${existingTitle}": ${normalizedUrl}`,
+        });
+      } else {
+        seenUrls.set(normalizedUrl, item.title);
+      }
+    }
+  }
+
+  return issues;
 }
 
 export interface LinksRepository {

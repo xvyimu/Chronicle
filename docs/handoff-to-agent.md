@@ -71,7 +71,7 @@
 | ---------- | ------------------------------------------------------ | -------------------------- |
 | TypeScript | 0 errors                                               | `tsc --noEmit`             |
 | Lint       | 0 errors                                               | `eslint`                   |
-| 单元测试   | 528 tests, 66 files 全绿                               | `vitest run`               |
+| 单元测试   | 542 tests, 68 files 全绿                               | `vitest run`               |
 | E2E 测试   | 47 tests, 5 spec files 全绿                            | `node scripts/run-e2e.mjs` |
 | 生产构建   | 编译成功 (93 个页面工件；CSP nonce 使路由按需动态渲染) | `pnpm build`               |
 | 代码清洁   | 无 `.only`/`@ts-*`；仅保留数据缺失保护性 `test.skip`   | 已验证                     |
@@ -102,7 +102,7 @@ Claude Code 接手后按以下顺序推进：
 - `pnpm lint`
 - `pnpm typecheck`
 - `pnpm check:seo`
-- `pnpm test`（528 tests / 66 files）
+- `pnpm test`（542 tests / 68 files）
 - `pnpm build`（93 个页面工件）
 - `pnpm test:e2e`（47 tests / 5 spec files，全绿）
 
@@ -155,7 +155,7 @@ Claude Code 接手后按以下顺序推进：
 
 - `pnpm lint`
 - `pnpm typecheck`
-- `pnpm test`（528 tests / 66 files）
+- `pnpm test`（542 tests / 68 files）
 - `pnpm build`
 - Chrome 访问 `http://localhost:7897` 的 `/`、`/blog`、`/blog/docker-deploy-guide`、`/tags`、`/links`、`/projects/nav-site`，无 console error/warning、无横向溢出。
 
@@ -391,7 +391,7 @@ pnpm dev                    # → localhost:3000 (Turbopack)
 pnpm dev --port 3001        # 显式指定端口（E2E 默认用 3001）
 
 # 测试
-pnpm test                   # Vitest 单元测试（528 tests, 66 files）
+pnpm test                   # Vitest 单元测试（542 tests, 68 files）
 pnpm test:e2e               # Playwright E2E（47 tests, 5 spec files;自动启动 :3001）
 pnpm test:e2e:raw -- --ui   # 带 UI 模式调试
 
@@ -439,7 +439,7 @@ pnpm analyze                # 生成 .next/analyze/
 ```bash
 cd D:\blog
 pnpm install                 # 确认依赖装得上（注意：pnpm v11 store 偶尔会损坏,见 Lessons Learned）
-pnpm test                    # 期望:528 tests / 66 files 全绿
+pnpm test                    # 期望:542 tests / 68 files 全绿
 pnpm lint                    # 期望:0 errors
 tsc --noEmit                 # 期望:0 errors
 pnpm build                   # 期望:生成 RSS + 93 个页面工件；build output 中页面为 ƒ Dynamic（CSP nonce 的预期结果）

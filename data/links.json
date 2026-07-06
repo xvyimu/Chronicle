@@ -161,12 +161,20 @@
       {
         "title": "Next.js 文档",
         "url": "https://nextjs.org/docs",
-        "description": "App Router、渲染模式、部署和性能优化的官方参考"
+        "description": "App Router、渲染模式、部署和性能优化的官方参考",
+        "official": true,
+        "priority": "primary",
+        "useCase": "排查 Next.js App Router、构建和部署问题的第一入口",
+        "lastChecked": "2026-07-06"
       },
       {
         "title": "React Learn",
         "url": "https://react.dev/learn",
-        "description": "React 官方学习路径，适合系统梳理组件、状态和 Hooks"
+        "description": "React 官方学习路径，适合系统梳理组件、状态和 Hooks",
+        "official": true,
+        "priority": "primary",
+        "useCase": "复盘 React 组件、状态和 Hooks 基础概念",
+        "lastChecked": "2026-07-06"
       },
       {
         "title": "Node.js 文档",
@@ -186,12 +194,20 @@
       {
         "title": "web.dev",
         "url": "https://web.dev/",
-        "description": "Google 维护的 Web 性能、可访问性和最佳实践资料库"
+        "description": "Google 维护的 Web 性能、可访问性和最佳实践资料库",
+        "official": true,
+        "priority": "reference",
+        "useCase": "查 Web 性能、可访问性和 Core Web Vitals 背景资料",
+        "lastChecked": "2026-07-06"
       },
       {
         "title": "TypeScript Handbook",
         "url": "https://www.typescriptlang.org/docs/",
-        "description": "TypeScript 官方手册，类型系统和配置问题优先查这里"
+        "description": "TypeScript 官方手册，类型系统和配置问题优先查这里",
+        "official": true,
+        "priority": "primary",
+        "useCase": "确认类型系统、配置项和迁移细节",
+        "lastChecked": "2026-07-06"
       },
       {
         "title": "Tailwind CSS 文档",
@@ -201,12 +217,20 @@
       {
         "title": "OWASP Cheat Sheet Series",
         "url": "https://cheatsheetseries.owasp.org/",
-        "description": "Web 安全工程清单，认证、输入校验和部署加固都能按图索骥"
+        "description": "Web 安全工程清单，认证、输入校验和部署加固都能按图索骥",
+        "official": true,
+        "priority": "reference",
+        "useCase": "做认证、输入校验、CSP 和上线加固时查清单",
+        "lastChecked": "2026-07-06"
       },
       {
         "title": "Google SRE Books",
         "url": "https://sre.google/books/",
-        "description": "Google 公开的 SRE 体系书籍，适合系统学习可靠性、值班和事故复盘"
+        "description": "Google 公开的 SRE 体系书籍，适合系统学习可靠性、值班和事故复盘",
+        "official": true,
+        "priority": "reference",
+        "useCase": "沉淀可靠性、告警、事故复盘和容量规划方法",
+        "lastChecked": "2026-07-06"
       },
       {
         "title": "The Twelve-Factor App",
@@ -231,7 +255,11 @@
       {
         "title": "Lighthouse 文档",
         "url": "https://developer.chrome.com/docs/lighthouse",
-        "description": "性能、SEO、可访问性和最佳实践评分背后的官方解释"
+        "description": "性能、SEO、可访问性和最佳实践评分背后的官方解释",
+        "official": true,
+        "priority": "reference",
+        "useCase": "解释 CI Lighthouse 分数和具体审计项",
+        "lastChecked": "2026-07-06"
       },
       {
         "title": "Martin Fowler",
@@ -345,7 +373,11 @@
       {
         "title": "Coolify",
         "url": "https://coolify.io/",
-        "description": "开源自托管 PaaS，把应用、数据库和常用服务部署到自己的服务器上"
+        "description": "开源自托管 PaaS，把应用、数据库和常用服务部署到自己的服务器上",
+        "official": true,
+        "priority": "primary",
+        "useCase": "评估个人服务器一站式部署平台",
+        "lastChecked": "2026-07-06"
       },
       {
         "title": "Portainer",
@@ -370,7 +402,11 @@
       {
         "title": "Uptime Kuma",
         "url": "https://uptime.kuma.pet/",
-        "description": "开源监控面板，用来做 HTTP、TCP、Ping 和证书到期监控"
+        "description": "开源监控面板，用来做 HTTP、TCP、Ping 和证书到期监控",
+        "official": true,
+        "priority": "primary",
+        "useCase": "给个人服务做可用性、证书和端口监控",
+        "lastChecked": "2026-07-06"
       },
       {
         "title": "Grafana",
@@ -385,7 +421,11 @@
       {
         "title": "Caddy",
         "url": "https://caddyserver.com/",
-        "description": "自动 HTTPS 的 Web 服务器和反向代理，个人服务暴露很省心"
+        "description": "自动 HTTPS 的 Web 服务器和反向代理，个人服务暴露很省心",
+        "official": true,
+        "priority": "reference",
+        "useCase": "快速配置自动 HTTPS 和反向代理",
+        "lastChecked": "2026-07-06"
       },
       {
         "title": "Authelia",
@@ -401,13 +441,19 @@
         "title": "Awesome Selfhosted",
         "url": "https://github.com/awesome-selfhosted/awesome-selfhosted",
         "description": "社区维护的自托管软件清单，适合按备份、监控、媒体、协作等场景持续发现工具",
-        "tags": ["directory", "open-source"]
+        "tags": ["directory", "open-source"],
+        "priority": "reference",
+        "useCase": "按场景发现新的自托管项目和替代方案",
+        "lastChecked": "2026-07-06"
       },
       {
         "title": "selfh.st",
         "url": "https://selfh.st/",
         "description": "聚合自托管新闻、项目发布和周报，适合跟踪小型服务器生态的新工具",
-        "tags": ["news", "self-hosted"]
+        "tags": ["news", "self-hosted"],
+        "priority": "watchlist",
+        "useCase": "跟踪自托管生态新项目、版本发布和周报",
+        "lastChecked": "2026-07-06"
       }
     ]
   },
@@ -419,86 +465,149 @@
       {
         "title": "BandwagonHost",
         "url": "https://bandwagonhost.com/",
-        "description": "常被用来关注 CN2 GIA、洛杉矶和日本优化线路的 VPS 商家"
+        "description": "常被用来关注 CN2 GIA、洛杉矶和日本优化线路的 VPS 商家",
+        "official": true,
+        "priority": "watchlist",
+        "useCase": "观察 CN2 GIA、洛杉矶和日本优化线路库存",
+        "lastChecked": "2026-07-06"
       },
       {
         "title": "DMIT",
         "url": "https://www.dmit.io/",
-        "description": "以洛杉矶、香港等优化线路产品出名，适合对网络质量敏感的用途"
+        "description": "以洛杉矶、香港等优化线路产品出名，适合对网络质量敏感的用途",
+        "official": true,
+        "priority": "primary",
+        "useCase": "评估香港、洛杉矶等高质量线路节点",
+        "lastChecked": "2026-07-06"
       },
       {
         "title": "RackNerd",
         "url": "https://www.racknerd.com/",
-        "description": "北美 VPS 商家，节日促销机型多，适合作为入门和测试节点备选"
+        "description": "北美 VPS 商家，节日促销机型多，适合作为入门和测试节点备选",
+        "official": true,
+        "priority": "watchlist",
+        "useCase": "关注北美低成本入门和测试节点促销",
+        "lastChecked": "2026-07-06"
       },
       {
         "title": "netcup",
         "url": "https://www.netcup.com/en",
-        "description": "德国主机商，VPS、Root Server 和域名产品线完整"
+        "description": "德国主机商，VPS、Root Server 和域名产品线完整",
+        "official": true,
+        "priority": "reference",
+        "useCase": "对比欧洲 VPS、Root Server 和域名方案",
+        "lastChecked": "2026-07-06"
       },
       {
         "title": "V.PS",
         "url": "https://v.ps/",
-        "description": "xTom 旗下 VPS 品牌，覆盖香港、东京、圣何塞等常用节点"
+        "description": "xTom 旗下 VPS 品牌，覆盖香港、东京、圣何塞等常用节点",
+        "official": true,
+        "priority": "watchlist",
+        "useCase": "观察香港、东京和圣何塞等常用节点",
+        "lastChecked": "2026-07-06"
       },
       {
         "title": "CloudCone",
         "url": "https://cloudcone.com/",
-        "description": "洛杉矶机房起家的云服务商，适合关注小时计费和特价云主机"
+        "description": "洛杉矶机房起家的云服务商，适合关注小时计费和特价云主机",
+        "official": true,
+        "priority": "watchlist",
+        "useCase": "关注小时计费、洛杉矶节点和促销云主机",
+        "lastChecked": "2026-07-06"
       },
       {
         "title": "ColoCrossing",
         "url": "https://www.colocrossing.com/",
-        "description": "美国数据中心与服务器服务商，提供独立服务器、托管和 VPS 相关产品"
+        "description": "美国数据中心与服务器服务商，提供独立服务器、托管和 VPS 相关产品",
+        "official": true,
+        "priority": "reference",
+        "useCase": "了解北美数据中心、独立服务器和托管产品",
+        "lastChecked": "2026-07-06"
       },
       {
         "title": "AkkoCloud",
         "url": "https://www.akkocloud.com/",
-        "description": "小众 VPS 商家，适合对国内访问优化线路做备选观察"
+        "description": "小众 VPS 商家，适合对国内访问优化线路做备选观察",
+        "official": true,
+        "priority": "watchlist",
+        "useCase": "观察小众优化线路和口碑变化",
+        "lastChecked": "2026-07-06"
       },
       {
         "title": "BageVM",
         "url": "https://www.bagevm.com/",
-        "description": "主打高性能实例和网络优化场景的小众云主机服务"
+        "description": "主打高性能实例和网络优化场景的小众云主机服务",
+        "official": true,
+        "priority": "watchlist",
+        "useCase": "观察高性能实例和特殊网络优化场景",
+        "lastChecked": "2026-07-06"
       },
       {
         "title": "YINNET",
         "url": "https://www.yin-net.com/",
-        "description": "提供多地区服务器和 IP 资源的小众商家，适合先观察口碑再下单"
+        "description": "提供多地区服务器和 IP 资源的小众商家，适合先观察口碑再下单",
+        "official": true,
+        "priority": "watchlist",
+        "useCase": "观察多地区服务器、IP 资源和售后口碑",
+        "lastChecked": "2026-07-06"
       },
       {
         "title": "JUSTG",
         "url": "https://www.justg.com/",
-        "description": "提供多地区 VPS 与优化线路产品，可作为特殊地区节点备选"
+        "description": "提供多地区 VPS 与优化线路产品，可作为特殊地区节点备选",
+        "official": true,
+        "priority": "watchlist",
+        "useCase": "观察特殊地区节点和线路产品",
+        "lastChecked": "2026-07-06"
       },
       {
         "title": "HostHatch",
         "url": "https://hosthatch.com/",
         "description": "老牌 VPS 商家，常见于大盘存储、NVMe VPS 和多地区节点方案比较",
-        "tags": ["vps", "global"]
+        "tags": ["vps", "global"],
+        "official": true,
+        "priority": "primary",
+        "useCase": "对比大盘存储、NVMe VPS 和多地区节点",
+        "lastChecked": "2026-07-06"
       },
       {
         "title": "GreenCloudVPS",
         "url": "https://greencloudvps.com/",
         "description": "提供多地区 VPS 与独立服务器产品，适合作为海外节点和促销机型观察对象",
-        "tags": ["vps", "global"]
+        "tags": ["vps", "global"],
+        "official": true,
+        "priority": "watchlist",
+        "useCase": "观察海外节点、独立服务器和节日促销机型",
+        "lastChecked": "2026-07-06"
       },
       {
         "title": "BuyVM",
         "url": "https://buyvm.net/",
         "description": "Frantech 旗下 VPS 品牌，适合关注 KVM VPS、块存储和北美节点的长期口碑",
-        "tags": ["vps", "north-america"]
+        "tags": ["vps", "north-america"],
+        "official": true,
+        "priority": "reference",
+        "useCase": "关注 KVM VPS、块存储和北美节点长期口碑",
+        "lastChecked": "2026-07-06"
       },
       {
         "title": "HostDare",
         "url": "https://www.hostdare.com/",
         "description": "主打洛杉矶等线路的 VPS 商家，可作为优化线路和促销套餐的备选入口",
-        "tags": ["vps", "network"]
+        "tags": ["vps", "network"],
+        "official": true,
+        "priority": "watchlist",
+        "useCase": "观察洛杉矶优化线路和促销套餐",
+        "lastChecked": "2026-07-06"
       },
       {
         "title": "LegacyVPS 监控",
         "url": "https://legacyvps.com/scanidc",
-        "description": "库存与补货监控入口，用来观察热门套餐，不直接使用推广链接"
+        "description": "库存与补货监控入口，用来观察热门套餐，不直接使用推广链接",
+        "priority": "reference",
+        "useCase": "作为 VPS 库存和补货监控参考，保留无推广参数入口",
+        "lastChecked": "2026-07-06"
       }
     ]
   },
@@ -511,7 +620,10 @@
         "title": "Tailwind Nextjs Starter Blog",
         "url": "https://github.com/timlrx/tailwind-nextjs-starter-blog",
         "description": "成熟的 Next.js + MDX 博客模板，适合参考内容组织、SEO、RSS 和主题结构",
-        "tags": ["nextjs", "mdx", "template"]
+        "tags": ["nextjs", "mdx", "template"],
+        "priority": "primary",
+        "useCase": "对标 Next.js MDX 博客的信息架构、SEO 和主题组织",
+        "lastChecked": "2026-07-06"
       },
       {
         "title": "Astro Cactus",
@@ -523,7 +635,10 @@
         "title": "Josh Comeau",
         "url": "https://www.joshwcomeau.com/",
         "description": "高质量交互式技术博客，适合参考解释型文章、动效克制和代码示例呈现",
-        "tags": ["writing", "interaction"]
+        "tags": ["writing", "interaction"],
+        "priority": "reference",
+        "useCase": "参考交互式长文、解释型写作和代码示例节奏",
+        "lastChecked": "2026-07-06"
       },
       {
         "title": "Lee Robinson",
@@ -535,13 +650,19 @@
         "title": "shijiucode",
         "url": "https://shijiucode.cn/",
         "description": "简洁、艺术感、低饱和的中文个人站参考，适合本站继续校准视觉气质",
-        "tags": ["visual", "minimal"]
+        "tags": ["visual", "minimal"],
+        "priority": "primary",
+        "useCase": "校准本站简洁、艺术感、低饱和视觉方向",
+        "lastChecked": "2026-07-06"
       },
       {
         "title": "Maggie Appleton",
         "url": "https://maggieappleton.com/",
         "description": "视觉化数字花园与长文写作参考，适合学习图文混排和知识网络呈现",
-        "tags": ["digital-garden", "visual"]
+        "tags": ["digital-garden", "visual"],
+        "priority": "reference",
+        "useCase": "参考数字花园、图文混排和知识网络表达",
+        "lastChecked": "2026-07-06"
       }
     ]
   },

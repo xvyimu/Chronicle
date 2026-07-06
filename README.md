@@ -56,6 +56,7 @@ NEXT_PUBLIC_GISCUS_CATEGORY_ID=your_category_id
 │  ├─ overview.md            # 文档导航
 │  ├─ architecture.md        # 当前架构与模块职责
 │  ├─ content-workflow.md    # 内容维护流程
+│  ├─ launch-baseline.md     # 上线运营基线
 │  ├─ css-conventions.md     # CSS 范式规范
 │  ├─ cache-components-migration.md  # Cache Components 迁移指南
 │  └─ architecture-review.html # 历史架构扫描快照
@@ -162,7 +163,7 @@ CSS 自定义属性 + Tailwind v4 `@theme` 令牌，当前按 17 个显式导入
 
 | 层级      | 工具                     | 数量               | 覆盖范围                                                                       |
 | --------- | ------------------------ | ------------------ | ------------------------------------------------------------------------------ |
-| 单元/集成 | Vitest + Testing Library | 528 用例 / 66 文件 | lib 数据层 / 组件交互 / 页面渲染                                               |
+| 单元/集成 | Vitest + Testing Library | 542 用例 / 68 文件 | lib 数据层 / 组件交互 / 页面渲染                                               |
 | E2E       | Playwright               | 47 用例 / 5 文件   | 首页 / 博客 / 导航 / 主题 / 作品 / 标签 / 分类 / 专题 / RSS / Sitemap / 移动端 |
 
 ```bash
@@ -189,6 +190,7 @@ GitHub Actions 流水线（`.github/workflows/ci.yml`）包含质量检查、E2E
 - 搜索索引、文章摘要、小标题列表和相关文章由构建期从 MDX 自动推导
 - `published: false` 的文章不在生产环境展示
 - `pnpm check:seo` 会检查重复 slug/标题、标签命名、锚点、资源路径、sitemap 覆盖等内容质量问题
+- `data/links.json` 支持 `official`、`priority`、`useCase`、`lastChecked` 等可选运营字段，`pnpm check:seo` 会检查重复 URL、空分类和推广/追踪参数
 - `pnpm check:production-content` 会用线上 URL 检查首页、博客、作品、导航、RSS 和 Sitemap 是否包含本地内容
 - 站点配置唯一源：`src/lib/site.ts`；内容路径、Vercel trace include 与分页常量在 `src/lib/content-dirs.ts`
 - 新增页面后同步更新 sitemap 和导航
@@ -200,6 +202,7 @@ GitHub Actions 流水线（`.github/workflows/ci.yml`）包含质量检查、E2E
 - [docs/overview.md](./docs/overview.md) — 文档导航
 - [docs/architecture.md](./docs/architecture.md) — 当前架构与模块职责
 - [docs/content-workflow.md](./docs/content-workflow.md) — 内容维护流程
+- [docs/launch-baseline.md](./docs/launch-baseline.md) — 上线运营基线、生产 smoke、性能和内容资产门禁
 - [docs/css-conventions.md](./docs/css-conventions.md) — CSS 范式规范
 - [docs/cache-components-migration.md](./docs/cache-components-migration.md) — Cache Components 迁移指南
 - [docs/specs/2026-07-04-shadcn-visual-architecture-design.md](./docs/specs/2026-07-04-shadcn-visual-architecture-design.md) — shadcn 视觉组件架构收口

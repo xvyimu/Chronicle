@@ -188,6 +188,10 @@ license: MIT
 | url         | string   | 是       | 官网或原始页面 URL                   |
 | description | string   | 是       | 收藏理由或用途说明                   |
 | tags        | string[] | 否       | 1-6 个短标签，用于卡片 metadata 展示 |
+| official    | boolean  | 否       | 是否为官网或原始权威入口             |
+| priority    | string   | 否       | `primary`、`reference`、`watchlist`  |
+| useCase     | string   | 否       | 使用场景或收藏理由，建议一句话       |
+| lastChecked | string   | 否       | 最近人工核对日期，格式 YYYY-MM-DD    |
 
 维护规则：
 
@@ -195,7 +199,18 @@ license: MIT
 - 不写 aff、ref、utm、coupon、partner 等追踪参数
 - 同一个 URL 不重复收录
 - `tags` 只写稳定语义，例如 `vps`、`open-source`、`template`，不要写临时营销词
+- `priority` 用于运营优先级：`primary` 表示重点入口，`reference` 表示长期参考，`watchlist` 表示观察清单
+- `useCase` 写给未来的自己看，说明“为什么收藏”和“什么时候打开”
+- `lastChecked` 只在人工确认官网、入口和用途仍然有效后更新
 - 新增分类后同步检查首页预览是否需要调整
+
+`pnpm check:seo` 会额外检查：
+
+- `data/links.json` 是否能解析并通过 schema
+- 分类 id 是否重复
+- 分类是否为空
+- URL 是否重复（忽略末尾 `/`）
+- URL 是否包含 aff、ref、utm、coupon、partner 等追踪或推广参数
 
 ## 6. 图片与静态资源
 
@@ -310,3 +325,4 @@ pnpm build
 - 新增内容目录，例如 content/projects
 - 新增搜索索引、文章摘要生成、图片处理等构建流程
 - 内容发布流程从纯本地文件改为接 CMS
+- 上线运营基线变化，例如 CI 门禁、生产域名、Speed Insights 指标记录方式调整

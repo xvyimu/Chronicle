@@ -12,6 +12,10 @@ import type { getAllCategories as getAllCategoriesType } from '../src/lib/catego
 import type { getAllProjects as getAllProjectsType } from '../src/lib/projects';
 import type { getAllSeries as getAllSeriesType } from '../src/lib/series';
 import type { getAllTags as getAllTagsType } from '../src/lib/tags';
+import type {
+  getLinkAssetIssues as getLinkAssetIssuesType,
+  parseLinks as parseLinksType,
+} from '../src/lib/links';
 import type sitemapType from '../src/app/sitemap';
 
 type Issue = {
@@ -20,10 +24,12 @@ type Issue = {
 };
 
 type CheckContext = {
-  contentDir: { blog: string; projects: string };
+  contentDir: { blog: string; projects: string; links: string };
   siteUrl: string;
   parseFrontmatter: typeof parseFrontmatterType;
   postFrontmatterSchema: typeof postFrontmatterSchemaType;
+  parseLinks: typeof parseLinksType;
+  getLinkAssetIssues: typeof getLinkAssetIssuesType;
   filenameToSlug: typeof filenameToSlugType;
   extractPostHeadings: typeof extractPostHeadingsType;
   buildPostSearchText: typeof buildPostSearchTextType;
@@ -256,6 +262,42 @@ function checkProjects(ctx: CheckContext): void {
   }
 }
 
+function checkLinks(ctx: CheckContext): void {
+  const linksPath = path.join(rootDir, ctx.contentDir.links);
+  if (!existsSync(linksPath)) {
+    addIssue(`Links data file does not exist: ${ctx.contentDir.links}`);
+    return;
+  }
+
+  let raw: unknown;
+  try {
+    raw = JSON.parse(readFileSync(linksPath, 'utf-8'));
+  } catch (error) {
+    addIssue(
+      `Links JSON parse failed: ${error instanceof Error ? error.message : String(error)}`,
+      ctx.contentDir.links,
+    );
+    return;
+  }
+
+  let categories;
+  try {
+    categories = ctx.parseLinks(raw);
+  } catch (error) {
+    addIssue(
+      `Links schema validation failed: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+      ctx.contentDir.links,
+    );
+    return;
+  }
+
+  for (const issue of ctx.getLinkAssetIssues(categories)) {
+    addIssue(`${issue.path}: ${issue.message}`, ctx.contentDir.links);
+  }
+}
+
 function checkSitemapCoverage(ctx: CheckContext): void {
   const siteOrigin = new URL(ctx.siteUrl).origin;
   const entries = ctx.sitemap();
@@ -307,6 +349,7 @@ async function main(): Promise<void> {
     projectsModule,
     seriesModule,
     tagsModule,
+    linksModule,
     sitemapModule,
   ] = await Promise.all([
     import('../src/lib/parse-frontmatter'),
@@ -318,6 +361,7 @@ async function main(): Promise<void> {
     import('../src/lib/projects'),
     import('../src/lib/series'),
     import('../src/lib/tags'),
+    import('../src/lib/links'),
     import('../src/app/sitemap'),
   ]);
 
@@ -326,6 +370,8 @@ async function main(): Promise<void> {
     siteUrl: siteModule.SITE_CONFIG.url,
     parseFrontmatter: frontmatterModule.parseFrontmatter,
     postFrontmatterSchema: schemaModule.postFrontmatterSchema,
+    parseLinks: linksModule.parseLinks,
+    getLinkAssetIssues: linksModule.getLinkAssetIssues,
     filenameToSlug: postsModule.filenameToSlug,
     extractPostHeadings: postsModule.extractPostHeadings,
     buildPostSearchText: postsModule.buildPostSearchText,
@@ -339,6 +385,7 @@ async function main(): Promise<void> {
 
   checkPostFrontmatter(ctx);
   checkProjects(ctx);
+  checkLinks(ctx);
   checkSitemapCoverage(ctx);
 
   if (issues.length === 0) {

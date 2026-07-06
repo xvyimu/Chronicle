@@ -37,6 +37,10 @@ export interface LinkItem {
   url: string;
   description: string;
   tags?: string[];
+  official?: boolean;
+  priority?: 'primary' | 'reference' | 'watchlist';
+  useCase?: string;
+  lastChecked?: string;
 }
 
 export interface LinkCategory {

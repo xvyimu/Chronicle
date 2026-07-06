@@ -1,6 +1,6 @@
 # 项目架构说明
 
-> 状态：当前维护版（2026-07-05）
+> 状态：当前维护版（2026-07-06）
 >
 > 这份文档是面向接手者的架构摘要：说明内容从哪里来、如何被解析、页面如何渲染、样式和安全边界在哪里，以及新增能力时应该落在哪一层。更细的运行状态与后续方向见 [`docs/handoff-to-agent.md`](./handoff-to-agent.md)，具体设计决策见 `docs/specs/` 与 `docs/adr/`。
 
@@ -101,7 +101,7 @@ data/links.json
   -> components/home/CuratedLinksPreview
 ```
 
-链接数据当前是 10 分类、123 条收藏，支持可选 `tags`。校验层会拒绝常见推广/追踪参数，并检查 URL 唯一性。VPS、云服务、工具类收藏应优先放官网或原始页面链接。
+链接数据当前是 10 分类、123 条收藏，支持可选 `tags`、`official`、`priority`、`useCase`、`lastChecked`。校验层会拒绝常见推广/追踪参数，并检查重复分类、空分类和 URL 唯一性。VPS、云服务、工具类收藏应优先放官网或原始页面链接。
 
 ## 4. 路由与页面组合
 
@@ -247,7 +247,7 @@ push master
 
 | 层         | 基线                                     |
 | ---------- | ---------------------------------------- |
-| Vitest     | 528 tests / 66 files                     |
+| Vitest     | 542 tests / 68 files                     |
 | Playwright | 47 tests / 5 spec files                  |
 | Build      | 93 page artifacts                        |
 | CI         | quality / e2e / lighthouse / deploy 全绿 |

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseLinks, createLinksRepository } from '@/lib/links';
+import { createLinksRepository, getLinkAssetIssues, parseLinks } from '@/lib/links';
 import type { ContentSource } from '@/lib/content-source';
 
 function makeJsonSource(data: unknown): ContentSource {
@@ -57,6 +57,56 @@ describe('parseLinks', () => {
     expect(result[0].items[0].tags).toEqual(['vps', 'global']);
   });
 
+  it('preserves optional curation metadata for operational content assets', () => {
+    const result = parseLinks([
+      {
+        id: 'vps',
+        title: 'VPS',
+        description: 'Official VPS provider links',
+        items: [
+          {
+            title: 'HostHatch',
+            url: 'https://hosthatch.com/',
+            description: 'Official VPS provider website',
+            tags: ['vps', 'global'],
+            official: true,
+            priority: 'watchlist',
+            useCase: '观察海外节点、促销套餐和长期口碑',
+            lastChecked: '2026-07-06',
+          },
+        ],
+      },
+    ]);
+
+    expect(result[0].items[0]).toMatchObject({
+      official: true,
+      priority: 'watchlist',
+      useCase: '观察海外节点、促销套餐和长期口碑',
+      lastChecked: '2026-07-06',
+    });
+  });
+
+  it('throws when curation metadata is malformed', () => {
+    expect(() =>
+      parseLinks([
+        {
+          id: 'vps',
+          title: 'VPS',
+          description: 'Official VPS provider links',
+          items: [
+            {
+              title: 'HostHatch',
+              url: 'https://hosthatch.com/',
+              description: 'Official VPS provider website',
+              priority: 'urgent',
+              lastChecked: '2026/07/06',
+            },
+          ],
+        },
+      ]),
+    ).toThrow();
+  });
+
   it('throws ZodError for missing required fields', () => {
     expect(() => parseLinks([{ id: 'incomplete' }])).toThrow();
   });
@@ -101,6 +151,57 @@ describe('parseLinks', () => {
         },
       ]),
     ).toThrow();
+  });
+});
+
+describe('getLinkAssetIssues', () => {
+  it('reports duplicate categories, duplicate urls, empty categories, and tracking params', () => {
+    const issues = getLinkAssetIssues([
+      {
+        id: 'vps',
+        title: 'VPS',
+        description: 'Official VPS provider links',
+        items: [
+          {
+            title: 'Tracked',
+            url: 'https://example.com/?utm_source=newsletter',
+            description: 'Tracked link',
+          },
+          {
+            title: 'Duplicate A',
+            url: 'https://example.com/path/',
+            description: 'First duplicate',
+          },
+        ],
+      },
+      {
+        id: 'vps',
+        title: 'VPS Duplicate',
+        description: 'Duplicate category',
+        items: [
+          {
+            title: 'Duplicate B',
+            url: 'https://example.com/path',
+            description: 'Second duplicate',
+          },
+        ],
+      },
+      {
+        id: 'empty',
+        title: 'Empty',
+        description: 'Empty category',
+        items: [],
+      },
+    ]);
+
+    expect(issues.map((issue) => issue.message)).toEqual(
+      expect.arrayContaining([
+        'Duplicate link category id: vps',
+        'Link category must contain at least one item',
+        'Link URL must not contain affiliate or tracking parameters: https://example.com/?utm_source=newsletter',
+        'Duplicate link URL also used by "Duplicate A": https://example.com/path',
+      ]),
+    );
   });
 });
 

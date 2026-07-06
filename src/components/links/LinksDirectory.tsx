@@ -10,7 +10,15 @@ function getLinkHost(url: string): string {
   }
 }
 
+const LINK_PRIORITY_LABELS: Record<NonNullable<LinkItem['priority']>, string> = {
+  primary: '重点',
+  reference: '参考',
+  watchlist: '观察',
+};
+
 function LinkCard({ item }: { item: LinkItem }) {
+  const hasCurationMeta = item.official || item.priority || item.lastChecked;
+
   return (
     <MagneticCard
       as="li"
@@ -27,6 +35,27 @@ function LinkCard({ item }: { item: LinkItem }) {
         <span className="links-directory__host">{getLinkHost(item.url)}</span>
         <strong className="links-directory__title">{item.title}</strong>
         <span className="links-directory__desc">{item.description}</span>
+        {item.useCase ? (
+          <span className="links-directory__use-case">{item.useCase}</span>
+        ) : null}
+        {hasCurationMeta ? (
+          <span
+            className="links-directory__curation"
+            aria-label={`${item.title} 收藏状态`}
+          >
+            {item.official ? (
+              <MetaBadge className="links-directory__tag">官网</MetaBadge>
+            ) : null}
+            {item.priority ? (
+              <MetaBadge className="links-directory__tag">
+                {LINK_PRIORITY_LABELS[item.priority]}
+              </MetaBadge>
+            ) : null}
+            {item.lastChecked ? (
+              <span className="links-directory__checked">{item.lastChecked}</span>
+            ) : null}
+          </span>
+        ) : null}
         {item.tags && item.tags.length > 0 ? (
           <span className="links-directory__tags" aria-label={`${item.title} tags`}>
             {item.tags.map((tag) => (
