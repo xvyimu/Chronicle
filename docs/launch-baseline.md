@@ -8,19 +8,19 @@
 
 ## 1. 当前状态
 
-| 项目             | 当前值                                                    | 说明                                                                      |
-| ---------------- | --------------------------------------------------------- | ------------------------------------------------------------------------- |
-| 最新线上提交     | `110dd3a feat: optimize blog architecture and reading UX` | 已推送并部署                                                              |
-| CI run           | `28781033610`                                             | [GitHub Actions](https://github.com/xvyimu/blog/actions/runs/28781033610) |
-| CI 结论          | `success`                                                 | `quality`、`e2e`、`bundle-analyze`、`lighthouse`、`deploy` 全绿           |
-| CI 时间          | 2026-07-06 17:17:53 CST 至 17:24:57 CST                   | GitHub 返回 UTC，已换算为北京时间                                         |
-| 生产域名         | `https://incca.ccwu.cc`                                   | `check-production-content` 已验证                                         |
-| 生产内容烟测     | 通过                                                      | 首页、博客、作品、导航、RSS、Sitemap 均返回 200 并包含本地内容            |
-| 当前本地文章     | 14 篇                                                     | `content/blog/*.mdx`                                                      |
-| 当前本地收藏分类 | 10 类                                                     | `data/links.json`                                                         |
-| 当前本地收藏链接 | 123 条                                                    | 其中 32 条已补运营元信息                                                  |
+| 项目             | 当前值                                          | 说明                                                                      |
+| ---------------- | ----------------------------------------------- | ------------------------------------------------------------------------- |
+| 最新线上提交     | `b48d57d feat: add content operations baseline` | 已推送并部署                                                              |
+| CI run           | `28787624143`                                   | [GitHub Actions](https://github.com/xvyimu/blog/actions/runs/28787624143) |
+| CI 结论          | `success`                                       | `quality`、`e2e`、`bundle-analyze`、`lighthouse`、`deploy` 全绿           |
+| CI 时间          | 2026-07-06 19:17:02 CST 至 19:24:03 CST         | GitHub 返回 UTC，已换算为北京时间                                         |
+| 生产域名         | `https://incca.ccwu.cc`                         | `check-production-content` 已验证                                         |
+| 生产内容烟测     | 通过                                            | 首页、博客、作品、导航、RSS、Sitemap 均返回 200 并包含本地内容            |
+| 当前本地文章     | 14 篇                                           | `content/blog/*.mdx`                                                      |
+| 当前本地收藏分类 | 10 类                                           | `data/links.json`                                                         |
+| 当前本地收藏链接 | 123 条                                          | 其中 32 条已补运营元信息                                                  |
 
-> 注意：本文件创建时，本轮“内容资产元信息”仍属于本地待提交改动；线上基线对应上一轮已部署提交 `110dd3a`。本轮合并后应再次更新 CI run 与部署状态。
+> 注意：本文件的生产基线对应已部署提交 `b48d57d`。本轮 P2 UX 收尾属于后续本地改动，合并部署后应再次刷新 CI run 与生产 smoke 状态。
 
 ## 2. 线上 Smoke 结果
 

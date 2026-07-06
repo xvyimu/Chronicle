@@ -1,7 +1,7 @@
 # 西江月博客 · 项目待办
 
-> 当前状态: 528 tests / 66 files / 47 E2E 全绿；CI Lighthouse / deploy / production content smoke 全绿；线上域名 `https://incca.ccwu.cc` 可用
-> 更新: 2026-07-05
+> 当前状态: 547 tests / 70 files / 47 E2E 全绿；CI Lighthouse / deploy / production content smoke 全绿；线上域名 `https://incca.ccwu.cc` 可用
+> 更新: 2026-07-06
 
 ---
 
@@ -131,4 +131,5 @@
 - [ ] 图片优化: 统一 next/image 配置 + 预生成 blur data URL
 - [ ] 性能基线: 回填 Speed Insights p75 基线 (依赖生产流量)
 - [x] mobile Lighthouse preset 评估：已新增手动基线配置 `lighthouse.mobile.config.js`，暂不接入 CI 强门禁
-- [x] 导航页 `/links` UI 迭代：metadata tags + 10 分类 123 条收藏已落地
+- [x] 导航页 `/links` UI 迭代：metadata tags + 10 分类 123 条收藏、关键词筛选和空状态已落地
+- [x] P2 UX 收尾：搜索无结果入口、404/error 导流、链接目录筛选已完成

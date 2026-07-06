@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { LinksDirectory } from './LinksDirectory';
 import type { LinkCategory } from '@/types';
@@ -95,5 +95,44 @@ describe('LinksDirectory', () => {
       'target',
       '_blank',
     );
+  });
+
+  it('filters links by keyword across title, host, description, use case, and tags', () => {
+    render(<LinksDirectory categories={categories} />);
+
+    const input = screen.getByRole('searchbox', { name: '筛选收藏链接' });
+    fireEvent.change(input, { target: { value: 'model' } });
+
+    expect(screen.getByText('OpenAI')).toBeInTheDocument();
+    expect(screen.queryByText('Claude')).not.toBeInTheDocument();
+    expect(screen.queryByText('Hetzner')).not.toBeInTheDocument();
+    expect(screen.getByText('1 / 3')).toBeInTheDocument();
+    expect(screen.getByText('匹配站点')).toBeInTheDocument();
+  });
+
+  it('clears the link filter and restores all categories', () => {
+    render(<LinksDirectory categories={categories} />);
+
+    const input = screen.getByRole('searchbox', { name: '筛选收藏链接' });
+    fireEvent.change(input, { target: { value: 'openai' } });
+    fireEvent.click(screen.getByRole('button', { name: '清除链接筛选' }));
+
+    expect(input).toHaveValue('');
+    expect(screen.getByText('OpenAI')).toBeInTheDocument();
+    expect(screen.getByText('Claude')).toBeInTheDocument();
+    expect(screen.getByText('Hetzner')).toBeInTheDocument();
+  });
+
+  it('shows a helpful empty state when no links match', () => {
+    render(<LinksDirectory categories={categories} />);
+
+    const input = screen.getByRole('searchbox', { name: '筛选收藏链接' });
+    fireEvent.change(input, { target: { value: 'zzznomatch' } });
+
+    expect(screen.getByText('没有匹配的收藏')).toBeInTheDocument();
+    expect(
+      screen.getByText(/试试搜索分类、标签、官网域名或使用场景/),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('OpenAI')).not.toBeInTheDocument();
   });
 });

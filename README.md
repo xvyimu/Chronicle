@@ -163,7 +163,7 @@ CSS 自定义属性 + Tailwind v4 `@theme` 令牌，当前按 17 个显式导入
 
 | 层级      | 工具                     | 数量               | 覆盖范围                                                                       |
 | --------- | ------------------------ | ------------------ | ------------------------------------------------------------------------------ |
-| 单元/集成 | Vitest + Testing Library | 542 用例 / 68 文件 | lib 数据层 / 组件交互 / 页面渲染                                               |
+| 单元/集成 | Vitest + Testing Library | 547 用例 / 70 文件 | lib 数据层 / 组件交互 / 页面渲染                                               |
 | E2E       | Playwright               | 47 用例 / 5 文件   | 首页 / 博客 / 导航 / 主题 / 作品 / 标签 / 分类 / 专题 / RSS / Sitemap / 移动端 |
 
 ```bash
@@ -190,7 +190,7 @@ GitHub Actions 流水线（`.github/workflows/ci.yml`）包含质量检查、E2E
 - 搜索索引、文章摘要、小标题列表和相关文章由构建期从 MDX 自动推导
 - `published: false` 的文章不在生产环境展示
 - `pnpm check:seo` 会检查重复 slug/标题、标签命名、锚点、资源路径、sitemap 覆盖等内容质量问题
-- `data/links.json` 支持 `official`、`priority`、`useCase`、`lastChecked` 等可选运营字段，`pnpm check:seo` 会检查重复 URL、空分类和推广/追踪参数
+- `data/links.json` 支持 `official`、`priority`、`useCase`、`lastChecked` 等可选运营字段，`/links` 支持关键词筛选，`pnpm check:seo` 会检查重复 URL、空分类和推广/追踪参数
 - `pnpm check:production-content` 会用线上 URL 检查首页、博客、作品、导航、RSS 和 Sitemap 是否包含本地内容
 - 站点配置唯一源：`src/lib/site.ts`；内容路径、Vercel trace include 与分页常量在 `src/lib/content-dirs.ts`
 - 新增页面后同步更新 sitemap 和导航

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import Link from 'next/link';
 
 export default function ErrorBoundary({
   error,
@@ -23,15 +24,23 @@ export default function ErrorBoundary({
       : '页面加载时发生未知错误。';
 
   return (
-    <div className="flex min-h-[50vh] flex-col items-center justify-center px-6 text-center">
-      <h2 className="text-2xl font-bold text-[var(--text)]">出错了</h2>
-      <p className="mt-3 text-[var(--text-dim)] max-w-md">{displayMessage}</p>
-      <button
-        onClick={reset}
-        className="mt-6 px-5 py-2 rounded-lg bg-[var(--brand)] text-white text-sm font-medium transition-opacity hover:opacity-90"
-      >
-        重试
-      </button>
+    <div className="not-found">
+      <h2 className="not-found__title">出错了</h2>
+      <p className="not-found__desc">{displayMessage}</p>
+      <div className="not-found__actions">
+        <button onClick={reset} className="btn btn--primary">
+          重试
+        </button>
+        <Link href="/" className="btn btn--ghost">
+          回到首页
+        </Link>
+        <Link href="/blog" className="btn btn--ghost">
+          看博客
+        </Link>
+        <Link href="/links" className="btn btn--ghost">
+          打开导航收藏
+        </Link>
+      </div>
     </div>
   );
 }

@@ -101,7 +101,7 @@ data/links.json
   -> components/home/CuratedLinksPreview
 ```
 
-链接数据当前是 10 分类、123 条收藏，支持可选 `tags`、`official`、`priority`、`useCase`、`lastChecked`。校验层会拒绝常见推广/追踪参数，并检查重复分类、空分类和 URL 唯一性。VPS、云服务、工具类收藏应优先放官网或原始页面链接。
+链接数据当前是 10 分类、123 条收藏，支持可选 `tags`、`official`、`priority`、`useCase`、`lastChecked`。校验层会拒绝常见推广/追踪参数，并检查重复分类、空分类和 URL 唯一性。`LinksDirectory` 在客户端提供轻量关键词筛选，匹配分类、标题、描述、官网域名、用途和标签；数据仍由 `app/links/page.tsx` 在服务端读取后传入。VPS、云服务、工具类收藏应优先放官网或原始页面链接。
 
 ## 4. 路由与页面组合
 
@@ -140,7 +140,7 @@ HomeCtaSection
 | `components/blog/`     | BlogCard、SearchBar、Pagination、MdxContent、TOC、ReadingProgress、ReadingPreferences、ImageZoom |
 | `components/layout/`   | Header、Footer、PageSection、ArchiveCard、EmptyState、SiteBackdropStage、SiteBackdropParallax    |
 | `components/projects/` | ProjectCard                                                                                      |
-| `components/links/`    | LinksDirectory                                                                                   |
+| `components/links/`    | LinksDirectory（收藏目录、分类锚点、关键词筛选）                                                 |
 | `components/comments/` | Giscus                                                                                           |
 | `components/ui/`       | ThemeToggle、MetaBadge、Card/Button/Badge primitive、BackToTop、MagneticCard、ParticleCanvas     |
 
@@ -247,7 +247,7 @@ push master
 
 | 层         | 基线                                     |
 | ---------- | ---------------------------------------- |
-| Vitest     | 542 tests / 68 files                     |
+| Vitest     | 547 tests / 70 files                     |
 | Playwright | 47 tests / 5 spec files                  |
 | Build      | 93 page artifacts                        |
 | CI         | quality / e2e / lighthouse / deploy 全绿 |

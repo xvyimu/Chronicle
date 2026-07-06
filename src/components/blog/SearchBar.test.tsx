@@ -131,6 +131,14 @@ describe('SearchBar', () => {
       },
       { timeout: 3000 },
     );
+    expect(screen.getByRole('link', { name: '查看全部文章' })).toHaveAttribute(
+      'href',
+      '/blog',
+    );
+    expect(screen.getByRole('link', { name: '浏览标签' })).toHaveAttribute(
+      'href',
+      '/tags',
+    );
   });
 
   it('shows result count in the dropdown', async () => {

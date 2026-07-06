@@ -1,3 +1,6 @@
+'use client';
+
+import { useMemo, useState } from 'react';
 import type { LinkCategory, LinkItem } from '@/types';
 import MagneticCard from '@/components/ui/MagneticCard';
 import MetaBadge from '@/components/ui/MetaBadge';
@@ -8,6 +11,28 @@ function getLinkHost(url: string): string {
   } catch {
     return url;
   }
+}
+
+function normalizeFilterText(value: string): string {
+  return value.trim().toLocaleLowerCase();
+}
+
+function getSearchableLinkText(item: LinkItem, category: LinkCategory): string {
+  return [
+    category.title,
+    category.description,
+    item.title,
+    item.description,
+    item.url,
+    getLinkHost(item.url),
+    item.useCase,
+    item.priority,
+    item.official ? '官网 official' : '',
+    item.tags?.join(' '),
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLocaleLowerCase();
 }
 
 const LINK_PRIORITY_LABELS: Record<NonNullable<LinkItem['priority']>, string> = {
@@ -72,6 +97,27 @@ function LinkCard({ item }: { item: LinkItem }) {
 
 export function LinksDirectory({ categories }: { categories: LinkCategory[] }) {
   const totalLinks = categories.reduce((sum, category) => sum + category.items.length, 0);
+  const [filter, setFilter] = useState('');
+  const normalizedFilter = normalizeFilterText(filter);
+
+  const filteredCategories = useMemo(() => {
+    if (!normalizedFilter) return categories;
+
+    return categories
+      .map((category) => ({
+        ...category,
+        items: category.items.filter((item) =>
+          getSearchableLinkText(item, category).includes(normalizedFilter),
+        ),
+      }))
+      .filter((category) => category.items.length > 0);
+  }, [categories, normalizedFilter]);
+
+  const visibleLinks = filteredCategories.reduce(
+    (sum, category) => sum + category.items.length,
+    0,
+  );
+  const hasFilter = normalizedFilter.length > 0;
 
   return (
     <div className="links-directory">
@@ -101,8 +147,59 @@ export function LinksDirectory({ categories }: { categories: LinkCategory[] }) {
         </nav>
       </div>
 
+      <div className="links-directory__tools" role="search">
+        <label className="links-directory__search">
+          <span className="sr-only">筛选收藏链接</span>
+          <svg
+            className="links-directory__search-icon"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="M21 21l-4.35-4.35" />
+          </svg>
+          <input
+            type="search"
+            value={filter}
+            onChange={(event) => setFilter(event.target.value)}
+            aria-label="筛选收藏链接"
+            className="links-directory__search-input"
+            placeholder="筛选名称、标签、官网域名或用途…"
+          />
+          {hasFilter ? (
+            <button
+              type="button"
+              className="links-directory__clear"
+              onClick={() => setFilter('')}
+              aria-label="清除链接筛选"
+            >
+              清除
+            </button>
+          ) : null}
+        </label>
+        <p className="links-directory__filter-count" aria-live="polite">
+          {hasFilter ? (
+            <>
+              <strong>
+                {visibleLinks} / {totalLinks}
+              </strong>
+              <span>匹配站点</span>
+            </>
+          ) : (
+            <span>可按分类、标签、官网域名和使用场景快速定位收藏。</span>
+          )}
+        </p>
+      </div>
+
       <div className="links-directory__sections">
-        {categories.map((category) => (
+        {filteredCategories.map((category) => (
           <section
             key={category.id}
             id={category.id}
@@ -125,6 +222,22 @@ export function LinksDirectory({ categories }: { categories: LinkCategory[] }) {
           </section>
         ))}
       </div>
+
+      {hasFilter && visibleLinks === 0 ? (
+        <div className="links-directory__empty empty-state" role="status">
+          <strong className="empty-state__title">没有匹配的收藏</strong>
+          <p className="empty-state__desc">
+            试试搜索分类、标签、官网域名或使用场景，也可以清除筛选回到完整收藏夹。
+          </p>
+          <button
+            type="button"
+            className="btn btn--ghost empty-state__action"
+            onClick={() => setFilter('')}
+          >
+            清除筛选
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

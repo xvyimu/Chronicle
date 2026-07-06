@@ -75,6 +75,23 @@ test.describe('mobile critical flows', () => {
     await expect(
       page.getByRole('link', { name: /Tailwind Nextjs Starter Blog/ }),
     ).toBeVisible();
+
+    const filter = page.getByRole('searchbox', { name: '筛选收藏链接' });
+    await expect(filter).toBeVisible({ timeout: 10000 });
+    await filter.focus();
+    await page.keyboard.type('HostHatch', { delay: 20 });
+
+    await expect(page.getByText(/1 \/ \d+/)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('link', { name: /HostHatch/ })).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: /Tailwind Nextjs Starter Blog/ }),
+    ).toHaveCount(0);
+
+    await page.getByRole('button', { name: '清除链接筛选' }).click();
+    await expect(filter).toHaveValue('');
+    await expect(
+      page.getByRole('link', { name: /Tailwind Nextjs Starter Blog/ }),
+    ).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
 });

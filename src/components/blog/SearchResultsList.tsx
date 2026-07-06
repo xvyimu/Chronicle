@@ -85,7 +85,14 @@ export default function SearchResultsList({
           );
         })
       ) : fuseReady && results.length === 0 ? (
-        <p className="search-results-popover__empty">没有匹配的文章</p>
+        <div className="search-results-popover__empty">
+          <strong>没有匹配的文章</strong>
+          <span>换个关键词，或从下面的入口重新探索。</span>
+          <div className="search-results-popover__empty-actions">
+            <Link href="/blog">查看全部文章</Link>
+            <Link href="/tags">浏览标签</Link>
+          </div>
+        </div>
       ) : null}
     </div>
   );
