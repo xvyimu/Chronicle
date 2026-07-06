@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import EmptyState from '@/components/layout/EmptyState';
 import PageSection from '@/components/layout/PageSection';
 import ProjectCard from '@/components/projects/ProjectCard';
 import { getAllProjects } from '@/lib/projects';
@@ -16,7 +17,7 @@ export default function ProjectsPage() {
   return (
     <PageSection eyebrow="Projects" title="作品集" subtitle="一些有趣的开源项目和工具">
       {projects.length === 0 ? (
-        <p className="text-[var(--text-dim)]">暂无作品</p>
+        <EmptyState title="暂无作品" description="项目样本发布后会显示在这里。" />
       ) : (
         <div className="cards cards--3">
           {projects.map((project, index) => (

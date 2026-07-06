@@ -60,6 +60,13 @@
   padding-top: 8px;
 }
 
+.section__action-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 14px;
+}
+
 .section__link {
   display: inline-flex;
   align-items: center;
@@ -77,6 +84,34 @@
 .section__link:hover {
   color: var(--brand-hover);
   gap: 7px;
+}
+
+.empty-state {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--surface) 62%, transparent);
+  padding: 36px 18px;
+  text-align: center;
+}
+
+.empty-state__title {
+  color: var(--text-soft);
+  font-size: 0.96rem;
+  font-weight: 800;
+}
+
+.empty-state__desc {
+  max-width: 420px;
+  color: var(--text-dim);
+  font-size: 0.86rem;
+  line-height: 1.7;
+}
+
+.empty-state__action {
+  margin-top: 4px;
 }
 
 .magnetic-card {

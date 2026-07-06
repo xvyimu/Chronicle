@@ -117,4 +117,16 @@ describe('TableOfContents', () => {
     expect(links[0].className).toContain('pl-3');
     expect(links[1].className).toContain('pl-5');
   });
+
+  it('renders a collapsible mobile table of contents', () => {
+    const article = document.createElement('article');
+    article.innerHTML = '<h2 id="intro">Intro</h2><h2 id="next">Next</h2>';
+    document.body.appendChild(article);
+
+    render(<TableOfContents variant="mobile" />);
+
+    expect(screen.getByText('本文目录')).toBeInTheDocument();
+    expect(screen.getByText('2 节')).toBeInTheDocument();
+    expect(screen.getByLabelText('移动文章目录')).toBeInTheDocument();
+  });
 });

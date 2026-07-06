@@ -181,7 +181,7 @@ body:has(.home-paper) .footer {
 .home-paper .btn--primary {
   border: 1px solid var(--brand);
   background: var(--brand);
-  color: #f8f7f2;
+  color: var(--primary-foreground);
 }
 
 .home-paper .btn--primary:hover {

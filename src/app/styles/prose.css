@@ -229,7 +229,8 @@ html:not(.dark) .prose pre {
     opacity var(--transition);
 }
 
-.code-toolbar:hover .copy-btn {
+.code-toolbar:hover .copy-btn,
+.code-toolbar:focus-within .copy-btn {
   opacity: 1;
 }
 
@@ -238,8 +239,17 @@ html:not(.dark) .prose pre {
   color: rgba(255, 255, 255, 0.92);
 }
 
-.code-block-copy--copied {
-  color: #9db6ad !important;
+.copy-btn--copied {
+  color: var(--brand-2) !important;
+}
+
+.copy-btn--failed {
+  color: var(--destructive) !important;
+}
+
+.copy-btn:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
 }
 
 .code-line {

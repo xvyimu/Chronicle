@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { PostMeta } from '@/types';
 import SearchResultsList from './SearchResultsList';
 import { useFuseSearch } from './useFuseSearch';
@@ -12,6 +12,7 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { fuseReady, results } = useFuseSearch(posts, query);
 
   useEffect(() => {
@@ -42,6 +43,12 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
   }, []);
+
+  useEffect(() => {
+    if (searchParams.get('focus') !== 'search') return;
+    inputRef.current?.focus();
+    inputRef.current?.select();
+  }, [searchParams]);
 
   const navigate = useCallback(
     (direction: 'up' | 'down') => {
@@ -76,10 +83,10 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
   }, [activeIndex]);
 
   return (
-    <div className="relative mb-8">
-      <div className="relative">
+    <div className="search-bar">
+      <div className="search-bar__field">
         <svg
-          className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+          className="search-bar__icon"
           width="16"
           height="16"
           viewBox="0 0 24 24"
@@ -88,7 +95,7 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          style={{ color: 'var(--text-dim)' }}
+          aria-hidden="true"
         >
           <circle cx="11" cy="11" r="8" />
           <path d="M21 21l-4.35-4.35" />
@@ -100,7 +107,6 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="w-full pl-10 pr-10 py-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] text-sm focus-visible:outline-2 focus-visible:outline-[var(--brand)] transition-all"
           aria-label="搜索文章"
           role="combobox"
           aria-expanded={query.trim().length > 0}
@@ -109,20 +115,12 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
           aria-activedescendant={
             activeIndex >= 0 ? `search-result-${activeIndex}` : undefined
           }
-          style={{ fontFamily: 'inherit' }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = 'var(--brand)';
-            e.currentTarget.style.boxShadow = '0 0 0 3px var(--brand-soft)';
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = '';
-            e.currentTarget.style.boxShadow = 'none';
-          }}
+          className="search-bar__input"
         />
         {query && (
           <button
             type="button"
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-dim)] hover:text-[var(--text)] transition-colors"
+            className="search-bar__clear"
             onClick={() => {
               setQuery('');
               setActiveIndex(-1);
@@ -138,6 +136,7 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
+              aria-hidden="true"
             >
               <path d="M18 6L6 18M6 6l12 12" />
             </svg>

@@ -27,6 +27,8 @@
   --bg-elevated: #fbfaf5;
   --surface: #f8f7f2;
   --surface-hover: #f2f1eb;
+  --surface-raised: var(--bg-elevated);
+  --surface-muted: var(--bg-soft);
   --bg-rgb: 241, 240, 235;
   --text: #242827;
   --text-soft: #4d5652;
@@ -87,6 +89,8 @@
   --bg-elevated: #202522;
   --surface: #1a1f1d;
   --surface-hover: #202724;
+  --surface-raised: var(--bg-elevated);
+  --surface-muted: var(--bg-soft);
   --bg-rgb: 20, 23, 22;
   --text: #eceee8;
   --text-soft: #c4cbc3;

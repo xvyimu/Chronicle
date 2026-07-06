@@ -5,8 +5,10 @@ import type { PostMeta } from '@/types';
 
 // Mock next/navigation useRouter
 const mockPush = vi.fn();
+const mockSearchParamValue = vi.fn();
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
+  useSearchParams: () => ({ get: mockSearchParamValue }),
 }));
 
 const MOCK_POSTS: PostMeta[] = [
@@ -58,6 +60,7 @@ describe('SearchBar', () => {
   beforeEach(() => {
     cleanup();
     mockPush.mockClear();
+    mockSearchParamValue.mockReturnValue(null);
   });
 
   afterEach(() => cleanup());
@@ -240,6 +243,15 @@ describe('SearchBar', () => {
     expect(document.activeElement).not.toBe(input);
 
     fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
+    expect(document.activeElement).toBe(input);
+  });
+
+  it('focuses the input when focus=search is present in the URL', () => {
+    mockSearchParamValue.mockImplementation((key: string) =>
+      key === 'focus' ? 'search' : null,
+    );
+    render(<SearchBar posts={MOCK_POSTS} />);
+    const input = screen.getByPlaceholderText(/搜索文章/);
     expect(document.activeElement).toBe(input);
   });
 

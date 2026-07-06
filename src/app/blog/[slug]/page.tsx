@@ -66,6 +66,7 @@ async function BlogPostContent({ post }: { post: PostFull }) {
             {/* Article */}
             <article className="article-shell">
               <ArticleHeader post={post} category={category ?? undefined} />
+              <TableOfContents variant="mobile" />
 
               <div id="article-content">
                 <MdxContent source={post.content} />

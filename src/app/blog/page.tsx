@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import BlogList from '@/components/blog/BlogList';
 import SearchBar from '@/components/blog/SearchBar';
 import Pagination from '@/components/blog/Pagination';
@@ -38,6 +39,16 @@ export default async function BlogPage({
       eyebrow="Blog"
       title="博客"
       subtitle={totalPages > 0 ? `共 ${allPosts.length} 篇` : ''}
+      action={
+        <div className="section__action-group">
+          <Link href="/categories" className="section__link">
+            按分类
+          </Link>
+          <Link href="/series" className="section__link">
+            看专题
+          </Link>
+        </div>
+      }
     >
       <SearchBar posts={allPosts} />
       <BlogList posts={posts} columns={2} />

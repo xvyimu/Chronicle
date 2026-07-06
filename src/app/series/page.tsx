@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import ArchiveCard from '@/components/layout/ArchiveCard';
+import EmptyState from '@/components/layout/EmptyState';
 import PageSection from '@/components/layout/PageSection';
 import { getAllSeries } from '@/lib/series';
 import { buildPageMetadata } from '@/lib/metadata';
@@ -19,9 +21,14 @@ export default function SeriesPage() {
       eyebrow="Series"
       title="专题"
       subtitle={`${seriesList.length} 个专题 · 按连续路径阅读文章`}
+      action={
+        <Link href="/blog" className="section__link">
+          全部文章
+        </Link>
+      }
     >
       {seriesList.length === 0 ? (
-        <p className="text-[var(--text-dim)]">暂无专题</p>
+        <EmptyState title="暂无专题" description="连续主题文章发布后会显示在这里。" />
       ) : (
         <div className="archive-grid archive-grid--2">
           {seriesList.map((series) => (

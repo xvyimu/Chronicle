@@ -23,6 +23,7 @@ vi.mock('next/link', () => ({
 const mockPush = vi.fn();
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
+  useSearchParams: () => ({ get: () => null }),
 }));
 
 import BlogPage from '@/app/blog/page';
@@ -45,6 +46,18 @@ describe('BlogPage', () => {
   it('renders search bar with all posts', async () => {
     await renderBlogPage();
     expect(screen.getByPlaceholderText(/搜索文章/)).toBeInTheDocument();
+  });
+
+  it('links to category and series discovery pages', async () => {
+    await renderBlogPage();
+    expect(screen.getByRole('link', { name: '按分类' })).toHaveAttribute(
+      'href',
+      '/categories',
+    );
+    expect(screen.getByRole('link', { name: '看专题' })).toHaveAttribute(
+      'href',
+      '/series',
+    );
   });
 
   it('renders blog post cards for the first page', async () => {

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import EmptyState from '@/components/layout/EmptyState';
 import PageSection from '@/components/layout/PageSection';
 import MetaBadge from '@/components/ui/MetaBadge';
 import { getAllTags } from '@/lib/tags';
@@ -20,9 +21,14 @@ export default function TagsPage() {
       eyebrow="Tags"
       title="标签"
       subtitle={`${tags.length} 个标签 · 按主题浏览文章`}
+      action={
+        <Link href="/blog" className="section__link">
+          全部文章
+        </Link>
+      }
     >
       {tags.length === 0 ? (
-        <p className="text-[var(--text-dim)]">暂无标签</p>
+        <EmptyState title="暂无标签" description="发布文章后会自动生成标签索引。" />
       ) : (
         <div className="tag-cloud">
           {tags.map((t) => {

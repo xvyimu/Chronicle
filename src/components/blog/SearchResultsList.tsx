@@ -21,18 +21,20 @@ export default function SearchResultsList({
     <div
       ref={listRef}
       id="search-results"
-      className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden"
+      className="search-results-popover"
       role="listbox"
       aria-label="搜索结果"
     >
-      <p className="text-xs text-[var(--text-dim)] px-4 pt-3 pb-1">
+      <p className="search-results-popover__summary">
         {!fuseReady ? (
           <span>正在加载搜索…</span>
         ) : (
           <>
             搜索 &ldquo;{query}&rdquo;，找到 {results.length} 篇
             {results.length > 0 && (
-              <span className="ml-2 opacity-60">↑↓ 导航 · Enter 打开 · Esc 关闭</span>
+              <span className="search-results-popover__hint">
+                ↑↓ 导航 · Enter 打开 · Esc 关闭
+              </span>
             )}
           </>
         )}
@@ -50,13 +52,11 @@ export default function SearchResultsList({
               id={`search-result-${index}`}
               role="option"
               aria-selected={index === activeIndex}
-              className={`block px-4 py-3 transition-colors ${
-                index === activeIndex
-                  ? 'bg-[var(--brand-soft)] border-l-2 border-l-[var(--brand)]'
-                  : 'border-l-2 border-l-transparent hover:bg-[var(--bg-soft)]'
+              className={`search-results-popover__item ${
+                index === activeIndex ? 'is-active' : ''
               }`}
             >
-              <div className="flex items-center gap-2 text-xs text-[var(--text-dim)] mb-0.5">
+              <div className="search-results-popover__meta">
                 <time dateTime={post.date}>{post.date}</time>
                 {post.category && (
                   <MetaBadge className="search-results__badge">{post.category}</MetaBadge>
@@ -73,19 +73,19 @@ export default function SearchResultsList({
                   </MetaBadge>
                 )}
               </div>
-              <h4 className="font-semibold text-sm">
+              <h4 className="search-results-popover__title">
                 {titleMatch
                   ? highlightSearchMatch(post.title, titleMatch.indices)
                   : post.title}
               </h4>
-              <p className="text-xs text-[var(--text-dim)] line-clamp-1 mt-0.5">
+              <p className="search-results-popover__desc">
                 {post.excerpt || post.description}
               </p>
             </Link>
           );
         })
       ) : fuseReady && results.length === 0 ? (
-        <p className="text-sm text-[var(--text-soft)] px-4 py-4">没有匹配的文章</p>
+        <p className="search-results-popover__empty">没有匹配的文章</p>
       ) : null}
     </div>
   );

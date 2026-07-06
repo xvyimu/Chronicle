@@ -71,7 +71,7 @@ content/blog/*.mdx
 
 关键文件：
 
-- `src/lib/posts/schema.ts`
+- `src/lib/schemas/post-frontmatter.ts`
 - `src/lib/posts/repository.ts`
 - `src/lib/posts/query.ts`
 - `src/lib/posts/search-text.ts`
@@ -138,7 +138,7 @@ HomeCtaSection
 | ---------------------- | ------------------------------------------------------------------------------------------------ |
 | `components/home/`     | 首页叙事、精选内容、滚动 reveal、首屏 loading                                                    |
 | `components/blog/`     | BlogCard、SearchBar、Pagination、MdxContent、TOC、ReadingProgress、ReadingPreferences、ImageZoom |
-| `components/layout/`   | Header、Footer、PageSection、ArchiveCard、SiteBackdropStage、SiteBackdropParallax                |
+| `components/layout/`   | Header、Footer、PageSection、ArchiveCard、EmptyState、SiteBackdropStage、SiteBackdropParallax    |
 | `components/projects/` | ProjectCard                                                                                      |
 | `components/links/`    | LinksDirectory                                                                                   |
 | `components/comments/` | Giscus                                                                                           |

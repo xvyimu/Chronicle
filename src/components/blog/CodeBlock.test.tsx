@@ -80,9 +80,15 @@ describe('CodeBlock', () => {
     vi.useRealTimers();
   });
 
-  it('reverts to "复制" when clipboard write fails', async () => {
+  it('shows a failure message when clipboard write and fallback both fail', async () => {
     const writeText = vi.fn().mockRejectedValue(new Error('denied'));
     Object.assign(navigator, { clipboard: { writeText } });
+    Object.defineProperty(document, 'execCommand', {
+      configurable: true,
+      value: vi.fn(() => {
+        throw new Error('fallback denied');
+      }),
+    });
 
     render(
       <CodeBlock>
@@ -94,7 +100,7 @@ describe('CodeBlock', () => {
       fireEvent.click(screen.getByRole('button', { name: '复制' }));
     });
     await vi.waitFor(() => {
-      expect(screen.getByRole('button', { name: '复制' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '复制失败' })).toBeInTheDocument();
     });
   });
 

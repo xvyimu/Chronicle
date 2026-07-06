@@ -16,9 +16,11 @@
    适合继续做 shadcn、MetaBadge、PageSection、ArchiveCard 或 Paper Gallery 视觉组件收口时阅读。
 6. docs/salesdex-inspired-redesign.md
    适合准备按 sales-dex.jp 的视觉方向改造首页时阅读，明确可迁移模式、技术落点、阶段计划和验收标准。
-7. docs/cache-components-migration.md
+7. docs/optimization-roadmap-2026-07-06.md
+   适合继续做架构、用户体验和视觉优化时阅读，明确阶段计划、任务拆分、验收标准和回滚策略。
+8. docs/cache-components-migration.md
    适合考虑引入外部数据源或迁移到 Cache Components 时阅读。
-8. docs/architecture-review.html
+9. docs/architecture-review.html
    历史架构扫描快照，适合作为治理与重构参考，不适合作为首次入门文档。
 
 ## 文档分工
@@ -91,6 +93,15 @@
 - 哪些视觉模式可以借鉴，哪些企业站内容不应照搬
 - 首页改版应该拆成哪些阶段
 - 新组件、样式、测试和浏览器验收应如何安排
+
+### docs/optimization-roadmap-2026-07-06.md
+
+解决这些问题：
+
+- 当前博客项目下一轮架构、用户体验和视觉优化目标是什么
+- 哪些问题优先处理，哪些留到内容规模增长后再做
+- 每个阶段应该改哪些模块、如何验收、如何回滚
+- 后续接手者应该按什么顺序继续推进
 
 ### docs/cache-components-migration.md
 

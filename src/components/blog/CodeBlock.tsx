@@ -10,9 +10,16 @@ import { useState, useRef, useEffect, type HTMLAttributes } from 'react';
  * rehype-pretty-code 会在 <pre> 上添加 data-language 属性。
  */
 type PreProps = HTMLAttributes<HTMLPreElement> & { 'data-language'?: string };
+type CopyState = 'idle' | 'copied' | 'failed';
+
+const COPY_LABELS: Record<CopyState, string> = {
+  idle: '复制',
+  copied: '已复制 ✓',
+  failed: '复制失败',
+};
 
 export default function CodeBlock({ children, ...props }: PreProps) {
-  const [copied, setCopied] = useState(false);
+  const [copyState, setCopyState] = useState<CopyState>('idle');
   const preRef = useRef<HTMLPreElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -25,13 +32,20 @@ export default function CodeBlock({ children, ...props }: PreProps) {
 
   const language = props['data-language'];
 
+  const resetCopyState = (state: CopyState) => {
+    setCopyState(state);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => setCopyState('idle'), 2000);
+  };
+
   const handleCopy = async () => {
     const codeText = preRef.current?.querySelector('code')?.textContent || '';
     try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error('Clipboard API unavailable');
+      }
       await navigator.clipboard.writeText(codeText);
-      setCopied(true);
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      timeoutRef.current = setTimeout(() => setCopied(false), 2000);
+      resetCopyState('copied');
     } catch {
       // 降级方案：使用 execCommand 兼容非 HTTPS 环境
       try {
@@ -41,13 +55,12 @@ export default function CodeBlock({ children, ...props }: PreProps) {
         textarea.style.opacity = '0';
         document.body.appendChild(textarea);
         textarea.select();
-        document.execCommand('copy');
+        const copied = document.execCommand('copy');
         document.body.removeChild(textarea);
-        setCopied(true);
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-        timeoutRef.current = setTimeout(() => setCopied(false), 2000);
+        if (!copied) throw new Error('execCommand copy failed');
+        resetCopyState('copied');
       } catch {
-        setCopied(false);
+        resetCopyState('failed');
       }
     }
   };
@@ -62,8 +75,14 @@ export default function CodeBlock({ children, ...props }: PreProps) {
       <pre ref={preRef} {...props}>
         {children}
       </pre>
-      <button className="copy-btn" onClick={handleCopy} type="button">
-        {copied ? '已复制 ✓' : '复制'}
+      <button
+        className={`copy-btn copy-btn--${copyState}`}
+        onClick={handleCopy}
+        type="button"
+        title={COPY_LABELS[copyState]}
+        aria-live="polite"
+      >
+        {COPY_LABELS[copyState]}
       </button>
     </div>
   );

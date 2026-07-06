@@ -95,9 +95,17 @@ describe('Header', () => {
     expect(screen.getByLabelText('切换主题')).toBeInTheDocument();
   });
 
+  it('renders a search shortcut link', () => {
+    render(<Header />);
+    expect(screen.getByLabelText('搜索文章')).toHaveAttribute(
+      'href',
+      '/blog?focus=search',
+    );
+  });
+
   it('renders mobile menu toggle button', () => {
     render(<Header />);
-    const menuBtn = screen.getByLabelText('菜单');
+    const menuBtn = screen.getByLabelText('打开菜单');
     expect(menuBtn).toBeInTheDocument();
     expect(menuBtn).toHaveAttribute('aria-expanded', 'false');
     expect(menuBtn).toHaveAttribute('aria-controls', 'mobile-nav');
@@ -105,9 +113,10 @@ describe('Header', () => {
 
   it('toggles mobile menu on click', () => {
     render(<Header />);
-    const menuBtn = screen.getByLabelText('菜单');
+    const menuBtn = screen.getByLabelText('打开菜单');
 
     fireEvent.click(menuBtn);
+    expect(screen.getByLabelText('关闭菜单')).toBeInTheDocument();
     expect(menuBtn).toHaveAttribute('aria-expanded', 'true');
 
     fireEvent.click(menuBtn);
@@ -117,7 +126,7 @@ describe('Header', () => {
   it('closes mobile menu when pathname changes', () => {
     mockPathname.mockReturnValue('/');
     render(<Header />);
-    const menuBtn = screen.getByLabelText('菜单');
+    const menuBtn = screen.getByLabelText('打开菜单');
 
     // Open menu
     fireEvent.click(menuBtn);
@@ -127,13 +136,13 @@ describe('Header', () => {
     cleanup();
     mockPathname.mockReturnValue('/blog');
     render(<Header />);
-    const newMenuBtn = screen.getByLabelText('菜单');
+    const newMenuBtn = screen.getByLabelText('打开菜单');
     expect(newMenuBtn).toHaveAttribute('aria-expanded', 'false');
   });
 
   it('closes mobile menu when backdrop is clicked', () => {
     render(<Header />);
-    const menuBtn = screen.getByLabelText('菜单');
+    const menuBtn = screen.getByLabelText('打开菜单');
 
     fireEvent.click(menuBtn);
     expect(menuBtn).toHaveAttribute('aria-expanded', 'true');
@@ -142,6 +151,17 @@ describe('Header', () => {
     const backdrop = document.querySelector('.header__backdrop');
     expect(backdrop).toBeInTheDocument();
     fireEvent.click(backdrop!);
+    expect(menuBtn).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('closes mobile menu when Escape is pressed', () => {
+    render(<Header />);
+    const menuBtn = screen.getByLabelText('打开菜单');
+
+    fireEvent.click(menuBtn);
+    expect(menuBtn).toHaveAttribute('aria-expanded', 'true');
+
+    fireEvent.keyDown(window, { key: 'Escape' });
     expect(menuBtn).toHaveAttribute('aria-expanded', 'false');
   });
 
