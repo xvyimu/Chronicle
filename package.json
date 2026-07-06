@@ -9,6 +9,8 @@
     "lint": "eslint",
     "format": "prettier --write \"src/**/*.{ts,tsx,mjs,mts,css}\" \"scripts/**/*.{ts,mjs}\" \"e2e/**/*.ts\" \"*.{ts,mjs,mts,js}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,mjs,mts,css}\" \"scripts/**/*.{ts,mjs}\" \"e2e/**/*.ts\" \"*.{ts,mjs,mts,js}\"",
+    "format:docs": "prettier --write \"README.md\" \"AGENTS.md\" \"TODO.md\" \"docs/*.md\" \"docs/adr/*.md\" \"docs/superpowers/runs/**/*.md\"",
+    "format:docs:check": "prettier --check \"README.md\" \"AGENTS.md\" \"TODO.md\" \"docs/*.md\" \"docs/adr/*.md\" \"docs/superpowers/runs/**/*.md\"",
     "typecheck": "tsc --noEmit",
     "check:seo": "tsx scripts/check-seo.ts",
     "check:production-content": "tsx scripts/check-production-content.ts",

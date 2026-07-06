@@ -3,5 +3,6 @@
 
 /* 语义模块通过 layout.tsx 显式 import 加载 (postcss-import 在 Tailwind v4
    下失效,详见 docs/specs/2026-06-29-css-import-fix-design.md):
-   styles/tokens.css → base → components → blog-ui → backdrop → home
-   → prose → project-detail → animations → responsive (最后) */
+   tokens → base → components → archive → controls → links → blog-ui → search-ui
+   → article-ui → backdrop → home → home-hero → home-sections → prose
+   → project-detail → animations → responsive (最后) */

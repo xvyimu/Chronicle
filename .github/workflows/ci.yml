@@ -33,6 +33,8 @@ jobs:
 
       - run: pnpm format:check
 
+      - run: pnpm format:docs:check
+
       - run: pnpm lint
 
       - run: pnpm test

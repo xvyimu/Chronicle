@@ -1,116 +1,18 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import type Fuse from 'fuse.js';
-import Link from 'next/link';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { PostMeta } from '@/types';
-import MetaBadge from '@/components/ui/MetaBadge';
-
-type FuseMatch = { key?: string; value?: string; indices: readonly [number, number][] };
-
-/**
- * Render `text` with the character ranges in `indices` wrapped in <mark>.
- * Indices come from Fuse.js (inclusive ranges). Falls back to plain text
- * when no matches are present for this field.
- */
-function highlight(text: string, indices: readonly [number, number][]) {
-  if (!indices || indices.length === 0) return text;
-  // Sort + merge to guard against overlapping/unordered ranges.
-  const sorted = [...indices].sort((a, b) => a[0] - b[0]);
-  const segments: React.ReactNode[] = [];
-  let cursor = 0;
-  sorted.forEach(([start, end], i) => {
-    if (start > cursor) segments.push(text.slice(cursor, start));
-    const safeStart = Math.max(start, cursor);
-    if (end + 1 > safeStart) {
-      segments.push(
-        <mark key={`m-${i}`} className="search-hl">
-          {text.slice(safeStart, end + 1)}
-        </mark>,
-      );
-      cursor = end + 1;
-    }
-  });
-  if (cursor < text.length) segments.push(text.slice(cursor));
-  return segments;
-}
+import SearchResultsList from './SearchResultsList';
+import { useFuseSearch } from './useFuseSearch';
 
 export default function SearchBar({ posts }: { posts: PostMeta[] }) {
   const [query, setQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(-1);
-  const [fuse, setFuse] = useState<Fuse<PostMeta> | null>(null);
-  const fuseLoadedRef = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-
-  // Fuse.js options — stable reference for reuse
-  const fuseOptions = useMemo(
-    () => ({
-      keys: [
-        { name: 'title', weight: 0.36 },
-        { name: 'description', weight: 0.22 },
-        { name: 'tags', weight: 0.16 },
-        { name: 'category', weight: 0.1 },
-        { name: 'series', weight: 0.08 },
-        { name: 'headings', weight: 0.05 },
-        { name: 'searchText', weight: 0.03 },
-      ],
-      threshold: 0.4,
-      ignoreLocation: true,
-      includeScore: true,
-      includeMatches: true,
-      minMatchCharLength: 2,
-    }),
-    [],
-  );
-
-  // Preload Fuse.js on mount so the first search is instant in production
-  // (the dynamic chunk would otherwise load on first keystroke, stalling the
-  // result list for several seconds). fuseLoadedRef guards against re-import.
-  useEffect(() => {
-    if (fuseLoadedRef.current) return;
-    fuseLoadedRef.current = true;
-
-    let cancelled = false;
-    import('fuse.js')
-      .then(({ default: FuseLib }) => {
-        if (cancelled) return;
-        setFuse(new FuseLib(posts, fuseOptions));
-      })
-      .catch((err) => {
-        console.error('Fuse.js 加载失败', err);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [posts, fuseOptions]);
-
-  // Rebuild index when posts array reference changes (ISR revalidation)
-  useEffect(() => {
-    if (!fuseLoadedRef.current) return;
-    let cancelled = false;
-    import('fuse.js')
-      .then(({ default: FuseLib }) => {
-        if (cancelled) return;
-        setFuse(new FuseLib(posts, fuseOptions));
-      })
-      .catch((err) => {
-        console.error('Fuse.js 加载失败', err);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [posts, fuseOptions]);
-
-  const results = useMemo(() => {
-    if (!query.trim() || !fuse) return [];
-    return fuse.search(query.trim(), { limit: 10 }).map((r) => ({
-      item: r.item,
-      matches: r.matches ?? [],
-    }));
-  }, [query, fuse]);
+  const { fuseReady, results } = useFuseSearch(posts, query);
 
   useEffect(() => {
     setActiveIndex(-1);
@@ -244,76 +146,13 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
       </div>
 
       {query && (
-        <div
-          ref={listRef}
-          id="search-results"
-          className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden"
-          role="listbox"
-          aria-label="搜索结果"
-        >
-          <p className="text-xs text-[var(--text-dim)] px-4 pt-3 pb-1">
-            {!fuse ? (
-              <span>正在加载搜索…</span>
-            ) : (
-              <>
-                搜索 &ldquo;{query}&rdquo;，找到 {results.length} 篇
-                {results.length > 0 && (
-                  <span className="ml-2 opacity-60">↑↓ 导航 · Enter 打开 · Esc 关闭</span>
-                )}
-              </>
-            )}
-          </p>
-          {fuse && results.length > 0 ? (
-            results.map(({ item: post, matches }, i) => {
-              const titleMatch = (matches as FuseMatch[]).find((m) => m.key === 'title');
-              return (
-                <Link
-                  key={post.slug}
-                  href={`/blog/${post.slug}`}
-                  data-result="true"
-                  id={`search-result-${i}`}
-                  role="option"
-                  aria-selected={i === activeIndex}
-                  className={`block px-4 py-3 transition-colors ${
-                    i === activeIndex
-                      ? 'bg-[var(--brand-soft)] border-l-2 border-l-[var(--brand)]'
-                      : 'border-l-2 border-l-transparent hover:bg-[var(--bg-soft)]'
-                  }`}
-                >
-                  <div className="flex items-center gap-2 text-xs text-[var(--text-dim)] mb-0.5">
-                    <time dateTime={post.date}>{post.date}</time>
-                    {post.category && (
-                      <MetaBadge className="search-results__badge">
-                        {post.category}
-                      </MetaBadge>
-                    )}
-                    {post.series && (
-                      <MetaBadge className="search-results__badge">
-                        {post.series}
-                      </MetaBadge>
-                    )}
-                    {post.featured && (
-                      <MetaBadge
-                        variant="secondary"
-                        className="search-results__badge search-results__badge--featured"
-                      >
-                        精选
-                      </MetaBadge>
-                    )}
-                  </div>
-                  <h4 className="font-semibold text-sm">
-                    {titleMatch ? highlight(post.title, titleMatch.indices) : post.title}
-                  </h4>
-                  <p className="text-xs text-[var(--text-dim)] line-clamp-1 mt-0.5">
-                    {post.excerpt || post.description}
-                  </p>
-                </Link>
-              );
-            })
-          ) : fuse && results.length === 0 ? (
-            <p className="text-sm text-[var(--text-soft)] px-4 py-4">没有匹配的文章</p>
-          ) : null}
-        </div>
+        <SearchResultsList
+          query={query}
+          fuseReady={fuseReady}
+          results={results}
+          activeIndex={activeIndex}
+          listRef={listRef}
+        />
       )}
     </div>
   );

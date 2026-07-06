@@ -15,8 +15,7 @@ import CuratedLinksPreview from '@/components/home/CuratedLinksPreview';
 import HomeCtaSection from '@/components/home/HomeCtaSection';
 import RevealOnScroll from '@/components/home/RevealOnScroll';
 import { getCspNonce } from '@/lib/csp';
-
-const homeLinkCategoryIds = ['ai', 'engineering-docs', 'self-hosted', 'vps'];
+import { selectHomeLinkPreviewCategories } from '@/lib/link-preview';
 
 function buildReadingPaths(): ReadingPathItem[] {
   return [
@@ -59,9 +58,7 @@ export default async function HomePage() {
   ].slice(0, 6);
   const featuredProjects = getFeaturedProjects();
   const linkCategories = getAllLinkCategories();
-  const previewLinkCategories = homeLinkCategoryIds
-    .map((id) => linkCategories.find((category) => category.id === id))
-    .filter((category): category is NonNullable<typeof category> => Boolean(category));
+  const previewLinkCategories = selectHomeLinkPreviewCategories(linkCategories);
   const readingPaths = buildReadingPaths();
 
   const orgLd = toJsonLd(organizationSchema());

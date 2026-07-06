@@ -5,11 +5,17 @@ import './globals.css';
 // 详见 docs/specs/2026-06-29-css-import-fix-design.md)
 import './styles/tokens.css'; // 设计令牌 (CSS 变量定义)
 import './styles/base.css'; // 全局基础 (skip-link, header, footer)
-import './styles/components.css'; // 通用组件 (card, button, hero 容器)
+import './styles/components.css'; // 通用布局与基础卡片
+import './styles/archive.css'; // 归档网格与 ArchiveCard
+import './styles/controls.css'; // 按钮、分页、标签与轻量控制
 import './styles/links.css'; // 收藏导航目录
-import './styles/blog-ui.css'; // 博客 UI (SearchBar, TOC, CodeBlock)
+import './styles/blog-ui.css'; // 博客列表、目录与辅助界面
+import './styles/search-ui.css'; // 搜索输入与结果列表
+import './styles/article-ui.css'; // 文章详情布局与阅读面板
 import './styles/backdrop.css'; // 背景层 (body::before/after + stage)
-import './styles/home.css'; // 首页 (Manifesto, ReadingPath, CTA)
+import './styles/home.css'; // 首页主题覆盖与共享样式
+import './styles/home-hero.css'; // 首页首屏
+import './styles/home-sections.css'; // 首页内容区块
 import './styles/prose.css'; // 文章排版 (.prose, code block)
 import './styles/project-detail.css'; // 项目详情
 import './styles/animations.css'; // 动画 (reveal, fade-in-up)

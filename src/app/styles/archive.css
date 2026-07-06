@@ -1,0 +1,202 @@
+.archive-grid {
+  display: grid;
+  gap: 16px;
+  padding: 18px 0 0;
+}
+
+.archive-grid--2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.archive-grid--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.archive-card {
+  display: block;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface) 76%, transparent);
+  box-shadow: var(--shadow-xs);
+  padding: 22px;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.archive-card:hover {
+  border-color: var(--brand);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-2px);
+}
+
+.archive-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.archive-card__title {
+  min-width: 0;
+  color: var(--text);
+  font-size: 1.08rem;
+  font-weight: 800;
+  line-height: 1.35;
+  transition: color var(--transition-fast);
+}
+
+.archive-card:hover .archive-card__title {
+  color: var(--brand-hover);
+}
+
+.archive-card__count {
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background: var(--brand-soft);
+  color: var(--brand-hover);
+  font-size: 0.76rem;
+  font-weight: 800;
+  padding: 3px 10px;
+}
+
+.archive-card__meta {
+  color: var(--text-dim);
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+
+.archive-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.archive-card__tag {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 0.76rem;
+  height: auto;
+  padding: 3px 9px;
+}
+
+.archive-card__content {
+  margin-top: 8px;
+  padding: 0;
+}
+
+.archive-card__sequence {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+}
+
+.archive-card__sequence-item {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+}
+
+.archive-card__sequence-index {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--surface-muted) 82%, transparent);
+  color: var(--text-dim);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.archive-card__sequence-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.archive-list {
+  display: grid;
+  gap: 12px;
+  padding-top: 10px;
+}
+
+.archive-list__item {
+  display: grid;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  padding: 18px;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.archive-list__item:hover {
+  border-color: var(--brand);
+  background: var(--surface);
+  transform: translateY(-1px);
+}
+
+.archive-list__item--series {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.archive-list__index {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-full);
+  background: var(--brand-soft);
+  color: var(--brand-hover);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.archive-list__title {
+  display: block;
+  color: var(--text);
+  font-weight: 800;
+  line-height: 1.45;
+  transition: color var(--transition-fast);
+}
+
+.archive-list__item:hover .archive-list__title {
+  color: var(--brand-hover);
+}
+
+.archive-list__desc {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-top: 4px;
+  color: var(--text-dim);
+  font-size: 0.88rem;
+  line-height: 1.65;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.archive-list__date {
+  color: var(--text-dim);
+  font-size: 0.86rem;
+  white-space: nowrap;
+}

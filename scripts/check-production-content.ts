@@ -1,4 +1,5 @@
 import { getAllLinkCategories } from '../src/lib/links';
+import { selectHomeLinkPreviewCategories } from '../src/lib/link-preview';
 import { getAllPosts } from '../src/lib/posts';
 import { getAllProjects, getFeaturedProjects } from '../src/lib/projects';
 
@@ -18,7 +19,6 @@ const DEFAULT_ATTEMPTS = 5;
 const DEFAULT_RETRY_DELAY_MS = 3000;
 const USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36';
-const HOME_LINK_CATEGORY_IDS = ['ai', 'engineering-docs', 'self-hosted', 'vps'];
 
 function readBaseUrl(): string {
   const baseUrlFlag = process.argv.find((arg) => arg.startsWith('--base-url='));
@@ -64,10 +64,7 @@ function buildExpectations(baseUrl: string): PageExpectation[] {
     ...posts.filter((post) => post.featured),
     ...posts.filter((post) => !post.featured),
   ].slice(0, 6);
-  const homeLinkCategory =
-    HOME_LINK_CATEGORY_IDS.map((id) =>
-      linkCategories.find((category) => category.id === id),
-    ).find(Boolean) ?? linkCategories[0];
+  const homeLinkCategory = selectHomeLinkPreviewCategories(linkCategories)[0];
   const firstLinkItem = linkCategories.find((category) => category.items.length > 0)
     ?.items[0];
 
