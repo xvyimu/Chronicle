@@ -7,6 +7,7 @@
 ## 何时迁移到 Cache Components
 
 当项目引入以下场景时，应考虑迁移：
+
 - 从外部 API 获取数据（如 GitHub stars、天气信息）
 - 页面混合静态内容和实时数据
 - 需要 ISR（增量静态再生）
@@ -54,6 +55,7 @@ export default async function Page() {
 ### 4. 废弃旧配置
 
 启用 Cache Components 后，以下配置将被禁用：
+
 - `export const revalidate = ...`
 - `export const dynamic = 'force-dynamic'`
 - `fetch(..., { cache: 'no-store' })`

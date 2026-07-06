@@ -71,7 +71,7 @@
 | ---------- | ------------------------------------------------------ | -------------------------- |
 | TypeScript | 0 errors                                               | `tsc --noEmit`             |
 | Lint       | 0 errors                                               | `eslint`                   |
-| 单元测试   | 523 tests, 65 files 全绿                               | `vitest run`               |
+| 单元测试   | 528 tests, 66 files 全绿                               | `vitest run`               |
 | E2E 测试   | 47 tests, 5 spec files 全绿                            | `node scripts/run-e2e.mjs` |
 | 生产构建   | 编译成功 (93 个页面工件；CSP nonce 使路由按需动态渲染) | `pnpm build`               |
 | 代码清洁   | 无 `.only`/`@ts-*`；仅保留数据缺失保护性 `test.skip`   | 已验证                     |
@@ -102,7 +102,7 @@ Claude Code 接手后按以下顺序推进：
 - `pnpm lint`
 - `pnpm typecheck`
 - `pnpm check:seo`
-- `pnpm test`（523 tests / 65 files）
+- `pnpm test`（528 tests / 66 files）
 - `pnpm build`（93 个页面工件）
 - `pnpm test:e2e`（47 tests / 5 spec files，全绿）
 
@@ -126,7 +126,7 @@ Claude Code 接手后按以下顺序推进：
 - `src/components/layout/SiteBackdropStage.tsx` (server component, aria-hidden)
 - `src/components/layout/SiteBackdropParallax.tsx` (client component, returns null)
 - `src/app/styles/backdrop.css` (`body::before/after` + `.site-backdrop__stage` 选择器)
-- `src/app/layout.tsx` (接入三层 + 显式 import 11 个 CSS 模块)
+- `src/app/layout.tsx` (接入三层 + 显式 import 17 个 CSS 模块)
 
 设计文档:
 
@@ -155,7 +155,7 @@ Claude Code 接手后按以下顺序推进：
 
 - `pnpm lint`
 - `pnpm typecheck`
-- `pnpm test`（523 tests / 65 files）
+- `pnpm test`（528 tests / 66 files）
 - `pnpm build`
 - Chrome 访问 `http://localhost:7897` 的 `/`、`/blog`、`/blog/docker-deploy-guide`、`/tags`、`/links`、`/projects/nav-site`，无 console error/warning、无横向溢出。
 
@@ -172,13 +172,20 @@ D:\blog\
 │   │   ├── page.tsx            # 首页
 │   │   ├── layout.tsx          # 根布局（Header + Footer + 字体 + CSS 显式 import）
 │   │   ├── globals.css         # CSS 入口（仅 @tailwindcss + @plugin,12 行）
-│   │   └── styles/             # 语义化 CSS 模块（每个 ≤500 行,共 11 个）
+│   │   └── styles/             # 语义化 CSS 模块（每个 ≤500 行,共 17 个）
 │   │       ├── tokens.css          # 设计令牌（明暗主题变量、间距、阴影）
 │   │       ├── base.css            # 全局基础（skip-link、header、footer、reduced-motion）
-│   │       ├── components.css     # 通用组件（card、button、section、hero 容器）
-│   │       ├── blog-ui.css        # 博客 UI（SearchBar、TOC、CodeBlock、ThemeToggle）
+│   │       ├── components.css     # 通用布局与 card
+│   │       ├── archive.css        # 归档网格、ArchiveCard、归档列表
+│   │       ├── controls.css       # button、pagination、tag link、轻量控制
+│   │       ├── links.css          # 收藏导航目录
+│   │       ├── blog-ui.css        # 博客列表、TOC、Tag cloud、Image zoom
+│   │       ├── search-ui.css      # 搜索输入与搜索结果
+│   │       ├── article-ui.css     # 文章详情布局、阅读面板、相关文章
 │   │       ├── backdrop.css       # 背景层（body::before/after + .site-backdrop__stage）
-│   │       ├── home.css           # 首页（Manifesto、ReadingPath、ArticleRail、CTA）
+│   │       ├── home.css           # 首页主题覆盖、共享样式、首页响应式
+│   │       ├── home-hero.css      # 首页首屏
+│   │       ├── home-sections.css  # Manifesto、ReadingPath、ArticleRail、Links、CTA
 │   │       ├── prose.css         # 文章排版（.prose、code block）
 │   │       ├── project-detail.css # 项目详情
 │   │       ├── animations.css    # 动画（reveal、fade-in-up、loading-intro）
@@ -227,8 +234,8 @@ D:\blog\
 │   ├── extended.spec.ts        # 10 tests
 │   └── mobile.spec.ts          # 4 tests（移动端 header / search / article / links）
 ├── docs/                       # 设计/规范文档
-│   ├── handoff-to-agent.md     # ← 当前文档（权威架构来源）
-│   ├── architecture.md         # 历史架构概览（已标注部分过时,保留参考）
+│   ├── handoff-to-agent.md     # 当前状态 + 接手顺序 + 后续方向
+│   ├── architecture.md         # 当前架构概览与模块职责
 │   ├── overview.md             # 文档总览与阅读顺序
 │   ├── content-workflow.md     # 内容工作流（新增/修改文章的规范）
 │   ├── css-conventions.md      # CSS 约定（BEM + Tailwind 分工）
@@ -384,7 +391,7 @@ pnpm dev                    # → localhost:3000 (Turbopack)
 pnpm dev --port 3001        # 显式指定端口（E2E 默认用 3001）
 
 # 测试
-pnpm test                   # Vitest 单元测试（523 tests, 65 files）
+pnpm test                   # Vitest 单元测试（528 tests, 66 files）
 pnpm test:e2e               # Playwright E2E（47 tests, 5 spec files;自动启动 :3001）
 pnpm test:e2e:raw -- --ui   # 带 UI 模式调试
 
@@ -432,7 +439,7 @@ pnpm analyze                # 生成 .next/analyze/
 ```bash
 cd D:\blog
 pnpm install                 # 确认依赖装得上（注意：pnpm v11 store 偶尔会损坏,见 Lessons Learned）
-pnpm test                    # 期望:523 tests / 65 files 全绿
+pnpm test                    # 期望:528 tests / 66 files 全绿
 pnpm lint                    # 期望:0 errors
 tsc --noEmit                 # 期望:0 errors
 pnpm build                   # 期望:生成 RSS + 93 个页面工件；build output 中页面为 ƒ Dynamic（CSP nonce 的预期结果）
@@ -446,14 +453,15 @@ pnpm test:e2e                # 期望:47 tests / 5 spec files 全绿（首次会
 按以下顺序读文档,可在 15 分钟内建立完整心智模型:
 
 1. `AGENTS.md` — 项目结构与约定速览
-2. 本文件（`docs/handoff-to-agent.md`）— 当前状态 + 架构 + 后续方向
-3. `docs/specs/2026-06-29-site-backdrop-architecture-design.md` — 三层背景架构
-4. `docs/specs/2026-06-29-css-import-fix-design.md` — Tailwind v4 CSS 加载约束
-5. `docs/specs/2026-07-04-shadcn-visual-architecture-design.md` — shadcn / Paper Gallery 视觉组件收口
-6. `docs/css-conventions.md` — 写样式前必读
-7. `docs/performance-baseline.md` — 改性能预算前必读
+2. 本文件（`docs/handoff-to-agent.md`）— 当前状态、接手顺序与后续方向
+3. `docs/architecture.md` — 当前架构概览、模块职责与扩展落点
+4. `docs/specs/2026-06-29-site-backdrop-architecture-design.md` — 三层背景架构
+5. `docs/specs/2026-06-29-css-import-fix-design.md` — Tailwind v4 CSS 加载约束
+6. `docs/specs/2026-07-04-shadcn-visual-architecture-design.md` — shadcn / Paper Gallery 视觉组件收口
+7. `docs/css-conventions.md` — 写样式前必读
+8. `docs/performance-baseline.md` — 改性能预算前必读
 
-**不必读**:`docs/architecture.md`（已标注部分过时,保留作历史参考）、`docs/architecture-review.html`（历史架构扫描快照,作为 specs/posts-deepening-design 的输入）。
+**不必读**:`docs/architecture-review.html`（历史架构扫描快照,作为 specs/posts-deepening-design 的输入；需要追溯历史审查时再看）。
 
 ### 7.4 高频踩坑点
 
@@ -488,8 +496,8 @@ git -c http.proxy=socks5h://127.0.0.1:7897 -c https.proxy=socks5h://127.0.0.1:78
 - [ ] 跑通 7.2 的 5 条基线命令,全绿
 - [ ] 读完 7.3 的 6 份文档
 - [ ] 理解三层背景架构（body::before/after + SiteBackdropStage + SiteBackdropParallax）的职责分离
-- [ ] 理解 CSS 11 模块的加载顺序约束（tokens 最先,responsive 最后）
-- [ ] 在 `src/app/styles/home.css` 中找到 ArticleRail 的自定义滚动条样式
+- [ ] 理解 CSS 17 模块的加载顺序约束（tokens 最先,responsive 最后）
+- [ ] 在 `src/app/styles/home-sections.css` 中找到 ArticleRail 样式
 - [ ] 在 `src/lib/posts/` 中找到文章查询的 4 个子模块
 - [ ] 在 `src/components/home/` 中找到首页 8 个组件的渲染顺序（参考本文件 §三的"组件层级"）
 - [ ] 知道改 CSP 相关代码时,要看 `docs/adr/0001-csp-nonce-vs-ssg.md`

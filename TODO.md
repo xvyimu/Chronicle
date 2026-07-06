@@ -1,6 +1,6 @@
 # 西江月博客 · 项目待办
 
-> 当前状态: 523 tests / 65 files / 47 E2E 全绿；CI Lighthouse / deploy / production content smoke 全绿；线上域名 `https://incca.ccwu.cc` 可用
+> 当前状态: 528 tests / 66 files / 47 E2E 全绿；CI Lighthouse / deploy / production content smoke 全绿；线上域名 `https://incca.ccwu.cc` 可用
 > 更新: 2026-07-05
 
 ---

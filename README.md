@@ -54,11 +54,11 @@ NEXT_PUBLIC_GISCUS_CATEGORY_ID=your_category_id
 │  └─ links.json             # 导航收藏数据
 ├─ docs/                     # 项目文档
 │  ├─ overview.md            # 文档导航
-│  ├─ architecture.md        # 架构与模块职责
+│  ├─ architecture.md        # 当前架构与模块职责
 │  ├─ content-workflow.md    # 内容维护流程
 │  ├─ css-conventions.md     # CSS 范式规范
 │  ├─ cache-components-migration.md  # Cache Components 迁移指南
-│  └─ 项目审查与改进文档.md   # 历史审查记录
+│  └─ architecture-review.html # 历史架构扫描快照
 ├─ e2e/                      # Playwright E2E 测试（5 文件 / 47 用例）
 │  ├─ home.spec.ts           # 首页测试
 │  ├─ blog.spec.ts           # 博客列表与详情测试
@@ -75,7 +75,7 @@ NEXT_PUBLIC_GISCUS_CATEGORY_ID=your_category_id
 │  └─ check-bundle-budget.ts # Bundle 体积预算检查
 ├─ src/
 │  ├─ app/                   # App Router 路由
-│  │  ├─ styles/             # CSS 分层（11 个显式 import 的语义模块）
+│  │  ├─ styles/             # CSS 分层（17 个显式 import 的语义模块）
 │  │  ├─ blog/[slug]/        # 文章详情（含 opengraph-image）
 │  │  ├─ projects/[id]/      # 作品详情
 │  │  ├─ tags/[tag]/         # 标签归档
@@ -122,15 +122,21 @@ NEXT_PUBLIC_GISCUS_CATEGORY_ID=your_category_id
 
 ## 设计系统
 
-CSS 自定义属性 + Tailwind v4 `@theme` 令牌，当前按 11 个显式导入的语义模块组织：
+CSS 自定义属性 + Tailwind v4 `@theme` 令牌，当前按 17 个显式导入的语义模块组织：
 
 - `tokens.css` — 色彩 / 间距 / 圆角 / 阴影 / 主题过渡
 - `base.css` — 全局基础 / Header / Footer / reduced-motion
-- `components.css` — Section / Card / Button / ArchiveCard / 通用布局
+- `components.css` — Section / Card / 通用布局
+- `archive.css` — ArchiveCard / 归档网格 / 归档列表
+- `controls.css` — Button / Pagination / TagLink / 小型控制
 - `links.css` — 个人收藏导航目录
-- `blog-ui.css` — BlogCard / SearchBar / TOC / Article panels
+- `blog-ui.css` — BlogCard / TOC / Tag cloud / Image zoom / Not found
+- `search-ui.css` — SearchBar / Search results
+- `article-ui.css` — Article layout / Article panels / Related posts / Article nav
 - `backdrop.css` — Paper Gallery 背景层
-- `home.css` — 首页专题模块
+- `home.css` — 首页主题变量、通用覆盖与首页响应式
+- `home-hero.css` — 首页 EditorialHero
+- `home-sections.css` — Manifesto / ReadingPath / ArticleRail / Links preview / CTA
 - `prose.css` — MDX 排版 / 代码块双主题（vitesse-dark / vitesse-light）
 - `project-detail.css` — 项目详情
 - `animations.css` — reveal / loading / fade motion
@@ -156,7 +162,7 @@ CSS 自定义属性 + Tailwind v4 `@theme` 令牌，当前按 11 个显式导入
 
 | 层级      | 工具                     | 数量               | 覆盖范围                                                                       |
 | --------- | ------------------------ | ------------------ | ------------------------------------------------------------------------------ |
-| 单元/集成 | Vitest + Testing Library | 523 用例 / 65 文件 | lib 数据层 / 组件交互 / 页面渲染                                               |
+| 单元/集成 | Vitest + Testing Library | 528 用例 / 66 文件 | lib 数据层 / 组件交互 / 页面渲染                                               |
 | E2E       | Playwright               | 47 用例 / 5 文件   | 首页 / 博客 / 导航 / 主题 / 作品 / 标签 / 分类 / 专题 / RSS / Sitemap / 移动端 |
 
 ```bash
@@ -192,10 +198,10 @@ GitHub Actions 流水线（`.github/workflows/ci.yml`）包含质量检查、E2E
 ## 文档索引
 
 - [docs/overview.md](./docs/overview.md) — 文档导航
-- [docs/architecture.md](./docs/architecture.md) — 架构与模块职责
+- [docs/architecture.md](./docs/architecture.md) — 当前架构与模块职责
 - [docs/content-workflow.md](./docs/content-workflow.md) — 内容维护流程
 - [docs/css-conventions.md](./docs/css-conventions.md) — CSS 范式规范
 - [docs/cache-components-migration.md](./docs/cache-components-migration.md) — Cache Components 迁移指南
 - [docs/specs/2026-07-04-shadcn-visual-architecture-design.md](./docs/specs/2026-07-04-shadcn-visual-architecture-design.md) — shadcn 视觉组件架构收口
-- [docs/项目审查与改进文档.md](./docs/项目审查与改进文档.md) — 历史审查记录
+- [docs/architecture-review.html](./docs/architecture-review.html) — 历史架构扫描快照
 - [AGENTS.md](./AGENTS.md) — AI 编码助手指引

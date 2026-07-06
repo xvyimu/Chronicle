@@ -88,7 +88,7 @@ links.ts 迁移后即为 projects.ts 的同构副本, 降低认知负担.
 ]
 ```
 
-当前落地为 9 个分类共 111 条链接, 无重复 URL, 无 aff/ref/utm 等追踪参数.
+当前落地为 10 个分类共 123 条链接, 无重复 URL, 无 aff/ref/utm 等追踪参数.
 
 ### 3.2 src/types/index.ts (新增类型)
 

@@ -9,11 +9,17 @@ globals.css                   ← Tailwind v4 入口，不承载 @import 链
 src/app/layout.tsx            ← 显式 import 语义 CSS 模块
 ├── styles/tokens.css         ← 设计令牌、明暗主题变量、滚动条
 ├── styles/base.css           ← 全局基础、skip-link、Header、Footer
-├── styles/components.css     ← Section / Card / Button / ArchiveCard 等通用组件
+├── styles/components.css     ← Section / Card 等通用布局组件
+├── styles/archive.css        ← ArchiveCard / 归档网格 / 归档列表
+├── styles/controls.css       ← Button / Pagination / TagLink / 小型控制
 ├── styles/links.css          ← 个人收藏导航目录
-├── styles/blog-ui.css        ← BlogCard / SearchBar / TOC / 文章面板
+├── styles/blog-ui.css        ← BlogCard / TOC / Tag cloud / Image zoom
+├── styles/search-ui.css      ← SearchBar / Search results
+├── styles/article-ui.css     ← Article layout / Article panels / Related posts
 ├── styles/backdrop.css       ← Paper Gallery 背景层
-├── styles/home.css           ← 首页专属模块
+├── styles/home.css           ← 首页主题覆盖、共享样式、首页响应式
+├── styles/home-hero.css      ← 首页 EditorialHero
+├── styles/home-sections.css  ← 首页叙事区块与 CTA
 ├── styles/prose.css          ← MDX 文章排版样式
 ├── styles/project-detail.css ← 项目详情
 ├── styles/animations.css     ← reveal / loading / fade motion
@@ -142,22 +148,30 @@ background: #ffffff;
 
 ## 文件归属规则
 
-| 文件                 | 内容                                        | 示例                                               |
-| -------------------- | ------------------------------------------- | -------------------------------------------------- |
-| `tokens.css`         | CSS 变量、reset、主题切换、滚动条、选中样式 | `:root`、`.dark`、`::selection`                    |
-| `base.css`           | 页面骨架和全局基础                          | `.header`、`.footer`、`.skip-link`                 |
-| `components.css`     | 可复用 UI 组件                              | `.section`、`.card`、`.btn`、`.archive-card`       |
-| `links.css`          | 收藏导航目录                                | `.links-directory`                                 |
-| `blog-ui.css`        | 博客界面组件                                | `.blog__item`、`.search-results`、`.article-panel` |
-| `backdrop.css`       | 背景视觉层                                  | `body::before`、`.site-backdrop__stage`            |
-| `home.css`           | 首页专属模块                                | `.editorial-hero`、`.home-article-rail`            |
-| `prose.css`          | MDX 渲染的文章排版                          | `.prose h2`、`.prose code`、`.code-toolbar`        |
-| `project-detail.css` | 项目详情页                                  | `.project-detail`                                  |
-| `animations.css`     | 动画关键帧和动效类                          | `.reveal`、`.loading-intro`                        |
-| `responsive.css`     | 媒体查询覆盖                                | `@media (max-width: 768px)`                        |
+| 文件                 | 内容                                        | 示例                                        |
+| -------------------- | ------------------------------------------- | ------------------------------------------- |
+| `tokens.css`         | CSS 变量、reset、主题切换、滚动条、选中样式 | `:root`、`.dark`、`::selection`             |
+| `base.css`           | 页面骨架和全局基础                          | `.header`、`.footer`、`.skip-link`          |
+| `components.css`     | 可复用布局和基础卡片                        | `.section`、`.card`、`.cards`               |
+| `archive.css`        | 归档页和 ArchiveCard                        | `.archive-grid`、`.archive-card`            |
+| `controls.css`       | 按钮、分页、标签链接和轻量控制              | `.btn`、`.pagination`、`.tag-link`          |
+| `links.css`          | 收藏导航目录                                | `.links-directory`                          |
+| `blog-ui.css`        | 博客列表、目录和辅助界面                    | `.blog__item`、`.toc`、`.tag-cloud`         |
+| `search-ui.css`      | 搜索输入与结果列表                          | `.search-bar`、`.search-results`            |
+| `article-ui.css`     | 文章详情布局和阅读面板                      | `.article-layout`、`.article-panel`         |
+| `backdrop.css`       | 背景视觉层                                  | `body::before`、`.site-backdrop__stage`     |
+| `home.css`           | 首页主题覆盖、共享样式和响应式              | `.home-paper`、`body:has(.home-paper)`      |
+| `home-hero.css`      | 首页首屏                                    | `.editorial-hero`                           |
+| `home-sections.css`  | 首页内容区块                                | `.home-manifesto`、`.home-article-rail`     |
+| `prose.css`          | MDX 渲染的文章排版                          | `.prose h2`、`.prose code`、`.code-toolbar` |
+| `project-detail.css` | 项目详情页                                  | `.project-detail`                           |
+| `animations.css`     | 动画关键帧和动效类                          | `.reveal`、`.loading-intro`                 |
+| `responsive.css`     | 媒体查询覆盖                                | `@media (max-width: 768px)`                 |
 
 **规则**：新组件的 CSS 放入最接近语义归属的模块。跨页面通用组件放入
-`components.css`；博客专属放入 `blog-ui.css`；首页专属放入 `home.css`；
+`components.css` / `archive.css` / `controls.css`；博客专属放入 `blog-ui.css` /
+`search-ui.css` / `article-ui.css`；首页专属放入 `home.css` / `home-hero.css` /
+`home-sections.css`；
 最后由 `layout.tsx` 显式导入新 CSS 文件。
 
 ## shadcn 与本地 BEM 的分工

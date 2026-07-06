@@ -20,7 +20,7 @@ A personal blog built with Next.js 16.2 (App Router), React 19, and Tailwind CSS
 - **Content**: MDX with custom frontmatter parser (`lib/parse-frontmatter.ts`, js-yaml 4.x), next-mdx-remote
 - **Syntax Highlighting**: Shiki via rehype-pretty-code
 - **Search**: fuse.js (client-side fuzzy search)
-- **Testing**: Vitest (unit/integration, 523 tests, 65 files), Playwright (E2E, 47 tests, 5 spec files)
+- **Testing**: Vitest (unit/integration, 528 tests, 66 files), Playwright (E2E, 47 tests, 5 spec files)
 - **CI**: GitHub Actions (lint / test / tsc / build / bundle-budget / e2e)
 - **Deployment**: Vercel
 
@@ -42,14 +42,20 @@ src/
 │   ├── tags/[tag]/         # Tag archive
 │   ├── series/[series]/    # Series archive
 │   ├── about/              # About page
-│   ├── styles/             # Semantic CSS modules (11 files, each ≤500 lines)
+│   ├── styles/             # Semantic CSS modules (17 files, each ≤500 lines)
 │   │   ├── tokens.css      # Design tokens (light/dark theme vars, spacing, shadows)
 │   │   ├── base.css        # Global base (skip-link, header, footer, reduced-motion)
-│   │   ├── components.css   # Generic components (card, button, section, hero container)
+│   │   ├── components.css   # Generic layout and card components
+│   │   ├── archive.css      # Archive grids, archive cards, archive lists
+│   │   ├── controls.css     # Buttons, pagination, tag links, small controls
 │   │   ├── links.css       # Links directory and curated resource UI
-│   │   ├── blog-ui.css     # Blog UI (SearchBar, TOC, CodeBlock, ThemeToggle)
+│   │   ├── blog-ui.css     # Blog list, TOC, tag cloud, image zoom, not-found
+│   │   ├── search-ui.css   # Search input and results UI
+│   │   ├── article-ui.css  # Article detail layout, panels, related posts
 │   │   ├── backdrop.css    # Backdrop layer (body::before/after + .site-backdrop__stage)
-│   │   ├── home.css        # Home (Manifesto, ReadingPath, ArticleRail, CTA)
+│   │   ├── home.css        # Home paper theme, shared overrides, responsive home rules
+│   │   ├── home-hero.css   # Home editorial hero
+│   │   ├── home-sections.css # Home Manifesto, ReadingPath, ArticleRail, links, CTA
 │   │   ├── prose.css      # Article typography (.prose, code block)
 │   │   ├── project-detail.css # Project detail
 │   │   ├── animations.css # Animations (reveal, fade-in-up, loading-intro)
@@ -100,7 +106,7 @@ src/
 ## Conventions
 
 - **CSS**: BEM for structural components, Tailwind for utilities. See `docs/css-conventions.md`
-- **CSS Module Loading**: ⚠️ Tailwind v4 `@tailwindcss/postcss` silently drops `@import "./styles/xxx.css"` in `globals.css`. All CSS modules MUST be explicitly imported in `layout.tsx` (order: tokens → base → components → links → blog-ui → backdrop → home → prose → project-detail → animations → responsive last). See `docs/specs/2026-06-29-css-import-fix-design.md`
+- **CSS Module Loading**: ⚠️ Tailwind v4 `@tailwindcss/postcss` silently drops `@import "./styles/xxx.css"` in `globals.css`. All CSS modules MUST be explicitly imported in `layout.tsx` (order: tokens → base → components → archive → controls → links → blog-ui → search-ui → article-ui → backdrop → home → home-hero → home-sections → prose → project-detail → animations → responsive last). See `docs/specs/2026-06-29-css-import-fix-design.md`
 - **shadcn Visual Composition**: Keep primitive shadcn-style components in `src/components/ui/` and page/archive composition helpers in `src/components/layout/`. Current shared pieces are `MetaBadge`, `ArchiveCard`, and `PageSection`. See `docs/specs/2026-07-04-shadcn-visual-architecture-design.md`
 - **Background Architecture**: Three-layer separation — `body::before/after` (CSS pseudo-elements) + `<SiteBackdropStage />` (server-rendered decorative DOM) + `<SiteBackdropParallax />` (client component, returns null, only side effects). See `docs/specs/2026-06-29-site-backdrop-architecture-design.md`
 - **Caching**: Use `createCache<T>` from `lib/cache.ts`. Use `resetAllCaches()` for test isolation. See `docs/cache-components-migration.md`
@@ -115,7 +121,7 @@ src/
 ```bash
 pnpm dev          # Start dev server (port 3000; Turbopack)
 pnpm build        # Generate RSS + production build (93 page artifacts; routes are dynamic due CSP nonce)
-pnpm test         # Run unit/integration tests (523 tests, 65 files)
+pnpm test         # Run unit/integration tests (528 tests, 66 files)
 pnpm test:e2e     # Run E2E tests (47 tests, 5 spec files; auto-starts dev/prod server on port 3001)
 pnpm test:e2e:raw # Playwright raw (pass-through flags, e.g. --ui)
 pnpm lint         # ESLint
