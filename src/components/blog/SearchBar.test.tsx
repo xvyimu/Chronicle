@@ -295,4 +295,24 @@ describe('SearchBar', () => {
     expect(marks.length).toBeGreaterThan(0);
     expect(Array.from(marks).some((m) => /Redis/i.test(m.textContent ?? ''))).toBe(true);
   });
+
+  it('highlights the matched substring in the result description', async () => {
+    render(<SearchBar posts={MOCK_POSTS} />);
+    const input = screen.getByPlaceholderText(/搜索文章/);
+    fireEvent.change(input, { target: { value: 'comprehensive' } });
+
+    await waitFor(
+      () => {
+        expect(
+          screen.getByRole('heading', { name: 'Next.js App Router Guide' }),
+        ).toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
+
+    const marks = document.querySelectorAll('mark.search-hl');
+    expect(
+      Array.from(marks).some((m) => /comprehensive/i.test(m.textContent ?? '')),
+    ).toBe(true);
+  });
 });

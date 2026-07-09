@@ -44,6 +44,12 @@ export default function SearchResultsList({
           const titleMatch = (matches as FuseMatch[]).find(
             (match) => match.key === 'title',
           );
+          const descriptionText = post.excerpt || post.description;
+          const descriptionMatch = (matches as FuseMatch[]).find(
+            (match) =>
+              (match.key === 'description' || match.key === 'excerpt') &&
+              match.value === descriptionText,
+          );
           return (
             <Link
               key={post.slug}
@@ -79,7 +85,9 @@ export default function SearchResultsList({
                   : post.title}
               </h4>
               <p className="search-results-popover__desc">
-                {post.excerpt || post.description}
+                {descriptionMatch
+                  ? highlightSearchMatch(descriptionText, descriptionMatch.indices)
+                  : descriptionText}
               </p>
             </Link>
           );
