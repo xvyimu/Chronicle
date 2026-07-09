@@ -14,7 +14,7 @@ vi.mock('next/navigation', () => ({
 const MOCK_POSTS: PostMeta[] = [
   {
     title: 'Next.js App Router Guide',
-    description: 'A comprehensive guide to App Router',
+    description: 'Frontmatter summary for App Router',
     date: '2026-06-23',
     tags: ['Next.js', 'React'],
     published: true,
@@ -296,7 +296,7 @@ describe('SearchBar', () => {
     expect(Array.from(marks).some((m) => /Redis/i.test(m.textContent ?? ''))).toBe(true);
   });
 
-  it('highlights the matched substring in the result description', async () => {
+  it('highlights the matched substring in the displayed result excerpt', async () => {
     render(<SearchBar posts={MOCK_POSTS} />);
     const input = screen.getByPlaceholderText(/搜索文章/);
     fireEvent.change(input, { target: { value: 'comprehensive' } });

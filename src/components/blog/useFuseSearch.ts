@@ -27,6 +27,7 @@ export function useFuseSearch(
       keys: [
         { name: 'title', weight: 0.36 },
         { name: 'description', weight: 0.22 },
+        { name: 'excerpt', weight: 0.22 },
         { name: 'tags', weight: 0.16 },
         { name: 'category', weight: 0.1 },
         { name: 'series', weight: 0.08 },
