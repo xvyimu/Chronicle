@@ -80,4 +80,42 @@ describe('Giscus', () => {
     // Still renders placeholder
     expect(screen.getByText('滚动到此处加载评论')).toBeInTheDocument();
   });
+
+  it('removes the iframe load listener when the iframe appears after mount', () => {
+    mockInView.mockReturnValue(true);
+
+    const originalMutationObserver = window.MutationObserver;
+    let latestCallback: MutationCallback | null = null;
+    const disconnect = vi.fn();
+    class MockMutationObserver implements MutationObserver {
+      constructor(callback: MutationCallback) {
+        latestCallback = callback;
+      }
+
+      disconnect = disconnect;
+      observe = vi.fn();
+      takeRecords = vi.fn(() => []);
+    }
+    window.MutationObserver = MockMutationObserver;
+
+    try {
+      const { unmount } = render(<Giscus />);
+      const iframe = document.createElement('iframe');
+      iframe.className = 'giscus-frame';
+      const addSpy = vi.spyOn(iframe, 'addEventListener');
+      const removeSpy = vi.spyOn(iframe, 'removeEventListener');
+      document.body.appendChild(iframe);
+
+      const notifyIframeMutation = latestCallback as MutationCallback | null;
+      expect(notifyIframeMutation).not.toBeNull();
+      notifyIframeMutation?.([], {} as MutationObserver);
+      expect(addSpy).toHaveBeenCalledWith('load', expect.any(Function));
+
+      unmount();
+
+      expect(removeSpy).toHaveBeenCalledWith('load', expect.any(Function));
+    } finally {
+      window.MutationObserver = originalMutationObserver;
+    }
+  });
 });

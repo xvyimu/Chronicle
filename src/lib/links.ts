@@ -29,6 +29,17 @@ function hasTrackingOrAffiliateParam(url: string): boolean {
   });
 }
 
+function isHttpUrl(url: string): boolean {
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(url);
+  } catch {
+    return false;
+  }
+
+  return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
+}
+
 function isIsoDateString(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     return false;
@@ -62,6 +73,9 @@ const LinkItemSchema = z.object({
   url: z
     .string()
     .url()
+    .refine(isHttpUrl, {
+      message: 'Link URLs must use http:// or https://',
+    })
     .refine((url) => !hasTrackingOrAffiliateParam(url), {
       message: 'Link URLs must not contain affiliate or tracking parameters',
     }),
@@ -120,6 +134,13 @@ export function getLinkAssetIssues(categories: LinkCategory[]): LinkAssetIssue[]
 
     for (const item of category.items) {
       const itemPath = `${categoryPath}.${item.title}`;
+      if (!isHttpUrl(item.url)) {
+        issues.push({
+          path: itemPath,
+          message: `Link URL must use http:// or https://: ${item.url}`,
+        });
+      }
+
       if (hasTrackingOrAffiliateParam(item.url)) {
         issues.push({
           path: itemPath,

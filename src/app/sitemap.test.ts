@@ -45,7 +45,9 @@ describe('sitemap', () => {
     }
 
     for (const tag of getAllTags()) {
-      expect(urls.has(`${SITE_CONFIG.url}/tags/${tag.slug}`)).toBe(true);
+      expect(urls.has(`${SITE_CONFIG.url}/tags/${encodeURIComponent(tag.slug)}`)).toBe(
+        true,
+      );
     }
 
     for (const category of getAllCategories()) {

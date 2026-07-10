@@ -111,12 +111,14 @@ export default function Giscus({
           iframe.removeEventListener('load', onLoad);
         };
       } else {
+        let cleanupIframeLoad: (() => void) | undefined;
         const bodyObserver = new MutationObserver(() => {
           const iframe = document.querySelector<HTMLIFrameElement>('iframe.giscus-frame');
           if (iframe) {
             bodyObserver.disconnect();
             const onLoad = () => sendTheme();
             iframe.addEventListener('load', onLoad);
+            cleanupIframeLoad = () => iframe.removeEventListener('load', onLoad);
             sendTheme();
           }
         });
@@ -125,6 +127,7 @@ export default function Giscus({
         return () => {
           clearTimeout(timeout);
           bodyObserver.disconnect();
+          cleanupIframeLoad?.();
         };
       }
     };

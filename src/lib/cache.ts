@@ -96,6 +96,9 @@ export function createCache<T>(options?: CacheOptions): Cache<T> {
               currentMtime = m;
             }
           }
+          if (files.length === 0) {
+            currentMtime = 0;
+          }
         } else {
           // 单文件场景
           currentMtime = source.getMtime(options.watchPath);

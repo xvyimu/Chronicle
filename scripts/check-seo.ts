@@ -318,7 +318,9 @@ function checkSitemapCoverage(ctx: CheckContext): void {
     `${ctx.siteUrl}/about`,
     ...ctx.getAllPosts().map((post) => `${ctx.siteUrl}/blog/${post.slug}`),
     ...ctx.getAllProjects().map((project) => `${ctx.siteUrl}/projects/${project.id}`),
-    ...ctx.getAllTags().map((tag) => `${ctx.siteUrl}/tags/${tag.slug}`),
+    ...ctx
+      .getAllTags()
+      .map((tag) => `${ctx.siteUrl}/tags/${encodeURIComponent(tag.slug)}`),
     ...ctx
       .getAllSeries()
       .map((series) => `${ctx.siteUrl}/series/${encodeURIComponent(series.slug)}`),

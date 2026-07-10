@@ -134,6 +134,25 @@ describe('parseLinks', () => {
     ).toThrow();
   });
 
+  it('throws on non-http link protocols', () => {
+    for (const url of [
+      'javascript:alert(1)',
+      'data:text/html,hi',
+      'mailto:a@example.com',
+    ]) {
+      expect(() =>
+        parseLinks([
+          {
+            id: 'x',
+            title: 'X',
+            description: 'D',
+            items: [{ title: 'Bad', url, description: 'D' }],
+          },
+        ]),
+      ).toThrow();
+    }
+  });
+
   it('throws when a link contains affiliate or tracking parameters', () => {
     expect(() =>
       parseLinks([

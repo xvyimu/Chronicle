@@ -124,6 +124,28 @@ describe('createCache', () => {
       setContentSource(prevSource);
     });
 
+    it('invalidates when a watched directory becomes empty', () => {
+      let files: Record<string, number> = { 'content/blog/a.mdx': 1000 };
+      const prevSource = setContentSource({
+        readFile: () => null,
+        readDir: (p) =>
+          Object.keys(files)
+            .filter((f) => f.startsWith(p + '/'))
+            .map((f) => f.split('/').pop()!),
+        getMtime: (p) => files[p] ?? null,
+      });
+      const cache = createCache<string>({ watchPath: 'content/blog' });
+
+      const factory = vi.fn(() => (Object.keys(files).length > 0 ? 'first' : 'empty'));
+      expect(cache.getOrCompute(factory)).toBe('first');
+
+      files = {};
+      expect(cache.getOrCompute(factory)).toBe('empty');
+      expect(factory).toHaveBeenCalledTimes(2);
+
+      setContentSource(prevSource);
+    });
+
     it('handles single-file watchPath (readDir returns null)', () => {
       const files: Record<string, number> = { 'config.json': 500 };
       const prevSource = setContentSource({

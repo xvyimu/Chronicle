@@ -104,7 +104,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }));
 
   const tagPages: MetadataRoute.Sitemap = getAllTags().map((tag) => ({
-    url: `${baseUrl}/tags/${tag.slug}`,
+    url: `${baseUrl}/tags/${encodeURIComponent(tag.slug)}`,
     lastModified: latestPostModifiedAt,
     changeFrequency: 'weekly' as const,
     priority: 0.4,
