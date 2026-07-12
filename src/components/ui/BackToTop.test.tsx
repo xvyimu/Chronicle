@@ -31,7 +31,10 @@ describe('BackToTop', () => {
     render(<BackToTop />);
     const btn = screen.getByLabelText('回到顶部');
     expect(btn.className).toContain('opacity-100');
-    expect(btn.className).not.toContain('pointer-events-none');
+    // 可见态不应带独立的 pointer-events-none（Button 基类的
+    // disabled:/svg: 前缀变体不计入）
+    expect(btn.className).toMatch(/(?:^|\s)opacity-100(?:\s|$)/);
+    expect(btn.className).not.toMatch(/(?:^|\s)pointer-events-none(?:\s|$)/);
   });
 
   it('scrolls to top on click', () => {

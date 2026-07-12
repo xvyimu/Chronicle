@@ -24,9 +24,17 @@ test.describe('mobile critical flows', () => {
 
     const header = page.locator('header');
     await expect(header).toBeVisible({ timeout: 10000 });
-    await expect(header.locator('a[href="/blog"]')).toBeVisible();
-    await expect(header.locator('a[href="/links"]')).toBeVisible();
-    await expect(header.locator('a[href="/projects"]')).toBeVisible();
+
+    // Mobile nav lives in a Sheet; open the menu before asserting links.
+    const menuBtn = page.getByRole('button', { name: /打开菜单|关闭菜单/ });
+    await expect(menuBtn).toBeVisible({ timeout: 10000 });
+    await menuBtn.click();
+
+    const mobileNav = page.locator('#mobile-nav');
+    await expect(mobileNav).toBeVisible({ timeout: 10000 });
+    await expect(mobileNav.locator('a[href="/blog"]')).toBeVisible();
+    await expect(mobileNav.locator('a[href="/links"]')).toBeVisible();
+    await expect(mobileNav.locator('a[href="/projects"]')).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
 
@@ -35,13 +43,14 @@ test.describe('mobile critical flows', () => {
 
     const searchInput = page.getByPlaceholder(/搜索文章/);
     await expect(searchInput).toBeVisible({ timeout: 10000 });
-    await searchInput.focus();
-    await page.keyboard.type('Redis', { delay: 20 });
+    await searchInput.click();
+    await searchInput.fill('Redis');
 
     await expect(page.getByRole('listbox')).toBeVisible({ timeout: 15000 });
     await expect(page.locator('[data-result]').first()).toBeVisible({
       timeout: 15000,
     });
+    await expect(page).toHaveURL(/[?&]q=Redis/);
     await expectNoHorizontalOverflow(page);
   });
 

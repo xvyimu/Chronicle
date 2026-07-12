@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 import { SITE_CONFIG } from '@/lib/site';
 
 export default function HomeCtaSection() {
@@ -20,22 +21,23 @@ export default function HomeCtaSection() {
           </div>
 
           <div className="home-cta__actions">
-            <Link href="/about" className="btn btn--primary">
-              关于我
-            </Link>
+            <Button asChild size="cta">
+              <Link href="/about">关于我</Link>
+            </Button>
 
-            <a
-              href={SITE_CONFIG.social.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn--ghost"
-            >
-              GitHub
-            </a>
+            <Button asChild size="cta" variant="outline">
+              <a
+                href={SITE_CONFIG.social.github}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                GitHub
+              </a>
+            </Button>
 
-            <a href="/feed.xml" className="btn btn--ghost">
-              RSS
-            </a>
+            <Button asChild size="cta" variant="outline">
+              <a href="/feed.xml">RSS</a>
+            </Button>
           </div>
         </div>
       </div>

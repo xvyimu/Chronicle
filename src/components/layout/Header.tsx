@@ -4,8 +4,42 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import ThemeToggle from '@/components/ui/ThemeToggle';
+import { Button } from '@/components/ui/button';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { SITE_CONFIG } from '@/lib/site';
 import { MAIN_NAV_ITEMS, isNavItemActive } from '@/lib/navigation';
+
+function NavLinks({
+  pathname,
+  onNavigate,
+}: {
+  pathname: string;
+  onNavigate?: () => void;
+}) {
+  return (
+    <>
+      {MAIN_NAV_ITEMS.map((item) => {
+        const isActive = isNavItemActive(pathname, item.href);
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`header__link ${isActive ? 'header__link--active' : ''}`}
+            onClick={onNavigate}
+          >
+            {item.label}
+          </Link>
+        );
+      })}
+    </>
+  );
+}
 
 export default function Header() {
   const pathname = usePathname();
@@ -21,17 +55,6 @@ export default function Header() {
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
-
-  useEffect(() => {
-    if (!mobileOpen) return;
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setMobileOpen(false);
-    };
-
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [mobileOpen]);
 
   return (
     <header className={`header ${scrolled ? 'is-scrolled' : ''}`}>
@@ -54,88 +77,94 @@ export default function Header() {
           <span className="header__name">{SITE_CONFIG.name}</span>
         </Link>
 
-        <div
-          className={`header__backdrop ${mobileOpen ? 'is-open' : ''}`}
-          onClick={() => setMobileOpen(false)}
-          aria-hidden="true"
-        />
-        <nav
-          id="mobile-nav"
-          className={`header__nav ${mobileOpen ? 'is-open' : ''}`}
-          aria-label="主导航"
-        >
-          {MAIN_NAV_ITEMS.map((item) => {
-            const isActive = isNavItemActive(pathname, item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`header__link ${isActive ? 'header__link--active' : ''}`}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
+        <nav className="header__nav header__nav--desktop" aria-label="主导航">
+          <NavLinks pathname={pathname} />
         </nav>
 
-        <div className="header__actions">
-          <Link
-            href="/blog?focus=search"
-            className="icon-btn header__search-link"
-            aria-label="搜索文章"
-            title="搜索文章"
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <div className="header__actions">
+            <Button
+              asChild
+              size="icon"
+              variant="ghost"
+              className="icon-btn header__search-link"
             >
-              <circle cx="11" cy="11" r="8" />
-              <path d="M21 21l-4.35-4.35" />
-            </svg>
-          </Link>
-          <ThemeToggle />
-          <button
-            className="icon-btn header__mobile-toggle"
-            onClick={() => setMobileOpen((v) => !v)}
-            aria-label={mobileOpen ? '关闭菜单' : '打开菜单'}
-            aria-expanded={mobileOpen}
-            aria-controls="mobile-nav"
-            title={mobileOpen ? '关闭菜单' : '打开菜单'}
+              <Link href="/blog?focus=search" aria-label="搜索文章" title="搜索文章">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="M21 21l-4.35-4.35" />
+                </svg>
+              </Link>
+            </Button>
+            <ThemeToggle />
+            <SheetTrigger asChild>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="icon-btn header__mobile-toggle"
+                aria-label={mobileOpen ? '关闭菜单' : '打开菜单'}
+                aria-expanded={mobileOpen}
+                aria-controls="mobile-nav"
+                title={mobileOpen ? '关闭菜单' : '打开菜单'}
+              >
+                {mobileOpen ? (
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M3 12h18M3 6h18M3 18h18" />
+                  </svg>
+                )}
+              </Button>
+            </SheetTrigger>
+          </div>
+
+          <SheetContent
+            side="top"
+            id="mobile-nav"
+            aria-label="主导航"
+            overlayClassName={`header__backdrop${mobileOpen ? ' is-open' : ''}`}
+            className={`header__nav header__nav--sheet${mobileOpen ? ' is-open' : ''}`}
+            onOpenAutoFocus={(event) => {
+              // Keep focus on the toggle for parity with the previous drawer.
+              event.preventDefault();
+            }}
           >
-            {mobileOpen ? (
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              >
-                <path d="M18 6L6 18M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              >
-                <path d="M3 12h18M3 6h18M3 18h18" />
-              </svg>
-            )}
-          </button>
-        </div>
+            <SheetTitle className="sr-only">站点导航</SheetTitle>
+            <SheetDescription className="sr-only">移动端主导航菜单</SheetDescription>
+            <NavLinks pathname={pathname} onNavigate={() => setMobileOpen(false)} />
+          </SheetContent>
+        </Sheet>
       </div>
     </header>
   );

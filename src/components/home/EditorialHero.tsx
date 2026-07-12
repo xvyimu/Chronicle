@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 interface EditorialHeroProps {
   postCount: number;
@@ -21,12 +22,12 @@ export default function EditorialHero({ postCount, projectCount }: EditorialHero
           </p>
 
           <div className="editorial-hero__actions">
-            <Link href="/blog" className="btn btn--primary">
-              进入文章
-            </Link>
-            <Link href="/links" className="btn btn--ghost">
-              打开收藏
-            </Link>
+            <Button asChild size="cta">
+              <Link href="/blog">进入文章</Link>
+            </Button>
+            <Button asChild size="cta" variant="outline">
+              <Link href="/links">打开收藏</Link>
+            </Button>
           </div>
         </div>
 

@@ -1,7 +1,7 @@
 # 西江月博客 · 项目待办
 
-> 当前状态: 547 tests / 70 files / 47 E2E 全绿；CI Lighthouse / deploy / production content smoke 全绿；线上域名 `https://incca.ccwu.cc` 可用
-> 更新: 2026-07-06
+> 当前状态: 556 tests / 71 files 全绿；E2E 47/47；shadcn 交互层收敛 + Sheet 移动导航 + Popover 阅读设置 + 搜索 `?q=`；线上域名 `https://incca.ccwu.cc` 可用
+> 更新: 2026-07-12
 
 ---
 
@@ -125,11 +125,35 @@
 
 ---
 
+## P4 · shadcn 交互层收敛 ✅ 已完成 (2026-07-12)
+
+> 目标：消掉 BEM `.btn` 与 shadcn 双轨并存，统一 CTA / 分页 / loading / 搜索输入到 `components/ui/*`。
+
+- [x] `Button` 新增 `size="cta"`（胶囊主 CTA，对齐原 `.btn` 触控尺寸）
+- [x] 全站 `.btn/.btn--primary/.btn--ghost` 迁移：Hero / CTA / 404 / error / 项目详情 / Links 空状态
+- [x] `Pagination` 改用 shadcn Button（修掉当前页 `text-white` 硬编码）
+- [x] blog loading 骨架改 `Skeleton`；新增 `Input` primitive
+- [x] Header 图标按钮 / ThemeToggle / BackToTop / SearchBar / Links 筛选 / ReadingPreferences / TagLink 接入 Button·Input·Badge
+- [x] 删除 `controls.css` / `home.css` 中死 `.btn` 规则，改由 `[data-slot=button][data-size=cta]` 承载
+- [x] 验证：`pnpm test` 553 ✅ · `pnpm typecheck` ✅ · `pnpm lint` ✅
+
+## P5 · Sheet / Popover / 搜索增强 / E2E ✅ 已完成 (2026-07-12)
+
+> 收口报告未闭合项；**排除**全量 BEM 重写与真·服务端搜索。
+
+- [x] `components/ui/sheet.tsx`：Radix Dialog-based Sheet
+- [x] `Header` 移动导航迁 Sheet（保留 backdrop 类名 / Escape / aria-controls / 路径关闭）
+- [x] `components/ui/popover.tsx` + `ReadingPreferences` 触发器/面板
+- [x] 搜索：`?q=` history.replaceState 可分享；Fuse 单例 + WeakMap 缓存；导出 `FUSE_SEARCH_OPTIONS`
+- [x] 单测/E2E 适配：`Header` / `ReadingPreferences` / `SearchBar` / `e2e/mobile.spec.ts`
+- [x] 验证：`pnpm test` 556 ✅ · typecheck ✅ · lint ✅ · build 93 routes ✅ · `pnpm test:e2e` 47/47 ✅
+
 ## Future · 远期
 
-- [ ] 搜索增强: fuse.js 索引持久化 / 服务端搜索
+- [ ] 搜索增强: fuse.js 索引持久化 / 服务端搜索（本轮仅客户端 `?q=` + 缓存）
 - [ ] 图片优化: 统一 next/image 配置 + 预生成 blur data URL
 - [ ] 性能基线: 回填 Speed Insights p75 基线 (依赖生产流量)
+- [ ] shadcn 三期：Input 完全吃掉 search-ui BEM；icon-btn 尺寸收进 Button size
 - [x] mobile Lighthouse preset 评估：已新增手动基线配置 `lighthouse.mobile.config.js`，暂不接入 CI 强门禁
 - [x] 导航页 `/links` UI 迭代：metadata tags + 10 分类 123 条收藏、关键词筛选和空状态已落地
 - [x] P2 UX 收尾：搜索无结果入口、404/error 导流、链接目录筛选已完成

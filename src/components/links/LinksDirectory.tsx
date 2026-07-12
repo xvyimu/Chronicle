@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import type { LinkCategory, LinkItem } from '@/types';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import MagneticCard from '@/components/ui/MagneticCard';
 import MetaBadge from '@/components/ui/MetaBadge';
 
@@ -165,23 +167,26 @@ export function LinksDirectory({ categories }: { categories: LinkCategory[] }) {
             <circle cx="11" cy="11" r="8" />
             <path d="M21 21l-4.35-4.35" />
           </svg>
-          <input
+          <Input
             type="search"
+            size="lg"
             value={filter}
             onChange={(event) => setFilter(event.target.value)}
             aria-label="筛选收藏链接"
-            className="links-directory__search-input"
+            className="links-directory__search-input h-auto"
             placeholder="筛选名称、标签、官网域名或用途…"
           />
           {hasFilter ? (
-            <button
+            <Button
               type="button"
+              size="sm"
+              variant="ghost"
               className="links-directory__clear"
               onClick={() => setFilter('')}
               aria-label="清除链接筛选"
             >
               清除
-            </button>
+            </Button>
           ) : null}
         </label>
         <p className="links-directory__filter-count" aria-live="polite">
@@ -229,13 +234,15 @@ export function LinksDirectory({ categories }: { categories: LinkCategory[] }) {
           <p className="empty-state__desc">
             试试搜索分类、标签、官网域名或使用场景，也可以清除筛选回到完整收藏夹。
           </p>
-          <button
+          <Button
             type="button"
-            className="btn btn--ghost empty-state__action"
+            size="cta"
+            variant="outline"
+            className="empty-state__action"
             onClick={() => setFilter('')}
           >
             清除筛选
-          </button>
+          </Button>
         </div>
       ) : null}
     </div>

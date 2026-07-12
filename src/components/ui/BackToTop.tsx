@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 export default function BackToTop() {
   const [visible, setVisible] = useState(false);
@@ -19,14 +21,17 @@ export default function BackToTop() {
   }, []);
 
   return (
-    <button
+    <Button
       onClick={scrollToTop}
       aria-label="回到顶部"
-      className={`fixed bottom-6 right-6 z-50 flex h-10 w-10 items-center justify-center rounded-full
-        bg-[var(--surface)] text-[var(--text-soft)] shadow-md
-        ring-1 ring-[var(--border)]
-        transition-all duration-300 hover:bg-[var(--brand)] hover:text-[var(--primary-foreground)] hover:ring-[var(--brand)]
-        ${visible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 pointer-events-none'}`}
+      size="icon"
+      variant="outline"
+      className={cn(
+        'fixed bottom-6 right-6 z-50 size-10 rounded-full bg-[var(--surface)] text-[var(--text-soft)] shadow-md ring-1 ring-[var(--border)] transition-all duration-300 hover:bg-[var(--brand)] hover:text-[var(--primary-foreground)] hover:ring-[var(--brand)]',
+        visible
+          ? 'translate-y-0 opacity-100'
+          : 'pointer-events-none translate-y-4 opacity-0',
+      )}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -38,9 +43,10 @@ export default function BackToTop() {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        aria-hidden="true"
       >
         <path d="M18 15l-6-6-6 6" />
       </svg>
-    </button>
+    </Button>
   );
 }

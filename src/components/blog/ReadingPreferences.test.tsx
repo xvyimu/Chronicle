@@ -9,6 +9,11 @@ describe('ReadingPreferences', () => {
   const findWidthButton = (label = '标准栏宽') =>
     screen.findByRole('button', { name: `切换栏宽，当前为${label}` });
 
+  async function openPanel() {
+    fireEvent.click(await screen.findByRole('button', { name: '阅读设置' }));
+    return screen.findByRole('group', { name: '阅读设置' });
+  }
+
   beforeEach(() => {
     cleanup();
     localStorage.clear();
@@ -32,8 +37,10 @@ describe('ReadingPreferences', () => {
   it('renders a localized reading settings panel', async () => {
     render(<ReadingPreferences />);
 
-    const panel = await screen.findByRole('group', { name: '阅读设置' });
-    expect(panel).toHaveClass('reading-prefs--left');
+    const trigger = await screen.findByRole('button', { name: '阅读设置' });
+    expect(trigger.closest('.reading-prefs')).toHaveClass('reading-prefs--left');
+
+    const panel = await openPanel();
     expect(panel).toHaveTextContent('阅读设置');
     expect(panel).toHaveTextContent('字号');
     expect(panel).toHaveTextContent('标准字号');
@@ -43,15 +50,16 @@ describe('ReadingPreferences', () => {
     expect(await findWidthButton()).toBeInTheDocument();
   });
 
-  it('mounts the fixed settings panel on document.body', async () => {
+  it('mounts the fixed settings control on document.body', async () => {
     render(<ReadingPreferences />);
 
-    const panel = await screen.findByRole('group', { name: '阅读设置' });
-    expect(panel.parentElement).toBe(document.body);
+    const trigger = await screen.findByRole('button', { name: '阅读设置' });
+    expect(trigger.closest('.reading-prefs')?.parentElement).toBe(document.body);
   });
 
   it('cycles font size: md → lg → sm → md', async () => {
     render(<ReadingPreferences />);
+    await openPanel();
 
     // Initial: md (标准字号)
     expect(await findFontButton()).toBeInTheDocument();
@@ -83,6 +91,7 @@ describe('ReadingPreferences', () => {
 
   it('cycles width: normal → wide → narrow → normal', async () => {
     render(<ReadingPreferences />);
+    await openPanel();
 
     // Initial: normal (标准)
     expect(await findWidthButton()).toBeInTheDocument();
@@ -114,6 +123,7 @@ describe('ReadingPreferences', () => {
 
   it('persists font size to localStorage', async () => {
     render(<ReadingPreferences />);
+    await openPanel();
 
     fireEvent.click(await findFontButton());
     await waitFor(() => {
@@ -123,6 +133,7 @@ describe('ReadingPreferences', () => {
 
   it('persists width to localStorage', async () => {
     render(<ReadingPreferences />);
+    await openPanel();
 
     fireEvent.click(await findWidthButton());
     await waitFor(() => {
@@ -135,6 +146,7 @@ describe('ReadingPreferences', () => {
     localStorage.setItem('reading-width', 'narrow');
 
     render(<ReadingPreferences />);
+    await openPanel();
 
     expect(await findFontButton('大字号')).toBeInTheDocument();
     expect(await findWidthButton('窄栏')).toBeInTheDocument();
@@ -142,6 +154,7 @@ describe('ReadingPreferences', () => {
 
   it('applies CSS custom properties to target element', async () => {
     render(<ReadingPreferences />);
+    await openPanel();
 
     // Click to change font size to lg
     fireEvent.click(await findFontButton());
@@ -156,6 +169,7 @@ describe('ReadingPreferences', () => {
     localStorage.setItem('reading-width', 'also-invalid');
 
     render(<ReadingPreferences />);
+    await openPanel();
 
     // Should fall back to defaults
     expect(await findFontButton()).toBeInTheDocument();

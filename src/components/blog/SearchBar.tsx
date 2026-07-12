@@ -3,21 +3,67 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PostMeta } from '@/types';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import SearchResultsList from './SearchResultsList';
 import { useFuseSearch } from './useFuseSearch';
 
+function readQFromLocation() {
+  if (typeof window === 'undefined') return '';
+  return (new URL(window.location.href).searchParams.get('q') ?? '').trim();
+}
+
+function syncQueryToUrl(query: string) {
+  if (typeof window === 'undefined') return;
+  const url = new URL(window.location.href);
+  const trimmed = query.trim();
+  if (trimmed) {
+    url.searchParams.set('q', trimmed);
+  } else {
+    url.searchParams.delete('q');
+  }
+  const next = `${url.pathname}${url.search}${url.hash}`;
+  const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  if (next !== current) {
+    window.history.replaceState(window.history.state, '', next);
+  }
+}
+
 export default function SearchBar({ posts }: { posts: PostMeta[] }) {
-  const [query, setQuery] = useState('');
+  const searchParams = useSearchParams();
+  const focusSearch = searchParams.get('focus') === 'search';
+  // Initial value from URL once; thereafter local state is source of truth.
+  // replaceState does not update Next's useSearchParams, so we never re-hydrate
+  // from that hook (it would clobber typing with a stale empty q).
+  const [query, setQuery] = useState(() => (searchParams.get('q') ?? '').trim());
   const [activeIndex, setActiveIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { fuseReady, results } = useFuseSearch(posts, query);
+  const skipUrlWriteRef = useRef(true);
 
   useEffect(() => {
     setActiveIndex(-1);
   }, [query]);
+
+  // Keep shareable ?q= in the address bar without a Next navigation round-trip.
+  useEffect(() => {
+    if (skipUrlWriteRef.current) {
+      skipUrlWriteRef.current = false;
+      return;
+    }
+    syncQueryToUrl(query);
+  }, [query]);
+
+  // Browser back/forward: re-read q from the real location.
+  useEffect(() => {
+    const onPopState = () => {
+      setQuery(readQFromLocation());
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -45,10 +91,10 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
   }, []);
 
   useEffect(() => {
-    if (searchParams.get('focus') !== 'search') return;
+    if (!focusSearch) return;
     inputRef.current?.focus();
     inputRef.current?.select();
-  }, [searchParams]);
+  }, [focusSearch]);
 
   const navigate = useCallback(
     (direction: 'up' | 'down') => {
@@ -100,9 +146,10 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
           <circle cx="11" cy="11" r="8" />
           <path d="M21 21l-4.35-4.35" />
         </svg>
-        <input
+        <Input
           ref={inputRef}
           type="text"
+          size="lg"
           placeholder="搜索文章…（按 / 或 Ctrl+K 聚焦）"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -115,11 +162,13 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
           aria-activedescendant={
             activeIndex >= 0 ? `search-result-${activeIndex}` : undefined
           }
-          className="search-bar__input"
+          className="search-bar__input h-auto shadow-xs"
         />
         {query && (
-          <button
+          <Button
             type="button"
+            size="icon-sm"
+            variant="ghost"
             className="search-bar__clear"
             onClick={() => {
               setQuery('');
@@ -140,7 +189,7 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
             >
               <path d="M18 6L6 18M6 6l12 12" />
             </svg>
-          </button>
+          </Button>
         )}
       </div>
 

@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { usePersistedEnum } from '@/hooks/usePersistedEnum';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 type FontSize = 'sm' | 'md' | 'lg';
 type Width = 'narrow' | 'normal' | 'wide';
@@ -38,6 +40,7 @@ export default function ReadingPreferences({
   targetId?: string;
 }) {
   const [mounted, setMounted] = useState(false);
+  const [open, setOpen] = useState(false);
   const {
     value: fontSize,
     cycle: cycleFontSize,
@@ -70,41 +73,75 @@ export default function ReadingPreferences({
   }, []);
 
   const panel = (
-    <div className="reading-prefs reading-prefs--left" role="group" aria-label="阅读设置">
-      <div className="reading-prefs__head" aria-hidden="true">
-        <span className="reading-prefs__title">阅读设置</span>
-        <span className="reading-prefs__hint">点击切换</span>
-      </div>
-      <button
-        type="button"
-        onClick={cycleFontSize}
-        className="reading-prefs__btn"
-        title={`切换字号，当前为${fontLabel}`}
-        aria-label={`切换字号，当前为${fontLabel}`}
-      >
-        <span className="reading-prefs__icon" aria-hidden="true">
-          字
-        </span>
-        <span className="reading-prefs__text">
-          <span className="reading-prefs__label">字号</span>
-          <span className="reading-prefs__value">{fontLabel}</span>
-        </span>
-      </button>
-      <button
-        type="button"
-        onClick={cycleWidth}
-        className="reading-prefs__btn"
-        title={`切换栏宽，当前为${widthLabel}`}
-        aria-label={`切换栏宽，当前为${widthLabel}`}
-      >
-        <span className="reading-prefs__icon" aria-hidden="true">
-          栏
-        </span>
-        <span className="reading-prefs__text">
-          <span className="reading-prefs__label">栏宽</span>
-          <span className="reading-prefs__value">{widthLabel}</span>
-        </span>
-      </button>
+    <div className="reading-prefs reading-prefs--left">
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            className="reading-prefs__trigger h-auto justify-start gap-2 rounded-xl px-3 py-2"
+            aria-label="阅读设置"
+            title="阅读设置"
+          >
+            <span className="reading-prefs__icon" aria-hidden="true">
+              阅
+            </span>
+            <span className="reading-prefs__text">
+              <span className="reading-prefs__label">阅读</span>
+              <span className="reading-prefs__value">
+                {fontLabel} · {widthLabel}
+              </span>
+            </span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent
+          side="top"
+          align="start"
+          sideOffset={10}
+          className="reading-prefs__panel w-[min(188px,calc(100vw-48px))] border-border p-2.5"
+          role="group"
+          aria-label="阅读设置"
+        >
+          <div className="reading-prefs__head" aria-hidden="true">
+            <span className="reading-prefs__title">阅读设置</span>
+            <span className="reading-prefs__hint">点击切换</span>
+          </div>
+          <div className="reading-prefs__controls">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={cycleFontSize}
+              className="reading-prefs__btn h-auto justify-start gap-2 rounded-xl px-3 py-2"
+              title={`切换字号，当前为${fontLabel}`}
+              aria-label={`切换字号，当前为${fontLabel}`}
+            >
+              <span className="reading-prefs__icon" aria-hidden="true">
+                字
+              </span>
+              <span className="reading-prefs__text">
+                <span className="reading-prefs__label">字号</span>
+                <span className="reading-prefs__value">{fontLabel}</span>
+              </span>
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={cycleWidth}
+              className="reading-prefs__btn h-auto justify-start gap-2 rounded-xl px-3 py-2"
+              title={`切换栏宽，当前为${widthLabel}`}
+              aria-label={`切换栏宽，当前为${widthLabel}`}
+            >
+              <span className="reading-prefs__icon" aria-hidden="true">
+                栏
+              </span>
+              <span className="reading-prefs__text">
+                <span className="reading-prefs__label">栏宽</span>
+                <span className="reading-prefs__value">{widthLabel}</span>
+              </span>
+            </Button>
+          </div>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 export default function NotFound() {
   return (
@@ -9,15 +10,15 @@ export default function NotFound() {
         这个地址没有找到对应内容，可以回到核心入口继续阅读。
       </p>
       <div className="not-found__actions">
-        <Link href="/" className="btn btn--primary">
-          回到首页
-        </Link>
-        <Link href="/blog" className="btn btn--ghost">
-          看博客
-        </Link>
-        <Link href="/links" className="btn btn--ghost">
-          打开导航收藏
-        </Link>
+        <Button asChild size="cta">
+          <Link href="/">回到首页</Link>
+        </Button>
+        <Button asChild size="cta" variant="outline">
+          <Link href="/blog">看博客</Link>
+        </Button>
+        <Button asChild size="cta" variant="outline">
+          <Link href="/links">打开导航收藏</Link>
+        </Button>
       </div>
     </div>
   );

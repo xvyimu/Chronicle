@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, cleanup, fireEvent } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
 
 // Mock next/link
 vi.mock('next/link', () => ({
@@ -140,29 +140,37 @@ describe('Header', () => {
     expect(newMenuBtn).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('closes mobile menu when backdrop is clicked', () => {
+  it('closes mobile menu when backdrop is clicked', async () => {
     render(<Header />);
     const menuBtn = screen.getByLabelText('打开菜单');
 
     fireEvent.click(menuBtn);
     expect(menuBtn).toHaveAttribute('aria-expanded', 'true');
 
-    // Find the backdrop and click it
-    const backdrop = document.querySelector('.header__backdrop');
-    expect(backdrop).toBeInTheDocument();
-    fireEvent.click(backdrop!);
-    expect(menuBtn).toHaveAttribute('aria-expanded', 'false');
+    // Sheet portal mounts the overlay with the legacy backdrop class
+    const backdrop = await waitFor(() => {
+      const node = document.querySelector('.header__backdrop');
+      expect(node).toBeInTheDocument();
+      return node as Element;
+    });
+    fireEvent.pointerDown(backdrop);
+    fireEvent.click(backdrop);
+    await waitFor(() => {
+      expect(menuBtn).toHaveAttribute('aria-expanded', 'false');
+    });
   });
 
-  it('closes mobile menu when Escape is pressed', () => {
+  it('closes mobile menu when Escape is pressed', async () => {
     render(<Header />);
     const menuBtn = screen.getByLabelText('打开菜单');
 
     fireEvent.click(menuBtn);
     expect(menuBtn).toHaveAttribute('aria-expanded', 'true');
 
-    fireEvent.keyDown(window, { key: 'Escape' });
-    expect(menuBtn).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.keyDown(document, { key: 'Escape' });
+    await waitFor(() => {
+      expect(menuBtn).toHaveAttribute('aria-expanded', 'false');
+    });
   });
 
   it('renders brand link pointing to /', () => {

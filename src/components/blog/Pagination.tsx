@@ -1,4 +1,5 @@
-﻿import Link from 'next/link';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 interface PaginationProps {
   currentPage: number;
@@ -16,37 +17,35 @@ export default function Pagination({
   return (
     <nav className="mt-10 flex items-center justify-center gap-2" aria-label="分页导航">
       {currentPage > 1 && (
-        <Link
-          href={currentPage === 2 ? basePath : `${basePath}?page=${currentPage - 1}`}
-          className="inline-flex h-9 items-center rounded-md px-3 text-sm text-[var(--text-soft)] hover:bg-[var(--bg-soft)] transition-colors"
-        >
-          ← 上一页{' '}
-        </Link>
+        <Button asChild variant="ghost" size="sm" className="px-3">
+          <Link
+            href={currentPage === 2 ? basePath : `${basePath}?page=${currentPage - 1}`}
+          >
+            ← 上一页
+          </Link>
+        </Button>
       )}
       {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
         const href = p === 1 ? basePath : `${basePath}?page=${p}`;
+        const isCurrent = p === currentPage;
         return (
-          <Link
+          <Button
             key={p}
-            href={href}
-            aria-current={p === currentPage ? 'page' : undefined}
-            className={`inline-flex h-9 w-9 items-center justify-center rounded-md text-sm transition-colors ${
-              p === currentPage
-                ? 'bg-primary text-white'
-                : 'text-[var(--text-soft)] hover:bg-[var(--bg-soft)]'
-            }`}
+            asChild
+            variant={isCurrent ? 'default' : 'ghost'}
+            size="icon"
+            className="size-9"
           >
-            {p}
-          </Link>
+            <Link href={href} aria-current={isCurrent ? 'page' : undefined}>
+              {p}
+            </Link>
+          </Button>
         );
       })}
       {currentPage < totalPages && (
-        <Link
-          href={`${basePath}?page=${currentPage + 1}`}
-          className="inline-flex h-9 items-center rounded-md px-3 text-sm text-[var(--text-soft)] hover:bg-[var(--bg-soft)] transition-colors"
-        >
-          下一页 →{' '}
-        </Link>
+        <Button asChild variant="ghost" size="sm" className="px-3">
+          <Link href={`${basePath}?page=${currentPage + 1}`}>下一页 →</Link>
+        </Button>
       )}
     </nav>
   );

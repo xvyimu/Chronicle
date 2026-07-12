@@ -211,7 +211,13 @@ body {
   display: none;
 }
 
+/* Sheet overlay is portaled only while the mobile menu is open */
 .header__backdrop {
+  display: none;
+}
+
+/* Sheet content is portaled; hide outside the mobile breakpoint styles */
+.header__nav--sheet {
   display: none;
 }
 

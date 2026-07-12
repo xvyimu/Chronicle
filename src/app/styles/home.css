@@ -171,35 +171,7 @@ body:has(.home-paper) .footer {
   gap: 4px;
 }
 
-.home-paper .btn {
-  min-height: 44px;
-  padding: 10px 22px;
-  border-radius: var(--radius-full);
-  box-shadow: none;
-}
-
-.home-paper .btn--primary {
-  border: 1px solid var(--brand);
-  background: var(--brand);
-  color: var(--primary-foreground);
-}
-
-.home-paper .btn--primary:hover {
-  background: var(--brand-hover);
-  box-shadow: var(--shadow-brand);
-}
-
-.home-paper .btn--ghost {
-  border-color: var(--border-strong);
-  background: transparent;
-  color: var(--text);
-}
-
-.home-paper .btn--ghost:hover {
-  border-color: var(--brand);
-  background: var(--brand-soft);
-  color: var(--brand-hover);
-}
+/* CTA 视觉统一由 controls.css 的 [data-size=cta] 负责 */
 
 @media (max-width: 1023px) {
   .editorial-hero__stage,

@@ -1,16 +1,9 @@
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
+/* Paper Gallery CTA：对齐原 .btn 触控尺寸，作用于 shadcn Button size="cta" */
+[data-slot='button'][data-size='cta'] {
   min-height: 44px;
-  padding: 10px 22px;
   border-radius: var(--radius-full);
-  font-size: 0.9rem;
   font-weight: 800;
-  line-height: 1;
-  white-space: nowrap;
-  cursor: pointer;
+  box-shadow: none;
   transition:
     background var(--transition-fast),
     border-color var(--transition-fast),
@@ -19,34 +12,27 @@
     transform var(--transition-fast);
 }
 
-.btn:hover {
+[data-slot='button'][data-size='cta']:hover {
   transform: translateY(-1px);
 }
 
-.btn:active {
+[data-slot='button'][data-size='cta']:active {
   transform: translateY(0);
 }
 
-.btn--primary {
-  border: 1px solid var(--brand);
-  background: var(--brand);
-  color: var(--primary-foreground);
-  box-shadow: none;
-}
-
-.btn--primary:hover {
-  border-color: var(--brand-hover);
+[data-slot='button'][data-size='cta'][data-variant='default']:hover {
   background: var(--brand-hover);
+  border-color: var(--brand-hover);
   box-shadow: var(--shadow-brand);
 }
 
-.btn--ghost {
-  border: 1px solid var(--border-strong);
+[data-slot='button'][data-size='cta'][data-variant='outline'] {
+  border-color: var(--border-strong);
   background: transparent;
   color: var(--text);
 }
 
-.btn--ghost:hover {
+[data-slot='button'][data-size='cta'][data-variant='outline']:hover {
   border-color: var(--brand);
   background: var(--brand-soft);
   color: var(--brand-hover);
@@ -153,12 +139,14 @@
 }
 
 .theme-toggle,
-.reading-prefs__btn {
+.reading-prefs__btn,
+.reading-prefs__trigger {
   position: relative;
 }
 
 .theme-toggle::before,
-.reading-prefs__btn::before {
+.reading-prefs__btn::before,
+.reading-prefs__trigger::before {
   content: '';
   position: absolute;
   inset: -4px;

@@ -263,6 +263,37 @@ describe('SearchBar', () => {
     expect(document.activeElement).toBe(input);
   });
 
+  it('hydrates the query from the q search param', async () => {
+    mockSearchParamValue.mockImplementation((key: string) =>
+      key === 'q' ? 'Redis' : null,
+    );
+    render(<SearchBar posts={MOCK_POSTS} />);
+    const input = screen.getByPlaceholderText(/搜索文章/) as HTMLInputElement;
+    expect(input.value).toBe('Redis');
+
+    await waitFor(
+      () => {
+        expect(
+          screen.getByRole('heading', { name: 'Redis Caching Strategies' }),
+        ).toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
+  });
+
+  it('writes the query into the URL via history.replaceState', async () => {
+    const replaceState = vi.spyOn(window.history, 'replaceState');
+    render(<SearchBar posts={MOCK_POSTS} />);
+    const input = screen.getByPlaceholderText(/搜索文章/);
+    fireEvent.change(input, { target: { value: 'Redis' } });
+
+    await waitFor(() => {
+      expect(replaceState).toHaveBeenCalled();
+    });
+    const lastCall = replaceState.mock.calls.at(-1);
+    expect(String(lastCall?.[2])).toContain('q=Redis');
+  });
+
   it('focuses the input when Cmd+K (metaKey) is pressed', () => {
     render(<SearchBar posts={MOCK_POSTS} />);
     const input = screen.getByPlaceholderText(/搜索文章/);

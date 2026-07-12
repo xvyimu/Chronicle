@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { usePersistedEnum } from '@/hooks/usePersistedEnum';
+import { Button } from '@/components/ui/button';
 
 type Theme = 'system' | 'light' | 'dark';
 
@@ -116,21 +117,29 @@ export default function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <button type="button" className="icon-btn" aria-label="切换主题">
+      <Button
+        type="button"
+        size="icon"
+        variant="ghost"
+        className="icon-btn"
+        aria-label="切换主题"
+      >
         <span style={{ width: 18, height: 18 }} />
-      </button>
+      </Button>
     );
   }
 
   return (
-    <button
+    <Button
       type="button"
       onClick={cycle}
+      size="icon"
+      variant="ghost"
       className="icon-btn"
       aria-label="切换主题"
       title={LABELS[theme]}
     >
       {ICONS[theme]}
-    </button>
+    </Button>
   );
 }
