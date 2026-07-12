@@ -181,11 +181,22 @@
 - [x] CI：`check:blur` 进 quality；e2e/lighthouse 同 job 自建 `.next`（跨 job artifact 不可 `next start`）
 - [x] `docs/architecture.md` 搜索双路径同步
 
+## P9 · 内容 SEO Phase A · 待做 (计划 2026-07-13)
+
+> 规划已对齐（2026-07-12）：**不做**全量 BEM rewrite / 现规模 Meili·ES / 无 RUM 假 p75 / 正文文字脱敏 blur。  
+> 记忆：本地 `blog-content-seo-plan-2026-07-12`；工程基线 HEAD `f234f1c`。
+
+- [ ] Google Search Console + Bing Webmaster：属性校验 + 提交 `https://incca.ccwu.cc/sitemap.xml`（需账号）
+- [ ] 可选落库：`docs/content-seo-plan-2026-07-12.md` + 单篇 checklist
+- [ ] 14 篇 MDX 内容清单滚动：title 唯一、description 意图句、文首结论、≥2 站内链（同簇+枢纽）、tags 去语义重叠
+- [ ] 优先收紧最泛的 ~5 篇 `description`；簇内互链（性能 / 数据 / 运维 / 边缘）
+- [ ] （有 GSC 展示后）用 query 数据替换代理指标，再改标题钩子
+
 ## Future · 远期
 
-- [ ] 性能基线: 回填 Speed Insights p75 基线 (依赖生产流量累计)
-- [ ] 文章量 >200 时再评估：构建期 JSON 索引或外部搜索（Meili 等）
-- [ ] MDX 正文图批量 blur（需内容侧 manifest 或构建扫 content 图）
+- [ ] 性能基线: 回填 Speed Insights **真实** p75（依赖生产流量累计；禁止无样本造数）
+- [ ] 文章量 >200 时再评估：构建期 JSON 索引或站内外部引擎（Meili 等）
+- [ ] MDX **真实本地正文图**批量 LQIP blur（先有 `public/images/blog/**`；扩展 `gen:blur`+`check:blur`；**非**正文脱敏）
 - [ ] 可选：`prose`/`article-ui` 迁文章 layout（Tailwind v4 须显式 import，ROI 待 Coverage 确认）
 - [x] mobile Lighthouse preset 评估：已新增手动基线配置 `lighthouse.mobile.config.js`，暂不接入 CI 强门禁
 - [x] 导航页 `/links` UI 迭代：metadata tags + 10 分类 123 条收藏、关键词筛选和空状态已落地
