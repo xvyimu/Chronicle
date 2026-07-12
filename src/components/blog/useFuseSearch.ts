@@ -4,6 +4,7 @@ import type { PostMeta } from '@/types';
 import {
   FUSE_SEARCH_OPTIONS,
   SEARCH_RESULT_LIMIT,
+  toSearchResultItem,
   type SearchHit,
   type SearchMatch,
 } from '@/lib/search';
@@ -46,6 +47,7 @@ function getOrCreateFuse(posts: PostMeta[], FuseLib: typeof import('fuse.js').de
  * Client-side Fuse over an in-memory PostMeta array.
  * Prefer this when the page already embeds posts (tests / offline).
  * Production blog page uses useServerSearch instead to drop payload weight.
+ * Results project to SearchResultItem for parity with /api/search.
  */
 export function useFuseSearch(
   posts: PostMeta[],
@@ -79,7 +81,7 @@ export function useFuseSearch(
   const results = useMemo(() => {
     if (!query.trim() || !fuse) return [];
     return fuse.search(query.trim(), { limit: SEARCH_RESULT_LIMIT }).map((result) => ({
-      item: result.item,
+      item: toSearchResultItem(result.item),
       matches: (result.matches ?? []) as FuseMatch[],
       score: result.score,
     }));

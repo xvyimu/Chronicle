@@ -34,10 +34,12 @@ import { getCspNonce } from '@/lib/csp';
 
 const notoSansSC = Noto_Sans_SC({
   subsets: ['latin'],
-  weight: ['400', '500', '700'],
+  // Two weights cover body + emphasis without the 500 face cost
+  weight: ['400', '700'],
   variable: '--font-noto-sans-sc',
   display: 'swap',
   preload: true,
+  adjustFontFallback: true,
 });
 
 const jetbrainsMono = JetBrains_Mono({

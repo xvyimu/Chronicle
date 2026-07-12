@@ -17,26 +17,10 @@ vi.mock('next/link', () => ({
   ),
 }));
 
-vi.mock('next/image', () => ({
-  default: (props: Record<string, unknown>) => {
-    const {
-      fill,
-      priority: _priority,
-      blurDataURL: _blurDataURL,
-      placeholder: _placeholder,
-      alt = '',
-      ...rest
-    } = props;
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        {...(rest as Record<string, string>)}
-        alt={String(alt)}
-        data-fill={fill ? 'true' : undefined}
-      />
-    );
-  },
-}));
+vi.mock('next/image', async () => {
+  const { default: MockNextImage } = await import('@/test/mocks/next-image');
+  return { default: MockNextImage };
+});
 
 vi.mock('next/navigation', () => ({
   notFound: () => {

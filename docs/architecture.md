@@ -16,15 +16,15 @@
 
 当前技术栈：
 
-| 层         | 选型                                          |
-| ---------- | --------------------------------------------- |
-| Framework  | Next.js 16.2 App Router                       |
-| UI         | React 19.2, Tailwind CSS 4, BEM CSS modules   |
-| Content    | MDX, `next-mdx-remote`, `js-yaml`, local JSON |
-| Validation | Zod schemas + custom frontmatter parser       |
-| Search     | fuse.js client-side fuzzy search              |
-| Tests      | Vitest + Testing Library, Playwright          |
-| Deploy     | Vercel + GitHub Actions                       |
+| 层         | 选型                                                          |
+| ---------- | ------------------------------------------------------------- |
+| Framework  | Next.js 16.2 App Router                                       |
+| UI         | React 19.2, Tailwind CSS 4, BEM CSS modules                   |
+| Content    | MDX, `next-mdx-remote`, `js-yaml`, local JSON                 |
+| Validation | Zod schemas + custom frontmatter parser                       |
+| Search     | fuse.js：生产 `GET /api/search`；测试可嵌 `posts` 客户端 Fuse |
+| Tests      | Vitest + Testing Library, Playwright                          |
+| Deploy     | Vercel + GitHub Actions                                       |
 
 ## 2. 总体分层
 
@@ -105,18 +105,19 @@ data/links.json
 
 ## 4. 路由与页面组合
 
-| 路由                                    | 入口                             | 数据来源                       |
-| --------------------------------------- | -------------------------------- | ------------------------------ |
-| `/`                                     | `src/app/page.tsx`               | posts、projects、links         |
-| `/about`                                | `src/app/about/page.tsx`         | `content/about.mdx`            |
-| `/blog`                                 | `src/app/blog/page.tsx`          | paginated posts + search index |
-| `/blog/[slug]`                          | `src/app/blog/[slug]/page.tsx`   | post detail + related posts    |
-| `/projects`                             | `src/app/projects/page.tsx`      | projects JSON                  |
-| `/projects/[id]`                        | `src/app/projects/[id]/page.tsx` | project detail                 |
-| `/links`                                | `src/app/links/page.tsx`         | links JSON                     |
-| `/tags`, `/tags/[tag]`                  | `src/app/tags/*`                 | tag aggregation                |
-| `/categories`, `/categories/[category]` | `src/app/categories/*`           | category aggregation           |
-| `/series`, `/series/[series]`           | `src/app/series/*`               | series aggregation             |
+| 路由                                    | 入口                             | 数据来源                                          |
+| --------------------------------------- | -------------------------------- | ------------------------------------------------- |
+| `/`                                     | `src/app/page.tsx`               | posts、projects、links                            |
+| `/about`                                | `src/app/about/page.tsx`         | `content/about.mdx`                               |
+| `/blog`                                 | `src/app/blog/page.tsx`          | paginated posts；搜索走 API（无全站索引 payload） |
+| `/api/search`                           | `src/app/api/search/route.ts`    | 服务端 Fuse + 投影 `SearchResultItem` + 进程限流  |
+| `/blog/[slug]`                          | `src/app/blog/[slug]/page.tsx`   | post detail + related posts                       |
+| `/projects`                             | `src/app/projects/page.tsx`      | projects JSON                                     |
+| `/projects/[id]`                        | `src/app/projects/[id]/page.tsx` | project detail                                    |
+| `/links`                                | `src/app/links/page.tsx`         | links JSON                                        |
+| `/tags`, `/tags/[tag]`                  | `src/app/tags/*`                 | tag aggregation                                   |
+| `/categories`, `/categories/[category]` | `src/app/categories/*`           | category aggregation                              |
+| `/series`, `/series/[series]`           | `src/app/series/*`               | series aggregation                                |
 
 动态路由优先使用 `src/lib/route-adapter.ts` 的 `createDynamicRoute` 收敛参数处理、404 和静态参数生成模式。
 
@@ -149,6 +150,19 @@ HomeCtaSection
 - 组件不直接读文件系统，内容读取留在 `src/lib/` 或页面服务端层；
 - 归档页与列表页优先复用 `PageSection`、`ArchiveCard`、`MetaBadge`；
 - shadcn CLI 在当前 Node 24 + zod exports 组合下不可用，继续维护本地已落地的 shadcn-style primitive，不运行 CLI 覆盖。
+- 布局/纸感用 BEM CSS；交互用 `components/ui/*`（`size=cta|icon-toolbar|search`）；禁止业务侧再写 `.btn` / `.icon-btn`。
+
+## 5.1 搜索
+
+```text
+生产: SearchBar (无 posts) → useServerSearch → GET /api/search
+       → getAllPosts() + searchPostsCached → SearchResultItem 投影
+测试: SearchBar posts={mock} → useFuseSearch → 同投影类型
+```
+
+- 共享权重：`src/lib/search/options.ts`
+- 限流：进程内 60 req / IP / min（`rate-limit.ts`），配合 `s-maxage=60`
+- 规模：~14 文不上外部引擎；见 `docs/bem-search-architecture-2026-07-12.md`
 
 ## 6. CSS 与视觉架构
 

@@ -18,27 +18,10 @@ vi.mock('next/link', () => ({
   ),
 }));
 
-vi.mock('next/image', () => ({
-  default: ({
-    src,
-    alt,
-    fill: _fill,
-    priority: _priority,
-    sizes: _sizes,
-    placeholder: _placeholder,
-    blurDataURL: _blurDataURL,
-    ...props
-  }: React.ImgHTMLAttributes<HTMLImageElement> & {
-    fill?: boolean;
-    priority?: boolean;
-    sizes?: string;
-    placeholder?: string;
-    blurDataURL?: string;
-  }) => (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={String(src)} alt={alt ?? ''} {...props} />
-  ),
-}));
+vi.mock('next/image', async () => {
+  const { default: MockNextImage } = await import('@/test/mocks/next-image');
+  return { default: MockNextImage };
+});
 
 vi.mock('@vercel/speed-insights/next', () => ({ SpeedInsights: () => null }));
 vi.mock('@vercel/analytics/react', () => ({ Analytics: () => null }));

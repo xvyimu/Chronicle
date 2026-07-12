@@ -1,12 +1,21 @@
 import Fuse from 'fuse.js';
+import type { FuseResult } from 'fuse.js';
 import type { PostMeta } from '@/types';
 import { FUSE_SEARCH_OPTIONS, SEARCH_RESULT_LIMIT } from './options';
+import { toSearchResultItem } from './project';
 import type { SearchHit, SearchMatch } from './types';
+
+function toHits(results: FuseResult<PostMeta>[]): SearchHit[] {
+  return results.map((result) => ({
+    item: toSearchResultItem(result.item),
+    matches: (result.matches ?? []) as SearchMatch[],
+    score: result.score,
+  }));
+}
 
 /**
  * Pure search over an in-memory PostMeta list.
- * Used by /api/search and any future build-time index consumers.
- * Client path keeps its own lazy Fuse instance via useFuseSearch for zero-latency keystrokes.
+ * Hits always project to SearchResultItem (no searchText on the wire).
  */
 export function searchPosts(
   posts: PostMeta[],
@@ -17,16 +26,13 @@ export function searchPosts(
   if (!q || posts.length === 0) return [];
 
   const fuse = new Fuse(posts, FUSE_SEARCH_OPTIONS);
-  return fuse.search(q, { limit }).map((result) => ({
-    item: result.item,
-    matches: (result.matches ?? []) as SearchMatch[],
-    score: result.score,
-  }));
+  return toHits(fuse.search(q, { limit }));
 }
 
 /**
  * Module-level Fuse cache keyed by posts array identity.
  * getAllPosts() returns a stable cached reference in production, so this stays hot.
+ * Projection happens after search so WeakMap keys stay full PostMeta[].
  */
 const fuseByPosts = new WeakMap<PostMeta[], Fuse<PostMeta>>();
 
@@ -44,9 +50,5 @@ export function searchPostsCached(
     fuseByPosts.set(posts, fuse);
   }
 
-  return fuse.search(q, { limit }).map((result) => ({
-    item: result.item,
-    matches: (result.matches ?? []) as SearchMatch[],
-    score: result.score,
-  }));
+  return toHits(fuse.search(q, { limit }));
 }

@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, cleanup } from '@testing-library/react';
+import { render, cleanup, act } from '@testing-library/react';
 
-// Mock usePrefersReducedMotion
 const mockReduced = vi.fn().mockReturnValue(false);
 vi.mock('@/hooks/usePrefersReducedMotion', () => ({
   usePrefersReducedMotion: () => mockReduced(),
@@ -9,13 +8,30 @@ vi.mock('@/hooks/usePrefersReducedMotion', () => ({
 
 import ParticleCanvas from './ParticleCanvas';
 
+function mockMatchMedia(matches: boolean) {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    configurable: true,
+    value: vi.fn().mockImplementation((query: string) => ({
+      matches,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
+}
+
 describe('ParticleCanvas', () => {
   beforeEach(() => {
     cleanup();
     vi.clearAllMocks();
     mockReduced.mockReturnValue(false);
+    mockMatchMedia(true);
 
-    // Mock canvas context
     HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue({
       clearRect: vi.fn(),
       beginPath: vi.fn(),
@@ -28,7 +44,6 @@ describe('ParticleCanvas', () => {
       scale: vi.fn(),
     });
 
-    // Mock requestAnimationFrame
     vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
       return window.setTimeout(() => cb(performance.now()), 16);
     });
@@ -36,7 +51,6 @@ describe('ParticleCanvas', () => {
       window.clearTimeout(id);
     });
 
-    // Mock IntersectionObserver
     class MockObserver implements IntersectionObserver {
       readonly root: Element | null = null;
       readonly rootMargin: string = '0px';
@@ -48,10 +62,8 @@ describe('ParticleCanvas', () => {
     }
     window.IntersectionObserver = MockObserver;
 
-    // Mock devicePixelRatio
     Object.defineProperty(window, 'devicePixelRatio', { value: 1, configurable: true });
 
-    // Mock getBoundingClientRect for canvas sizing
     Element.prototype.getBoundingClientRect = vi.fn().mockReturnValue({
       width: 400,
       height: 300,
@@ -69,44 +81,50 @@ describe('ParticleCanvas', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders a canvas element', () => {
-    const { container } = render(<ParticleCanvas />);
-    const canvas = container.querySelector('canvas');
+  it('renders canvas when desktop fine-pointer media matches', async () => {
+    let container: HTMLElement;
+    await act(async () => {
+      ({ container } = render(<ParticleCanvas />));
+    });
+    const canvas = container!.querySelector('canvas');
     expect(canvas).toBeInTheDocument();
-  });
-
-  it('has aria-hidden attribute', () => {
-    render(<ParticleCanvas />);
-    const canvas = document.querySelector('canvas');
     expect(canvas).toHaveAttribute('aria-hidden', 'true');
-  });
-
-  it('has hero__particles class', () => {
-    const { container } = render(<ParticleCanvas />);
-    const canvas = container.querySelector('canvas');
     expect(canvas?.className).toContain('hero__particles');
   });
 
-  it('does not start animation when reduced motion is preferred', () => {
-    mockReduced.mockReturnValue(true);
+  it('does not render canvas on coarse/mobile media', async () => {
+    mockMatchMedia(false);
+    let container: HTMLElement;
+    await act(async () => {
+      ({ container } = render(<ParticleCanvas />));
+    });
+    expect(container!.querySelector('canvas')).not.toBeInTheDocument();
+  });
 
+  it('does not start animation when reduced motion is preferred', async () => {
+    mockReduced.mockReturnValue(true);
     const getContextSpy = vi.spyOn(HTMLCanvasElement.prototype, 'getContext');
-    render(<ParticleCanvas />);
-    // If reduced, the effect returns early before getting context or starting animation
-    // Context may still be queried but animation loop won't run
+    await act(async () => {
+      render(<ParticleCanvas />);
+    });
     expect(getContextSpy).not.toHaveBeenCalled();
   });
 
-  it('registers resize event listener', () => {
+  it('registers resize event listener when enabled', async () => {
     const addSpy = vi.spyOn(window, 'addEventListener');
-    render(<ParticleCanvas />);
+    await act(async () => {
+      render(<ParticleCanvas />);
+    });
     expect(addSpy).toHaveBeenCalledWith('resize', expect.any(Function));
   });
 
-  it('cleans up on unmount', () => {
+  it('cleans up on unmount', async () => {
     const removeSpy = vi.spyOn(window, 'removeEventListener');
-    const { unmount } = render(<ParticleCanvas />);
-    unmount();
+    let unmount: () => void;
+    await act(async () => {
+      ({ unmount } = render(<ParticleCanvas />));
+    });
+    unmount!();
     expect(removeSpy).toHaveBeenCalledWith('resize', expect.any(Function));
   });
 });

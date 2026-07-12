@@ -1,6 +1,6 @@
 # 西江月博客 · 项目待办
 
-> 当前状态: P6 服务端搜索 + P7 icon-toolbar/search Input/blur LQIP；线上 `https://incca.ccwu.cc` 可用
+> 当前状态: P8 审查落地（搜索投影/限流/CSP/粒子/字体/CI 复用 build）；线上 `https://incca.ccwu.cc`
 > 更新: 2026-07-12
 
 ---
@@ -169,11 +169,24 @@
 - [x] 图片 LQIP：`pnpm gen:blur` → `src/lib/image-blur-data.ts`；Hero / ProjectCard / 项目详情 / ImageZoom 可选 blur
 - [x] 生产烟测：`GET https://incca.ccwu.cc/api/search?q=Redis` 200；`/blog` 200
 
+## P8 · 审查落地 ✅ 已完成 (2026-07-12)
+
+> 对应全栈审查 Sprint A–C 可工程项；不做全量 BEM rewrite / 外部搜索 / 无流量 p75。
+
+- [x] 搜索 wire 投影 `SearchResultItem`（去掉 searchText/headings）
+- [x] `/api/search` 进程限流 + 结构化错误码 + `runtime = 'nodejs'`
+- [x] CSP 允许 `va.vercel-scripts.com`（Analytics/Speed Insights debug/prod 脚本）
+- [x] 字体 Noto 400+700；粒子仅桌面 fine-pointer + tab hidden 停 RAF
+- [x] 共享 `src/test/mocks/next-image.tsx`；`pnpm check:blur` + CI
+- [x] CI：quality 上传 `.next`，e2e/lighthouse 复用（减重复 build）
+- [x] `docs/architecture.md` 搜索双路径同步
+
 ## Future · 远期
 
 - [ ] 性能基线: 回填 Speed Insights p75 基线 (依赖生产流量累计)
 - [ ] 文章量 >200 时再评估：构建期 JSON 索引或外部搜索（Meili 等）
 - [ ] MDX 正文图批量 blur（需内容侧 manifest 或构建扫 content 图）
+- [ ] 可选：`prose`/`article-ui` 迁文章 layout（Tailwind v4 须显式 import，ROI 待 Coverage 确认）
 - [x] mobile Lighthouse preset 评估：已新增手动基线配置 `lighthouse.mobile.config.js`，暂不接入 CI 强门禁
 - [x] 导航页 `/links` UI 迭代：metadata tags + 10 分类 123 条收藏、关键词筛选和空状态已落地
 - [x] P2 UX 收尾：搜索无结果入口、404/error 导流、链接目录筛选已完成

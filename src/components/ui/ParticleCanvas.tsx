@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 
 interface Particle {
@@ -15,13 +15,29 @@ interface Particle {
 const PARTICLE_COUNT = 40;
 const CONNECTION_DIST = 120;
 
+function useFinePointerDesktop() {
+  const [ok, setOk] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia('(min-width: 768px) and (pointer: fine)');
+    const apply = () => setOk(mq.matches);
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, []);
+
+  return ok;
+}
+
 export default function ParticleCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const reduced = usePrefersReducedMotion();
+  const desktopFine = useFinePointerDesktop();
+  const enabled = !reduced && desktopFine;
 
   useEffect(() => {
-    // 尊重用户系统无障碍设置：关闭动画
-    if (reduced) return;
+    if (!enabled) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -32,6 +48,7 @@ export default function ParticleCanvas() {
     let w = 0;
     let h = 0;
     let isVisible = true;
+    let pageVisible = document.visibilityState !== 'hidden';
 
     const resize = () => {
       w = canvas.clientWidth;
@@ -63,7 +80,7 @@ export default function ParticleCanvas() {
     };
 
     const draw = () => {
-      if (!isVisible) return;
+      if (!isVisible || !pageVisible) return;
 
       ctx.clearRect(0, 0, w, h);
 
@@ -104,9 +121,16 @@ export default function ParticleCanvas() {
       animId = requestAnimationFrame(draw);
     };
 
+    const kick = () => {
+      cancelAnimationFrame(animId);
+      if (isVisible && pageVisible) {
+        animId = requestAnimationFrame(draw);
+      }
+    };
+
     resize();
     initParticles();
-    draw();
+    kick();
 
     const handleResize = () => {
       resize();
@@ -119,16 +143,19 @@ export default function ParticleCanvas() {
 
     window.addEventListener('resize', handleResize);
 
+    const onVisibility = () => {
+      pageVisible = document.visibilityState !== 'hidden';
+      if (pageVisible) kick();
+      else cancelAnimationFrame(animId);
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
     // Pause animation when canvas scrolls out of view
     const intersectionObserver = new IntersectionObserver(
       ([entry]) => {
         isVisible = entry.isIntersecting;
-        if (isVisible) {
-          cancelAnimationFrame(animId);
-          animId = requestAnimationFrame(draw);
-        } else {
-          cancelAnimationFrame(animId);
-        }
+        if (isVisible) kick();
+        else cancelAnimationFrame(animId);
       },
       { threshold: 0 },
     );
@@ -137,9 +164,14 @@ export default function ParticleCanvas() {
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener('resize', handleResize);
+      document.removeEventListener('visibilitychange', onVisibility);
       intersectionObserver.disconnect();
     };
-  }, [reduced]);
+  }, [enabled]);
+
+  if (!enabled) {
+    return null;
+  }
 
   return <canvas ref={canvasRef} className="hero__particles" aria-hidden="true" />;
 }

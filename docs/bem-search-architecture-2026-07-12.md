@@ -6,11 +6,11 @@
 
 ## 0. 结论（先读）
 
-| 命题                  | 本站事实                                                                                                                                                | 最优处置                                                                 |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| 「全量 CSS BEM 重写」 | **已是 BEM 主结构**（`.header__*` / `.search-bar__*` / `.reading-prefs__*` / `.blog__*` / `.prose`…），约 17 模块 ~3.8k 行，与 Paper Gallery token 绑定 | **不做**视觉等价全量重写；做**卫生与映射文档**，只清死代码/双轨残留      |
-| 「服务端搜索瓶颈」    | **无**服务端搜索引擎；原先是客户端 Fuse + 整表 `PostMeta[]` 进 RSC payload                                                                              | **做**轻量 `GET /api/search` + 共享 Fuse 配置；**不上** ES/Meili/Algolia |
-| 内容规模              | **~14** 篇 MDX                                                                                                                                          | 全量内存索引足够；SWR 缓存 60s                                           |
+| 命题                  | 本站事实                                                                                                                                                | 最优处置                                                                        |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| 「全量 CSS BEM 重写」 | **已是 BEM 主结构**（`.header__*` / `.search-bar__*` / `.reading-prefs__*` / `.blog__*` / `.prose`…），约 17 模块 ~3.8k 行，与 Paper Gallery token 绑定 | **不做**视觉等价全量重写；做**卫生与映射文档**，只清死代码/双轨残留             |
+| 「服务端搜索瓶颈」    | **无**服务端搜索引擎；原先是客户端 Fuse + 整表 `PostMeta[]` 进 RSC payload                                                                              | **做**轻量 `GET /api/search` + 共享 Fuse 配置；**不上** ES/Meili/Algolia        |
+| 内容规模              | **~14** 篇 MDX                                                                                                                                          | 全量内存索引足够；SWR 缓存 60s；响应为 `SearchResultItem` 投影（无 searchText） |
 
 验收目标：搜索结果与原先权重一致；`/blog` 不再嵌入全站文章索引；视觉与交互（`?q=` / Ctrl+K / 高亮）保持。
 
@@ -119,17 +119,20 @@ GET /api/search?q={string}&limit={1..20}
 
 200 {
   query: string,
-  results: Array<{ item: PostMeta, matches: SearchMatch[], score?: number }>,
+  results: Array<{ item: SearchResultItem, matches: SearchMatch[], score?: number }>,
   total: number,
   source: "server"
 }
 
-400 { error: string }  // q 长度 > 100
+400 { error, code: "QUERY_TOO_LONG" }
+429 { error, code: "RATE_LIMITED" }  // 进程内 60/min/IP
 ```
 
+- `SearchResultItem`：展示字段投影（无 `searchText` / `headings` / `wordCount`）
 - 权重：与客户端同一 `FUSE_SEARCH_OPTIONS`
 - 缓存：`public, s-maxage=60, stale-while-revalidate=300`
-- 实现：`src/app/api/search/route.ts` + `searchPostsCached`
+- 实现：`src/app/api/search/route.ts` + `searchPostsCached` + `rate-limit.ts`
+- `runtime = 'nodejs'`
 
 ### 3.3 客户端策略
 

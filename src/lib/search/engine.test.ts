@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { PostMeta } from '@/types';
-import { searchPosts, searchPostsCached } from './engine';
+import { searchPosts, searchPostsCached, toSearchResultItem } from './index';
 import { FUSE_SEARCH_OPTIONS, SEARCH_RESULT_LIMIT } from './options';
 
 const MOCK_POSTS: PostMeta[] = [
@@ -46,6 +46,16 @@ describe('searchPosts', () => {
     expect(hits[0].matches.some((m) => m.key === 'title')).toBe(true);
   });
 
+  it('projects away searchText and headings from wire items', () => {
+    const hits = searchPosts(MOCK_POSTS, 'Redis');
+    const item = hits[0].item as Record<string, unknown>;
+    expect(item.searchText).toBeUndefined();
+    expect(item.headings).toBeUndefined();
+    expect(item.wordCount).toBeUndefined();
+    expect(item.slug).toBe('redis-caching-strategies');
+    expect(item.excerpt).toBeTruthy();
+  });
+
   it('respects limit', () => {
     const hits = searchPosts(MOCK_POSTS, 'a', 1);
     expect(hits.length).toBeLessThanOrEqual(1);
@@ -61,6 +71,23 @@ describe('searchPostsCached', () => {
     const a = searchPosts(MOCK_POSTS, 'Invalidation');
     const b = searchPostsCached(MOCK_POSTS, 'Invalidation');
     expect(b.map((h) => h.item.slug)).toEqual(a.map((h) => h.item.slug));
+  });
+});
+
+describe('toSearchResultItem', () => {
+  it('keeps display fields only', () => {
+    const card = toSearchResultItem(MOCK_POSTS[0]);
+    expect(card).toEqual({
+      slug: 'nextjs-app-router',
+      title: 'Next.js App Router Guide',
+      description: 'Frontmatter summary for App Router',
+      date: '2026-06-23',
+      tags: ['Next.js', 'React'],
+      category: undefined,
+      series: undefined,
+      featured: true,
+      excerpt: 'A comprehensive guide to App Router',
+    });
   });
 });
 

@@ -2,26 +2,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 
 // Mock next/image
-vi.mock('next/image', () => ({
-  default: (props: Record<string, unknown>) => {
-    const {
-      fill,
-      priority: _priority,
-      blurDataURL: _blurDataURL,
-      placeholder: _placeholder,
-      alt = '',
-      ...rest
-    } = props;
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        {...(rest as Record<string, string>)}
-        alt={String(alt)}
-        data-fill={fill ? 'true' : undefined}
-      />
-    );
-  },
-}));
+vi.mock('next/image', async () => {
+  const { default: MockNextImage } = await import('@/test/mocks/next-image');
+  return { default: MockNextImage };
+});
 
 import ImageZoom from './ImageZoom';
 
