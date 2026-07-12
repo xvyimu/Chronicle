@@ -62,16 +62,6 @@ jobs:
       # Bundle budget: fail if static output exceeds thresholds
       - run: pnpm exec tsx scripts/check-bundle-budget.ts
 
-      - name: Upload production build
-        uses: actions/upload-artifact@v7
-        with:
-          name: next-build
-          path: |
-            .next
-            public/feed.xml
-            public/feed.json
-          retention-days: 1
-
   bundle-analyze:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -105,6 +95,8 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
+    # Quality gates first; each job still builds locally — Next production
+    # start needs a same-runner `.next` (cross-job artifact lost BUILD_ID fidelity).
     needs: quality
     timeout-minutes: 15
     env:
@@ -124,11 +116,8 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Download production build
-        uses: actions/download-artifact@v7
-        with:
-          name: next-build
-          path: .
+      - name: Build for E2E
+        run: pnpm build
 
       - name: Run E2E tests
         run: pnpm test:e2e
@@ -160,11 +149,8 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Download production build
-        uses: actions/download-artifact@v7
-        with:
-          name: next-build
-          path: .
+      - name: Build production bundle
+        run: pnpm build
 
       # Lighthouse CI via treosh/lighthouse-ci-action — reuses lighthouse.config.js
       # (configPath) so all assertions (perf/a11y/seo/errors-in-console/canonical) are

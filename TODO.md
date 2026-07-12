@@ -178,7 +178,7 @@
 - [x] CSP 允许 `va.vercel-scripts.com`（Analytics/Speed Insights debug/prod 脚本）
 - [x] 字体 Noto 400+700；粒子仅桌面 fine-pointer + tab hidden 停 RAF
 - [x] 共享 `src/test/mocks/next-image.tsx`；`pnpm check:blur` + CI
-- [x] CI：quality 上传 `.next`，e2e/lighthouse 复用（减重复 build）
+- [x] CI：`check:blur` 进 quality；e2e/lighthouse 同 job 自建 `.next`（跨 job artifact 不可 `next start`）
 - [x] `docs/architecture.md` 搜索双路径同步
 
 ## Future · 远期
