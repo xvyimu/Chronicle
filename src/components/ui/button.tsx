@@ -29,6 +29,9 @@ const buttonVariants = cva(
         // Paper Gallery 主 CTA：圆角胶囊 + 触控友好高度，对齐原 .btn 视觉
         cta: 'min-h-11 gap-1.5 rounded-full px-[22px] text-[0.9rem] font-extrabold shadow-none',
         icon: 'size-8',
+        // Header / ThemeToggle toolbar: 38px circle, matches former .icon-btn
+        'icon-toolbar':
+          "size-[38px] rounded-full border border-transparent text-[var(--text-soft)] hover:border-[var(--border)] hover:bg-[var(--brand-soft)] hover:text-[var(--text)] active:translate-y-px [&_svg:not([class*='size-'])]:size-[18px]",
         'icon-xs':
           "size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
         'icon-sm':

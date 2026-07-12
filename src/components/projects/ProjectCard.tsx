@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import MagneticCard from '@/components/ui/MagneticCard';
 import MetaBadge from '@/components/ui/MetaBadge';
+import { blurDataFor } from '@/lib/image-blur-data';
 
 export default function ProjectCard({
   project,
@@ -24,6 +25,8 @@ export default function ProjectCard({
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               loading={priority ? 'eager' : undefined}
               priority={priority}
+              placeholder={blurDataFor(project.image) ? 'blur' : undefined}
+              blurDataURL={blurDataFor(project.image)}
             />
           </div>
         ) : (

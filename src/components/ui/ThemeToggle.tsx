@@ -117,13 +117,7 @@ export default function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <Button
-        type="button"
-        size="icon"
-        variant="ghost"
-        className="icon-btn"
-        aria-label="切换主题"
-      >
+      <Button type="button" size="icon-toolbar" variant="ghost" aria-label="切换主题">
         <span style={{ width: 18, height: 18 }} />
       </Button>
     );
@@ -133,9 +127,8 @@ export default function ThemeToggle() {
     <Button
       type="button"
       onClick={cycle}
-      size="icon"
+      size="icon-toolbar"
       variant="ghost"
-      className="icon-btn"
       aria-label="切换主题"
       title={LABELS[theme]}
     >

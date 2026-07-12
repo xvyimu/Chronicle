@@ -85,9 +85,9 @@ export default function Header() {
           <div className="header__actions">
             <Button
               asChild
-              size="icon"
+              size="icon-toolbar"
               variant="ghost"
-              className="icon-btn header__search-link"
+              className="header__search-link"
             >
               <Link href="/blog?focus=search" aria-label="搜索文章" title="搜索文章">
                 <svg
@@ -110,9 +110,9 @@ export default function Header() {
             <SheetTrigger asChild>
               <Button
                 type="button"
-                size="icon"
+                size="icon-toolbar"
                 variant="ghost"
-                className="icon-btn header__mobile-toggle"
+                className="header__mobile-toggle"
                 aria-label={mobileOpen ? '关闭菜单' : '打开菜单'}
                 aria-expanded={mobileOpen}
                 aria-controls="mobile-nav"

@@ -25,11 +25,15 @@ vi.mock('next/image', () => ({
     fill: _fill,
     priority: _priority,
     sizes: _sizes,
+    placeholder: _placeholder,
+    blurDataURL: _blurDataURL,
     ...props
   }: React.ImgHTMLAttributes<HTMLImageElement> & {
     fill?: boolean;
     priority?: boolean;
     sizes?: string;
+    placeholder?: string;
+    blurDataURL?: string;
   }) => (
     // eslint-disable-next-line @next/next/no-img-element
     <img src={String(src)} alt={alt ?? ''} {...props} />

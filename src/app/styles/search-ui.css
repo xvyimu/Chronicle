@@ -9,27 +9,10 @@
   position: relative;
 }
 
+/* Input chrome lives on Input size="search"; keep only layout hooks here */
 .search-bar__input {
   width: 100%;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: var(--shadow-xs);
-  color: var(--text);
-  font-size: 0.95rem;
   font-family: inherit;
-  outline: none;
-  padding: 12px 44px;
-  transition:
-    border-color var(--transition-fast),
-    box-shadow var(--transition-fast);
-}
-
-.search-bar__input:focus-visible {
-  border-color: var(--brand);
-  box-shadow:
-    0 0 0 3px var(--brand-soft),
-    var(--shadow-sm);
 }
 
 .search-bar__icon {

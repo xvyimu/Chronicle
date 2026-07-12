@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { blurDataFor } from '@/lib/image-blur-data';
 
 interface EditorialHeroProps {
   postCount: number;
@@ -8,6 +9,9 @@ interface EditorialHeroProps {
 }
 
 export default function EditorialHero({ postCount, projectCount }: EditorialHeroProps) {
+  const heroImage = '/images/projects/blog.png';
+  const heroBlur = blurDataFor(heroImage);
+
   return (
     <section className="editorial-hero" aria-labelledby="home-hero-title">
       <div className="editorial-hero__stage">
@@ -34,13 +38,15 @@ export default function EditorialHero({ postCount, projectCount }: EditorialHero
         <div className="editorial-hero__visual" aria-label="站点概览">
           <div className="editorial-hero__image-frame">
             <Image
-              src="/images/projects/blog.png"
+              src={heroImage}
               alt="个人博客首页界面预览"
               fill
               priority
               loading="eager"
               sizes="(max-width: 767px) 82vw, 420px"
               className="editorial-hero__image"
+              placeholder={heroBlur ? 'blur' : undefined}
+              blurDataURL={heroBlur}
             />
           </div>
           <div className="editorial-hero__metrics">

@@ -8,6 +8,8 @@ interface ImageZoomProps {
   alt?: string;
   className?: string;
   style?: React.CSSProperties;
+  /** Optional LQIP; when set, next/image uses blur placeholder on the thumb. */
+  blurDataURL?: string;
 }
 
 /**
@@ -23,7 +25,13 @@ interface ImageZoomProps {
  * 使用 next/image 优化图片加载。MDX 中的图片尺寸未知，
  * 因此内联图片使用默认尺寸 + 响应式 CSS，放大层使用 fill 布局。
  */
-export default function ImageZoom({ src, alt, className, style }: ImageZoomProps) {
+export default function ImageZoom({
+  src,
+  alt,
+  className,
+  style,
+  blurDataURL,
+}: ImageZoomProps) {
   const [zoomed, setZoomed] = useState(false);
   const triggerRef = useRef<HTMLImageElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -99,6 +107,8 @@ export default function ImageZoom({ src, alt, className, style }: ImageZoomProps
         tabIndex={0}
         role="button"
         aria-label={alt ? `${alt} — 点击放大` : '点击放大图片'}
+        placeholder={blurDataURL ? 'blur' : undefined}
+        blurDataURL={blurDataURL}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();

@@ -84,13 +84,14 @@ SearchBar() ──debounce 180ms──► GET /api/search?q=&limit=
 
 ### 2.3 本轮 BEM 动作清单
 
-| ID  | 动作                                      | 状态            |
-| --- | ----------------------------------------- | --------------- |
-| B1  | 文档化映射（本文件）                      | ✅              |
-| B2  | 禁止新增业务 `.btn`（已清零）             | ✅ 既有         |
-| B3  | 全量 BEM→Tailwind 重写                    | ❌ **明确不做** |
-| B4  | `icon-btn` 收进 Button size（三期）       | ⏳ 远期         |
-| B5  | search-ui padding 完全吃进 Input variants | ⏳ 远期         |
+| ID  | 动作                                          | 状态            |
+| --- | --------------------------------------------- | --------------- |
+| B1  | 文档化映射（本文件）                          | ✅              |
+| B2  | 禁止新增业务 `.btn`（已清零）                 | ✅ 既有         |
+| B3  | 全量 BEM→Tailwind 重写                        | ❌ **明确不做** |
+| B4  | `icon-btn` 收进 Button `size=icon-toolbar`    | ✅ P7           |
+| B5  | search-ui padding 吃进 Input `size=search`    | ✅ P7           |
+| B6  | 项目图预生成 blur data URL（`pnpm gen:blur`） | ✅ P7           |
 
 ### 2.4 回滚
 

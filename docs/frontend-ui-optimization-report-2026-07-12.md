@@ -9,13 +9,13 @@
 本站**不是**「陈旧、无组件化」的起点项目，而是已经过多轮工程化与 shadcn 部分落地的 Next.js 16 博客。
 本轮主矛盾是 **BEM 自定义 `.btn` 与 shadcn Button 双轨并存**；已在不改内容结构的前提下，把交互层收敛到 `components/ui/*`，并补齐 Sheet 移动导航、阅读设置 Popover、可分享搜索 query 与 E2E 回归。
 
-| 门禁             | 结果              |
+| 门禁             | 结果（P7 后）     |
 | ---------------- | ----------------- |
-| `pnpm test`      | 556 / 71 files ✅ |
+| `pnpm test`      | 572 / 75 files ✅ |
 | `pnpm typecheck` | ✅                |
 | `pnpm lint`      | ✅                |
-| `pnpm build`     | 93 routes ✅      |
-| `pnpm test:e2e`  | 47 / 47 ✅        |
+| `pnpm build`     | 94 routes ✅      |
+| e2e blog+mobile  | 12 / 12 ✅        |
 
 ---
 
@@ -138,14 +138,16 @@ CSS 侧用属性选择器替代死 `.btn`：
 
 ---
 
-## 3. 第三阶段 · 体验与工程边界（仍排除）
+## 3. 第三阶段 · 体验与工程边界
 
-| 项                         | 原因                                              |
-| -------------------------- | ------------------------------------------------- |
-| 全量 BEM → utility 重写    | 会动 Paper Gallery 视觉与大量 CSS 回归，ROI 低    |
-| 真·服务端搜索 / 索引持久化 | 架构与内容规模侧；本轮仅客户端可分享 `?q=` + 缓存 |
-| lucide 图标统一            | 现有 inline SVG 零依赖、无包体积压力              |
-| 内容/MDX 改动              | 约束：不改核心内容结构                            |
+| 项                          | 状态                                 |
+| --------------------------- | ------------------------------------ |
+| 全量 BEM → utility 重写     | ❌ 明确不做（ROI 负）                |
+| 服务端搜索                  | ✅ P6：`GET /api/search` + 内存 Fuse |
+| lucide 图标统一             | 不做：inline SVG 零依赖              |
+| 内容/MDX 改动               | 约束：不改核心内容结构               |
+| icon-toolbar / search Input | ✅ P7                                |
+| 项目图 blur LQIP            | ✅ P7（`pnpm gen:blur`）             |
 
 ---
 
@@ -158,17 +160,18 @@ CSS 侧用属性选择器替代死 `.btn`：
 - [x] Pagination / loading / search / links filter 组件化
 - [x] Sheet 移动导航 + Popover 阅读设置
 - [x] 搜索 `?q=` 可分享 + Fuse 实例缓存
-- [x] 556 unit tests + lint + typecheck + production build
-- [x] E2E 47/47
+- [x] 556→572 unit tests + lint + typecheck + production build
+- [x] E2E blog+mobile 12/12（生产 start）
 - [x] WCAG 相关：保留 skip-link、aria-label、aria-current、combobox；Sheet/Popover 提供 focus 管理
+- [x] `icon-toolbar` + `Input size=search` + 项目图 blur
 
 ### 待办 / 风险
 
-| 项                          | 风险       | 建议                                       |
-| --------------------------- | ---------- | ------------------------------------------ |
-| `icon-btn` 仍叠在 Button 上 | 低         | 三期可把 icon-btn 尺寸收进 Button size     |
-| search-ui BEM 仍厚          | 无功能风险 | 三期再吃掉 padding/focus 到 Input variants |
-| 未 commit / 未 push         | —          | 等你确认后提交                             |
+| 项                 | 风险     | 建议                   |
+| ------------------ | -------- | ---------------------- |
+| Speed Insights p75 | 需流量   | 有足够样本后再回填基线 |
+| 文章量 >200        | 当前 ~14 | 再评外部索引           |
+| MDX 正文图 blur    | 需图清单 | 可选构建扫 content 图  |
 
 ### 怎么验
 
@@ -178,26 +181,27 @@ pnpm test
 pnpm typecheck
 pnpm lint
 pnpm build
-pnpm test:e2e
-pnpm dev   # 目视：首页 CTA、/blog 分页与 ?q=、移动菜单 Sheet、文章阅读设置 Popover、/links 筛选、404、主题切换
+# e2e 关键路径：
+$env:CI=1; pnpm test:e2e -- e2e/blog.spec.ts e2e/mobile.spec.ts
+# 生产：curl "https://incca.ccwu.cc/api/search?q=Redis"
 ```
 
 ---
 
 ## 5. 优化清单总表
 
-| 状态 | 项                                                                           |
-| ---- | ---------------------------------------------------------------------------- |
-| ✅   | A1–A7 交互层 shadcn 收敛                                                     |
-| ✅   | 死 CSS `.btn` 清理                                                           |
-| ✅   | Input primitive                                                              |
-| ✅   | Sheet 移动导航                                                               |
-| ✅   | Popover 阅读设置                                                             |
-| ✅   | 搜索 `?q=` + Fuse 缓存                                                       |
-| ✅   | E2E 47 全绿                                                                  |
-| ✅   | TODO P4/P5 记录                                                              |
-| ⏳   | 远期：服务端搜索 / 索引持久化、图片 blur、Speed Insights 基线、全量 BEM 重写 |
+| 状态 | 项                                                   |
+| ---- | ---------------------------------------------------- |
+| ✅   | A1–A7 交互层 shadcn 收敛                             |
+| ✅   | 死 CSS `.btn` 清理                                   |
+| ✅   | Input primitive + `size=search`                      |
+| ✅   | Sheet 移动导航                                       |
+| ✅   | Popover 阅读设置                                     |
+| ✅   | 搜索 `?q=` + Fuse 缓存 + 服务端 API                  |
+| ✅   | `icon-toolbar`；删除 `.icon-btn`                     |
+| ✅   | 项目图预生成 blur                                    |
+| ⏳   | Speed Insights p75 / 文章>200 外部索引 / MDX 图 blur |
 
 ---
 
-_P4/P5 已入库 `1bfb313`。后续服务端搜索 + BEM 卫生见 `docs/bem-search-architecture-2026-07-12.md`（P6）。_
+_P4/P5 `1bfb313` · P6 `38e7951` · P7 见 git log（icon-toolbar / search Input / blur）。方案：`docs/bem-search-architecture-2026-07-12.md`。_

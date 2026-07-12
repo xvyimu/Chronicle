@@ -1,6 +1,6 @@
 # 西江月博客 · 项目待办
 
-> 当前状态: 服务端搜索 `GET /api/search` + 共享 Fuse 核心；`/blog` 不再嵌入全站索引；BEM 卫生方案（非全量重写）；线上域名 `https://incca.ccwu.cc` 可用
+> 当前状态: P6 服务端搜索 + P7 icon-toolbar/search Input/blur LQIP；线上 `https://incca.ccwu.cc` 可用
 > 更新: 2026-07-12
 
 ---
@@ -160,12 +160,20 @@
 - [x] 单测：engine / route / useServerSearch
 - [x] E2E：blog + mobile 搜索改 `fill({ force })` + 等 `/api/search`；search-bar `z-index:5` 压过卡片 stretch-link
 
+## P7 · shadcn 三期 + 图片 blur ✅ 已完成 (2026-07-12)
+
+> 关闭 Future 中可工程落地项；Speed Insights p75 / 外部搜索仍等条件。
+
+- [x] `Button size="icon-toolbar"`：Header 搜索/菜单 + ThemeToggle；删除 `.icon-btn` 规则
+- [x] `Input size="search"`：搜索 padding/高度/focus 吃进 variants；`search-ui` 仅保留布局钩子
+- [x] 图片 LQIP：`pnpm gen:blur` → `src/lib/image-blur-data.ts`；Hero / ProjectCard / 项目详情 / ImageZoom 可选 blur
+- [x] 生产烟测：`GET https://incca.ccwu.cc/api/search?q=Redis` 200；`/blog` 200
+
 ## Future · 远期
 
-- [ ] 图片优化: 统一 next/image 配置 + 预生成 blur data URL
-- [ ] 性能基线: 回填 Speed Insights p75 基线 (依赖生产流量)
-- [ ] shadcn 三期：Input 完全吃掉 search-ui BEM；icon-btn 尺寸收进 Button size
+- [ ] 性能基线: 回填 Speed Insights p75 基线 (依赖生产流量累计)
 - [ ] 文章量 >200 时再评估：构建期 JSON 索引或外部搜索（Meili 等）
+- [ ] MDX 正文图批量 blur（需内容侧 manifest 或构建扫 content 图）
 - [x] mobile Lighthouse preset 评估：已新增手动基线配置 `lighthouse.mobile.config.js`，暂不接入 CI 强门禁
 - [x] 导航页 `/links` UI 迭代：metadata tags + 10 分类 123 条收藏、关键词筛选和空状态已落地
 - [x] P2 UX 收尾：搜索无结果入口、404/error 导流、链接目录筛选已完成

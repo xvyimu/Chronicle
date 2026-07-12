@@ -166,7 +166,7 @@ export default function SearchBar({ posts }: { posts?: PostMeta[] }) {
         <Input
           ref={inputRef}
           type="text"
-          size="lg"
+          size="search"
           placeholder="搜索文章…（按 / 或 Ctrl+K 聚焦）"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -179,7 +179,7 @@ export default function SearchBar({ posts }: { posts?: PostMeta[] }) {
           aria-activedescendant={
             activeIndex >= 0 ? `search-result-${activeIndex}` : undefined
           }
-          className="search-bar__input h-auto shadow-xs"
+          className="search-bar__input"
         />
         {query && (
           <Button

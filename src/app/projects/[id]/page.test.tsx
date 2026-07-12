@@ -19,7 +19,14 @@ vi.mock('next/link', () => ({
 
 vi.mock('next/image', () => ({
   default: (props: Record<string, unknown>) => {
-    const { fill, priority: _priority, alt = '', ...rest } = props;
+    const {
+      fill,
+      priority: _priority,
+      blurDataURL: _blurDataURL,
+      placeholder: _placeholder,
+      alt = '',
+      ...rest
+    } = props;
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img

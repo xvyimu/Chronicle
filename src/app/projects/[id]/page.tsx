@@ -5,6 +5,7 @@ import MetaBadge from '@/components/ui/MetaBadge';
 import { getAllProjectIds, getProjectById } from '@/lib/projects';
 import { buildPageMetadata } from '@/lib/metadata';
 import { createDynamicRoute } from '@/lib/route-adapter';
+import { blurDataFor } from '@/lib/image-blur-data';
 import type { Project } from '@/types';
 
 const {
@@ -70,6 +71,8 @@ function ProjectDetailContent({ project }: { project: Project }) {
                 className="object-cover"
                 sizes="(max-width: 720px) 100vw, 720px"
                 priority
+                placeholder={blurDataFor(project.image) ? 'blur' : undefined}
+                blurDataURL={blurDataFor(project.image)}
               />
             </div>
           )}

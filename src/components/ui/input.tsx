@@ -11,6 +11,9 @@ const inputVariants = cva(
         default: 'h-9',
         sm: 'h-8 text-xs',
         lg: 'h-10',
+        // Blog SearchBar: room for leading icon + clear control
+        search:
+          'h-auto min-h-[44px] rounded-[var(--radius)] border-[var(--border)] bg-[var(--surface)] px-11 py-3 text-[0.95rem] shadow-[var(--shadow-xs)] focus-visible:border-[var(--brand)] focus-visible:ring-[3px] focus-visible:ring-[var(--brand-soft)]',
       },
     },
     defaultVariants: {
