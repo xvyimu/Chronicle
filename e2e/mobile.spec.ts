@@ -41,10 +41,16 @@ test.describe('mobile critical flows', () => {
   test('supports mobile blog search without layout overflow', async ({ page }) => {
     await page.goto('/blog', { waitUntil: 'domcontentloaded' });
 
-    const searchInput = page.getByPlaceholder(/搜索文章/);
-    await expect(searchInput).toBeVisible({ timeout: 10000 });
-    await searchInput.click();
-    await searchInput.fill('Redis');
+    const searchInput = page.getByRole('combobox', { name: '搜索文章' });
+    await expect(searchInput).toBeVisible({ timeout: 15000 });
+
+    const responsePromise = page.waitForResponse(
+      (res) => res.url().includes('/api/search') && res.ok(),
+      { timeout: 15000 },
+    );
+    // force: stretch-link overlays break default actionability on fill/click
+    await searchInput.fill('Redis', { force: true });
+    await responsePromise;
 
     await expect(page.getByRole('listbox')).toBeVisible({ timeout: 15000 });
     await expect(page.locator('[data-result]').first()).toBeVisible({

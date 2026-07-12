@@ -4,7 +4,7 @@ import BlogList from '@/components/blog/BlogList';
 import SearchBar from '@/components/blog/SearchBar';
 import Pagination from '@/components/blog/Pagination';
 import PageSection from '@/components/layout/PageSection';
-import { getPaginatedPosts, getAllPosts } from '@/lib/posts';
+import { getPaginatedPosts } from '@/lib/posts';
 import { PAGE_SIZE } from '@/lib/content-dirs';
 import { buildPageMetadata } from '@/lib/metadata';
 
@@ -31,14 +31,17 @@ export default async function BlogPage({
   searchParams?: Promise<BlogPageSearchParams>;
 } = {}) {
   const requestedPage = parsePageParam((await searchParams)?.page);
-  const allPosts = getAllPosts();
-  const { posts, totalPages, currentPage } = getPaginatedPosts(requestedPage, PAGE_SIZE);
+  // Search uses GET /api/search — do not embed the full PostMeta index in the RSC payload.
+  const { posts, totalPages, currentPage, totalPosts } = getPaginatedPosts(
+    requestedPage,
+    PAGE_SIZE,
+  );
 
   return (
     <PageSection
       eyebrow="Blog"
       title="博客"
-      subtitle={totalPages > 0 ? `共 ${allPosts.length} 篇` : ''}
+      subtitle={totalPages > 0 ? `共 ${totalPosts} 篇` : ''}
       action={
         <div className="section__action-group">
           <Link href="/categories" className="section__link">
@@ -50,7 +53,7 @@ export default async function BlogPage({
         </div>
       }
     >
-      <SearchBar posts={allPosts} />
+      <SearchBar />
       <BlogList posts={posts} columns={2} />
       <Pagination currentPage={currentPage} totalPages={totalPages} />
     </PageSection>

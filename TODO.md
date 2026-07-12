@@ -1,6 +1,6 @@
 # 西江月博客 · 项目待办
 
-> 当前状态: 556 tests / 71 files 全绿；E2E 47/47；shadcn 交互层收敛 + Sheet 移动导航 + Popover 阅读设置 + 搜索 `?q=`；线上域名 `https://incca.ccwu.cc` 可用
+> 当前状态: 服务端搜索 `GET /api/search` + 共享 Fuse 核心；`/blog` 不再嵌入全站索引；BEM 卫生方案（非全量重写）；线上域名 `https://incca.ccwu.cc` 可用
 > 更新: 2026-07-12
 
 ---
@@ -148,12 +148,24 @@
 - [x] 单测/E2E 适配：`Header` / `ReadingPreferences` / `SearchBar` / `e2e/mobile.spec.ts`
 - [x] 验证：`pnpm test` 556 ✅ · typecheck ✅ · lint ✅ · build 93 routes ✅ · `pnpm test:e2e` 47/47 ✅
 
+## P6 · 服务端搜索 + BEM 卫生 ✅ 已完成 (2026-07-12)
+
+> 规模诚实：~14 文、CSS 已 BEM；**不上 ES**；**不做**全量 BEM 重写。方案：`docs/bem-search-architecture-2026-07-12.md`
+
+- [x] `src/lib/search/*`：共享 `FUSE_SEARCH_OPTIONS` + `searchPosts` / `searchPostsCached`
+- [x] `GET /api/search?q=&limit=`：服务端 Fuse + `s-maxage=60` + 查询长度/limit 钳制
+- [x] `useServerSearch`（debounce 180ms + abort）；`SearchBar` 无 `posts` 走 API
+- [x] `/blog` 去掉 `getAllPosts` 嵌入；单测仍可 `posts={mock}` 走客户端 Fuse
+- [x] BEM：映射表 + 明确排除全量 rewrite；交互层继续 shadcn
+- [x] 单测：engine / route / useServerSearch
+- [x] E2E：blog + mobile 搜索改 `fill({ force })` + 等 `/api/search`；search-bar `z-index:5` 压过卡片 stretch-link
+
 ## Future · 远期
 
-- [ ] 搜索增强: fuse.js 索引持久化 / 服务端搜索（本轮仅客户端 `?q=` + 缓存）
 - [ ] 图片优化: 统一 next/image 配置 + 预生成 blur data URL
 - [ ] 性能基线: 回填 Speed Insights p75 基线 (依赖生产流量)
 - [ ] shadcn 三期：Input 完全吃掉 search-ui BEM；icon-btn 尺寸收进 Button size
+- [ ] 文章量 >200 时再评估：构建期 JSON 索引或外部搜索（Meili 等）
 - [x] mobile Lighthouse preset 评估：已新增手动基线配置 `lighthouse.mobile.config.js`，暂不接入 CI 强门禁
 - [x] 导航页 `/links` UI 迭代：metadata tags + 10 分类 123 条收藏、关键词筛选和空状态已落地
 - [x] P2 UX 收尾：搜索无结果入口、404/error 导流、链接目录筛选已完成

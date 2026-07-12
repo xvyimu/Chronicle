@@ -1,5 +1,7 @@
 .search-bar {
   position: relative;
+  /* Above blog card stretch-link ::after so search stays actionable */
+  z-index: 5;
   margin-bottom: 32px;
 }
 

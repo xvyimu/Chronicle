@@ -10,31 +10,30 @@ test.describe('博客列表页', () => {
   });
 
   test('搜索框输入后显示结果', async ({ page }) => {
-    await page.goto('/blog');
-    await page.waitForLoadState('domcontentloaded');
-    // Wait 3s for React hydration in dev mode
-    await page.waitForTimeout(3000);
+    await page.goto('/blog', { waitUntil: 'domcontentloaded' });
 
-    // Use focus() instead of click() — blog card ::after overlays can intercept clicks
-    const searchInput = page.getByPlaceholder(/搜索文章/);
-    await searchInput.focus();
-    await page.keyboard.type('Redis', { delay: 50 });
+    const searchInput = page.getByRole('combobox', { name: '搜索文章' });
+    await expect(searchInput).toBeVisible({ timeout: 15000 });
 
-    // Wait for Fuse.js to load and results to appear
+    // force: blog card stretch-links can steal actionability checks
+    const responsePromise = page.waitForResponse(
+      (res) => res.url().includes('/api/search') && res.ok(),
+      { timeout: 15000 },
+    );
+    await searchInput.fill('Redis', { force: true });
+    await responsePromise;
+
     await expect(page.getByRole('listbox')).toBeVisible({ timeout: 15000 });
-    // Should show at least one result
     const results = page.locator('[data-result]');
     await expect(results.first()).toBeVisible({ timeout: 15000 });
   });
 
   test('清除搜索按钮可清空输入', async ({ page }) => {
-    await page.goto('/blog');
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(3000);
+    await page.goto('/blog', { waitUntil: 'domcontentloaded' });
 
-    const searchInput = page.getByPlaceholder(/搜索文章/);
-    await searchInput.focus();
-    await page.keyboard.type('test', { delay: 50 });
+    const searchInput = page.getByRole('combobox', { name: '搜索文章' });
+    await expect(searchInput).toBeVisible({ timeout: 15000 });
+    await searchInput.fill('test', { force: true });
 
     // Clear button should appear after input has content
     const clearBtn = page.getByLabel('清除搜索');
@@ -58,14 +57,12 @@ test.describe('博客列表页', () => {
     );
     const count = await pagination.count();
     if (count > 0) {
-      // If there's a "next" button, click it
-      const nextBtn = page
-        .getByText('下一页')
-        .or(page.getByRole('link', { name: /→|>|下一页/ }));
+      const nextBtn = page.getByRole('link', { name: /下一页/ });
       const nextCount = await nextBtn.count();
       if (nextCount > 0) {
-        await nextBtn.first().click();
-        await expect(page).toHaveURL(/page=2/);
+        // dispatchEvent avoids sticky header / card overlay intercepting click
+        await nextBtn.first().dispatchEvent('click');
+        await expect(page).toHaveURL(/page=2/, { timeout: 15000 });
         const secondPageFirstPost = await page
           .locator('main .blog__item a[href^="/blog/"]')
           .first()

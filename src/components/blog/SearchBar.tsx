@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { PostMeta } from '@/types';
+import type { PostMeta } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import SearchResultsList from './SearchResultsList';
 import { useFuseSearch } from './useFuseSearch';
+import { useServerSearch } from './useServerSearch';
 
 function readQFromLocation() {
   if (typeof window === 'undefined') return '';
@@ -29,7 +30,13 @@ function syncQueryToUrl(query: string) {
   }
 }
 
-export default function SearchBar({ posts }: { posts: PostMeta[] }) {
+/**
+ * Blog search bar.
+ *
+ * - With `posts`: client Fuse (tests / embedded index).
+ * - Without `posts`: GET /api/search (production path — no full post payload on the page).
+ */
+export default function SearchBar({ posts }: { posts?: PostMeta[] }) {
   const searchParams = useSearchParams();
   const focusSearch = searchParams.get('focus') === 'search';
   // Initial value from URL once; thereafter local state is source of truth.
@@ -40,8 +47,18 @@ export default function SearchBar({ posts }: { posts: PostMeta[] }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const { fuseReady, results } = useFuseSearch(posts, query);
   const skipUrlWriteRef = useRef(true);
+
+  const useClient = Array.isArray(posts);
+  // Hooks must always run; idle path passes empty query so no Fuse work / no fetch.
+  const client = useFuseSearch(
+    useClient ? (posts as PostMeta[]) : [],
+    useClient ? query : '',
+  );
+  const server = useServerSearch(useClient ? '' : query);
+
+  const fuseReady = useClient ? client.fuseReady : server.ready;
+  const results = useClient ? client.results : server.results;
 
   useEffect(() => {
     setActiveIndex(-1);

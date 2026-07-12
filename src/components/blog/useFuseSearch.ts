@@ -1,37 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import type Fuse from 'fuse.js';
-import type { IFuseOptions } from 'fuse.js';
 import type { PostMeta } from '@/types';
+import {
+  FUSE_SEARCH_OPTIONS,
+  SEARCH_RESULT_LIMIT,
+  type SearchHit,
+  type SearchMatch,
+} from '@/lib/search';
 
-export type FuseMatch = {
-  key?: string;
-  value?: string;
-  indices: readonly [number, number][];
-};
+export type FuseMatch = SearchMatch;
+export type SearchResult = SearchHit;
 
-export type SearchResult = {
-  item: PostMeta;
-  matches: readonly FuseMatch[];
-};
-
-/** Shared Fuse options — also used by build-time index scripts if added later. */
-export const FUSE_SEARCH_OPTIONS: IFuseOptions<PostMeta> = {
-  keys: [
-    { name: 'title', weight: 0.36 },
-    { name: 'description', weight: 0.22 },
-    { name: 'excerpt', weight: 0.22 },
-    { name: 'tags', weight: 0.16 },
-    { name: 'category', weight: 0.1 },
-    { name: 'series', weight: 0.08 },
-    { name: 'headings', weight: 0.05 },
-    { name: 'searchText', weight: 0.03 },
-  ],
-  threshold: 0.4,
-  ignoreLocation: true,
-  includeScore: true,
-  includeMatches: true,
-  minMatchCharLength: 2,
-};
+/** Re-export shared options so existing imports keep working. */
+export { FUSE_SEARCH_OPTIONS, SEARCH_RESULT_LIMIT };
 
 const fuseCache = new WeakMap<PostMeta[], Fuse<PostMeta>>();
 let fuseConstructor: (typeof import('fuse.js'))['default'] | null = null;
@@ -61,6 +42,11 @@ function getOrCreateFuse(posts: PostMeta[], FuseLib: typeof import('fuse.js').de
   return instance;
 }
 
+/**
+ * Client-side Fuse over an in-memory PostMeta array.
+ * Prefer this when the page already embeds posts (tests / offline).
+ * Production blog page uses useServerSearch instead to drop payload weight.
+ */
 export function useFuseSearch(
   posts: PostMeta[],
   query: string,
@@ -73,8 +59,6 @@ export function useFuseSearch(
     return getOrCreateFuse(posts, fuseConstructor);
   });
 
-  // Preload and rebuild Fuse.js whenever posts identity changes.
-  // Instance is cached per posts array reference to keep first keystroke hot.
   useEffect(() => {
     let cancelled = false;
 
@@ -94,9 +78,10 @@ export function useFuseSearch(
 
   const results = useMemo(() => {
     if (!query.trim() || !fuse) return [];
-    return fuse.search(query.trim(), { limit: 10 }).map((result) => ({
+    return fuse.search(query.trim(), { limit: SEARCH_RESULT_LIMIT }).map((result) => ({
       item: result.item,
       matches: (result.matches ?? []) as FuseMatch[],
+      score: result.score,
     }));
   }, [query, fuse]);
 

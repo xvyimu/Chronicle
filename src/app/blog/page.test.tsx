@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
-import { getPaginatedPosts, getAllPosts } from '@/lib/posts';
+import { getPaginatedPosts } from '@/lib/posts';
 import { PAGE_SIZE } from '@/lib/content-dirs';
 
 // Mock next/link
@@ -93,11 +93,9 @@ describe('BlogPage', () => {
   it('shows total post count in subtitle', async () => {
     await renderBlogPage();
 
-    const allPosts = getAllPosts();
-    if (allPosts.length > 0) {
-      expect(
-        screen.getByText(new RegExp(`共 ${allPosts.length} 篇`)),
-      ).toBeInTheDocument();
+    const { totalPosts } = getPaginatedPosts(1, PAGE_SIZE);
+    if (totalPosts > 0) {
+      expect(screen.getByText(new RegExp(`共 ${totalPosts} 篇`))).toBeInTheDocument();
     }
   });
 
