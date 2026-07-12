@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { blurDataFor, IMAGE_BLUR_DATA } from './image-blur-data';
+import { blurDataFor, imageBlurProps, IMAGE_BLUR_DATA } from './image-blur-data';
 
 describe('image-blur-data', () => {
   it('covers all project preview images', () => {
@@ -19,5 +19,15 @@ describe('image-blur-data', () => {
     expect(blurDataFor('/images/projects/nav-site.png')).toBe(
       IMAGE_BLUR_DATA['/images/projects/nav-site.png'],
     );
+  });
+
+  it('imageBlurProps pairs placeholder with blurDataURL', () => {
+    const known = imageBlurProps('/images/projects/blog.png');
+    expect(known).toEqual({
+      placeholder: 'blur',
+      blurDataURL: IMAGE_BLUR_DATA['/images/projects/blog.png'],
+    });
+    expect(imageBlurProps(undefined)).toEqual({});
+    expect(imageBlurProps('/images/missing.png')).toEqual({});
   });
 });

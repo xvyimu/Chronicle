@@ -1,6 +1,6 @@
 /**
  * Generate tiny WebP blur placeholders for local project images.
- * Output: src/lib/image-blur-data.ts
+ * Output: src/lib/image-blur-map.ts (map only; helpers live in image-blur-data.ts)
  *
  * Usage: node scripts/generate-blur-data.mjs
  */
@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const imageDir = path.join(root, 'public', 'images', 'projects');
-const outFile = path.join(root, 'src', 'lib', 'image-blur-data.ts');
+const outFile = path.join(root, 'src', 'lib', 'image-blur-map.ts');
 
 const files = fs
   .readdirSync(imageDir)
@@ -36,12 +36,6 @@ const body = `/** Auto-generated blur placeholders for local project images.
  * Do not edit by hand.
  */
 export const IMAGE_BLUR_DATA: Record<string, string> = ${JSON.stringify(map, null, 2)} as const;
-
-/** Return a precomputed blurDataURL for a known local image path. */
-export function blurDataFor(src?: string | null): string | undefined {
-  if (!src) return undefined;
-  return IMAGE_BLUR_DATA[src];
-}
 `;
 
 fs.writeFileSync(outFile, body, 'utf8');
