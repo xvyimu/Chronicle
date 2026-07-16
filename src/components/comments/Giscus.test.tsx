@@ -33,10 +33,11 @@ describe('Giscus', () => {
     expect(screen.queryByText('滚动到此处加载评论')).not.toBeInTheDocument();
   });
 
-  it('has sentinel container with mt-16 class', () => {
+  it('has sentinel container with host + spacing classes', () => {
     const { container } = render(<Giscus />);
     const sentinel = container.firstElementChild;
     expect(sentinel?.className).toContain('mt-16');
+    expect(sentinel?.className).toContain('giscus-host');
     expect(sentinel).toHaveAttribute('data-testid', 'giscus-comments');
   });
 
@@ -46,15 +47,15 @@ describe('Giscus', () => {
     mockInView.mockReturnValue(true);
     const { container } = render(<Giscus />);
     // The visible container is where script would be appended
-    const innerDiv = container.querySelector('.mt-16 > div');
+    const innerDiv = container.querySelector('.giscus-host > .giscus-host__frame');
     // The sentinel is the outer div, and when visible the inner container div is rendered
     expect(innerDiv).toBeInTheDocument();
-    expect(container.querySelector('.mt-16')).toBeInTheDocument();
+    expect(container.querySelector('.giscus-host')).toBeInTheDocument();
   });
 
   it('renders with correct spacing classes', () => {
     render(<Giscus />);
-    const sentinel = document.querySelector('.mt-16');
+    const sentinel = document.querySelector('.giscus-host.mt-16');
     expect(sentinel).toBeInTheDocument();
   });
 
@@ -62,7 +63,7 @@ describe('Giscus', () => {
     mockInView.mockReturnValue(true);
     render(<Giscus />);
     // Should not throw when rendered with defaults
-    const sentinel = document.querySelector('.mt-16');
+    const sentinel = document.querySelector('.giscus-host');
     expect(sentinel).toBeInTheDocument();
   });
 

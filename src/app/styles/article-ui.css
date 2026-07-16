@@ -23,7 +23,10 @@
   font-size: clamp(2.7rem, 6vw, 5.2rem);
   font-weight: 500;
   letter-spacing: 0;
-  line-height: 0.98;
+  /* Slightly looser than 0.98 so metric fallback swap cannot clip/reflow as hard. */
+  line-height: 1.05;
+  /* Cap reflow when display font swaps in (pairs with adjustFontFallback). */
+  text-rendering: optimizeLegibility;
 }
 
 .article__meta {
@@ -318,6 +321,24 @@ a.article__badge:hover {
 
 .article-nav__link:hover .article-nav__title {
   color: var(--brand-hover);
+}
+
+/* Reserve comment host space so Giscus iframe cannot inflate CLS on article pages. */
+.giscus-host {
+  min-height: 320px;
+}
+
+.giscus-host__placeholder {
+  min-height: 320px;
+  box-sizing: border-box;
+}
+
+.giscus-host__frame {
+  min-height: 320px;
+}
+
+.giscus-host iframe.giscus-frame {
+  min-height: 320px;
 }
 
 .reading-prefs {

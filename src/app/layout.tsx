@@ -48,6 +48,8 @@ const jetbrainsMono = JetBrains_Mono({
   variable: '--font-jetbrains-mono',
   display: 'swap',
   preload: false,
+  // Code blocks and mono UI share the same face; keep metric fallback tight for CLS.
+  adjustFontFallback: true,
 });
 
 const cormorantGaramond = Cormorant_Garamond({
@@ -56,6 +58,9 @@ const cormorantGaramond = Cormorant_Garamond({
   variable: '--font-display',
   display: 'swap',
   preload: true,
+  // Article titles use clamp(2.7rem, 6vw, 5.2rem); unadjusted Georgia fallback
+  // was a primary CLS driver on /blog/nextjs-app-router in Lighthouse CI.
+  adjustFontFallback: true,
 });
 
 export const metadata: Metadata = {

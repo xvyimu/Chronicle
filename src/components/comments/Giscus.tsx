@@ -141,11 +141,13 @@ export default function Giscus({
   }, [visible]);
 
   return (
-    <div ref={sentinelRef} className="mt-16" data-testid="giscus-comments">
-      {visible && <div ref={containerRef} />}
+    // Reserve host height so the iframe / reactions UI cannot shove content
+    // when the lazy script mounts (field + lab CLS on long article pages).
+    <div ref={sentinelRef} className="giscus-host mt-16" data-testid="giscus-comments">
+      {visible && <div ref={containerRef} className="giscus-host__frame" />}
       {!visible && (
         <div
-          className="flex items-center justify-center py-12 text-[var(--text-dim)] text-sm"
+          className="giscus-host__placeholder flex items-center justify-center text-[var(--text-dim)] text-sm"
           data-testid="giscus-placeholder"
         >
           滚动到此处加载评论
