@@ -143,7 +143,7 @@ HomeCtaSection
 | `components/projects/` | ProjectCard                                                                                      |
 | `components/links/`    | LinksDirectory（收藏目录、分类锚点、关键词筛选）                                                 |
 | `components/comments/` | Giscus                                                                                           |
-| `components/ui/`       | ThemeToggle、MetaBadge、Card/Button/Badge primitive、BackToTop、MagneticCard、ParticleCanvas     |
+| `components/ui/`       | ThemeToggle、MetaBadge、Card/Button/Badge primitive、BackToTop、MagneticCard                     |
 
 约定：
 

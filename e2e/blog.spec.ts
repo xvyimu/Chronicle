@@ -15,12 +15,12 @@ test.describe('博客列表页', () => {
     const searchInput = page.getByRole('combobox', { name: '搜索文章' });
     await expect(searchInput).toBeVisible({ timeout: 15000 });
 
-    // force: blog card stretch-links can steal actionability checks
     const responsePromise = page.waitForResponse(
       (res) => res.url().includes('/api/search') && res.ok(),
       { timeout: 15000 },
     );
-    await searchInput.fill('Redis', { force: true });
+    await searchInput.focus();
+    await page.keyboard.type('Redis', { delay: 20 });
     await responsePromise;
 
     await expect(page.getByRole('listbox')).toBeVisible({ timeout: 15000 });
@@ -33,7 +33,8 @@ test.describe('博客列表页', () => {
 
     const searchInput = page.getByRole('combobox', { name: '搜索文章' });
     await expect(searchInput).toBeVisible({ timeout: 15000 });
-    await searchInput.fill('test', { force: true });
+    await searchInput.focus();
+    await page.keyboard.type('test', { delay: 20 });
 
     // Clear button should appear after input has content
     const clearBtn = page.getByLabel('清除搜索');
@@ -55,26 +56,22 @@ test.describe('博客列表页', () => {
     const pagination = page.locator(
       'nav[aria-label*="分页"], .pagination, [class*="pagination"]',
     );
-    const count = await pagination.count();
-    if (count > 0) {
-      const nextBtn = page.getByRole('link', { name: /下一页/ });
-      const nextCount = await nextBtn.count();
-      if (nextCount > 0) {
-        // dispatchEvent avoids sticky header / card overlay intercepting click
-        await nextBtn.first().dispatchEvent('click');
-        await expect(page).toHaveURL(/page=2/, { timeout: 15000 });
-        const secondPageFirstPost = await page
-          .locator('main .blog__item a[href^="/blog/"]')
-          .first()
-          .getAttribute('href');
-        expect(secondPageFirstPost).toBeTruthy();
-        expect(secondPageFirstPost).not.toBe(firstPageFirstPost);
-        await expect(page.getByRole('link', { name: '2' })).toHaveAttribute(
-          'aria-current',
-          'page',
-        );
-      }
-    }
+    await expect(pagination).toBeVisible();
+    const nextBtn = page.getByRole('link', { name: /下一页/ });
+    await expect(nextBtn).toBeVisible();
+    // dispatchEvent avoids sticky header / card overlay intercepting click
+    await nextBtn.dispatchEvent('click');
+    await expect(page).toHaveURL(/page=2/, { timeout: 15000 });
+    const secondPageFirstPost = await page
+      .locator('main .blog__item a[href^="/blog/"]')
+      .first()
+      .getAttribute('href');
+    expect(secondPageFirstPost).toBeTruthy();
+    expect(secondPageFirstPost).not.toBe(firstPageFirstPost);
+    await expect(page.getByRole('link', { name: '2' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
   });
 });
 
@@ -95,7 +92,7 @@ test.describe('博客文章详情页', () => {
 
   test('从列表页进入文章详情', async ({ page }) => {
     const slug = await getFirstPostSlug(page);
-    test.skip(!slug, 'no blog posts found');
+    expect(slug).toBeTruthy();
 
     // Navigate directly — blog card ::after overlays can intercept clicks
     await page.goto(slug!);
@@ -106,7 +103,7 @@ test.describe('博客文章详情页', () => {
 
   test('文章页面显示阅读进度条', async ({ page }) => {
     const slug = await getFirstPostSlug(page);
-    test.skip(!slug, 'no blog posts found');
+    expect(slug).toBeTruthy();
 
     await page.goto(slug!);
     // Reading progress bar should exist (data-testid added for testability)
@@ -116,7 +113,7 @@ test.describe('博客文章详情页', () => {
 
   test('文章页面显示目录和标签', async ({ page }) => {
     const slug = await getFirstPostSlug(page);
-    test.skip(!slug, 'no blog posts found');
+    expect(slug).toBeTruthy();
 
     await page.goto(slug!);
     // Tags should be visible
@@ -125,19 +122,15 @@ test.describe('博客文章详情页', () => {
   });
 
   test('代码块显示复制按钮', async ({ page }) => {
-    const slug = await getFirstPostSlug(page);
-    test.skip(!slug, 'no blog posts found');
-
-    await page.goto(slug!);
-    // Wait for page to load
+    // Navigate directly to a post known to contain code blocks
+    await page.goto('/blog/cicd-pipeline-design');
     await expect(page.locator('article h1')).toBeVisible({ timeout: 15000 });
 
-    // Check if any code blocks exist with copy buttons
+    // Code toolbar should exist with copy button
     const codeBlocks = page.locator('.code-toolbar');
-    const count = await codeBlocks.count();
-    if (count > 0) {
-      const copyBtn = codeBlocks.first().locator('button:has-text("复制")');
-      await expect(copyBtn).toBeVisible();
-    }
+    await expect(codeBlocks.first()).toBeVisible({ timeout: 15000 });
+
+    const copyBtn = codeBlocks.first().locator('button:has-text("复制")');
+    await expect(copyBtn).toBeVisible();
   });
 });

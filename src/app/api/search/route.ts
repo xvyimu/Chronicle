@@ -60,14 +60,11 @@ export async function GET(request: Request) {
     const empty: SearchResponse = {
       query: '',
       results: [],
-      total: 0,
+      count: 0,
       source: 'server',
     };
     return NextResponse.json(empty, {
-      headers: {
-        ...cacheHeaders(),
-        'X-RateLimit-Remaining': String(limitState.remaining),
-      },
+      headers: cacheHeaders(),
     });
   }
 
@@ -76,15 +73,12 @@ export async function GET(request: Request) {
   const body: SearchResponse = {
     query: q,
     results,
-    total: results.length,
+    count: results.length,
     source: 'server',
   };
 
   return NextResponse.json(body, {
-    headers: {
-      ...cacheHeaders(),
-      'X-RateLimit-Remaining': String(limitState.remaining),
-    },
+    headers: cacheHeaders(),
   });
 }
 

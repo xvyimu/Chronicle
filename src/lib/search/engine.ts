@@ -2,13 +2,13 @@ import Fuse from 'fuse.js';
 import type { FuseResult } from 'fuse.js';
 import type { PostMeta } from '@/types';
 import { FUSE_SEARCH_OPTIONS, SEARCH_RESULT_LIMIT } from './options';
-import { toSearchResultItem } from './project';
+import { toSearchResultItem, toSearchResultMatches } from './project';
 import type { SearchHit, SearchMatch } from './types';
 
 function toHits(results: FuseResult<PostMeta>[]): SearchHit[] {
   return results.map((result) => ({
     item: toSearchResultItem(result.item),
-    matches: (result.matches ?? []) as SearchMatch[],
+    matches: toSearchResultMatches((result.matches ?? []) as SearchMatch[]),
     score: result.score,
   }));
 }

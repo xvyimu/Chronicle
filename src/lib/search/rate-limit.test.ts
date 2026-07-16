@@ -31,11 +31,28 @@ describe('checkSearchRateLimit', () => {
 });
 
 describe('clientKeyFromRequest', () => {
-  it('prefers first x-forwarded-for hop', () => {
+  it('uses the Vercel-owned forwarded header', () => {
     const req = new Request('http://localhost/api/search', {
-      headers: { 'x-forwarded-for': '1.2.3.4, 5.6.7.8' },
+      headers: { 'x-vercel-forwarded-for': '1.2.3.4' },
     });
     expect(clientKeyFromRequest(req)).toBe('1.2.3.4');
+  });
+
+  it('ignores spoofable generic forwarding headers', () => {
+    const req = new Request('http://localhost/api/search', {
+      headers: {
+        'x-forwarded-for': '1.2.3.4',
+        'x-real-ip': '2001:db8::1',
+      },
+    });
+    expect(clientKeyFromRequest(req)).toBe('anonymous');
+  });
+
+  it('rejects malformed Vercel forwarding values', () => {
+    const req = new Request('http://localhost/api/search', {
+      headers: { 'x-vercel-forwarded-for': 'not an ip' },
+    });
+    expect(clientKeyFromRequest(req)).toBe('anonymous');
   });
 
   it('falls back to anonymous', () => {

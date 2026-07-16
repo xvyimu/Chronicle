@@ -22,6 +22,34 @@ export const SEARCH_RATE_LIMIT_WINDOW_MS = 60_000;
 const PRUNE_EVERY = 200;
 let ops = 0;
 
+function normalizeIp(value: string): string | null {
+  const ip = value.trim().replace(/^\[|\]$/g, '');
+  if (!ip) return null;
+
+  const ipv4 = ip.split('.');
+  if (
+    ipv4.length === 4 &&
+    ipv4.every((part) => /^\d{1,3}$/.test(part) && Number(part) <= 255)
+  ) {
+    return ip;
+  }
+
+  if (ip.includes(':') && ip.length <= 45 && /^[0-9a-f:.]+$/i.test(ip)) {
+    return ip;
+  }
+
+  return null;
+}
+
+function firstValidIp(header: string | null): string | null {
+  if (!header) return null;
+  for (const part of header.split(',')) {
+    const ip = normalizeIp(part);
+    if (ip) return ip;
+  }
+  return null;
+}
+
 function prune(now: number) {
   for (const [key, bucket] of buckets) {
     if (now > bucket.reset) buckets.delete(key);
@@ -59,12 +87,9 @@ export function resetSearchRateLimitForTests() {
 }
 
 export function clientKeyFromRequest(request: Request): string {
-  const forwarded = request.headers.get('x-forwarded-for');
-  if (forwarded) {
-    const first = forwarded.split(',')[0]?.trim();
-    if (first) return first;
-  }
-  const realIp = request.headers.get('x-real-ip')?.trim();
-  if (realIp) return realIp;
+  // Vercel overwrites x-forwarded-for to prevent spoofing and exposes the
+  // platform-owned value separately so an upstream proxy cannot replace it.
+  const vercelForwarded = firstValidIp(request.headers.get('x-vercel-forwarded-for'));
+  if (vercelForwarded) return vercelForwarded;
   return 'anonymous';
 }

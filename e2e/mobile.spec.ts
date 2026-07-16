@@ -48,8 +48,8 @@ test.describe('mobile critical flows', () => {
       (res) => res.url().includes('/api/search') && res.ok(),
       { timeout: 15000 },
     );
-    // force: stretch-link overlays break default actionability on fill/click
-    await searchInput.fill('Redis', { force: true });
+    await searchInput.focus();
+    await page.keyboard.type('Redis', { delay: 20 });
     await responsePromise;
 
     await expect(page.getByRole('listbox')).toBeVisible({ timeout: 15000 });

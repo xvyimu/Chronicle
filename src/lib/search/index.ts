@@ -19,8 +19,9 @@ export type {
   SearchResponse,
   SearchResultItem,
   SearchErrorBody,
+  SearchErrorState,
 } from './types';
-export { toSearchResultItem } from './project';
+export { toSearchResultItem, toSearchResultMatches } from './project';
 export { searchPosts, searchPostsCached } from './engine';
 export {
   checkSearchRateLimit,

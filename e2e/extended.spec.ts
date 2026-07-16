@@ -68,12 +68,23 @@ test.describe('标签详情页', () => {
   });
 
   test('中文标签 URL 编码后仍显示相关文章', async ({ page }) => {
-    await page.goto(`/tags/${encodeURIComponent('后端')}`);
+    await page.goto('/tags');
     await page.waitForLoadState('domcontentloaded');
 
-    await expect(page.getByRole('heading', { name: '标签：后端' })).toBeVisible({
-      timeout: 10000,
+    const chineseTagLink = page.locator('a[href*="/tags/"]').filter({
+      hasText: /[\u4e00-\u9fff]/,
     });
+    await expect(chineseTagLink.first()).toBeVisible({ timeout: 10000 });
+
+    const tagName = (await chineseTagLink.first().innerText()).replace(/\d+$/, '').trim();
+    expect(tagName).toMatch(/[\u4e00-\u9fff]/);
+
+    await page.goto(`/tags/${encodeURIComponent(tagName)}`);
+    await page.waitForLoadState('domcontentloaded');
+
+    await expect(
+      page.getByRole('heading', { name: `标签：${tagName}`, exact: true }),
+    ).toBeVisible({ timeout: 10000 });
     await expect(page.locator('a[href*="/blog/"]').first()).toBeVisible();
   });
 });
@@ -83,9 +94,9 @@ test.describe('分类详情页', () => {
     await page.goto(`/categories/${encodeURIComponent('前端开发')}`);
     await page.waitForLoadState('domcontentloaded');
 
-    await expect(page.getByRole('heading', { name: '分类：前端开发' })).toBeVisible({
-      timeout: 10000,
-    });
+    await expect(
+      page.getByRole('heading', { name: '分类：前端开发', exact: true }),
+    ).toBeVisible({ timeout: 10000 });
     await expect(page.locator('a[href*="/blog/"]').first()).toBeVisible();
   });
 });

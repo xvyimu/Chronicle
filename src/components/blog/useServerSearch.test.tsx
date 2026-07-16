@@ -3,11 +3,13 @@ import { render, screen, cleanup, waitFor } from '@testing-library/react';
 import { useServerSearch } from './useServerSearch';
 
 function Probe({ query }: { query: string }) {
-  const { ready, results } = useServerSearch(query);
+  const { ready, results, error, retryAfterSeconds } = useServerSearch(query);
   return (
     <div>
       <span data-testid="ready">{ready ? 'yes' : 'no'}</span>
       <span data-testid="count">{results.length}</span>
+      <span data-testid="error">{error ?? 'none'}</span>
+      <span data-testid="retry-after">{retryAfterSeconds ?? 'none'}</span>
       {results.map((r) => (
         <div key={r.item.slug}>{r.item.title}</div>
       ))}
@@ -42,7 +44,7 @@ describe('useServerSearch', () => {
               matches: [],
             },
           ],
-          total: 1,
+          count: 1,
           source: 'server',
         }),
       ),
@@ -73,5 +75,50 @@ describe('useServerSearch', () => {
     const url = String(vi.mocked(fetch).mock.calls[0][0]);
     expect(url).toContain('/api/search');
     expect(url).toContain('q=Redis');
+  });
+
+  it('reports rate limit responses separately from empty results', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        Response.json(
+          { error: 'rate limit exceeded', code: 'RATE_LIMITED' },
+          {
+            status: 429,
+            headers: { 'Retry-After': '17' },
+          },
+        ),
+      ),
+    );
+
+    render(<Probe query="Redis" />);
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId('ready').textContent).toBe('yes');
+        expect(screen.getByTestId('error').textContent).toBe('rate_limited');
+        expect(screen.getByTestId('retry-after').textContent).toBe('17');
+      },
+      { timeout: 2000 },
+    );
+    expect(screen.getByTestId('count').textContent).toBe('0');
+  });
+
+  it('reports server failures separately from empty results', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({}, { status: 500 })),
+    );
+
+    render(<Probe query="Redis" />);
+
+    await waitFor(
+      () => {
+        expect(screen.getByTestId('ready').textContent).toBe('yes');
+        expect(screen.getByTestId('error').textContent).toBe('server');
+      },
+      { timeout: 2000 },
+    );
+    expect(screen.getByTestId('count').textContent).toBe('0');
   });
 });

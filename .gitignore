@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/.pnpm-store/
 /.pnp
 .pnp.*
 .yarn/*
@@ -51,6 +52,11 @@ project-diagnostic-report/
 
 # vitest HTML report
 /html/
+
+# agent session working notes (root only)
+/task_plan.md
+/findings.md
+/progress.md
 
 # stryker mutation testing
 /stryker-report/

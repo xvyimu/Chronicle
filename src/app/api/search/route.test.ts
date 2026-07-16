@@ -39,7 +39,7 @@ describe('GET /api/search', () => {
     const res = await GET(requestFor('/api/search?q='));
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body).toMatchObject({ query: '', results: [], total: 0, source: 'server' });
+    expect(body).toMatchObject({ query: '', results: [], count: 0, source: 'server' });
   });
 
   it('returns ranked projected hits for a matching query', async () => {
@@ -47,11 +47,23 @@ describe('GET /api/search', () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.source).toBe('server');
-    expect(body.total).toBeGreaterThan(0);
+    expect(body.count).toBeGreaterThan(0);
     expect(body.results[0].item.slug).toBe('redis-caching-strategies');
     expect(body.results[0].item.searchText).toBeUndefined();
     expect(body.results[0].item.headings).toBeUndefined();
     expect(res.headers.get('Cache-Control')).toContain('s-maxage=60');
+    expect(res.headers.get('X-RateLimit-Remaining')).toBeNull();
+  });
+
+  it('does not expose hidden index fields in match payloads', async () => {
+    const res = await GET(requestFor('/api/search?q=Invalidation'));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    const matchKeys = body.results.flatMap(
+      (result: { matches: Array<{ key?: string }> }) =>
+        result.matches.map((match) => match.key),
+    );
+    expect(matchKeys).not.toEqual(expect.arrayContaining(['headings', 'searchText']));
   });
 
   it('rejects oversized queries with structured error', async () => {
@@ -70,7 +82,7 @@ describe('GET /api/search', () => {
   });
 
   it('returns 429 after the rate window is exhausted', async () => {
-    const headers = { 'x-forwarded-for': '203.0.113.9' };
+    const headers = { 'x-vercel-forwarded-for': '203.0.113.9' };
     for (let i = 0; i < SEARCH_RATE_LIMIT_MAX; i++) {
       const res = await GET(requestFor('/api/search?q=Redis', headers));
       expect(res.status).toBe(200);
@@ -79,5 +91,7 @@ describe('GET /api/search', () => {
     expect(blocked.status).toBe(429);
     const body = await blocked.json();
     expect(body.code).toBe('RATE_LIMITED');
+    expect(Number(blocked.headers.get('Retry-After'))).toBeGreaterThan(0);
+    expect(blocked.headers.get('X-RateLimit-Remaining')).toBe('0');
   });
 });

@@ -5,6 +5,7 @@ import {
   FUSE_SEARCH_OPTIONS,
   SEARCH_RESULT_LIMIT,
   toSearchResultItem,
+  toSearchResultMatches,
   type SearchHit,
   type SearchMatch,
 } from '@/lib/search';
@@ -57,11 +58,16 @@ export function useFuseSearch(
   results: SearchResult[];
 } {
   const [fuse, setFuse] = useState<Fuse<PostMeta> | null>(() => {
-    if (!fuseConstructor) return null;
+    if (posts.length === 0 || !fuseConstructor) return null;
     return getOrCreateFuse(posts, fuseConstructor);
   });
 
   useEffect(() => {
+    if (posts.length === 0) {
+      setFuse(null);
+      return;
+    }
+
     let cancelled = false;
 
     loadFuse()
@@ -82,7 +88,7 @@ export function useFuseSearch(
     if (!query.trim() || !fuse) return [];
     return fuse.search(query.trim(), { limit: SEARCH_RESULT_LIMIT }).map((result) => ({
       item: toSearchResultItem(result.item),
-      matches: (result.matches ?? []) as FuseMatch[],
+      matches: toSearchResultMatches((result.matches ?? []) as FuseMatch[]),
       score: result.score,
     }));
   }, [query, fuse]);

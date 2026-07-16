@@ -9,7 +9,10 @@ import type {
   getAllPosts as getAllPostsType,
 } from '../src/lib/posts';
 import type { getAllCategories as getAllCategoriesType } from '../src/lib/categories';
-import type { getAllProjects as getAllProjectsType } from '../src/lib/projects';
+import type {
+  getAllProjects as getAllProjectsType,
+  parseProjects as parseProjectsType,
+} from '../src/lib/projects';
 import type { getAllSeries as getAllSeriesType } from '../src/lib/series';
 import type { getAllTags as getAllTagsType } from '../src/lib/tags';
 import type {
@@ -36,6 +39,7 @@ type CheckContext = {
   getAllPosts: typeof getAllPostsType;
   getAllCategories: typeof getAllCategoriesType;
   getAllProjects: typeof getAllProjectsType;
+  parseProjects: typeof parseProjectsType;
   getAllSeries: typeof getAllSeriesType;
   getAllTags: typeof getAllTagsType;
   sitemap: typeof sitemapType;
@@ -244,9 +248,39 @@ function checkPostFrontmatter(ctx: CheckContext): void {
 }
 
 function checkProjects(ctx: CheckContext): void {
-  const seenIds = new Set<string>();
+  const projectsPath = path.join(rootDir, ctx.contentDir.projects);
+  if (!existsSync(projectsPath)) {
+    addIssue(`Projects data file does not exist: ${ctx.contentDir.projects}`);
+    return;
+  }
 
-  for (const project of ctx.getAllProjects()) {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(readFileSync(projectsPath, 'utf-8'));
+  } catch (error) {
+    addIssue(
+      `Projects JSON parse failed: ${error instanceof Error ? error.message : String(error)}`,
+      ctx.contentDir.projects,
+    );
+    return;
+  }
+
+  let projects: ReturnType<typeof ctx.parseProjects>;
+  try {
+    // parseProjects 做 schema 校验 (zod array of ProjectSchema)，失败即抛出
+    projects = ctx.parseProjects(raw);
+  } catch (error) {
+    addIssue(
+      `Projects schema validation failed: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+      ctx.contentDir.projects,
+    );
+    return;
+  }
+
+  const seenIds = new Set<string>();
+  for (const project of projects) {
     if (seenIds.has(project.id)) {
       addIssue(`Duplicate project id: ${project.id}`, ctx.contentDir.projects);
     }
@@ -380,6 +414,7 @@ async function main(): Promise<void> {
     getAllPosts: postsModule.getAllPosts,
     getAllCategories: categoriesModule.getAllCategories,
     getAllProjects: projectsModule.getAllProjects,
+    parseProjects: projectsModule.parseProjects,
     getAllSeries: seriesModule.getAllSeries,
     getAllTags: tagsModule.getAllTags,
     sitemap: sitemapModule.default,

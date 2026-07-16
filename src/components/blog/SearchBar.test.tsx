@@ -63,7 +63,10 @@ describe('SearchBar', () => {
     mockSearchParamValue.mockReturnValue(null);
   });
 
-  afterEach(() => cleanup());
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    cleanup();
+  });
 
   it('renders an input with search placeholder', () => {
     render(<SearchBar posts={MOCK_POSTS} />);
@@ -139,6 +142,36 @@ describe('SearchBar', () => {
       'href',
       '/tags',
     );
+  });
+
+  it('shows rate limit feedback for server-backed search', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        Response.json(
+          { error: 'rate limit exceeded', code: 'RATE_LIMITED' },
+          {
+            status: 429,
+            headers: { 'Retry-After': '17' },
+          },
+        ),
+      ),
+    );
+
+    render(<SearchBar />);
+    const input = screen.getByPlaceholderText(/搜索文章/);
+    fireEvent.change(input, { target: { value: 'Redis' } });
+
+    await waitFor(
+      () => {
+        expect(screen.getByText('请求过快，请稍后重试')).toBeInTheDocument();
+        expect(
+          screen.getByText('搜索请求已被临时限流，请在 17 秒后重试。'),
+        ).toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
+    expect(screen.queryByText('没有匹配的文章')).not.toBeInTheDocument();
   });
 
   it('shows result count in the dropdown', async () => {

@@ -1,22 +1,52 @@
 import Link from 'next/link';
 import type { RefObject } from 'react';
 import MetaBadge from '@/components/ui/MetaBadge';
+import type { SearchErrorState } from '@/lib/search';
 import { highlightSearchMatch } from './search-highlight';
 import type { FuseMatch, SearchResult } from './useFuseSearch';
+
+const SEARCH_ERROR_COPY: Record<SearchErrorState, { title: string; body: string }> = {
+  bad_request: {
+    title: '搜索请求无效',
+    body: '请调整关键词后再试。',
+  },
+  network: {
+    title: '搜索暂时不可用',
+    body: '网络连接异常，请稍后重试。',
+  },
+  query_too_long: {
+    title: '关键词太长',
+    body: '请缩短关键词后再试。',
+  },
+  rate_limited: {
+    title: '请求过快，请稍后重试',
+    body: '搜索请求已被临时限流。',
+  },
+  server: {
+    title: '搜索暂时不可用',
+    body: '服务端响应异常，请稍后重试。',
+  },
+};
 
 export default function SearchResultsList({
   query,
   fuseReady,
   results,
+  error,
+  retryAfterSeconds,
   activeIndex,
   listRef,
 }: {
   query: string;
   fuseReady: boolean;
   results: SearchResult[];
+  error: SearchErrorState | null;
+  retryAfterSeconds: number | null;
   activeIndex: number;
   listRef: RefObject<HTMLDivElement | null>;
 }) {
+  const errorCopy = error ? SEARCH_ERROR_COPY[error] : null;
+
   return (
     <div
       ref={listRef}
@@ -28,6 +58,8 @@ export default function SearchResultsList({
       <p className="search-results-popover__summary">
         {!fuseReady ? (
           <span>正在加载搜索…</span>
+        ) : errorCopy ? (
+          <span>搜索 “{query}” 遇到问题</span>
         ) : (
           <>
             搜索 &ldquo;{query}&rdquo;，找到 {results.length} 篇
@@ -39,7 +71,20 @@ export default function SearchResultsList({
           </>
         )}
       </p>
-      {fuseReady && results.length > 0 ? (
+      {fuseReady && errorCopy ? (
+        <div className="search-results-popover__empty" role="status">
+          <strong>{errorCopy.title}</strong>
+          <span>
+            {error === 'rate_limited' && retryAfterSeconds !== null
+              ? `搜索请求已被临时限流，请在 ${retryAfterSeconds} 秒后重试。`
+              : errorCopy.body}
+          </span>
+          <div className="search-results-popover__empty-actions">
+            <Link href="/blog">查看全部文章</Link>
+            <Link href="/tags">浏览标签</Link>
+          </div>
+        </div>
+      ) : fuseReady && results.length > 0 ? (
         results.map(({ item: post, matches }, index) => {
           const titleMatch = (matches as FuseMatch[]).find(
             (match) => match.key === 'title',

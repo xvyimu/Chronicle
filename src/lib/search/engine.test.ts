@@ -56,6 +56,14 @@ describe('searchPosts', () => {
     expect(item.excerpt).toBeTruthy();
   });
 
+  it('does not return hidden index fields in match payloads', () => {
+    const hits = searchPosts(MOCK_POSTS, 'Invalidation');
+    expect(hits.length).toBeGreaterThan(0);
+    expect(hits.flatMap((hit) => hit.matches).map((match) => match.key)).not.toEqual(
+      expect.arrayContaining(['headings', 'searchText']),
+    );
+  });
+
   it('respects limit', () => {
     const hits = searchPosts(MOCK_POSTS, 'a', 1);
     expect(hits.length).toBeLessThanOrEqual(1);

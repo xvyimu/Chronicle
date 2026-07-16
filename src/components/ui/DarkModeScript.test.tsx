@@ -1,9 +1,19 @@
 import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/react';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 
 import DarkModeScript from './DarkModeScript';
 
 describe('DarkModeScript', () => {
+  it('stays a server component because it only renders static script markup', () => {
+    const source = readFileSync(
+      path.join(process.cwd(), 'src/components/ui/DarkModeScript.tsx'),
+      'utf8',
+    );
+    expect(source.startsWith("'use client'")).toBe(false);
+  });
+
   it('renders a script element with inline content', () => {
     render(<DarkModeScript />);
     const script = document.querySelector('script');

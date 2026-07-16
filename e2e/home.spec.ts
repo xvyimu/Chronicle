@@ -162,13 +162,18 @@ test.describe('首页', () => {
       },
       { timeout: 5000 },
     );
-    // mousemove 监听器在 SiteBackdropParallax 的 useEffect (hydration 后) 才挂载,
+    // pointermove 监听器在 SiteBackdropParallax 的 useEffect (hydration 后) 才挂载,
     // 仅等 stage 存在不足以保证监听就绪。反复 dispatch 并轮询, 直到 CSS 变量被写入,
     // 避免在监听器挂载前触发事件的竞态 (见 handoff §7.4)。
+    // 与组件一致：只响应 pointermove（不再监听 mousemove）。
     await page.waitForFunction(
       () => {
         window.dispatchEvent(
-          new MouseEvent('mousemove', { clientX: 1000, clientY: 500 }),
+          new PointerEvent('pointermove', {
+            clientX: 1000,
+            clientY: 500,
+            pointerType: 'mouse',
+          }),
         );
         const stage = document.querySelector<HTMLElement>('.site-backdrop__stage');
         return !!stage && stage.style.getPropertyValue('--parallax-x') !== '';

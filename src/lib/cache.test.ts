@@ -146,6 +146,60 @@ describe('createCache', () => {
       setContentSource(prevSource);
     });
 
+    it('invalidates when a non-latest-mtime file is deleted', () => {
+      // Max-mtime signature would miss this: deleting the older file leaves
+      // the max unchanged, so a signature based only on max mtime is stale.
+      const files: Record<string, number> = {
+        'content/blog/a.mdx': 1000,
+        'content/blog/b.mdx': 2000,
+      };
+      const prevSource = setContentSource({
+        readFile: () => null,
+        readDir: (p) =>
+          Object.keys(files)
+            .filter((f) => f.startsWith(p + '/'))
+            .map((f) => f.split('/').pop()!),
+        getMtime: (p) => files[p] ?? null,
+      });
+      const cache = createCache<number>({ watchPath: 'content/blog' });
+
+      const factory = vi.fn(() => Object.keys(files).length);
+      expect(cache.getOrCompute(factory)).toBe(2);
+
+      // Delete the older (non-max mtime) file — max mtime stays 2000
+      delete files['content/blog/a.mdx'];
+      expect(cache.getOrCompute(factory)).toBe(1);
+      expect(factory).toHaveBeenCalledTimes(2);
+
+      setContentSource(prevSource);
+    });
+
+    it('invalidates when a file is renamed without changing mtime', () => {
+      // Rename keeps the same mtime value; a max-mtime signature cannot detect
+      // it, but a filename-aware signature must.
+      const files: Record<string, number> = { 'content/blog/old.mdx': 1500 };
+      const prevSource = setContentSource({
+        readFile: () => null,
+        readDir: (p) =>
+          Object.keys(files)
+            .filter((f) => f.startsWith(p + '/'))
+            .map((f) => f.split('/').pop()!),
+        getMtime: (p) => files[p] ?? null,
+      });
+      const cache = createCache<string>({ watchPath: 'content/blog' });
+
+      const factory = vi.fn(() => Object.keys(files).join(','));
+      expect(cache.getOrCompute(factory)).toBe('content/blog/old.mdx');
+
+      // Rename old.mdx -> new.mdx, same mtime
+      delete files['content/blog/old.mdx'];
+      files['content/blog/new.mdx'] = 1500;
+      expect(cache.getOrCompute(factory)).toBe('content/blog/new.mdx');
+      expect(factory).toHaveBeenCalledTimes(2);
+
+      setContentSource(prevSource);
+    });
+
     it('handles single-file watchPath (readDir returns null)', () => {
       const files: Record<string, number> = { 'config.json': 500 };
       const prevSource = setContentSource({

@@ -74,7 +74,7 @@ src/
 │   ├── layout/             # Header, Footer, ArchiveCard, PageSection, SiteBackdropStage/Parallax
 │   ├── projects/           # ProjectCard
 │   ├── comments/           # Giscus comments
-│   └── ui/                 # Reusable UI (ThemeToggle, MetaBadge, Card, BackToTop, MagneticCard, ParticleCanvas)
+│   └── ui/                 # Reusable UI (ThemeToggle, MetaBadge, Card, BackToTop, MagneticCard)
 ├── hooks/                  # React hooks (useInView, usePersistedEnum, usePrefersReducedMotion)
 ├── lib/                    # Business logic
 │   ├── posts/              # Post modules (schema, repository, query, search-text — 4 submodules)

@@ -2,60 +2,59 @@
 <rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">
     <channel>
         <title>西江月</title>
-        <link>http://localhost:3000</link>
+        <link>https://incca.ccwu.cc</link>
         <description>云原生 · 全栈 · 自动化</description>
-        <lastBuildDate>Sun, 28 Jun 2026 00:00:00 GMT</lastBuildDate>
+        <lastBuildDate>Mon, 13 Jul 2026 00:00:00 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <language>zh-CN</language>
         <copyright>All rights reserved 2026</copyright>
-        <category>性能优化</category>
-        <category>前端</category>
         <category>Core Web Vitals</category>
         <category>Lighthouse</category>
+        <category>性能优化</category>
         <category>个人服务部署路线</category>
         <category>VPS</category>
         <category>Linux</category>
         <category>安全</category>
-        <category>运维</category>
+        <category>SSH</category>
         <category>TypeScript</category>
         <category>类型系统</category>
+        <category>泛型</category>
         <category>Supabase</category>
         <category>PostgreSQL</category>
-        <category>数据库</category>
-        <category>后端</category>
+        <category>RLS</category>
         <category>Redis</category>
         <category>缓存</category>
+        <category>索引</category>
         <category>Nginx</category>
-        <category>部署</category>
+        <category>反向代理</category>
+        <category>HTTPS</category>
         <category>Next.js</category>
         <category>React</category>
-        <category>全栈</category>
-        <category>监控</category>
+        <category>App Router</category>
+        <category>运维</category>
+        <category>排查</category>
         <category>Go</category>
         <category>CLI</category>
-        <category>工具</category>
         <category>Git</category>
-        <category>CI/CD</category>
         <category>GitHub Actions</category>
-        <category>自动化</category>
+        <category>CI/CD</category>
         <category>Docker</category>
         <category>Node.js</category>
-        <category>容器</category>
+        <category>部署</category>
         <category>Cloudflare</category>
         <category>Workers</category>
         <category>Serverless</category>
-        <category>无服务器</category>
         <category>DevOps</category>
-        <atom:link href="http://localhost:3000/feed.xml" rel="self" type="application/rss+xml"/>
+        <atom:link href="https://incca.ccwu.cc/feed.xml" rel="self" type="application/rss+xml"/>
         <item>
             <title><![CDATA[Web 性能优化实战：从 Core Web Vitals 到首屏加载]]></title>
-            <link>http://localhost:3000/blog/web-performance-optimization</link>
-            <guid isPermaLink="false">http://localhost:3000/blog/web-performance-optimization</guid>
+            <link>https://incca.ccwu.cc/blog/web-performance-optimization</link>
+            <guid isPermaLink="false">https://incca.ccwu.cc/blog/web-performance-optimization</guid>
             <pubDate>Sun, 28 Jun 2026 00:00:00 GMT</pubDate>
-            <description><![CDATA[Web 性能优化的完整指南：Core Web Vitals 指标解读、LCP/INP/CLS 优化策略、资源加载优先级、字体优化、图片懒加载、代码分割，以及如何用 Lighthouse 和 Chrome DevTools 定位性能瓶颈。]]></description>
+            <description><![CDATA[Core Web Vitals 落地：LCP/INP/CLS 优先序、资源优先级、字体与图片、代码分割，以及 Lighthouse 定位瓶颈。]]></description>
             <content:encoded><![CDATA[
-> 性能不是一次性的工作，而是一种习惯。这篇文章讲 Web 性能优化的实战方法——从指标到落地。
+> 结论先说：先测再改。优先把 LCP/INP/CLS 从 Poor 拉到 Good，再抠代码分割与字体；没有 RUM 数据时，别用假 p75 自我安慰。
 
 ## Core Web Vitals：Google 的性能三件套
 
@@ -538,23 +537,28 @@ export default function RootLayout({ children }) {
 6. **持续监控** — 采集真实用户的 Web Vitals 数据
 
 性能优化不是追求 100 分，而是在用户体验和开发成本之间找到平衡点。先解决 Poor 的问题，再逐步向 Good 靠拢。
+
+## 延伸阅读
+
+- [Next.js App Router 实战](/blog/nextjs-app-router)
+- [TypeScript 高级类型实战](/blog/typescript-advanced-types)
+- [Cloudflare Workers 实战](/blog/cloudflare-workers-guide)
 ]]></content:encoded>
-            <category>性能优化</category>
-            <category>前端</category>
             <category>Core Web Vitals</category>
             <category>Lighthouse</category>
+            <category>性能优化</category>
             <_reading_time>
                 <readingTime>11 min read</readingTime>
             </_reading_time>
         </item>
         <item>
             <title><![CDATA[VPS 初始化安全与运维配置清单]]></title>
-            <link>http://localhost:3000/blog/vps-initial-setup</link>
-            <guid isPermaLink="false">http://localhost:3000/blog/vps-initial-setup</guid>
+            <link>https://incca.ccwu.cc/blog/vps-initial-setup</link>
+            <guid isPermaLink="false">https://incca.ccwu.cc/blog/vps-initial-setup</guid>
             <pubDate>Tue, 23 Jun 2026 00:00:00 GMT</pubDate>
-            <description><![CDATA[拿到一台新 VPS 后应该做的安全配置和运维设置，涵盖 SSH 加固、防火墙、Fail2Ban、自动更新、Docker 安装和监控工具，一份照着执行的清单。]]></description>
+            <description><![CDATA[新 VPS 上线前的安全与运维清单：SSH 加固、UFW、Fail2Ban、自动更新、Docker 与基础监控，照着做即可。]]></description>
             <content:encoded><![CDATA[
-> 一份新入手 VPS 时的标配配置清单。
+> 结论先说：新 VPS 不要急着装业务。先完成 SSH 密钥登录、禁 root 密码、防火墙与 Fail2Ban，再装 Docker——否则 22 端口的扫描会比你的应用先到。
 
 ## 前言
 
@@ -822,24 +826,30 @@ echo "5. 调整 limits.conf 和 sysctl.conf（BBR）"
 - 每月检查一次 `fail2ban` 状态
 - `apt update` 保持系统更新
 - 检查 `/var/log/auth.log` 看有没有异常登录尝试
+
+## 延伸阅读
+
+- [Docker 容器部署实战](/blog/docker-deploy-guide)
+- [Nginx 反向代理与负载均衡](/blog/nginx-reverse-proxy)
+- [Linux 服务器排查手册](/blog/linux-server-troubleshooting)
 ]]></content:encoded>
             <category>个人服务部署路线</category>
             <category>VPS</category>
             <category>Linux</category>
             <category>安全</category>
-            <category>运维</category>
+            <category>SSH</category>
             <_reading_time>
                 <readingTime>7 min read</readingTime>
             </_reading_time>
         </item>
         <item>
             <title><![CDATA[TypeScript 高级类型实战：从泛型到条件类型的进阶之路]]></title>
-            <link>http://localhost:3000/blog/typescript-advanced-types</link>
-            <guid isPermaLink="false">http://localhost:3000/blog/typescript-advanced-types</guid>
+            <link>https://incca.ccwu.cc/blog/typescript-advanced-types</link>
+            <guid isPermaLink="false">https://incca.ccwu.cc/blog/typescript-advanced-types</guid>
             <pubDate>Fri, 26 Jun 2026 00:00:00 GMT</pubDate>
-            <description><![CDATA[深入 TypeScript 类型系统：泛型约束、条件类型、映射类型、模板字面量类型、类型推断技巧，以及在实际项目中如何用类型驱动开发减少运行时错误。]]></description>
+            <description><![CDATA[TypeScript 进阶类型：泛型约束、条件类型、映射与模板字面量，用类型把错误挡在编译期。]]></description>
             <content:encoded><![CDATA[
-> 类型系统不是用来限制你的，而是用来保护你的。这篇文章讲 TypeScript 高级类型在实际项目中的运用。
+> 结论先说：高级类型的目标不是炫技，而是消灭 `as any`。泛型约束、条件类型与 zod+infer 能把运行时错误前移到编译期。
 
 ## 为什么需要高级类型
 
@@ -1185,22 +1195,28 @@ const a: A = b;  // ✓ B 比 A 多属性，结构兼容
 | zod + infer | 运行时验证 + 编译期类型 |
 
 类型系统的价值不在于写出更复杂的类型，而在于让错误在编译期暴露。当你发现自己在写 `as any` 时，停下来想想——大概率有更好的类型表达方式。
+
+## 延伸阅读
+
+- [Next.js App Router 实战](/blog/nextjs-app-router)
+- [Web 性能优化实战](/blog/web-performance-optimization)
+- [Go 语言 CLI 工具入门](/blog/go-cli-tool)
 ]]></content:encoded>
             <category>TypeScript</category>
-            <category>前端</category>
             <category>类型系统</category>
+            <category>泛型</category>
             <_reading_time>
-                <readingTime>9 min read</readingTime>
+                <readingTime>10 min read</readingTime>
             </_reading_time>
         </item>
         <item>
             <title><![CDATA[Supabase 实战：从数据库到实时订阅]]></title>
-            <link>http://localhost:3000/blog/supabase-practical-guide</link>
-            <guid isPermaLink="false">http://localhost:3000/blog/supabase-practical-guide</guid>
+            <link>https://incca.ccwu.cc/blog/supabase-practical-guide</link>
+            <guid isPermaLink="false">https://incca.ccwu.cc/blog/supabase-practical-guide</guid>
             <pubDate>Tue, 23 Jun 2026 00:00:00 GMT</pubDate>
-            <description><![CDATA[全栈式接入 Supabase 的实战指南，涵盖 PostgreSQL 数据库设计、Row Level Security 权限控制、Realtime 订阅、Storage 文件存储和 Edge Functions 无服务器函数。]]></description>
+            <description><![CDATA[Supabase 全栈接入：表设计、Row Level Security、Realtime、Storage 与 Edge Functions 的分工边界。]]></description>
             <content:encoded><![CDATA[
-> 参考 [nav-site](https://github.com/yuanjia1314/nav-site) 项目中深度使用 Supabase 的经验。
+> 结论先说：小项目把 Supabase 当全部后端；中等项目用 Edge Functions 扛业务；大项目只把库和认证交给它，复杂逻辑仍要独立服务。
 
 ## 为什么选 Supabase
 
@@ -1457,23 +1473,29 @@ Supabase 让我可以专注于前端逻辑，后端的基础设施——数据�
 - **中等项目**：Supabase 做数据层，Edge Functions 做业务逻辑
 - **大项目**：Supabase 做数据库+认证，单独的后端服务做复杂的业务逻辑
 
-下一篇文章会聊如何用 Supabase + Redis 构建多层的缓存架构，提升 API 响应速度。]]></content:encoded>
+下一篇文章会聊如何用 Supabase + Redis 构建多层的缓存架构，提升 API 响应速度。
+
+## 延伸阅读
+
+- [PostgreSQL 性能优化实战](/blog/postgresql-performance)
+- [Redis 缓存策略](/blog/redis-caching-strategies)
+- [Next.js App Router 实战](/blog/nextjs-app-router)
+]]></content:encoded>
             <category>Supabase</category>
             <category>PostgreSQL</category>
-            <category>数据库</category>
-            <category>后端</category>
+            <category>RLS</category>
             <_reading_time>
                 <readingTime>7 min read</readingTime>
             </_reading_time>
         </item>
         <item>
             <title><![CDATA[Redis 缓存策略：从入门到生产环境实践]]></title>
-            <link>http://localhost:3000/blog/redis-caching-strategies</link>
-            <guid isPermaLink="false">http://localhost:3000/blog/redis-caching-strategies</guid>
+            <link>https://incca.ccwu.cc/blog/redis-caching-strategies</link>
+            <guid isPermaLink="false">https://incca.ccwu.cc/blog/redis-caching-strategies</guid>
             <pubDate>Thu, 25 Jun 2026 00:00:00 GMT</pubDate>
-            <description><![CDATA[Redis 在 Web 应用中的核心使用场景：缓存穿透/击穿/雪崩的应对方案、热点 Key 处理、缓存与数据库一致性策略，以及常见误区和排查方法。]]></description>
+            <description><![CDATA[生产 Redis 用法：穿透/击穿/雪崩、热点 Key、写后删缓存与一致性策略，以及命中率监控。]]></description>
             <content:encoded><![CDATA[
-> 缓存是后端性能优化的第一利器。这篇文章讲 Redis 在生产环境中的实际使用模式和踩过的坑。
+> 结论先说：缓存只放读多写少的数据；过期加随机偏移，写后删而非更新；命中率长期低于 90% 先查设计，别先加机器。
 
 ## 什么时候需要 Redis
 
@@ -1693,23 +1715,27 @@ Redis 的核心价值是把"慢"变成"快"。但缓存是双刃剑——引入�
 - **监控命中率，低于 90% 要检查设计**
 
 参考：[Redis 官方文档](https://redis.io/docs/)
+
+## 延伸阅读
+
+- [PostgreSQL 性能优化实战](/blog/postgresql-performance)
+- [Supabase 实战](/blog/supabase-practical-guide)
+- [Next.js App Router 实战](/blog/nextjs-app-router)
 ]]></content:encoded>
             <category>Redis</category>
-            <category>数据库</category>
             <category>缓存</category>
-            <category>后端</category>
             <_reading_time>
-                <readingTime>9 min read</readingTime>
+                <readingTime>10 min read</readingTime>
             </_reading_time>
         </item>
         <item>
             <title><![CDATA[PostgreSQL 性能优化实战：慢查询排查与索引策略]]></title>
-            <link>http://localhost:3000/blog/postgresql-performance</link>
-            <guid isPermaLink="false">http://localhost:3000/blog/postgresql-performance</guid>
+            <link>https://incca.ccwu.cc/blog/postgresql-performance</link>
+            <guid isPermaLink="false">https://incca.ccwu.cc/blog/postgresql-performance</guid>
             <pubDate>Sat, 27 Jun 2026 00:00:00 GMT</pubDate>
-            <description><![CDATA[PostgreSQL 在生产环境中的性能优化方法：EXPLAIN 分析、索引策略（B-Tree/GIN/GiST）、连接池配置、VACUUM 与表膨胀治理、分区表实践，以及常见慢查询的排查思路。]]></description>
+            <description><![CDATA[PostgreSQL 慢查询实战：EXPLAIN、B-Tree/GIN 索引、连接池、VACUUM 与分区表，先测量再改。]]></description>
             <content:encoded><![CDATA[
-> 数据库慢查询是后端最常见的问题。这篇文章讲 PostgreSQL 性能优化的实战经验——从 EXPLAIN 分析到索引设计。
+> 结论先说：没有 EXPLAIN ANALYZE 的优化都是猜测。先看执行计划与索引列顺序，再谈连接池、VACUUM 和分区。
 
 ## 性能问题的第一信号
 
@@ -2134,23 +2160,28 @@ PostgreSQL 性能优化的核心思路：
 6. **避免 N+1 和大 OFFSET** — 这是应用层最常见的数据库性能杀手
 
 性能优化是一个持续过程，不是一次性工作。建立监控、定期审查慢查询、保持统计信息更新，比任何单次优化都重要。
+
+## 延伸阅读
+
+- [Redis 缓存策略](/blog/redis-caching-strategies)
+- [Supabase 实战](/blog/supabase-practical-guide)
+- [Linux 服务器排查手册](/blog/linux-server-troubleshooting)
 ]]></content:encoded>
             <category>PostgreSQL</category>
-            <category>数据库</category>
+            <category>索引</category>
             <category>性能优化</category>
-            <category>后端</category>
             <_reading_time>
                 <readingTime>12 min read</readingTime>
             </_reading_time>
         </item>
         <item>
             <title><![CDATA[Nginx 反向代理与负载均衡实战]]></title>
-            <link>http://localhost:3000/blog/nginx-reverse-proxy</link>
-            <guid isPermaLink="false">http://localhost:3000/blog/nginx-reverse-proxy</guid>
+            <link>https://incca.ccwu.cc/blog/nginx-reverse-proxy</link>
+            <guid isPermaLink="false">https://incca.ccwu.cc/blog/nginx-reverse-proxy</guid>
             <pubDate>Wed, 24 Jun 2026 00:00:00 GMT</pubDate>
-            <description><![CDATA[从 Nginx 基础配置到反向代理、负载均衡、HTTPS 重定向和静态资源优化的完整指南，适合需要在生产环境部署 Web 服务的开发者。]]></description>
+            <description><![CDATA[生产前端层 Nginx：反向代理、负载均衡、HTTPS 终端与静态缓存，让后端只关心业务。]]></description>
             <content:encoded><![CDATA[
-> 在 Docker 部署和 VPS 初始化之后，Nginx 是最常用的前端层——反向代理、负载均衡、HTTPS 终端、静态资源缓存，一个搞定。
+> 结论先说：生产环境把 TLS、反向代理、限流和静态缓存交给 Nginx，后端只听内网端口——比每个服务各自挂证书稳得多。
 
 ## 为什么需要 Nginx
 
@@ -2388,24 +2419,29 @@ curl http://127.0.0.1/nginx_status
 Nginx 是部署流程里最值得花时间配置好的环节。一个合理的 Nginx 层能让后端服务更简单——只管处理业务逻辑，安全、缓存、限流全交给 Nginx。
 
 参考配置：[Nginx 官方文档](https://nginx.org/en/docs/)
+
+## 延伸阅读
+
+- [Docker 容器部署实战](/blog/docker-deploy-guide)
+- [VPS 初始化安全与运维配置清单](/blog/vps-initial-setup)
+- [Cloudflare Workers 实战](/blog/cloudflare-workers-guide)
 ]]></content:encoded>
             <category>个人服务部署路线</category>
             <category>Nginx</category>
-            <category>Linux</category>
-            <category>运维</category>
-            <category>部署</category>
+            <category>反向代理</category>
+            <category>HTTPS</category>
             <_reading_time>
                 <readingTime>6 min read</readingTime>
             </_reading_time>
         </item>
         <item>
             <title><![CDATA[Next.js 16 App Router 实战：服务端组件与流式渲染]]></title>
-            <link>http://localhost:3000/blog/nextjs-app-router</link>
-            <guid isPermaLink="false">http://localhost:3000/blog/nextjs-app-router</guid>
+            <link>https://incca.ccwu.cc/blog/nextjs-app-router</link>
+            <guid isPermaLink="false">https://incca.ccwu.cc/blog/nextjs-app-router</guid>
             <pubDate>Tue, 23 Jun 2026 00:00:00 GMT</pubDate>
-            <description><![CDATA[从 Pages Router 迁移到 App Router 的实践笔记，涵盖 Server Component、Streaming SSR、Server Actions 和数据获取模式，以及生产环境常见问题的解决。]]></description>
+            <description><![CDATA[Next.js App Router 生产笔记：Server Component 默认、Streaming、Server Actions 与数据获取边界。]]></description>
             <content:encoded><![CDATA[
-> 本站就是用 Next.js 16 App Router 构建的。这篇文章分享一下我在实际项目中使用的模式和踩过的坑。
+> 结论先说：默认全是服务端组件，只在交互边界加 `"use client"`；数据在服务端直接取，表单走 Server Actions，Suspense 负责流式首屏。
 
 ## Pages Router vs App Router
 
@@ -2678,23 +2714,28 @@ App Router 的学习曲线比 Pages Router 陡一些——概念更多（服务�
 - **嵌套布局**避免不必要的重复渲染
 
 参考：[Next.js 官方文档](https://nextjs.org/docs)
+
+## 延伸阅读
+
+- [Web 性能优化实战](/blog/web-performance-optimization)
+- [TypeScript 高级类型实战](/blog/typescript-advanced-types)
+- [Supabase 实战](/blog/supabase-practical-guide)
 ]]></content:encoded>
             <category>Next.js</category>
             <category>React</category>
-            <category>前端</category>
-            <category>全栈</category>
+            <category>App Router</category>
             <_reading_time>
                 <readingTime>8 min read</readingTime>
             </_reading_time>
         </item>
         <item>
             <title><![CDATA[Linux 服务器排查手册：CPU、内存、磁盘、网络]]></title>
-            <link>http://localhost:3000/blog/linux-server-troubleshooting</link>
-            <guid isPermaLink="false">http://localhost:3000/blog/linux-server-troubleshooting</guid>
+            <link>https://incca.ccwu.cc/blog/linux-server-troubleshooting</link>
+            <guid isPermaLink="false">https://incca.ccwu.cc/blog/linux-server-troubleshooting</guid>
             <pubDate>Fri, 26 Jun 2026 00:00:00 GMT</pubDate>
-            <description><![CDATA[当服务出问题时，从四个维度系统性地排查服务器状态——CPU 满载、内存泄漏、磁盘占满、网络异常，每种场景的排查步骤和常用命令。]]></description>
+            <description><![CDATA[服务异常时按 CPU → 内存 → 磁盘 → 网络四维排查：常用命令、定位顺序与日常预防清单。]]></description>
             <content:encoded><![CDATA[
-> 服务出问题的时候，最怕的不是问题本身，而是不知道从哪开始查。这篇文章整理了一套排查流程。
+> 结论先说：别凭感觉乱扫日志。固定顺序 CPU → 内存 → 磁盘 → 网络，配合 top/free/df/ss，多数线上故障能在几分钟内落到根因。
 
 ## 排查前的心态
 
@@ -2992,23 +3033,28 @@ ps aux --sort=-%mem | head -6
 - 配置日志轮转
 - 给关键指标设告警（磁盘 > 80%、内存 < 20%）
 - 定期查看 `dmesg`——很多问题（OOM killer、硬件错误）只出现在内核日志里，不会在应用日志中出现
+
+## 延伸阅读
+
+- [VPS 初始化安全与运维配置清单](/blog/vps-initial-setup)
+- [Docker 容器部署实战](/blog/docker-deploy-guide)
+- [Nginx 反向代理与负载均衡](/blog/nginx-reverse-proxy)
 ]]></content:encoded>
             <category>Linux</category>
             <category>运维</category>
-            <category>VPS</category>
-            <category>监控</category>
+            <category>排查</category>
             <_reading_time>
                 <readingTime>9 min read</readingTime>
             </_reading_time>
         </item>
         <item>
             <title><![CDATA[Go 语言入门：从零写一个 CLI 工具]]></title>
-            <link>http://localhost:3000/blog/go-cli-tool</link>
-            <guid isPermaLink="false">http://localhost:3000/blog/go-cli-tool</guid>
+            <link>https://incca.ccwu.cc/blog/go-cli-tool</link>
+            <guid isPermaLink="false">https://incca.ccwu.cc/blog/go-cli-tool</guid>
             <pubDate>Thu, 25 Jun 2026 00:00:00 GMT</pubDate>
-            <description><![CDATA[用 Go 语言从零实现一个实用的命令行工具，涵盖 flag 参数解析、文件 IO、JSON 输出、错误处理和交叉编译，让有脚本基础的开发者快速上手 Go。]]></description>
+            <description><![CDATA[用 Go 从零写可分发 CLI：flag、文件 IO、JSON 输出、错误处理与交叉编译成单二进制。]]></description>
             <content:encoded><![CDATA[
-> 之前一直用 Node.js / Python 写工具，最近开始用 Go 写——编译成单个二进制文件、零依赖部署的感觉确实好。
+> 结论先说：需要丢到多台服务器、零运行时依赖的工具，优先 Go 编译成单二进制；脚本语言适合原型，不适合当运维标配。
 
 ## 为什么选 Go 写 CLI
 
@@ -3254,23 +3300,27 @@ Go 写 CLI 工具的体验很舒适——标准库够用、编译产物简单、
 - 用 `cobra` + `viper` 做更复杂的 CLI 框架
 - 加入彩色输出（`fatih/color`）
 - 加入进度条（`cheggaaa/pb`）
+
+## 延伸阅读
+
+- [Cloudflare Workers 实战](/blog/cloudflare-workers-guide)
+- [CI/CD 流水线设计](/blog/cicd-pipeline-design)
+- [Linux 服务器排查手册](/blog/linux-server-troubleshooting)
 ]]></content:encoded>
             <category>Go</category>
-            <category>后端</category>
             <category>CLI</category>
-            <category>工具</category>
             <_reading_time>
                 <readingTime>6 min read</readingTime>
             </_reading_time>
         </item>
         <item>
             <title><![CDATA[用 Git Hooks 和 GitHub Actions 打造自动化代码工作流]]></title>
-            <link>http://localhost:3000/blog/git-hooks-github-actions</link>
-            <guid isPermaLink="false">http://localhost:3000/blog/git-hooks-github-actions</guid>
+            <link>https://incca.ccwu.cc/blog/git-hooks-github-actions</link>
+            <guid isPermaLink="false">https://incca.ccwu.cc/blog/git-hooks-github-actions</guid>
             <pubDate>Wed, 24 Jun 2026 00:00:00 GMT</pubDate>
-            <description><![CDATA[从 pre-commit 代码检查到 CI/CD 自动化部署的完整实践，用 Git Hooks + GitHub Actions 让代码质量检查和发布流程自动化，减少手动操作和人为错误。]]></description>
+            <description><![CDATA[本地 pre-commit + 远程 GitHub Actions：把检查、构建和部署串成「提交即可上线」的双层自动化。]]></description>
             <content:encoded><![CDATA[
-> 配合 VPS 初始化和 Docker 部署这两篇文章，这篇聊聊代码从提交到上线的自动化链路。
+> 结论先说：本地 Git Hooks 挡脏提交，远程 Actions 挡脏合并；两层配齐后，部署命令不该再出现在你的日常操作里。
 
 ## 为什么需要自动化工作流
 
@@ -3487,25 +3537,29 @@ main 分支 push
 - **GitHub Actions 把好远程合并这一关**，不管谁来提交都按统一标准验证，通过后自动部署
 
 这两层配好之后，"提交即上线"成为常态，不需要再手动敲部署命令。
+
+## 延伸阅读
+
+- [CI/CD 流水线设计](/blog/cicd-pipeline-design)
+- [Docker 容器部署实战](/blog/docker-deploy-guide)
+- [VPS 初始化安全与运维配置清单](/blog/vps-initial-setup)
 ]]></content:encoded>
             <category>个人服务部署路线</category>
             <category>Git</category>
-            <category>CI/CD</category>
             <category>GitHub Actions</category>
-            <category>自动化</category>
+            <category>CI/CD</category>
             <_reading_time>
-                <readingTime>5 min read</readingTime>
+                <readingTime>6 min read</readingTime>
             </_reading_time>
         </item>
         <item>
             <title><![CDATA[Docker 容器部署实战：从零搭建 Node.js 应用]]></title>
-            <link>http://localhost:3000/blog/docker-deploy-guide</link>
-            <guid isPermaLink="false">http://localhost:3000/blog/docker-deploy-guide</guid>
+            <link>https://incca.ccwu.cc/blog/docker-deploy-guide</link>
+            <guid isPermaLink="false">https://incca.ccwu.cc/blog/docker-deploy-guide</guid>
             <pubDate>Mon, 22 Jun 2026 00:00:00 GMT</pubDate>
-            <description><![CDATA[从安装 Docker 开始，到将一个完整的 Node.js 应用容器化并部署到服务器的全过程，包含 Dockerfile 优化、多阶段构建、Docker Compose 编排，以及生产环境的最佳实践。]]></description>
+            <description><![CDATA[把 Node.js 应用从源码做到生产容器：Dockerfile 多阶段构建、Compose 编排与镜像体积优化。]]></description>
             <content:encoded><![CDATA[
-> **适用读者**：有基础 Linux 操作经验、想上手 Docker 的开发者。
-> **目标**：把一个 Node.js 应用从源码 → Docker 镜像 → 服务器跑起来。
+> 结论先说：用多阶段 Dockerfile + Compose 把 Node 应用固化成「同一套镜像到处跑」；别再在服务器上裸装 Node 然后 pm2 start。
 
 ## 为什么选择 Docker
 
@@ -3737,24 +3791,29 @@ dist
 从安装 Docker、写 Dockerfile、构建镜像，到用 Docker Compose 编排多容器服务——这套流程已经成了我部署应用的标配。容器化的好处不用多说，关键是**形成规范**：每个项目都按同样的方式组织、同样的命令部署，省心很多。
 
 下一篇会讲如何用 Docker Compose 编排更多服务，以及一些进阶的部署策略。
+
+## 延伸阅读
+
+- [VPS 初始化安全与运维配置清单](/blog/vps-initial-setup)
+- [Nginx 反向代理与负载均衡](/blog/nginx-reverse-proxy)
+- [Git Hooks 与 GitHub Actions 自动化](/blog/git-hooks-github-actions)
 ]]></content:encoded>
             <category>个人服务部署路线</category>
             <category>Docker</category>
             <category>Node.js</category>
             <category>部署</category>
-            <category>容器</category>
             <_reading_time>
                 <readingTime>6 min read</readingTime>
             </_reading_time>
         </item>
         <item>
             <title><![CDATA[Cloudflare Workers 实战：构建无服务器应用]]></title>
-            <link>http://localhost:3000/blog/cloudflare-workers-guide</link>
-            <guid isPermaLink="false">http://localhost:3000/blog/cloudflare-workers-guide</guid>
+            <link>https://incca.ccwu.cc/blog/cloudflare-workers-guide</link>
+            <guid isPermaLink="false">https://incca.ccwu.cc/blog/cloudflare-workers-guide</guid>
             <pubDate>Mon, 22 Jun 2026 00:00:00 GMT</pubDate>
-            <description><![CDATA[从 Workers 基础概念到完整项目实战，涵盖路由、KV 存储、环境变量、定时触发器、Cron Triggers 和部署策略，带你搭建一个真正的可运行应用。]]></description>
+            <description><![CDATA[Cloudflare Workers 从路由到 KV、Cron 与部署：边缘无服务器应用的可运行骨架与适用边界。]]></description>
             <content:encoded><![CDATA[
-> 参考 [domain-check](https://github.com/yuanjia1314/domain-check) 项目的实践经验。
+> 结论先说：适合放在边缘的短逻辑（网关、定时探针、Webhook）优先 Workers；需要长连接或重 CPU 时再回传统容器。
 
 ## 什么是 Cloudflare Workers
 
@@ -4004,23 +4063,28 @@ Cloudflare Workers 是我最推荐的无服务器平台。门槛低（一个文�
 - A/B 测试分发
 
 下一步可以探索 Workers AI、D1（边缘 SQLite）、R2 对象存储等更深度的服务，Cloudflare 正在把整个边缘平台做成一站式的应用开发环境。
+
+## 延伸阅读
+
+- [Nginx 反向代理与负载均衡](/blog/nginx-reverse-proxy)
+- [Go 语言 CLI 工具入门](/blog/go-cli-tool)
+- [Next.js App Router 实战](/blog/nextjs-app-router)
 ]]></content:encoded>
             <category>Cloudflare</category>
             <category>Workers</category>
             <category>Serverless</category>
-            <category>无服务器</category>
             <_reading_time>
                 <readingTime>7 min read</readingTime>
             </_reading_time>
         </item>
         <item>
             <title><![CDATA[CI/CD 流水线设计：从单脚本到 GitHub Actions 多阶段流水线]]></title>
-            <link>http://localhost:3000/blog/cicd-pipeline-design</link>
-            <guid isPermaLink="false">http://localhost:3000/blog/cicd-pipeline-design</guid>
+            <link>https://incca.ccwu.cc/blog/cicd-pipeline-design</link>
+            <guid isPermaLink="false">https://incca.ccwu.cc/blog/cicd-pipeline-design</guid>
             <pubDate>Thu, 25 Jun 2026 00:00:00 GMT</pubDate>
-            <description><![CDATA[从零搭建 CI/CD 流水线，涵盖流水线阶段设计、并行与串行策略、缓存优化、制品管理和部署策略，以 GitHub Actions 为例。]]></description>
+            <description><![CDATA[GitHub Actions 多阶段流水线：阶段划分、并行与缓存、制品管理与部署策略，从单脚本演进到可回滚发布。]]></description>
             <content:encoded><![CDATA[
-> 手动部署是事故的温床。这篇文章讲如何从零设计 CI/CD 流水线——阶段划分、并行策略、缓存优化、制品管理和部署策略，以 GitHub Actions 为例。
+> 结论先说：流水线按 lint → test → build → deploy 快速失败；能并行就并行，依赖与镜像必须缓存，制品用 commit SHA 标识。
 
 ## 为什么要设计流水线
 
@@ -4924,12 +4988,17 @@ jobs:
 流水线是演进的。从最简单的 lint + test 开始，逐步加构建、部署、缓存、矩阵。不要一开始就设计完美流水线——先跑起来，再优化。
 
 参考：[GitHub Actions 文档](https://docs.github.com/en/actions)、[Docker Build Push Action](https://github.com/docker/build-push-action)、[Kubernetes 部署文档](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)
+
+## 延伸阅读
+
+- [Git Hooks 与 GitHub Actions 自动化](/blog/git-hooks-github-actions)
+- [Docker 容器部署实战](/blog/docker-deploy-guide)
+- [VPS 初始化安全与运维配置清单](/blog/vps-initial-setup)
 ]]></content:encoded>
             <category>个人服务部署路线</category>
             <category>CI/CD</category>
             <category>GitHub Actions</category>
             <category>DevOps</category>
-            <category>自动化</category>
             <_reading_time>
                 <readingTime>20 min read</readingTime>
             </_reading_time>

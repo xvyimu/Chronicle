@@ -36,7 +36,10 @@ describe('getTagNameBySlug', () => {
   });
 
   it('resolves URL-encoded Chinese slugs', () => {
-    expect(getTagNameBySlug(encodeURIComponent('后端'))).toBe('后端');
+    const chineseTag = getAllTags().find((tag) => /[\u4e00-\u9fff]/.test(tag.tag));
+    expect(chineseTag).toBeDefined();
+
+    expect(getTagNameBySlug(encodeURIComponent(chineseTag!.slug))).toBe(chineseTag!.tag);
   });
 
   it('returns null for an unknown slug', () => {

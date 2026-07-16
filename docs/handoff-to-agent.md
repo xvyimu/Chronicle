@@ -194,7 +194,7 @@ D:\blog\
 │   │   ├── home/               # 首页专属组件（8 个:EditorialHero/Manifesto/ReadingPath/ArticleRail/CuratedLinks/HomeCta/RevealOnScroll/LoadingIntro）
 │   │   ├── blog/               # 博客组件（BlogCard/SearchBar/Pagination/CodeBlock/TOC/ReadingProgress/ReadingPreferences/ImageZoom/MdxContent/TagLink）
 │   │   ├── layout/             # Header/Footer + SiteBackdropStage + SiteBackdropParallax
-│   │   ├── ui/                 # ThemeToggle/ParticleCanvas/BackToTop/MagneticCard
+│   │   ├── ui/                 # ThemeToggle/BackToTop/MagneticCard
 │   │   ├── projects/           # ProjectCard
 │   │   └── comments/           # Giscus
 │   ├── hooks/                  # React hooks（useInView/usePersistedEnum/usePrefersReducedMotion,均带测试）
@@ -347,7 +347,6 @@ page.tsx
 
 - 检查各组件在深色模式下的对比度
 - HomeCtaSection 卡片在暗色下的一致性
-- ParticleCanvas 在暗色下的粒子亮度
 - 代码高亮颜色（Shiki）在明暗主题下的切换
 
 关键文件：`src/app/globals.css` (14-84 行)

@@ -1,5 +1,3 @@
-'use client';
-
 /**
  * DarkModeScript — 首屏暗色主题闪烁防护。
  *

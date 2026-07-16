@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, type MouseEvent, type PointerEvent, type ReactNode } from 'react';
+import { useRef, type PointerEvent, type ReactNode } from 'react';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 import { cn } from '@/lib/utils';
 
@@ -47,10 +47,6 @@ export default function MagneticCard({
     handleMove(event.clientX, event.clientY);
   };
 
-  const handleMouseMove = (event: MouseEvent<HTMLElement>) => {
-    handleMove(event.clientX, event.clientY);
-  };
-
   const handleLeave = () => {
     const el = ref.current;
     if (!el) return;
@@ -68,8 +64,6 @@ export default function MagneticCard({
       className={cn('magnetic-card', className)}
       onPointerMove={handlePointerMove}
       onPointerLeave={handleLeave}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleLeave}
     >
       {children}
     </Tag>

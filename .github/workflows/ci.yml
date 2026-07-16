@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL || 'https://example.com' }}
+      NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL || 'https://incca.ccwu.cc' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -55,9 +55,10 @@ jobs:
 
       - run: pnpm check:blur
 
-      - run: npx tsx scripts/generate-rss.ts
-
       - run: pnpm build
+
+      - name: Verify RSS artifacts are committed
+        run: git diff --exit-code -- public/feed.xml public/feed.json
 
       # Bundle budget: fail if static output exceeds thresholds
       - run: pnpm exec tsx scripts/check-bundle-budget.ts
@@ -66,7 +67,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL || 'https://example.com' }}
+      NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL || 'https://incca.ccwu.cc' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -100,7 +101,7 @@ jobs:
     needs: quality
     timeout-minutes: 15
     env:
-      NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL || 'https://example.com' }}
+      NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL || 'https://incca.ccwu.cc' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -136,7 +137,7 @@ jobs:
     needs: quality
     timeout-minutes: 10
     env:
-      NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL || 'https://example.com' }}
+      NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL || 'https://incca.ccwu.cc' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -180,14 +181,15 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm build
-
+      # No local build here: quality/e2e/lighthouse already gate the tree.
+      # vercel deploy uploads source and builds on Vercel (single production build).
       - name: Deploy to Vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: npx vercel@latest deploy --prod --yes --token "$VERCEL_TOKEN"
+        # Pin CLI: avoid @latest drift (CFG-1). Bump deliberately after verify.
+        run: npx vercel@56.2.1 deploy --prod --yes --token "$VERCEL_TOKEN"
 
       - name: Check production content
         run: pnpm check:production-content

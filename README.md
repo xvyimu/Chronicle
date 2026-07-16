@@ -89,7 +89,7 @@ NEXT_PUBLIC_GISCUS_CATEGORY_ID=your_category_id
 │  │  ├─ layout/             # Header / Footer
 │  │  ├─ projects/           # ProjectCard
 │  │  ├─ comments/           # Giscus
-│  │  └─ ui/                 # ThemeToggle / BackToTop / MagneticCard / ParticleCanvas
+│  │  └─ ui/                 # ThemeToggle / BackToTop / MagneticCard
 │  ├─ lib/                   # 数据层（posts / projects / tags / utils / site / content-dirs / cache / jsonld）
 │  └─ types/                 # TypeScript 类型定义
 ├─ .github/workflows/ci.yml  # CI 流水线（lint / test / tsc / build / bundle-budget / e2e / deploy smoke）

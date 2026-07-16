@@ -66,7 +66,7 @@ export function resetAllCaches(): void {
 
 export function createCache<T>(options?: CacheOptions): Cache<T> {
   let value: T | null = null;
-  let cachedMtime: number | null = null;
+  let cachedSignature: string | null = null;
 
   const cache: Cache<T> = {
     get(): T | null {
@@ -79,33 +79,30 @@ export function createCache<T>(options?: CacheOptions): Cache<T> {
 
     invalidate(): void {
       value = null;
-      cachedMtime = null;
+      cachedSignature = null;
     },
 
     getOrCompute(factory: () => T): T {
-      // 开发环境：检查 watchPath 的 mtime，变化时自动失效
+      // 开发环境：检查 watchPath 的签名，变化时自动失效
       if (options?.watchPath && process.env.NODE_ENV !== 'production') {
         const source = options.source ?? getContentSource();
-        // 对于目录，遍历内部文件取最大 mtime（目录 mtime 不随文件内容变化）
+        // 目录场景：用稳定的 `filename:mtime` 组合作为签名，
+        // 覆盖新增、删除、重命名和内容修改（最大 mtime 无法感知删除非最新文件或重命名）。
         const files = source.readDir(options.watchPath);
-        let currentMtime: number | null = null;
+        let currentSignature: string | null = null;
         if (files) {
-          for (const f of files) {
-            const m = source.getMtime(`${options.watchPath}/${f}`);
-            if (m !== null && (currentMtime === null || m > currentMtime)) {
-              currentMtime = m;
-            }
-          }
-          if (files.length === 0) {
-            currentMtime = 0;
-          }
+          currentSignature = [...files]
+            .sort()
+            .map((f) => `${f}:${source.getMtime(`${options.watchPath}/${f}`) ?? ''}`)
+            .join('|');
         } else {
           // 单文件场景
-          currentMtime = source.getMtime(options.watchPath);
+          const m = source.getMtime(options.watchPath);
+          currentSignature = m === null ? null : String(m);
         }
-        if (currentMtime !== null && currentMtime !== cachedMtime) {
+        if (currentSignature !== null && currentSignature !== cachedSignature) {
           value = null;
-          cachedMtime = currentMtime;
+          cachedSignature = currentSignature;
         }
       }
 

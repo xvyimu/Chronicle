@@ -59,6 +59,8 @@ export default function SearchBar({ posts }: { posts?: PostMeta[] }) {
 
   const fuseReady = useClient ? client.fuseReady : server.ready;
   const results = useClient ? client.results : server.results;
+  const error = useClient ? null : server.error;
+  const retryAfterSeconds = useClient ? null : server.retryAfterSeconds;
 
   useEffect(() => {
     setActiveIndex(-1);
@@ -215,6 +217,8 @@ export default function SearchBar({ posts }: { posts?: PostMeta[] }) {
           query={query}
           fuseReady={fuseReady}
           results={results}
+          error={error}
+          retryAfterSeconds={retryAfterSeconds}
           activeIndex={activeIndex}
           listRef={listRef}
         />

@@ -80,7 +80,7 @@ describe('MagneticCard', () => {
     expect(article.style.getPropertyValue('--spotlight-y')).toBe('50px');
   });
 
-  it('applies magnetic transform on mouse move', () => {
+  it('applies magnetic transform on pointer move', () => {
     render(
       <MagneticCard>
         <span>Content</span>
@@ -101,8 +101,8 @@ describe('MagneticCard', () => {
       toJSON: () => ({}),
     });
 
-    // Simulate mouse move at center-right
-    fireEvent.mouseMove(article, { clientX: 150, clientY: 50 });
+    // Simulate pointer move at center-right
+    fireEvent.pointerMove(article, { clientX: 150, clientY: 50 });
 
     expect(article.style.transform).toContain('perspective(720px)');
     expect(article.style.transform).toContain('rotateY');
@@ -111,7 +111,7 @@ describe('MagneticCard', () => {
     expect(article.style.getPropertyValue('--glow-y')).toBe('50%');
   });
 
-  it('clears transform on mouse leave', () => {
+  it('clears transform on pointer leave', () => {
     render(
       <MagneticCard>
         <span>Content</span>
@@ -131,10 +131,10 @@ describe('MagneticCard', () => {
       toJSON: () => ({}),
     });
 
-    fireEvent.mouseMove(article, { clientX: 150, clientY: 50 });
+    fireEvent.pointerMove(article, { clientX: 150, clientY: 50 });
     expect(article.style.transform).toBeTruthy();
 
-    fireEvent.mouseLeave(article);
+    fireEvent.pointerLeave(article);
     expect(article.style.transform).toBe('');
     expect(article.style.getPropertyValue('--glow-x')).toBe('');
   });
@@ -161,11 +161,26 @@ describe('MagneticCard', () => {
       toJSON: () => ({}),
     });
 
-    fireEvent.mouseMove(article, { clientX: 150, clientY: 50 });
+    fireEvent.pointerMove(article, { clientX: 150, clientY: 50 });
     expect(article.style.transform).toBe('');
   });
 
-  it('does not throw when ref is null on mouse move', () => {
+  it('ignores compatibility mouse move events', () => {
+    render(
+      <MagneticCard>
+        <span>Content</span>
+      </MagneticCard>,
+    );
+    const article = document.querySelector('article')!;
+    const rectSpy = vi.spyOn(article, 'getBoundingClientRect');
+
+    fireEvent.mouseMove(article, { clientX: 150, clientY: 50 });
+
+    expect(rectSpy).not.toHaveBeenCalled();
+    expect(article.style.transform).toBe('');
+  });
+
+  it('does not throw when ref is null on pointer move', () => {
     render(
       <MagneticCard>
         <span>Content</span>
