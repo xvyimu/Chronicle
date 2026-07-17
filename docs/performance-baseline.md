@@ -131,12 +131,13 @@ result meaningful.
 
 ## Refresh Procedure
 
-1. Wait for a production deployment to receive enough traffic in Vercel Speed Insights.
-2. Check count metrics first. Do not treat a low-count p75 value as a regression.
-3. Record p75 LCP, INP, and CLS for each tracked page above.
-4. Compare desktop Lighthouse CI, manual mobile Lighthouse, and Speed Insights.
-5. If Lighthouse is green but real-user data regresses, prioritize the real-user issue.
-6. Update the table below with exact dates and values.
+1. Require `VERCEL_TOKEN` in the current process environment; never copy credentials into the repository or command arguments.
+2. Wait for a production deployment to receive enough traffic in Vercel Speed Insights.
+3. Check count metrics first. Do not treat a low-count p75 value as a regression.
+4. Record p75 LCP, INP, and CLS for each tracked page above.
+5. Compare desktop Lighthouse CI, manual mobile Lighthouse, and Speed Insights.
+6. If Lighthouse is green but real-user data regresses, prioritize the real-user issue.
+7. Update the table below with exact dates and values.
 
 Suggested Vercel CLI queries:
 
@@ -152,15 +153,15 @@ the actual project name.
 
 ## Baseline Log
 
-| Date       | Source                | Device     | Page                      | LCP          | INP     | CLS      | Count   | Notes                                                  |
-| ---------- | --------------------- | ---------- | ------------------------- | ------------ | ------- | -------- | ------- | ------------------------------------------------------ |
-| 2026-06-29 | Lighthouse CI         | desktop    | `/`                       | 1877 ms      | n/a     | 0.00     | 2 runs  | TBT 0 ms; all assertions green                         |
-| 2026-06-29 | Lighthouse CI         | desktop    | `/about`                  | 1172 ms      | n/a     | 0.00     | 2 runs  | TBT 0 ms                                               |
-| 2026-06-29 | Lighthouse CI         | desktop    | `/blog`                   | 1524 ms      | n/a     | 0.00     | 2 runs  | TBT 0 ms                                               |
-| 2026-06-29 | Lighthouse CI         | desktop    | `/blog/nextjs-app-router` | 1795 ms      | n/a     | 0.13     | 2 runs  | TBT 3 ms; CLS 略超 0.1，CI 取中位数通过                |
-| 2026-06-29 | Lighthouse CI         | desktop    | `/projects`               | 1142 ms      | n/a     | 0.00     | 2 runs  | TBT 0 ms                                               |
-| 2026-07-17 | Manual Lighthouse     | mobile     | tracked pages             | 7.40–10.55 s | n/a     | 0–0.0311 | 2/page  | Node 22 representative runs; FCP/LCP warnings; not p75 |
-| 2026-07-05 | Vercel Speed Insights | real users | tracked pages             | pending      | pending | pending  | pending | Fill after enough production traffic exists            |
+| Date       | Source                | Device     | Page                      | LCP          | INP     | CLS      | Count   | Notes                                                                    |
+| ---------- | --------------------- | ---------- | ------------------------- | ------------ | ------- | -------- | ------- | ------------------------------------------------------------------------ |
+| 2026-06-29 | Lighthouse CI         | desktop    | `/`                       | 1877 ms      | n/a     | 0.00     | 2 runs  | TBT 0 ms; all assertions green                                           |
+| 2026-06-29 | Lighthouse CI         | desktop    | `/about`                  | 1172 ms      | n/a     | 0.00     | 2 runs  | TBT 0 ms                                                                 |
+| 2026-06-29 | Lighthouse CI         | desktop    | `/blog`                   | 1524 ms      | n/a     | 0.00     | 2 runs  | TBT 0 ms                                                                 |
+| 2026-06-29 | Lighthouse CI         | desktop    | `/blog/nextjs-app-router` | 1795 ms      | n/a     | 0.13     | 2 runs  | TBT 3 ms; CLS 略超 0.1，CI 取中位数通过                                  |
+| 2026-06-29 | Lighthouse CI         | desktop    | `/projects`               | 1142 ms      | n/a     | 0.00     | 2 runs  | TBT 0 ms                                                                 |
+| 2026-07-17 | Manual Lighthouse     | mobile     | tracked pages             | 7.40–10.55 s | n/a     | 0–0.0311 | 2/page  | Node 22 representative runs; FCP/LCP warnings; not p75                   |
+| 2026-07-17 | Vercel Speed Insights | real users | tracked pages             | pending      | pending | pending  | pending | Project linked; no `VERCEL_TOKEN` available, so metrics were not queried |
 
 ## Escalation Rules
 

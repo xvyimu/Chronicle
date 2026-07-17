@@ -96,10 +96,10 @@
 - [x] 文章交叉链接 — 文章详情底部已有“相关文章”，规则为共享 tag 优先，同 category / 同 series 加权补充；页面测试已覆盖
 - [x] 文章系列 / 专题页增强 — 新增 `/series` 与 `/series/[series]`，主导航、sitemap、SEO 检查、Vitest 与 E2E 均已覆盖
 
-### 需内容决策（等你定方向）：
+### 内容决策 ✅ 已审计 (2026-07-17)：
 
-- [ ] 缺 `source` 字段的文章补 source（仅在确有外部来源或仓库链接时填写；原创文章保持缺省，禁止写空字符串）
-- [ ] 精简冗余 tags（如 Next.js 文章同时有 "前端" "全栈" 语义重叠）
+- [x] `source` 字段审计：仅 Cloudflare Workers / Supabase 两篇存在可验证仓库来源且已填写；其余原创文章保持缺省，无空字符串
+- [x] tags 审计：P9 去泛化后保留技术实体/主题标签，无“前端”与“全栈”等冗余组合
 
 ### 暂不处理：
 
@@ -186,19 +186,19 @@
 > **不做**全量 BEM rewrite / 现规模 Meili·ES / 无 RUM 假 p75 / 正文文字脱敏 blur。  
 > 方案：`docs/content-seo-plan-2026-07-12.md` · 批处理：`scripts/_apply-content-seo-p9.mjs`
 
-- [ ] Google Search Console + Bing Webmaster：属性校验 + 提交 `https://incca.ccwu.cc/sitemap.xml`（**需你账号**）
+- [ ] Google Search Console + Bing Webmaster：属性校验 + 提交 `https://incca.ccwu.cc/sitemap.xml`（**需账号；2026-07-17 用户明确不允许登录，暂停至重新授权**）
 - [x] 落库：`docs/content-seo-plan-2026-07-12.md` + 14 篇 checklist
 - [x] 14 篇 MDX：`updatedAt`、description 意图句、文首结论 blockquote、`## 延伸阅读` ≥2 站内链、tags 去泛化
 - [x] 四簇互链：运维发布 / 数据缓存 / 性能前端 / 边缘工具
 - [x] `pnpm check:seo` 通过
-- [ ] （有 GSC 展示后）用 query 数据替换代理指标，再改标题钩子
+- [ ] （有 GSC 展示且重新授权账号访问后）用 query 数据替换代理指标，再改标题钩子
 
 ## Future · 远期
 
-- [ ] 性能基线: 回填 Speed Insights **真实** p75（依赖生产流量累计；禁止无样本造数）
-- [ ] 文章量 >200 时再评估：构建期 JSON 索引或站内外部引擎（Meili 等）
-- [ ] MDX **真实本地正文图**批量 LQIP blur（先有 `public/images/blog/**`；扩展 `gen:blur`+`check:blur`；**非**正文脱敏）
-- [ ] 可选：`prose`/`article-ui` 迁文章 layout（Tailwind v4 须显式 import，ROI 待 Coverage 确认）
+- [ ] 性能基线: 回填 Speed Insights **真实** p75（2026-07-17 已确认项目链接正常，但进程/用户/机器环境均无 `VERCEL_TOKEN`；禁止无凭据或无样本造数）
+- [ ] 文章量 >200 时再评估：当前 14 篇，未达到构建期 JSON 索引或外部引擎（Meili 等）门槛
+- [ ] MDX **真实本地正文图**批量 LQIP blur：当前无 `public/images/blog/**` 和真实正文图片，待素材出现后扩展 `gen:blur`+`check:blur`
+- [ ] 可选：`prose`/`article-ui` 迁文章 layout（2026-07-17 审计：`prose` 同时供 about/blog 使用，根响应式规则存在父子 CSS 顺序约束；待 Coverage 与层叠迁移方案证明 ROI）
 - [x] mobile Lighthouse preset 评估：已新增手动基线配置 `lighthouse.mobile.config.js`，暂不接入 CI 强门禁
 - [x] 导航页 `/links` UI 迭代：metadata tags + 10 分类 123 条收藏、关键词筛选和空状态已落地
 - [x] P2 UX 收尾：搜索无结果入口、404/error 导流、链接目录筛选已完成

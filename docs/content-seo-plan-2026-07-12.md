@@ -73,6 +73,8 @@
 
 ## 5. 搜索控制台（需账号 · 人工）
 
+> 2026-07-17 状态：技术前置（生产 sitemap、robots、SEO 检查）已完成；用户明确不允许登录 Google/Bing 账号，因此属性验证、GSC 导入和 sitemap 提交保持暂停。恢复执行必须先获得新的账号访问授权。
+
 1. [Google Search Console](https://search.google.com/search-console)
    - 属性：域名 `ccwu.cc` **或** 网址前缀 `https://incca.ccwu.cc`
    - 验证：DNS TXT 或 HTML 文件（Vercel 项目可挂 public 验证文件）
