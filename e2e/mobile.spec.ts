@@ -78,6 +78,28 @@ test.describe('mobile critical flows', () => {
     await expectNoHorizontalOverflow(page);
   });
 
+  test('applies the project title responsive size at runtime', async ({ page }) => {
+    await page.goto('/projects/nav-site', { waitUntil: 'domcontentloaded' });
+
+    const title = page.locator('.project-detail__title');
+    await expect(title).toBeVisible({ timeout: 10000 });
+    const sizes = await title.evaluate((element) => {
+      const rootSize = Number.parseFloat(
+        getComputedStyle(document.documentElement).fontSize,
+      );
+      return {
+        actual: Number.parseFloat(getComputedStyle(element).fontSize),
+        expected: Math.min(
+          Math.max(2.2 * rootSize, window.innerWidth * 0.12),
+          3.6 * rootSize,
+        ),
+      };
+    });
+
+    expect(sizes.actual).toBeCloseTo(sizes.expected, 1);
+    await expectNoHorizontalOverflow(page);
+  });
+
   test('renders the curated links directory and new VPS entries on mobile', async ({
     page,
   }) => {

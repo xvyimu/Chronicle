@@ -297,8 +297,8 @@
     white-space: normal;
   }
 
-  .project-detail__title {
-    font-size: clamp(2.2rem, 12vw, 3.6rem);
+  .project-detail {
+    --project-detail-title-size: clamp(2.2rem, 12vw, 3.6rem);
   }
 
   .not-found__code {
@@ -324,10 +324,13 @@
 }
 
 @media (max-width: 374px) {
+  .project-detail {
+    --project-detail-title-size: 2.1rem;
+  }
+
   .section__title,
   .hero__title,
-  .hero__name,
-  .project-detail__title {
+  .hero__name {
     font-size: 2.1rem;
   }
 
