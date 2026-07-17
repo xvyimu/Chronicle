@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import ThemeToggle from '@/components/ui/ThemeToggle';
@@ -18,13 +18,15 @@ import { MAIN_NAV_ITEMS, isNavItemActive } from '@/lib/navigation';
 function NavLinks({
   pathname,
   onNavigate,
+  firstLinkRef,
 }: {
   pathname: string;
   onNavigate?: () => void;
+  firstLinkRef?: RefObject<HTMLAnchorElement | null>;
 }) {
   return (
     <>
-      {MAIN_NAV_ITEMS.map((item) => {
+      {MAIN_NAV_ITEMS.map((item, index) => {
         const isActive = isNavItemActive(pathname, item.href);
         return (
           <Link
@@ -33,6 +35,7 @@ function NavLinks({
             className={`header__link ${isActive ? 'header__link--active' : ''}`}
             aria-current={isActive ? 'page' : undefined}
             onClick={onNavigate}
+            ref={index === 0 ? firstLinkRef : undefined}
           >
             {item.label}
           </Link>
@@ -46,6 +49,7 @@ export default function Header() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const mobileFirstLinkRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 16);
@@ -156,10 +160,18 @@ export default function Header() {
             aria-label="主导航"
             overlayClassName={`header__backdrop${mobileOpen ? ' is-open' : ''}`}
             className={`header__nav header__nav--sheet${mobileOpen ? ' is-open' : ''}`}
+            onOpenAutoFocus={(event) => {
+              event.preventDefault();
+              mobileFirstLinkRef.current?.focus();
+            }}
           >
             <SheetTitle className="sr-only">站点导航</SheetTitle>
             <SheetDescription className="sr-only">移动端主导航菜单</SheetDescription>
-            <NavLinks pathname={pathname} onNavigate={() => setMobileOpen(false)} />
+            <NavLinks
+              pathname={pathname}
+              onNavigate={() => setMobileOpen(false)}
+              firstLinkRef={mobileFirstLinkRef}
+            />
           </SheetContent>
         </Sheet>
       </div>

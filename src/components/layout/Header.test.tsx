@@ -146,15 +146,13 @@ describe('Header', () => {
     const mobileNav = await screen.findByLabelText('主导航', {
       selector: '#mobile-nav',
     });
+    const firstLink = mobileNav.querySelector('a');
+    expect(firstLink).toBeInstanceOf(HTMLAnchorElement);
+    if (!(firstLink instanceof HTMLAnchorElement)) {
+      throw new Error('Expected the mobile navigation to render a link.');
+    }
     await waitFor(() => {
-      const activeElement = document.activeElement;
-      expect(activeElement).toBeInstanceOf(HTMLElement);
-      if (!(activeElement instanceof HTMLElement)) {
-        throw new Error(
-          'Expected the mobile navigation to receive an HTML focus target.',
-        );
-      }
-      expect(mobileNav).toContainElement(activeElement);
+      expect(firstLink).toHaveFocus();
     });
   });
 
