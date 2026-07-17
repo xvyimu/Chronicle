@@ -41,7 +41,7 @@ Mobile Lighthouse is tracked manually with `lighthouse.mobile.config.js`. It is
 not wired into CI yet, so mobile variance cannot block deploys while the baseline
 is still being established.
 
-Use it after a successful production build:
+Use it after a successful production build, under the project-supported Node 22 runtime:
 
 ```bash
 pnpm build
@@ -60,6 +60,36 @@ Manual mobile coverage:
 Results are written to `.lighthouse-mobile/`. Record stable findings in the
 baseline log below. Treat repeated warnings as investigation signals, not as
 automatic release blockers.
+
+The manual config uses port `3101` so an unrelated local service on the common
+port `3000` cannot silently contaminate the reports.
+
+Do not establish the baseline under Node 24: Chrome's temporary-profile cleanup
+can fail with `EPERM` on this workstation, while CI targets Node 22. The command
+uses a temporary CLI download and intentionally does not add a large manual-only
+toolchain to the project's development dependencies.
+
+### Manual Mobile Lighthouse Baseline (2026-07-17, Node 22)
+
+Source: local production build, Lighthouse CI mobile emulation, 390 × 844 at
+3× DPR, two runs per page. The table records LHCI's representative run. These
+are lab values, not real-user p75 measurements.
+
+| Page                      | Perf | A11y | BestPrac | SEO  | FCP     | LCP      | CLS    | TBT   |
+| ------------------------- | ---- | ---- | -------- | ---- | ------- | -------- | ------ | ----- |
+| `/`                       | 0.57 | 0.96 | 1.00     | 1.00 | 7827 ms | 9794 ms  | 0.0000 | 1 ms  |
+| `/blog`                   | 0.59 | 0.95 | 1.00     | 1.00 | 6780 ms | 8730 ms  | 0.0001 | 0 ms  |
+| `/blog/nextjs-app-router` | 0.58 | 0.96 | 1.00     | 1.00 | 7524 ms | 9188 ms  | 0.0311 | 18 ms |
+| `/projects`               | 0.62 | 0.96 | 1.00     | 1.00 | 5577 ms | 7690 ms  | 0.0001 | 0 ms  |
+| `/about`                  | 0.63 | 0.96 | 1.00     | 1.00 | 5277 ms | 7404 ms  | 0.0001 | 0 ms  |
+| `/links`                  | 0.57 | 0.96 | 1.00     | 1.00 | 8736 ms | 10554 ms | 0.0001 | 0 ms  |
+
+Observed result: accessibility, best-practices, SEO, CLS and TBT stayed within
+the manual warning thresholds. Performance score, FCP and LCP warned on the
+local mobile simulation. The reports identify render-blocking route CSS as the
+main FCP opportunity; this is an investigation baseline, not evidence of a
+field regression. Keep deploy non-blocking until CI or real-user data confirms
+the same pattern.
 
 ## CI Baseline Snapshot (2026-06-28)
 
@@ -83,7 +113,7 @@ automatic release blockers.
 | `/blog/nextjs-app-router` | 0.83 | 0.96 | 1.00     | 1.00 | 1083 ms | 1795 ms | 0.13 | 3 ms |
 | `/projects`               | 0.97 | 1.00 | 1.00     | 1.00 | 872 ms  | 1142 ms | 0.00 | 0 ms |
 
-> 所有断言通过（CI success）。`/blog/nextjs-app-router` 的 perf=0.83 略低于 0.85 阈值、CLS=0.13 略超 0.1，但 CI 取 2 次中位数通过。2026-07-05 的 CI 回归确认主要来源是固定背景层 `.site-backdrop__mesh` 冷加载时的几何变化；背景舞台已补充关键内联几何样式，网格圈改由 `.site-backdrop__stage::before` 静态绘制。TBT 全部 0–3 ms，远低于 300 ms 阈值，印证 SSG 静态站的响应性优势。Speed Insights p75 见下表，需生产流量后填充。
+> 所有断言通过（CI success）。`/blog/nextjs-app-router` 的 perf=0.83 略低于 0.85 阈值、CLS=0.13 略超 0.1，但 CI 取 2 次中位数通过。2026-07-05 的 CI 回归确认主要来源是固定背景层 `.site-backdrop__mesh` 冷加载时的几何变化；背景舞台已补充关键内联几何样式，网格圈改由 `.site-backdrop__stage::before` 静态绘制。TBT 全部 0–3 ms，远低于 300 ms 阈值，说明当前动态 HTML 架构的交互主线程仍保持轻量。Speed Insights p75 见下表，需生产流量后填充。
 >
 > **2026-07-17 补记：** 落地 full-stack-audit：CSS 路由下沉；JSON strict 生产；MagneticCard rAF；文章标题 clamp 收敛 + code-toolbar min-height；CI e2e+lighthouse 同 job 单次 build；RSS 拒绝 production+localhost。
 
@@ -122,15 +152,15 @@ the actual project name.
 
 ## Baseline Log
 
-| Date       | Source                | Device     | Page                      | LCP p75 | INP p75 | CLS p75 | Count   | Notes                                                                   |
-| ---------- | --------------------- | ---------- | ------------------------- | ------- | ------- | ------- | ------- | ----------------------------------------------------------------------- |
-| 2026-06-29 | Lighthouse CI         | desktop    | `/`                       | 1877 ms | n/a     | 0.00    | 2 runs  | TBT 0 ms; all assertions green                                          |
-| 2026-06-29 | Lighthouse CI         | desktop    | `/about`                  | 1172 ms | n/a     | 0.00    | 2 runs  | TBT 0 ms                                                                |
-| 2026-06-29 | Lighthouse CI         | desktop    | `/blog`                   | 1524 ms | n/a     | 0.00    | 2 runs  | TBT 0 ms                                                                |
-| 2026-06-29 | Lighthouse CI         | desktop    | `/blog/nextjs-app-router` | 1795 ms | n/a     | 0.13    | 2 runs  | TBT 3 ms; CLS 略超 0.1，CI 取中位数通过                                 |
-| 2026-06-29 | Lighthouse CI         | desktop    | `/projects`               | 1142 ms | n/a     | 0.00    | 2 runs  | TBT 0 ms                                                                |
-| 2026-07-05 | Manual Lighthouse     | mobile     | tracked pages             | pending | pending | pending | pending | Use `lighthouse.mobile.config.js`; record after first stable manual run |
-| 2026-07-05 | Vercel Speed Insights | real users | tracked pages             | pending | pending | pending | pending | Fill after enough production traffic exists                             |
+| Date       | Source                | Device     | Page                      | LCP          | INP     | CLS      | Count   | Notes                                                  |
+| ---------- | --------------------- | ---------- | ------------------------- | ------------ | ------- | -------- | ------- | ------------------------------------------------------ |
+| 2026-06-29 | Lighthouse CI         | desktop    | `/`                       | 1877 ms      | n/a     | 0.00     | 2 runs  | TBT 0 ms; all assertions green                         |
+| 2026-06-29 | Lighthouse CI         | desktop    | `/about`                  | 1172 ms      | n/a     | 0.00     | 2 runs  | TBT 0 ms                                               |
+| 2026-06-29 | Lighthouse CI         | desktop    | `/blog`                   | 1524 ms      | n/a     | 0.00     | 2 runs  | TBT 0 ms                                               |
+| 2026-06-29 | Lighthouse CI         | desktop    | `/blog/nextjs-app-router` | 1795 ms      | n/a     | 0.13     | 2 runs  | TBT 3 ms; CLS 略超 0.1，CI 取中位数通过                |
+| 2026-06-29 | Lighthouse CI         | desktop    | `/projects`               | 1142 ms      | n/a     | 0.00     | 2 runs  | TBT 0 ms                                               |
+| 2026-07-17 | Manual Lighthouse     | mobile     | tracked pages             | 7.40–10.55 s | n/a     | 0–0.0311 | 2/page  | Node 22 representative runs; FCP/LCP warnings; not p75 |
+| 2026-07-05 | Vercel Speed Insights | real users | tracked pages             | pending      | pending | pending  | pending | Fill after enough production traffic exists            |
 
 ## Escalation Rules
 

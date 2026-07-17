@@ -50,7 +50,7 @@
 | ------- | ------------------------------------------------------------------------------ | ---- |
 | Phase 1 | EditorialHero 首屏视觉改造                                                     | ✅   |
 | Phase 2 | Manifesto / ReadingPath / FeaturedArticleRail / CuratedLinksPreview + 信息架构 | ✅   |
-| Phase 3 | LoadingIntro / RevealOnScroll / 章节进入动画 / 首屏视差                        | ✅   |
+| Phase 3 | RevealOnScroll / 章节进入动画 / 首屏视差                                       | ✅   |
 | 额外    | HomeCtaSection 尾屏 CTA                                                        | ✅   |
 
 ### 首页渲染顺序（`src/app/page.tsx`）
@@ -93,7 +93,7 @@ Claude Code 接手后按以下顺序推进：
 2026-07-03 已完成的稳定性修复：
 
 - `/blog?page=2` 已根据 `searchParams.page` 渲染对应分页内容，单测与 `e2e/blog.spec.ts` 均覆盖。
-- `LoadingIntro` 已改为安全检测 `window.requestIdleCallback`，不支持时 fallback 到 `setTimeout`，并补清理测试。
+- 根级 `LoadingIntro` 已于 2026-07-17 删除，避免延迟出现的加载遮罩造成视觉闪烁；保留博客路由级 skeleton。
 - `src/lib/categories.ts` 已以仓库层归一化后的 `post.category` 为来源，显式分类不再丢失。
 - `src/app/blog/[slug]/page.tsx` 已在 series/category/tags 任一存在时渲染徽章容器。
 
@@ -188,10 +188,10 @@ D:\blog\
 │   │       ├── home-sections.css  # Manifesto、ReadingPath、ArticleRail、Links、CTA
 │   │       ├── prose.css         # 文章排版（.prose、code block）
 │   │       ├── project-detail.css # 项目详情
-│   │       ├── animations.css    # 动画（reveal、fade-in-up、loading-intro）
+│   │       ├── animations.css    # 动画（reveal、fade-in-up）
 │   │       └── responsive.css     # 响应式断点（最后加载,覆盖前面）
 │   ├── components/
-│   │   ├── home/               # 首页专属组件（8 个:EditorialHero/Manifesto/ReadingPath/ArticleRail/CuratedLinks/HomeCta/RevealOnScroll/LoadingIntro）
+│   │   ├── home/               # 首页专属组件（7 个:EditorialHero/Manifesto/ReadingPath/ArticleRail/CuratedLinks/HomeCta/RevealOnScroll）
 │   │   ├── blog/               # 博客组件（BlogCard/SearchBar/Pagination/CodeBlock/TOC/ReadingProgress/ReadingPreferences/ImageZoom/MdxContent/TagLink）
 │   │   ├── layout/             # Header/Footer + SiteBackdropStage + SiteBackdropParallax
 │   │   ├── ui/                 # ThemeToggle/BackToTop/MagneticCard

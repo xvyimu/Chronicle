@@ -33,7 +33,7 @@ export type SearchResponse = {
 
 export type SearchErrorBody = {
   error: string;
-  code: 'QUERY_TOO_LONG' | 'RATE_LIMITED' | 'BAD_REQUEST';
+  code: 'QUERY_TOO_LONG' | 'RATE_LIMITED' | 'BAD_REQUEST' | 'SERVER_ERROR';
 };
 
 export type SearchErrorState =

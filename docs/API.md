@@ -30,6 +30,10 @@ Public endpoint used by the blog search UI.
 | ------ | ---------------- | ------------------------------------------------- |
 | 400    | `QUERY_TOO_LONG` | `q` exceeds max length                            |
 | 429    | `RATE_LIMITED`   | Origin process window exceeded; `Retry-After` set |
+| 500    | `SERVER_ERROR`   | Content repository or search engine failure       |
+
+`500` responses are not cached and never include internal filesystem paths or
+stack traces.
 
 ### Rate limit semantics
 

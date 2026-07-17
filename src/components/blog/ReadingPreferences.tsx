@@ -59,10 +59,16 @@ export default function ReadingPreferences({
   // Apply font size + width to the prose container (skip until restored)
   useEffect(() => {
     if (!hydrated) return;
+    const fontValue = FONT_SIZE_MAP[fontSize];
+    const widthValue = WIDTH_MAP[width];
+    const root = document.documentElement;
+    root.style.setProperty('--reading-font-size', fontValue);
+    root.style.setProperty('--reading-width', widthValue);
+
     const el = document.getElementById(targetId);
     if (!el) return;
-    el.style.setProperty('--reading-font-size', FONT_SIZE_MAP[fontSize]);
-    el.style.setProperty('--reading-width', WIDTH_MAP[width]);
+    el.style.setProperty('--reading-font-size', fontValue);
+    el.style.setProperty('--reading-width', widthValue);
   }, [fontSize, width, targetId, hydrated]);
 
   const fontLabel = FONT_TITLES[fontSize];

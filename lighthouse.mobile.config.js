@@ -9,18 +9,20 @@
  *   pnpm build
  *   npx @lhci/cli autorun --config=./lighthouse.mobile.config.js
  */
+const MOBILE_BASE_URL = 'http://localhost:3101';
+
 module.exports = {
   ci: {
     collect: {
       url: [
-        'http://localhost:3000/',
-        'http://localhost:3000/blog',
-        'http://localhost:3000/blog/nextjs-app-router',
-        'http://localhost:3000/projects',
-        'http://localhost:3000/about',
-        'http://localhost:3000/links',
+        `${MOBILE_BASE_URL}/`,
+        `${MOBILE_BASE_URL}/blog`,
+        `${MOBILE_BASE_URL}/blog/nextjs-app-router`,
+        `${MOBILE_BASE_URL}/projects`,
+        `${MOBILE_BASE_URL}/about`,
+        `${MOBILE_BASE_URL}/links`,
       ],
-      startServerCommand: 'pnpm start',
+      startServerCommand: 'pnpm exec next start -p 3101',
       startServerReadyPattern: 'ready',
       startServerReadyTimeout: 30000,
       numberOfRuns: 2,

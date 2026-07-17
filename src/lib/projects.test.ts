@@ -99,6 +99,29 @@ describe('parseProjects', () => {
   it('throws on non-array input', () => {
     expect(() => parseProjects('not-an-array')).toThrow();
   });
+
+  it('rejects duplicate project ids', () => {
+    expect(() =>
+      parseProjects([
+        {
+          id: 'duplicate',
+          title: 'A',
+          description: 'A',
+          tags: [],
+          featured: false,
+          year: 2026,
+        },
+        {
+          id: 'duplicate',
+          title: 'B',
+          description: 'B',
+          tags: [],
+          featured: false,
+          year: 2025,
+        },
+      ]),
+    ).toThrow(/duplicate project id/i);
+  });
 });
 
 describe('ProjectsRepository', () => {

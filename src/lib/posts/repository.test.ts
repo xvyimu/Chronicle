@@ -98,6 +98,44 @@ describe('createPostRepository', () => {
       expect(repo.getAllPosts()).toEqual([]);
     });
 
+    it('throws in production when the blog directory is missing', () => {
+      const originalEnv = process.env.NODE_ENV;
+      (process.env as Record<string, string>).NODE_ENV = 'production';
+      try {
+        const repo = createPostRepository(createInMemorySource({}));
+        expect(() => repo.getAllPosts()).toThrow(/内容目录不存在/);
+      } finally {
+        (process.env as Record<string, string>).NODE_ENV = originalEnv;
+      }
+    });
+
+    it('returns a stable metadata array for repeated reads', () => {
+      const repo = createPostRepository(createInMemorySource(makeFixture()));
+      expect(repo.getAllPosts()).toBe(repo.getAllPosts());
+    });
+
+    it('rejects duplicate slugs after the date prefix is removed', () => {
+      const repo = createPostRepository(
+        createInMemorySource({
+          [`${BLOG}/2026-06-same.mdx`]: `---
+title: First
+description: First
+date: '2026-06-01'
+---
+
+Body`,
+          [`${BLOG}/2026-07-same.mdx`]: `---
+title: Second
+description: Second
+date: '2026-07-01'
+---
+
+Body`,
+        }),
+      );
+      expect(() => repo.getAllPosts()).toThrow(/重复 slug/);
+    });
+
     it('applies zod defaults (published=true, featured=false, tags=[])', () => {
       const repo = createPostRepository(
         createInMemorySource({

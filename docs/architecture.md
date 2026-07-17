@@ -157,7 +157,7 @@ HomeCtaSection
 
 | 目录                   | 职责                                                                                             |
 | ---------------------- | ------------------------------------------------------------------------------------------------ |
-| `components/home/`     | 首页叙事、精选内容、滚动 reveal、首屏 loading                                                    |
+| `components/home/`     | 首页叙事、精选内容、滚动 reveal                                                                  |
 | `components/blog/`     | BlogCard、SearchBar、Pagination、MdxContent、TOC、ReadingProgress、ReadingPreferences、ImageZoom |
 | `components/layout/`   | Header、Footer、PageSection、ArchiveCard、EmptyState、SiteBackdropStage、SiteBackdropParallax    |
 | `components/projects/` | ProjectCard                                                                                      |
@@ -186,9 +186,9 @@ HomeCtaSection
 
 ## 6. CSS 与视觉架构
 
-Tailwind v4 的 `@tailwindcss/postcss` 会静默丢弃 `globals.css` 内的 CSS `@import`，所以所有 CSS 模块必须在 `src/app/layout.tsx` 中显式 import。
+Tailwind v4 的 `@tailwindcss/postcss` 会静默丢弃 `globals.css` 内的 CSS `@import`，所以所有 CSS 模块必须在拥有该样式的根/segment `layout.tsx` 或页面中显式 import。
 
-加载顺序必须保持：
+根 layout 的全局加载顺序必须保持：
 
 ```text
 tokens.css
@@ -196,19 +196,15 @@ base.css
 components.css
 archive.css
 controls.css
-links.css
 blog-ui.css
-search-ui.css
 article-ui.css
 backdrop.css
-home.css
-home-hero.css
-home-sections.css
 prose.css
-project-detail.css
 animations.css
 responsive.css
 ```
+
+路由专属模块下沉到最近入口：首页 `page.tsx` 导入 `home.css`、`home-hero.css`、`home-sections.css`；`/blog` layout 导入 `search-ui.css`；`/links` layout 导入 `links.css`；`/projects/[id]` layout 导入 `project-detail.css`。这样保持显式依赖关系，同时避免所有路由下载无关样式。
 
 职责分配：
 
@@ -227,7 +223,7 @@ responsive.css
 - `home-sections.css`：首页 Manifesto、ReadingPath、ArticleRail、链接预览、项目和 CTA；
 - `prose.css`：MDX 正文排版与代码块；
 - `project-detail.css`：项目详情；
-- `animations.css`：reveal、loading、fade motion；
+- `animations.css`：reveal、fade motion；
 - `responsive.css`：移动端覆盖，最后加载。
 
 颜色应通过 CSS 变量引用，避免硬编码；结构类使用 BEM，自定义状态或布局可配合少量 Tailwind utility。

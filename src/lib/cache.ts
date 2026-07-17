@@ -44,7 +44,7 @@ export interface Cache<T> {
 }
 
 /**
- * 全局缓存注册表 — 持有所有 createCache 实例的弱引用（通过 invalidate 方法）。
+ * 全局缓存注册表 — 持有所有 createCache 实例（通过 invalidate 方法）。
  * 用于测试场景下一次性重置所有缓存，避免 swap ContentSource 后读到旧数据。
  */
 const _registry = new Set<Cache<unknown>>();
@@ -66,7 +66,7 @@ export function resetAllCaches(): void {
 
 export function createCache<T>(options?: CacheOptions): Cache<T> {
   let value: T | null = null;
-  let cachedSignature: string | null = null;
+  let cachedSignature: string | null | undefined;
 
   const cache: Cache<T> = {
     get(): T | null {
@@ -79,7 +79,7 @@ export function createCache<T>(options?: CacheOptions): Cache<T> {
 
     invalidate(): void {
       value = null;
-      cachedSignature = null;
+      cachedSignature = undefined;
     },
 
     getOrCompute(factory: () => T): T {
@@ -100,7 +100,7 @@ export function createCache<T>(options?: CacheOptions): Cache<T> {
           const m = source.getMtime(options.watchPath);
           currentSignature = m === null ? null : String(m);
         }
-        if (currentSignature !== null && currentSignature !== cachedSignature) {
+        if (currentSignature !== cachedSignature) {
           value = null;
           cachedSignature = currentSignature;
         }

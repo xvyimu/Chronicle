@@ -71,18 +71,34 @@ export async function GET(request: Request) {
     });
   }
 
-  const posts = getAllPosts();
-  const results = searchPostsCached(posts, q, limit);
-  const body: SearchResponse = {
-    query: q,
-    results,
-    count: results.length,
-    source: 'server',
-  };
+  try {
+    const posts = getAllPosts();
+    const results = searchPostsCached(posts, q, limit);
+    const body: SearchResponse = {
+      query: q,
+      results,
+      count: results.length,
+      source: 'server',
+    };
 
-  return NextResponse.json(body, {
-    headers: cacheHeaders(),
-  });
+    return NextResponse.json(body, {
+      headers: cacheHeaders(),
+    });
+  } catch (error) {
+    // Log only the error class; never expose filesystem paths or content to clients.
+    console.error(
+      '[search] internal failure',
+      error instanceof Error ? error.name : typeof error,
+    );
+    const body: SearchErrorBody = {
+      error: 'search unavailable',
+      code: 'SERVER_ERROR',
+    };
+    return NextResponse.json(body, {
+      status: 500,
+      headers: { 'Cache-Control': 'no-store' },
+    });
+  }
 }
 
 function cacheHeaders(): Record<string, string> {

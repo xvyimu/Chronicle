@@ -219,6 +219,24 @@ describe('createCache', () => {
 
       setContentSource(prevSource);
     });
+
+    it('invalidates when a watched single file is deleted', () => {
+      const files: Record<string, number> = { 'config.json': 500 };
+      const prevSource = setContentSource({
+        readFile: () => null,
+        readDir: () => null,
+        getMtime: (p) => files[p] ?? null,
+      });
+      const cache = createCache<string>({ watchPath: 'config.json' });
+      const factory = vi.fn(() => (files['config.json'] ? 'present' : 'missing'));
+
+      expect(cache.getOrCompute(factory)).toBe('present');
+      delete files['config.json'];
+      expect(cache.getOrCompute(factory)).toBe('missing');
+      expect(factory).toHaveBeenCalledTimes(2);
+
+      setContentSource(prevSource);
+    });
   });
 
   describe('production environment', () => {

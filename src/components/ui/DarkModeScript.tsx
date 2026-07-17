@@ -12,7 +12,7 @@ export default function DarkModeScript({ nonce }: { nonce?: string }) {
     <script
       nonce={nonce}
       dangerouslySetInnerHTML={{
-        __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
+        __html: `(function(){try{var r=document.documentElement;r.classList.add('js');var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){r.classList.add('dark')}var f=localStorage.getItem('reading-font-size'),w=localStorage.getItem('reading-width'),fm={sm:'0.92rem',md:'1rem',lg:'1.12rem'},wm={narrow:'640px',normal:'720px',wide:'840px'};if(fm[f])r.style.setProperty('--reading-font-size',fm[f]);if(wm[w])r.style.setProperty('--reading-width',wm[w])}catch(e){}})()`,
       }}
     />
   );

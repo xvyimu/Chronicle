@@ -32,6 +32,8 @@ describe('ReadingPreferences', () => {
     cleanup();
     const el = document.getElementById('article-content');
     if (el) el.remove();
+    document.documentElement.style.removeProperty('--reading-font-size');
+    document.documentElement.style.removeProperty('--reading-width');
   });
 
   it('renders a localized reading settings panel', async () => {
@@ -161,6 +163,9 @@ describe('ReadingPreferences', () => {
     await waitFor(() => {
       const el = document.getElementById('article-content');
       expect(el?.style.getPropertyValue('--reading-font-size')).toBe('1.12rem');
+      expect(document.documentElement.style.getPropertyValue('--reading-font-size')).toBe(
+        '1.12rem',
+      );
     });
   });
 

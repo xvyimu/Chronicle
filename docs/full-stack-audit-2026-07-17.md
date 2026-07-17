@@ -584,3 +584,32 @@ npx @lhci/cli autorun --config=./lighthouse.config.js
 ---
 
 _审查人角色：资深全栈代码审查 · 方法：静态阅读关键路径 + 生产探针 + 既有 CI/门禁证据 · 日期：2026-07-17_
+
+## 8. 2026-07-17 Follow-up implementation
+
+- **FE-5 assessed:** Next 16.2's generated `Noto Sans SC` CSS contains CJK
+  `unicode-range` shards. `subsets: ['latin']` limits preload selection; it
+  does not make Chinese body copy use a system fallback. Keep the smaller
+  preload strategy rather than forcing all CJK shards into the initial request.
+- **FE-6 completed:** removed the root `LoadingIntro` overlay, its client-side
+  idle timer, test and CSS. Route-level blog skeletons remain as loading
+  boundaries, so navigation feedback is preserved without the delayed flash.
+- **CFG-2 assessed:** `vercel build --prod` + `deploy --prebuilt` needs Vercel
+  project authentication and a production workflow change. It was intentionally
+  not executed without that authority; the current remote-build deploy remains
+  protected by production-content smoke.
+- **CFG-4 completed in scope:** removed the unused `postcss-import` plugin and
+  dependency. Stryker remains a documented, ad-hoc mutation-testing tool.
+- **CFG-5 completed:** mobile Lighthouse keeps its temporary CLI command and
+  ignored report directories. A Node 22 run now records six routes × two runs in
+  `docs/performance-baseline.md`; mobile performance/FCP/LCP remain warnings and
+  do not block deploy. The manual config uses port 3101 to avoid unrelated local
+  services contaminating the report.
+- **Final review follow-ups completed:** frontmatter rejects unknown keys and
+  invalid calendar dates; posts/projects reject duplicate public identifiers;
+  production search failures return a structured no-store 500; RSS now fails on
+  invalid frontmatter instead of silently publishing an incomplete feed.
+- **Progressive enhancement completed:** reveal content remains visible without
+  JavaScript and uses a pre-paint `js` marker for animation; reading preferences
+  synchronize root CSS variables across client navigation; search empty states
+  are announced as status messages.

@@ -9,6 +9,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import { pathToFileURL } from 'node:url';
 import { Feed, type Category } from 'feed';
 import { parseFrontmatter } from '@/lib/parse-frontmatter';
 import readingTime from 'reading-time';
@@ -66,11 +67,11 @@ function getPostCategories(post: RssPost): Category[] {
   ]).map((name) => ({ name }));
 }
 
-function loadRssPosts(filenames: string[]): RssPost[] {
+export function loadRssPosts(filenames: string[], postsDir = POSTS_DIR): RssPost[] {
   const posts: RssPost[] = [];
 
   for (const filename of filenames) {
-    const raw = fs.readFileSync(path.join(POSTS_DIR, filename), 'utf-8');
+    const raw = fs.readFileSync(path.join(postsDir, filename), 'utf-8');
     const { data, content } = parseFrontmatter(raw);
 
     const parsed = postFrontmatterSchema.safeParse(data);
@@ -78,8 +79,7 @@ function loadRssPosts(filenames: string[]): RssPost[] {
       const issues = parsed.error.issues
         .map((i) => `${i.path.join('.')}: ${i.message}`)
         .join('; ');
-      console.warn(`[RSS] 跳过 ${filename}: ${issues}`);
-      continue;
+      throw new Error(`[RSS] ${filename} frontmatter invalid: ${issues}`);
     }
 
     const frontmatter = parsed.data;
@@ -95,6 +95,17 @@ function loadRssPosts(filenames: string[]): RssPost[] {
   }
 
   return posts;
+}
+
+export function assertPostsDirectory(postsDir = POSTS_DIR): boolean {
+  if (fs.existsSync(postsDir)) return true;
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(`[RSS] content/blog directory is missing: ${postsDir}`);
+  }
+
+  console.warn('[RSS] content/blog 目录不存在，跳过');
+  return false;
 }
 
 function assertProductionSiteUrl() {
@@ -114,13 +125,10 @@ function assertProductionSiteUrl() {
   }
 }
 
-function generateRss() {
+export function generateRss() {
   assertProductionSiteUrl();
 
-  if (!fs.existsSync(POSTS_DIR)) {
-    console.warn('[RSS] content/blog 目录不存在，跳过');
-    return;
-  }
+  if (!assertPostsDirectory()) return;
 
   const filenames = fs
     .readdirSync(POSTS_DIR)
@@ -184,4 +192,7 @@ function generateRss() {
   console.log('[RSS] feed.xml + feed.json 已生成');
 }
 
-generateRss();
+const entryPath = process.argv[1];
+if (entryPath && import.meta.url === pathToFileURL(path.resolve(entryPath)).href) {
+  generateRss();
+}

@@ -26,7 +26,22 @@ describe('DarkModeScript', () => {
     render(<DarkModeScript />);
     const script = document.querySelector('script');
     expect(script?.innerHTML).toContain('dark');
-    expect(script?.innerHTML).toContain('document.documentElement.classList');
+    expect(script?.innerHTML).toContain("classList.add('dark')");
+  });
+
+  it('contains pre-paint reading preference restoration logic', () => {
+    render(<DarkModeScript />);
+    const script = document.querySelector('script');
+    expect(script?.innerHTML).toContain('reading-font-size');
+    expect(script?.innerHTML).toContain('reading-width');
+    expect(script?.innerHTML).toContain('--reading-font-size');
+    expect(script?.innerHTML).toContain('--reading-width');
+  });
+
+  it('marks the document as JavaScript-enabled before reveal content is parsed', () => {
+    render(<DarkModeScript />);
+    const script = document.querySelector('script');
+    expect(script?.innerHTML).toContain("classList.add('js')");
   });
 
   it('is wrapped in try-catch', () => {

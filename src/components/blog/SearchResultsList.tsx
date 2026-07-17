@@ -54,8 +54,13 @@ export default function SearchResultsList({
       className="search-results-popover"
       role="listbox"
       aria-label="搜索结果"
+      aria-busy={!fuseReady}
     >
-      <p className="search-results-popover__summary">
+      <p
+        className="search-results-popover__summary"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         {!fuseReady ? (
           <span>正在加载搜索…</span>
         ) : errorCopy ? (
@@ -138,7 +143,7 @@ export default function SearchResultsList({
           );
         })
       ) : fuseReady && results.length === 0 ? (
-        <div className="search-results-popover__empty">
+        <div className="search-results-popover__empty" role="status">
           <strong>没有匹配的文章</strong>
           <span>换个关键词，或从下面的入口重新探索。</span>
           <div className="search-results-popover__empty-actions">

@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 
 // Mock hooks
 const mockReduced = vi.fn().mockReturnValue(false);
@@ -34,6 +36,17 @@ describe('RevealOnScroll', () => {
       </RevealOnScroll>,
     );
     expect(screen.getByText('Hello')).toBeInTheDocument();
+  });
+
+  it('keeps content visible as the SSR-safe CSS default', () => {
+    const css = readFileSync(
+      path.join(process.cwd(), 'src/app/styles/animations.css'),
+      'utf8',
+    );
+    expect(css).toMatch(/\.reveal-on-scroll\s*\{[\s\S]*?opacity:\s*1;/);
+    expect(css).toMatch(
+      /\.js\s+\.reveal-on-scroll:not\(\.is-visible\)\s*\{[\s\S]*?opacity:\s*0;/,
+    );
   });
 
   it('renders as div by default', () => {

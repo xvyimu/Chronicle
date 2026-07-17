@@ -31,6 +31,13 @@ const ProjectSchema = z.object({
 
 export function parseProjects(raw: unknown): Project[] {
   const arr = z.array(ProjectSchema).parse(raw);
+  const seenIds = new Set<string>();
+  for (const project of arr) {
+    if (seenIds.has(project.id)) {
+      throw new Error(`Duplicate project id: ${project.id}`);
+    }
+    seenIds.add(project.id);
+  }
   return arr.sort((a, b) => b.year - a.year);
 }
 

@@ -20,9 +20,10 @@ const MOCK_POSTS: PostMeta[] = [
 ];
 
 vi.mock('@/lib/posts', () => ({
-  getAllPosts: () => MOCK_POSTS,
+  getAllPosts: vi.fn(() => MOCK_POSTS),
 }));
 
+import { getAllPosts } from '@/lib/posts';
 import { GET } from './route';
 
 function requestFor(path: string, headers?: HeadersInit) {
@@ -32,6 +33,7 @@ function requestFor(path: string, headers?: HeadersInit) {
 describe('GET /api/search', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(getAllPosts).mockReturnValue(MOCK_POSTS);
     resetSearchRateLimitForTests();
   });
 
@@ -93,5 +95,21 @@ describe('GET /api/search', () => {
     expect(body.code).toBe('RATE_LIMITED');
     expect(Number(blocked.headers.get('Retry-After'))).toBeGreaterThan(0);
     expect(blocked.headers.get('X-RateLimit-Remaining')).toBe('0');
+  });
+
+  it('returns a no-store structured 500 without leaking internal details', async () => {
+    vi.mocked(getAllPosts).mockImplementation(() => {
+      throw new Error('D:\\private\\content\\broken.mdx');
+    });
+
+    const res = await GET(requestFor('/api/search?q=Redis'));
+    expect(res.status).toBe(500);
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
+    const body = await res.json();
+    expect(body).toEqual({
+      error: 'search unavailable',
+      code: 'SERVER_ERROR',
+    });
+    expect(JSON.stringify(body)).not.toContain('private');
   });
 });

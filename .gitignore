@@ -38,6 +38,8 @@
 
 # lighthouse reports
 .lighthouse/
+.lighthouseci/
+.lighthouse-mobile/
 
 # tooling caches
 .agents/

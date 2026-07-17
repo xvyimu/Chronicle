@@ -6,29 +6,27 @@
 
 ```
 globals.css                   ← Tailwind v4 入口，不承载 @import 链
-src/app/layout.tsx            ← 显式 import 语义 CSS 模块
+src/app/layout.tsx            ← 显式 import 全局语义 CSS 模块
 ├── styles/tokens.css         ← 设计令牌、明暗主题变量、滚动条
 ├── styles/base.css           ← 全局基础、skip-link、Header、Footer
 ├── styles/components.css     ← Section / Card 等通用布局组件
 ├── styles/archive.css        ← ArchiveCard / 归档网格 / 归档列表
 ├── styles/controls.css       ← Button / Pagination / TagLink / 小型控制
-├── styles/links.css          ← 个人收藏导航目录
 ├── styles/blog-ui.css        ← BlogCard / TOC / Tag cloud / Image zoom
-├── styles/search-ui.css      ← SearchBar / Search results
 ├── styles/article-ui.css     ← Article layout / Article panels / Related posts
 ├── styles/backdrop.css       ← Paper Gallery 背景层
-├── styles/home.css           ← 首页主题覆盖、共享样式、首页响应式
-├── styles/home-hero.css      ← 首页 EditorialHero
-├── styles/home-sections.css  ← 首页叙事区块与 CTA
 ├── styles/prose.css          ← MDX 文章排版样式
-├── styles/project-detail.css ← 项目详情
-├── styles/animations.css     ← reveal / loading / fade motion
+├── styles/animations.css     ← reveal / fade motion
 └── styles/responsive.css     ← 响应式断点覆盖，最后加载
+src/app/page.tsx              ← home.css / home-hero.css / home-sections.css
+src/app/blog/layout.tsx       ← search-ui.css
+src/app/links/layout.tsx      ← links.css
+src/app/projects/[id]/layout.tsx ← project-detail.css
 ```
 
 不要在 `globals.css` 里写 `@import "./styles/xxx.css"`。Tailwind v4 的
-`@tailwindcss/postcss` 可能静默丢弃这些导入；CSS 模块必须在
-`src/app/layout.tsx` 顶部显式 import。
+`@tailwindcss/postcss` 可能静默丢弃这些导入；CSS 模块必须由根/segment
+`layout.tsx` 或所属页面显式 import。
 
 ## 决策树：BEM 还是 Tailwind？
 
@@ -167,14 +165,14 @@ background: #ffffff;
 | `home-sections.css`  | 首页内容区块                                | `.home-manifesto`、`.home-article-rail`     |
 | `prose.css`          | MDX 渲染的文章排版                          | `.prose h2`、`.prose code`、`.code-toolbar` |
 | `project-detail.css` | 项目详情页                                  | `.project-detail`                           |
-| `animations.css`     | 动画关键帧和动效类                          | `.reveal`、`.loading-intro`                 |
+| `animations.css`     | 动画关键帧和动效类                          | `.reveal-on-scroll`、`.animate-fade-in`     |
 | `responsive.css`     | 媒体查询覆盖                                | `@media (max-width: 768px)`                 |
 
 **规则**：新组件的 CSS 放入最接近语义归属的模块。跨页面通用组件放入
 `components.css` / `archive.css` / `controls.css`；博客专属放入 `blog-ui.css` /
 `search-ui.css` / `article-ui.css`；首页专属放入 `home.css` / `home-hero.css` /
 `home-sections.css`；
-最后由 `layout.tsx` 显式导入新 CSS 文件。
+由最近的根/segment `layout.tsx` 或所属页面显式导入新 CSS 文件；全局模块仍由根 layout 管理顺序。
 
 ## shadcn 与本地 BEM 的分工
 

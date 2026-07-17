@@ -58,7 +58,7 @@ src/
 │   │   ├── home-sections.css # Home Manifesto, ReadingPath, ArticleRail, links, CTA
 │   │   ├── prose.css      # Article typography (.prose, code block)
 │   │   ├── project-detail.css # Project detail
-│   │   ├── animations.css # Animations (reveal, fade-in-up, loading-intro)
+│   │   ├── animations.css # Animations (reveal, fade-in-up)
 │   │   └── responsive.css  # Responsive breakpoints (loaded last, overrides above)
 │   ├── globals.css         # CSS entry (Tailwind v4 only, ~12 lines, NO @import chain)
 │   ├── layout.tsx          # Root layout (fonts, theme, skip-link, CSS imports)
@@ -70,7 +70,7 @@ src/
 │   └── error.tsx           # Error boundary (production-safe)
 ├── components/
 │   ├── blog/               # Blog-specific (SearchBar, BlogCard, CodeBlock, TOC, etc.)
-│   ├── home/               # Home-only (EditorialHero, Manifesto, ReadingPath, ArticleRail, CTA, RevealOnScroll, LoadingIntro)
+│   ├── home/               # Home-only (EditorialHero, Manifesto, ReadingPath, ArticleRail, CTA, RevealOnScroll)
 │   ├── layout/             # Header, Footer, ArchiveCard, PageSection, SiteBackdropStage/Parallax
 │   ├── projects/           # ProjectCard
 │   ├── comments/           # Giscus comments
@@ -106,7 +106,7 @@ src/
 ## Conventions
 
 - **CSS**: BEM for structural components, Tailwind for utilities. See `docs/css-conventions.md`
-- **CSS Module Loading**: ⚠️ Tailwind v4 `@tailwindcss/postcss` silently drops `@import "./styles/xxx.css"` in `globals.css`. All CSS modules MUST be explicitly imported in `layout.tsx` (order: tokens → base → components → archive → controls → links → blog-ui → search-ui → article-ui → backdrop → home → home-hero → home-sections → prose → project-detail → animations → responsive last). See `docs/specs/2026-06-29-css-import-fix-design.md`
+- **CSS Module Loading**: ⚠️ Tailwind v4 `@tailwindcss/postcss` silently drops `@import "./styles/xxx.css"` in `globals.css`. Every CSS module MUST be explicitly imported from a root/segment `layout.tsx` or its owning `page.tsx`: global modules stay in the root layout (tokens → base → components → archive → controls → blog-ui → article-ui → backdrop → prose → animations → responsive last); route-only `home*`, `search-ui`, `links`, and `project-detail` modules stay with their owning route. See `docs/specs/2026-06-29-css-import-fix-design.md`
 - **shadcn Visual Composition**: Keep primitive shadcn-style components in `src/components/ui/` and page/archive composition helpers in `src/components/layout/`. Current shared pieces are `MetaBadge`, `ArchiveCard`, and `PageSection`. See `docs/specs/2026-07-04-shadcn-visual-architecture-design.md`
 - **Background Architecture**: Three-layer separation — `body::before/after` (CSS pseudo-elements) + `<SiteBackdropStage />` (server-rendered decorative DOM) + `<SiteBackdropParallax />` (client component, returns null, only side effects). See `docs/specs/2026-06-29-site-backdrop-architecture-design.md`
 - **Caching**: Use `createCache<T>` from `lib/cache.ts`. Use `resetAllCaches()` for test isolation. See `docs/cache-components-migration.md`
@@ -145,6 +145,5 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on push/PR to master:
 
 1. **quality** — pnpm audit → lint → test → tsc → generate-rss → build → bundle-budget
 2. **bundle-analyze** — builds with analyzer, uploads report as artifact
-3. **e2e** — installs Chromium, runs Playwright tests (production build)
-4. **lighthouse** — Lighthouse CI via treosh/lighthouse-ci-action@v12 (needs quality; reuses `lighthouse.config.js` for assertions)
-5. **deploy** — Vercel production deploy + production content smoke test (needs quality + e2e + lighthouse; master push only)
+3. **e2e** — installs Chromium, builds production once, then sequentially runs Playwright and Lighthouse CI (`lighthouse.config.js`)
+4. **deploy** — Vercel production deploy + production content smoke test (needs quality + e2e; master push only)

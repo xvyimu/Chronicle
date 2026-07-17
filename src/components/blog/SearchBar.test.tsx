@@ -134,6 +134,7 @@ describe('SearchBar', () => {
       },
       { timeout: 3000 },
     );
+    expect(screen.getByRole('status')).toHaveTextContent('没有匹配的文章');
     expect(screen.getByRole('link', { name: '查看全部文章' })).toHaveAttribute(
       'href',
       '/blog',
@@ -188,6 +189,9 @@ describe('SearchBar', () => {
       },
       { timeout: 3000 },
     );
+    const summary = screen.getByText(/找到 \d+ 篇/);
+    expect(summary.closest('p')).toHaveAttribute('aria-live', 'polite');
+    expect(screen.getByRole('listbox')).toHaveAttribute('aria-busy', 'false');
   });
 
   it('clears query when clear button is clicked', async () => {

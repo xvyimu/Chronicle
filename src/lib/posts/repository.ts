@@ -91,22 +91,43 @@ export function createPostRepository(source: ContentSource): PostRepository {
     watchPath: CONTENT_DIR.blog,
     source,
   });
+  let metadataSource: PostFull[] | null = null;
+  let metadataCache: PostMeta[] | null = null;
+  let metadataVisibility: boolean | null = null;
 
   function loadAll(): PostFull[] {
     return cache.getOrCompute(() => {
       const filenames = source.readDir(CONTENT_DIR.blog);
       if (filenames === null) {
-        console.warn(`[posts/repository] 内容目录不存在: ${CONTENT_DIR.blog}`);
+        const message = `[posts/repository] 内容目录不存在: ${CONTENT_DIR.blog}`;
+        if (process.env.NODE_ENV === 'production') throw new Error(message);
+        console.warn(message);
         return [];
       }
-      return filenames
+      const posts = filenames
         .filter((f) => f.endsWith('.mdx'))
         .map((filename) => readPostFile(source, filename));
+      const seenSlugs = new Set<string>();
+      for (const post of posts) {
+        if (seenSlugs.has(post.slug)) {
+          throw new Error(`[posts/repository] 重复 slug: ${post.slug}`);
+        }
+        seenSlugs.add(post.slug);
+      }
+      return posts;
     });
   }
 
   function getAllPosts(): PostMeta[] {
-    return loadAll()
+    const allPosts = loadAll();
+    const visibleInProduction = process.env.NODE_ENV === 'production';
+    if (metadataSource === allPosts && metadataVisibility === visibleInProduction) {
+      return metadataCache ?? [];
+    }
+
+    metadataSource = allPosts;
+    metadataVisibility = visibleInProduction;
+    metadataCache = allPosts
       .filter(isVisible)
       .sort((a, b) => {
         if (a.date < b.date) return 1;
@@ -114,6 +135,7 @@ export function createPostRepository(source: ContentSource): PostRepository {
         return a.slug.localeCompare(b.slug);
       })
       .map(({ content: _content, ...meta }) => meta);
+    return metadataCache;
   }
 
   function getPostBySlug(slug: string): PostFull | null {
