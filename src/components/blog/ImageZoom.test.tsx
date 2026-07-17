@@ -33,6 +33,22 @@ describe('ImageZoom', () => {
     const thumb = screen.getByRole('button', { name: 'Test image — 点击放大' });
     expect(thumb).toBeInTheDocument();
     expect(thumb).toHaveAttribute('src', '/test.jpg');
+    expect(thumb).toHaveClass('image-zoom__trigger');
+  });
+
+  it('preserves caller classes and inline thumbnail overrides', () => {
+    render(
+      <ImageZoom
+        src="/test.jpg"
+        alt="Styled"
+        className="prose-image"
+        style={{ objectPosition: 'top' }}
+      />,
+    );
+
+    const thumb = screen.getByRole('button', { name: 'Styled — 点击放大' });
+    expect(thumb).toHaveClass('image-zoom__trigger', 'prose-image');
+    expect(thumb).toHaveStyle({ objectPosition: 'top' });
   });
 
   it('opens overlay on thumbnail click', () => {
@@ -125,6 +141,7 @@ describe('ImageZoom', () => {
     const overlayImg = screen.getByRole('img');
     expect(overlayImg).toHaveAttribute('src', '/test.jpg');
     expect(overlayImg).toHaveAttribute('data-fill', 'true');
+    expect(overlayImg).toHaveClass('image-zoom__img');
   });
 
   it('returns focus to trigger element on close', () => {
@@ -143,6 +160,8 @@ describe('ImageZoom', () => {
 
     const closeBtn = screen.getByLabelText('关闭');
     expect(closeBtn).toBeInTheDocument();
+    expect(closeBtn).toHaveClass('image-zoom__close');
+    expect(closeBtn).not.toHaveAttribute('style');
     expect(closeBtn.querySelector('svg')).toBeInTheDocument();
   });
 });

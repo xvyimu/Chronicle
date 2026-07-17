@@ -1,155 +1,63 @@
-# 文档总览
+# 项目文档总览
 
-这份总览用于告诉协作者：这个项目的文档分别解决什么问题，以及应该按什么顺序阅读。
+> 状态：当前维护版（2026-07-17）。本页是文档导航的唯一入口。
+
+项目文档分为四类：当前维护文档、架构决策、已实施设计、历史报告与运行记录。只有“当前维护文档”描述现行操作；日期型报告、spec 和 run 中的测试数、提交和待办都是当时快照，不应作为当前基线。
 
 ## 建议阅读顺序
 
-1. README.md
-   先快速了解项目定位、技术栈、启动方式、目录结构和常用命令。
-2. docs/architecture.md
-   适合准备改代码、排查问题或扩展模块时阅读，重点是模块职责、数据流和关键文件定位。
-3. docs/content-workflow.md
-   适合准备写文章、改关于页、维护作品集、检查 RSS 或做内容发布时阅读。
-4. docs/css-conventions.md
-   适合准备写或修改样式时阅读，明确 BEM 与 Tailwind 的分工边界和设计令牌系统。
-5. docs/launch-baseline.md
-   适合上线后巡检、记录 CI/部署状态、生产 smoke、性能和内容资产基线时阅读。
-6. docs/specs/2026-07-04-shadcn-visual-architecture-design.md
-   适合继续做 shadcn、MetaBadge、PageSection、ArchiveCard 或 Paper Gallery 视觉组件收口时阅读。
-7. docs/salesdex-inspired-redesign.md
-   适合准备按 sales-dex.jp 的视觉方向改造首页时阅读，明确可迁移模式、技术落点、阶段计划和验收标准。
-8. docs/optimization-roadmap-2026-07-06.md
-   适合继续做架构、用户体验和视觉优化时阅读，明确阶段计划、任务拆分、验收标准和回滚策略。
-9. docs/cache-components-migration.md
-   适合考虑引入外部数据源或迁移到 Cache Components 时阅读。
-10. docs/architecture-review.html
-    历史架构扫描快照，适合作为治理与重构参考，不适合作为首次入门文档。
+1. [README](../README.md)：项目定位、启动方式、路由、功能和常用命令。
+2. [Agent 接手指南](./handoff-to-agent.md)：当前生产基线、接手步骤、边界和验证顺序。
+3. [架构说明](./architecture.md)：数据流、模块职责、渲染、安全、CSS 和缓存边界。
+4. 按任务选择 API、内容、CSS、性能或缓存文档。
+5. 需要理解“为什么这样设计”时再读 ADR 和 specs。
 
-## 文档分工
+## 当前维护文档
 
-### README.md
+| 文档                                                     | 负责内容                             | 更新触发条件                   |
+| -------------------------------------------------------- | ------------------------------------ | ------------------------------ |
+| [README](../README.md)                                   | 项目入口、安装、功能、路由、命令     | 依赖、路由、脚本或功能变化     |
+| [AGENTS](../AGENTS.md)                                   | AI 协作规则和项目约定                | 工具链、目录、测试或工作流变化 |
+| [TODO](../TODO.md)                                       | 仅保留当前未完成或条件触发事项       | 待办完成、取消或条件变化       |
+| [架构说明](./architecture.md)                            | 当前模块和运行时边界                 | 模块、数据流、渲染或部署变化   |
+| [Search API](./API.md)                                   | `/api/search` 请求、响应、错误和缓存 | route、DTO、限流或缓存变化     |
+| [内容工作流](./content-workflow.md)                      | 文章、项目、收藏、RSS 发布           | schema、内容目录或检查脚本变化 |
+| [CSS 规范](./css-conventions.md)                         | token、BEM、shadcn、文件归属         | token、CSS 文件或导入归属变化  |
+| [Cache Components 指南](./cache-components-migration.md) | 当前缓存和未来迁移门槛               | 缓存实现或外部数据源变化       |
+| [上线基线](./launch-baseline.md)                         | 最新生产证据和发布门禁               | 新生产基线或 smoke 变化        |
+| [性能基线](./performance-baseline.md)                    | CI 预算、实验室数据、RUM 目标        | Lighthouse、bundle 或 p75 更新 |
+| [Agent 接手指南](./handoff-to-agent.md)                  | 当前状态、优先级和交接边界           | 生产状态或主要待办变化         |
 
-解决这些问题：
+## 决策与设计记录
 
-- 这个项目是什么
-- 怎么在本地跑起来
-- 主要目录做什么
-- 常用命令有哪些
-- 有哪些路由和功能
-- 测试如何运行
-- CI/CD 流水线如何工作
-- 文档应该从哪里继续看
+- [ADR 索引](./adr/README.md)：已接受、被替代的关键架构决策。
+- [Specs 索引](./specs/README.md)：已经实施的详细设计及其当前落点。
+- [Superpower specs 索引](./superpowers/specs/README.md)：工作流产生的已实施设计。
 
-### AGENTS.md
+ADR 和 spec 保留决策当时的事实、测试数和方案对比。状态行可以更新，正文不为了追逐当前统计而改写。
 
-解决这些问题：
+## 历史报告与运行记录
 
-- AI 编码助手需要知道哪些关键约定
-- 项目用了哪些 API 和模式
-- E2E 测试有哪些已知的坑和解决方案
-- CI 流水线的结构是什么
+以下文件是时间点快照，不是当前操作手册：
 
-### docs/architecture.md
+- `launch-readiness-2026-07-10.md`
+- `frontend-ui-optimization-report-2026-07-12.md`
+- `bem-search-architecture-2026-07-12.md`
+- `content-seo-plan-2026-07-12.md`
+- `codex-review-2026-07-13.md`
+- `full-stack-audit-2026-07-17.md`
+- `optimization-roadmap-2026-07-06.md`
+- `salesdex-inspired-redesign.md`
+- `architecture-review.html`
+- [Superpower runs 索引](./superpowers/runs/README.md)
 
-解决这些问题：
+历史文件中的未勾选项只表示该次运行在记录结束时的状态。仍有效的工作必须重新出现在根 [TODO](../TODO.md) 中；否则不得据此推断当前项目未完成。
 
-- 当前项目是怎样拆分模块的
-- 页面、内容源、工具库之间如何协作
-- 哪些文件是入口，哪些文件是底层能力
-- 新功能应该优先落在哪一层
-- CSS、CSP、缓存、测试和部署链路有哪些关键边界
+## 文档维护规则
 
-### docs/content-workflow.md
-
-解决这些问题：
-
-- 怎样新增一篇博客文章
-- frontmatter 应该怎么写
-- 怎样维护作品集数据
-- 构建阶段 RSS 和 sitemap 受哪些内容影响
-- 内容发布前要检查什么
-
-### docs/launch-baseline.md
-
-解决这些问题：
-
-- 当前线上版本、CI 和部署是否健康
-- 生产内容烟测覆盖哪些页面
-- Lighthouse、Bundle、Speed Insights 应该如何记录
-- 收藏链接资产有哪些运营字段和质量门禁
-
-### docs/css-conventions.md
-
-解决这些问题：
-
-- BEM 和 Tailwind 各自负责什么
-- 设计令牌系统怎么用
-- 新组件的 CSS 应该放在哪个文件
-- 响应式和暗色主题怎么处理
-
-### docs/specs/2026-07-04-shadcn-visual-architecture-design.md
-
-解决这些问题：
-
-- 当前 shadcn 本地组件和项目 BEM 样式如何协作
-- 什么时候使用 MetaBadge、PageSection、ArchiveCard
-- Paper Gallery 低饱和视觉收口涉及哪些文件
-- shadcn CLI 在当前 Node 24 环境下的限制是什么
-
-### docs/salesdex-inspired-redesign.md
-
-解决这些问题：
-
-- 如何把 sales-dex.jp 的强首屏、滚动叙事和横向内容流转译到个人博客
-- 哪些视觉模式可以借鉴，哪些企业站内容不应照搬
-- 首页改版应该拆成哪些阶段
-- 新组件、样式、测试和浏览器验收应如何安排
-
-### docs/optimization-roadmap-2026-07-06.md
-
-解决这些问题：
-
-- 当前博客项目下一轮架构、用户体验和视觉优化目标是什么
-- 哪些问题优先处理，哪些留到内容规模增长后再做
-- 每个阶段应该改哪些模块、如何验收、如何回滚
-- 后续接手者应该按什么顺序继续推进
-
-### docs/cache-components-migration.md
-
-解决这些问题：
-
-- 当前缓存方案是什么（createCache<T>）
-- 什么时候需要迁移到 Cache Components
-- 迁移步骤和风险评估
-
-### docs/architecture-review.html
-
-解决这些问题：
-
-- 历史架构扫描发现了哪些候选改进点（Strong / Worth / Speculative 三档分级）
-- 各候选项的优先级、影响范围、技术落点
-- 后续工程治理可以从哪些点下手
-
-> 注意：此为 2026-06-29 的架构审查快照，作为 `docs/specs/2026-06-29-posts-deepening-design.md` 的输入文档生成。其中的测试数量等统计数据已过时，请以 `docs/handoff-to-agent.md` 的"质量门禁"表为准。
-
-## 当前文档策略
-
-这套文档以"让协作者快速进入上下文"为目标，因此更强调：
-
-- 真实反映当前代码，而不是泛化模板
-- 解释职责边界，而不是重复源码细节
-- 说明修改时要联动检查哪些文件
-- 让内容维护和代码维护都能找到入口
-
-## 维护建议
-
-当下面这些内容变化时，建议同步更新文档：
-
-- 新增或移除顶层页面
-- 内容目录结构变化
-- 站点配置来源变化
-- 构建流程变化，例如增加搜索索引、图片处理、部署脚本
-- 数据模型变化，例如 projects.json 字段或文章 frontmatter 字段变化
-- CSS 架构变化，例如新增样式文件或调整令牌系统
-- 测试策略变化，例如新增测试工具或调整覆盖率要求
-- 上线基线变化，例如生产域名、CI run、部署流程或真实用户指标来源变化
+1. 行为、接口、参数和命令以源码、配置和测试收集结果为准。
+2. 当前测试数必须带验证日期；历史报告中的旧数量不修改。
+3. 新增页面时同步 README、sitemap、导航和测试；新增数据字段时同步 schema、内容工作流和测试。
+4. 修改 CSP、内容源、缓存或部署模型时新增或更新 ADR。
+5. 外部账号、生产流量和未来规模相关事项必须标明前置条件，不能写成已完成。
+6. 合并前运行 `pnpm format:docs:check`、`pnpm check:docs`、`pnpm check:seo` 与 `git diff --check`。

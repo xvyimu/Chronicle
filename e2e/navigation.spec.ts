@@ -30,8 +30,7 @@ test.describe('主题切换', () => {
     const htmlClass = await page.evaluate(() => document.documentElement.className);
     const initialDark = htmlClass.includes('dark');
 
-    // Use dispatchEvent to avoid click interception by blog card ::after overlays
-    await toggle.dispatchEvent('click');
+    await toggle.click();
 
     // Wait for class change
     await page.waitForTimeout(500);
@@ -50,8 +49,7 @@ test.describe('主题切换', () => {
 
     const toggle = page.getByRole('button', { name: '切换主题' });
     await expect(toggle).toBeVisible({ timeout: 10000 });
-    // Use dispatchEvent to avoid click interception by blog card ::after overlays
-    await toggle.dispatchEvent('click');
+    await toggle.click();
     await page.waitForTimeout(300);
 
     // localStorage should have a theme entry (or be cleared for 'system')
@@ -160,9 +158,9 @@ test.describe('关于页面', () => {
     await expect(page.locator('body')).toBeVisible();
     // About page uses h2 for section title (no h1 on this page)
     // Use exact match — "关于" also matches "关于西江月" as substring
-    await expect(page.getByRole('heading', { name: '关于', exact: true })).toBeVisible({
-      timeout: 10000,
-    });
+    await expect(
+      page.getByRole('heading', { level: 1, name: '关于', exact: true }),
+    ).toBeVisible({ timeout: 10000 });
   });
 });
 

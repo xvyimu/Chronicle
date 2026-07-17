@@ -3,7 +3,7 @@
 > Date: 2026-07-03
 > Project: `D:\blog`
 > Purpose: make the current repository safe and easy for Claude Code to continue.
-> Status: design approved for approach A, implementation not started in this document.
+> Status: implemented. This document preserves the original design snapshot; current handoff state lives in `docs/handoff-to-agent.md`.
 
 ## 1. Goal
 

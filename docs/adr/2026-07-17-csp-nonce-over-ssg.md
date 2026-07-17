@@ -2,6 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-07-17
+- Supersedes: `0001-csp-nonce-vs-ssg.md`
 - Related: `src/proxy.ts`, `src/lib/csp.ts`, `docs/architecture.md`, `docs/full-stack-audit-2026-07-17.md`
 
 ## Context
@@ -13,6 +14,8 @@ Next App Router emits inline hydration scripts. A strict CSP needs a per-request
 Keep **per-request CSP nonce** with `script-src 'nonce-…' 'strict-dynamic'` (plus allowlisted Giscus / Vercel script hosts). Accept dynamic HTML cost. Do **not** relax script CSP to `unsafe-inline` to recover SSG.
 
 Static assets (feed, images, `/_next/static`) remain cacheable independently.
+
+This ADR updates the earlier decision with the production cache behavior, `strict-dynamic` policy, third-party script allowlist, and an evidence-based revisit trigger.
 
 ## Consequences
 

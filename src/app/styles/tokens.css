@@ -66,6 +66,10 @@
   --shadow-lg: 0 24px 68px rgba(43, 48, 46, 0.12);
   --shadow-xl: 0 30px 80px rgba(43, 48, 46, 0.14);
   --shadow-brand: 0 12px 28px rgba(89, 117, 109, 0.2);
+  --image-overlay-scrim: rgba(15, 17, 16, 0.88);
+  --image-overlay-control-bg: rgba(0, 0, 0, 0.6);
+  --image-overlay-control-fg: #fff;
+  --image-overlay-control-border: rgba(255, 255, 255, 0.2);
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;

@@ -2,12 +2,25 @@ import { getAllLinkCategories } from '../src/lib/links';
 import { selectHomeLinkPreviewCategories } from '../src/lib/link-preview';
 import { getAllPosts } from '../src/lib/posts';
 import { getAllProjects, getFeaturedProjects } from '../src/lib/projects';
+import { getAboutContent } from '../src/lib/about';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
-type PageExpectation = {
+type HeaderExpectation = {
+  name: string;
+  validate(value: string | null): string | null;
+};
+
+export type PageExpectation = {
   label: string;
   path: string;
   contentTypeIncludes: string;
   mustContain: string[];
+  requiredHeaders?: HeaderExpectation[];
+  json?: {
+    source: string;
+    resultSlug: string;
+  };
 };
 
 type CheckFailure = {
@@ -17,6 +30,7 @@ type CheckFailure = {
 
 const DEFAULT_ATTEMPTS = 5;
 const DEFAULT_RETRY_DELAY_MS = 3000;
+const DEFAULT_TIMEOUT_MS = 10_000;
 const USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36';
 
@@ -54,7 +68,59 @@ function requireText(value: string | undefined, label: string): string {
   return value;
 }
 
-function buildExpectations(baseUrl: string): PageExpectation[] {
+function firstMarkdownHeading(markdown: string): string | undefined {
+  return /^\s*#{1,6}\s+(.+?)\s*#*\s*$/mu.exec(markdown)?.[1]?.trim();
+}
+
+function validateCsp(value: string | null): string | null {
+  if (!value) return 'is missing';
+
+  const directives = new Map(
+    value
+      .split(';')
+      .map((directive) => directive.trim().split(/\s+/u))
+      .filter((parts) => parts[0])
+      .map(([name, ...sources]) => [name.toLowerCase(), sources]),
+  );
+  const defaultSources = directives.get('default-src') ?? [];
+  const scriptSources = directives.get('script-src') ?? [];
+
+  if (!defaultSources.includes("'self'")) {
+    return "must include default-src 'self'";
+  }
+  if (!scriptSources.some((source) => /^'nonce-[^']+'$/u.test(source))) {
+    return 'script-src must include a nonce source';
+  }
+  if (!scriptSources.includes("'strict-dynamic'")) {
+    return "script-src must include 'strict-dynamic'";
+  }
+  if (scriptSources.includes("'unsafe-inline'")) {
+    return "script-src must not include 'unsafe-inline'";
+  }
+
+  return null;
+}
+
+const HOME_SECURITY_HEADERS: HeaderExpectation[] = [
+  {
+    name: 'content-security-policy',
+    validate: validateCsp,
+  },
+  {
+    name: 'strict-transport-security',
+    validate: (value) =>
+      value?.toLowerCase().includes('max-age=31536000')
+        ? null
+        : 'must include max-age=31536000',
+  },
+  {
+    name: 'x-content-type-options',
+    validate: (value) =>
+      value?.trim().toLowerCase() === 'nosniff' ? null : 'must equal nosniff',
+  },
+];
+
+export function buildExpectations(baseUrl: string): PageExpectation[] {
   const posts = getAllPosts();
   const projects = getAllProjects();
   const featuredProjects = getFeaturedProjects();
@@ -67,8 +133,14 @@ function buildExpectations(baseUrl: string): PageExpectation[] {
   const homeLinkCategory = selectHomeLinkPreviewCategories(linkCategories)[0];
   const firstLinkItem = linkCategories.find((category) => category.items.length > 0)
     ?.items[0];
+  const aboutContent = requireText(getAboutContent() ?? undefined, 'About content');
 
   const firstPost = requireText(posts[0]?.title, 'blog post title');
+  const firstPostSlug = requireText(posts[0]?.slug, 'blog post slug');
+  const aboutHeading = requireText(
+    firstMarkdownHeading(aboutContent),
+    'About Markdown heading',
+  );
   const homePost = requireText(homePosts[0]?.title, 'home article title');
   const firstProject = requireText(projects[0]?.title, 'project title');
   const homeProject = requireText(
@@ -84,12 +156,35 @@ function buildExpectations(baseUrl: string): PageExpectation[] {
       path: '/',
       contentTypeIncludes: 'text/html',
       mustContain: [homePost, homeProject, linkCategory],
+      requiredHeaders: HOME_SECURITY_HEADERS,
     },
     {
       label: 'blog',
       path: '/blog',
       contentTypeIncludes: 'text/html',
       mustContain: [firstPost],
+    },
+    {
+      label: 'about',
+      path: '/about',
+      contentTypeIncludes: 'text/html',
+      mustContain: [aboutHeading],
+    },
+    {
+      label: 'article',
+      path: `/blog/${firstPostSlug}`,
+      contentTypeIncludes: 'text/html',
+      mustContain: [firstPost],
+    },
+    {
+      label: 'search',
+      path: `/api/search?q=${encodeURIComponent(firstPost)}`,
+      contentTypeIncludes: 'application/json',
+      mustContain: [],
+      json: {
+        source: 'server',
+        resultSlug: firstPostSlug,
+      },
     },
     {
       label: 'projects',
@@ -124,22 +219,43 @@ function wait(ms: number): Promise<void> {
   });
 }
 
-async function fetchTextWithRetry(url: string): Promise<{
+type FetchOptions = {
+  fetchImpl?: typeof fetch;
+  attempts?: number;
+  retryDelayMs?: number;
+  timeoutMs?: number;
+};
+
+export async function fetchResponseWithRetry(
+  url: string,
+  {
+    fetchImpl = fetch,
+    attempts = DEFAULT_ATTEMPTS,
+    retryDelayMs = DEFAULT_RETRY_DELAY_MS,
+    timeoutMs = DEFAULT_TIMEOUT_MS,
+  }: FetchOptions = {},
+): Promise<{
   body: string;
   contentType: string;
   status: number;
+  headers: Headers;
 }> {
   let lastError: unknown;
 
-  for (let attempt = 1; attempt <= DEFAULT_ATTEMPTS; attempt += 1) {
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
     try {
-      const response = await fetch(url, {
+      const response = await fetchImpl(url, {
         headers: {
-          accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          accept:
+            'text/html,application/xhtml+xml,application/json,application/xml;q=0.9,*/*;q=0.8',
           'accept-language': 'zh-CN,zh;q=0.9,en;q=0.8',
           'cache-control': 'no-cache',
           'user-agent': USER_AGENT,
         },
+        signal: controller.signal,
       });
       const body = await response.text();
 
@@ -148,31 +264,37 @@ async function fetchTextWithRetry(url: string): Promise<{
           body,
           contentType: response.headers.get('content-type') ?? '',
           status: response.status,
+          headers: response.headers,
         };
       }
 
-      lastError = new Error(`HTTP ${response.status}: ${body.slice(0, 200)}`);
+      lastError = new Error(`HTTP ${response.status} at ${url}.`);
     } catch (error) {
-      lastError = error;
+      lastError = controller.signal.aborted
+        ? new Error(`Request timed out after ${timeoutMs}ms at ${url}.`)
+        : error;
+    } finally {
+      clearTimeout(timeout);
     }
 
-    if (attempt < DEFAULT_ATTEMPTS) {
-      await wait(DEFAULT_RETRY_DELAY_MS);
+    if (attempt < attempts) {
+      await wait(retryDelayMs);
     }
   }
 
   throw lastError instanceof Error ? lastError : new Error(String(lastError));
 }
 
-async function checkPage(
+export async function checkPage(
   baseUrl: string,
   expectation: PageExpectation,
+  options: FetchOptions = {},
 ): Promise<CheckFailure[]> {
   const url = `${baseUrl}${expectation.path}`;
   const failures: CheckFailure[] = [];
 
   try {
-    const response = await fetchTextWithRetry(url);
+    const response = await fetchResponseWithRetry(url, options);
 
     if (!response.contentType.includes(expectation.contentTypeIncludes)) {
       failures.push({
@@ -190,6 +312,46 @@ async function checkPage(
       }
     }
 
+    for (const header of expectation.requiredHeaders ?? []) {
+      const validationError = header.validate(response.headers.get(header.name));
+      if (validationError) {
+        failures.push({
+          label: expectation.label,
+          message: `Response header "${header.name}" ${validationError} at ${url}.`,
+        });
+      }
+    }
+
+    if (expectation.json) {
+      try {
+        const payload = JSON.parse(response.body) as {
+          source?: unknown;
+          results?: Array<{ item?: { slug?: unknown } }>;
+        };
+        if (payload.source !== expectation.json.source) {
+          failures.push({
+            label: expectation.label,
+            message: `Expected JSON source "${expectation.json.source}" at ${url}.`,
+          });
+        }
+        if (
+          !payload.results?.some(
+            ({ item }) => item?.slug === expectation.json?.resultSlug,
+          )
+        ) {
+          failures.push({
+            label: expectation.label,
+            message: `Expected search result slug "${expectation.json.resultSlug}" at ${url}.`,
+          });
+        }
+      } catch {
+        failures.push({
+          label: expectation.label,
+          message: `Expected valid JSON at ${url}.`,
+        });
+      }
+    }
+
     console.log(
       `[production-content] ${expectation.label}: ${response.status} ${response.body.length} bytes`,
     );
@@ -203,12 +365,22 @@ async function checkPage(
   return failures;
 }
 
+export async function checkExpectations(
+  baseUrl: string,
+  expectations: PageExpectation[],
+  options: FetchOptions = {},
+): Promise<CheckFailure[]> {
+  return (
+    await Promise.all(
+      expectations.map((expectation) => checkPage(baseUrl, expectation, options)),
+    )
+  ).flat();
+}
+
 async function main(): Promise<void> {
   const baseUrl = readBaseUrl();
   const expectations = buildExpectations(baseUrl);
-  const failures = (
-    await Promise.all(expectations.map((expectation) => checkPage(baseUrl, expectation)))
-  ).flat();
+  const failures = await checkExpectations(baseUrl, expectations);
 
   if (failures.length === 0) {
     console.log(`[production-content] passed for ${baseUrl}`);
@@ -222,7 +394,10 @@ async function main(): Promise<void> {
   process.exitCode = 1;
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+const entryPath = process.argv[1];
+if (entryPath && import.meta.url === pathToFileURL(path.resolve(entryPath)).href) {
+  main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}

@@ -20,7 +20,7 @@ async function getFirstPostHref(page: import('@playwright/test').Page) {
 
 test.describe('mobile critical flows', () => {
   test('keeps header navigation accessible on a mobile viewport', async ({ page }) => {
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.goto('/blog', { waitUntil: 'domcontentloaded' });
 
     const header = page.locator('header');
     await expect(header).toBeVisible({ timeout: 10000 });
@@ -32,6 +32,12 @@ test.describe('mobile critical flows', () => {
 
     const mobileNav = page.locator('#mobile-nav');
     await expect(mobileNav).toBeVisible({ timeout: 10000 });
+    const firstLink = mobileNav.locator('a').first();
+    await expect(firstLink).toBeFocused();
+    await expect(mobileNav.locator('a[href="/blog"]')).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
     await expect(mobileNav.locator('a[href="/blog"]')).toBeVisible();
     await expect(mobileNav.locator('a[href="/links"]')).toBeVisible();
     await expect(mobileNav.locator('a[href="/projects"]')).toBeVisible();

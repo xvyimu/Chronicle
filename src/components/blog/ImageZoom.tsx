@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import Image from 'next/image';
+import { cn } from '@/lib/utils';
 
 interface ImageZoomProps {
   src?: string;
@@ -102,8 +103,8 @@ export default function ImageZoom({
         width={1200}
         height={630}
         onClick={open}
-        className={className}
-        style={{ cursor: 'zoom-in', width: '100%', height: 'auto', ...style }}
+        className={cn('image-zoom__trigger', className)}
+        style={style}
         tabIndex={0}
         role="button"
         aria-label={alt ? `${alt} — 点击放大` : '点击放大图片'}
@@ -132,24 +133,6 @@ export default function ImageZoom({
             className="image-zoom__close"
             onClick={close}
             aria-label="关闭"
-            style={{
-              position: 'absolute',
-              top: '1rem',
-              right: '1rem',
-              zIndex: 10,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              border: '1px solid var(--border, rgba(255,255,255,0.2))',
-              background: 'rgba(0,0,0,0.6)',
-              color: '#fff',
-              cursor: 'pointer',
-              fontSize: '1.25rem',
-              lineHeight: 1,
-            }}
           >
             <svg
               width="18"
@@ -170,7 +153,6 @@ export default function ImageZoom({
             fill
             className="image-zoom__img"
             onClick={(e) => e.stopPropagation()}
-            style={{ objectFit: 'contain' }}
             sizes="92vw"
           />
         </div>

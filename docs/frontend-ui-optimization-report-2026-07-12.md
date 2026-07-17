@@ -1,5 +1,7 @@
 # 个人博客前端优化实施报告 · 2026-07-12
 
+> 状态：已实施的历史报告。测试数和文件清单保留当时口径，当前基线见 `docs/handoff-to-agent.md`。
+
 路径：`D:\blog` · 域名：`https://incca.ccwu.cc` · 分支：`master`
 
 ---

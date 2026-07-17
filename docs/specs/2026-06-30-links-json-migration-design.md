@@ -1,5 +1,7 @@
 # 设计文档: links.ts → data/links.json 迁移 (W2)
 
+> 状态：已实施。当前 schema 与维护规则见 `docs/content-workflow.md`。
+
 **日期**: 2026-06-30
 **作者**: brainstorming skill 流程
 **关联**: docs/architecture-review.html 中 W2 候选 (links.ts 633 行纯数据 → JSON)

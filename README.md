@@ -39,6 +39,7 @@ NEXT_PUBLIC_GISCUS_CATEGORY_ID=your_category_id
 | `pnpm test:e2e`                 | Playwright E2E 测试（自动启动 dev server）                    |
 | `pnpm check:seo`                | 内容、资源、sitemap 与 SEO 完整性检查                         |
 | `pnpm check:production-content` | 生产环境内容烟测（首页 / 博客 / 作品 / 导航 / RSS / Sitemap） |
+| `pnpm check:docs`               | 检查根文档与 `docs/**` 的内部相对链接                         |
 | `pnpm lint`                     | ESLint                                                        |
 | `pnpm analyze`                  | Bundle 体积分析                                               |
 
@@ -60,7 +61,7 @@ NEXT_PUBLIC_GISCUS_CATEGORY_ID=your_category_id
 │  ├─ css-conventions.md     # CSS 范式规范
 │  ├─ cache-components-migration.md  # Cache Components 迁移指南
 │  └─ architecture-review.html # 历史架构扫描快照
-├─ e2e/                      # Playwright E2E 测试（5 文件 / 47 用例）
+├─ e2e/                      # Playwright E2E 测试（5 文件 / 48 用例）
 │  ├─ home.spec.ts           # 首页测试
 │  ├─ blog.spec.ts           # 博客列表与详情测试
 │  ├─ navigation.spec.ts     # 主题切换 / 项目 / 标签 / 关于 / 404
@@ -104,22 +105,25 @@ NEXT_PUBLIC_GISCUS_CATEGORY_ID=your_category_id
 
 ## 路由
 
-| 路由               | 说明                                         |
-| ------------------ | -------------------------------------------- |
-| `/`                | 首页（Hero 粒子背景 + 最新文章 + 精选项目）  |
-| `/about`           | 关于页                                       |
-| `/blog`            | 博客列表（fuse.js 模糊搜索 + 键盘导航）      |
-| `/blog/[slug]`     | 文章详情（TOC + 阅读进度 + 阅读偏好 + 评论） |
-| `/projects`        | 作品集                                       |
-| `/projects/[id]`   | 作品详情                                     |
-| `/series`          | 专题列表                                     |
-| `/series/[series]` | 专题详情                                     |
-| `/tags`            | 标签汇总                                     |
-| `/tags/[tag]`      | 单标签归档                                   |
-| `/feed.xml`        | RSS 订阅                                     |
-| `/feed.json`       | JSON Feed                                    |
-| `/sitemap.xml`     | 站点地图                                     |
-| `/robots.txt`      | 爬虫规则                                     |
+| 路由                     | 说明                                         |
+| ------------------------ | -------------------------------------------- |
+| `/`                      | Paper Gallery 首页（文章路径 + 项目 + 收藏） |
+| `/about`                 | 关于页                                       |
+| `/blog`                  | 博客列表（fuse.js 模糊搜索 + 键盘导航）      |
+| `/blog/[slug]`           | 文章详情（TOC + 阅读进度 + 阅读偏好 + 评论） |
+| `/categories`            | 分类汇总                                     |
+| `/categories/[category]` | 单分类归档                                   |
+| `/links`                 | 技术收藏导航与关键词筛选                     |
+| `/projects`              | 作品集                                       |
+| `/projects/[id]`         | 作品详情                                     |
+| `/series`                | 专题列表                                     |
+| `/series/[series]`       | 专题详情                                     |
+| `/tags`                  | 标签汇总                                     |
+| `/tags/[tag]`            | 单标签归档                                   |
+| `/feed.xml`              | RSS 订阅                                     |
+| `/feed.json`             | JSON Feed                                    |
+| `/sitemap.xml`           | 站点地图                                     |
+| `/robots.txt`            | 爬虫规则                                     |
 
 ## 设计系统
 
@@ -152,7 +156,7 @@ CSS 自定义属性 + Tailwind v4 `@theme` 令牌，当前按 17 个显式导入
 - 代码块主题跟随站点（亮色用 github-light）
 - 阅读偏好（字号调节 · 宽窄切换 · 图片点击放大）
 - 文章卡片 magnetic hover 微交互
-- Hero 区 Canvas 2D 粒子背景（尊重 reduced-motion）
+- 三层 Paper Gallery 背景（CSS + server DOM + reduced-motion 视差）
 - 阅读进度条 + 目录 + 相关文章 + 上一篇/下一篇 + 回到顶部
 - Giscus 评论（主题同步）
 - RSS / JSON Feed / Sitemap / PWA manifest
@@ -163,8 +167,8 @@ CSS 自定义属性 + Tailwind v4 `@theme` 令牌，当前按 17 个显式导入
 
 | 层级      | 工具                     | 数量               | 覆盖范围                                                                       |
 | --------- | ------------------------ | ------------------ | ------------------------------------------------------------------------------ |
-| 单元/集成 | Vitest + Testing Library | 547 用例 / 70 文件 | lib 数据层 / 组件交互 / 页面渲染                                               |
-| E2E       | Playwright               | 47 用例 / 5 文件   | 首页 / 博客 / 导航 / 主题 / 作品 / 标签 / 分类 / 专题 / RSS / Sitemap / 移动端 |
+| 单元/集成 | Vitest + Testing Library | 599 用例 / 77 文件 | lib 数据层 / 组件交互 / 页面渲染                                               |
+| E2E       | Playwright               | 48 用例 / 5 文件   | 首页 / 博客 / 导航 / 主题 / 作品 / 标签 / 分类 / 专题 / RSS / Sitemap / 移动端 |
 
 ```bash
 pnpm test          # 运行单元测试
@@ -175,10 +179,9 @@ pnpm test:e2e      # 运行 E2E 测试（自动启动 dev server）
 
 GitHub Actions 流水线（`.github/workflows/ci.yml`）包含质量检查、E2E、Lighthouse 与部署后烟测：
 
-- **quality** — lint → test → tsc → generate-rss → build → bundle-budget
+- **quality** — format → check:docs → lint → test → tsc → generate-rss → build → bundle-budget
 - **bundle-analyze** — 构建并上传 Bundle 分析报告
-- **e2e** — 安装 Chromium → 运行 Playwright E2E 测试
-- **lighthouse** — Lighthouse CI 审计
+- **e2e** — 安装 Chromium → 构建一次生产包 → 运行 Playwright → 复用同一构建执行 Lighthouse CI
 - **deploy** — Vercel 生产部署 → `pnpm check:production-content` 线上内容烟测（仅 master push）
 
 部署平台：Vercel（自动跟随 master 分支）。
@@ -205,6 +208,14 @@ GitHub Actions 流水线（`.github/workflows/ci.yml`）包含质量检查、E2E
 - [docs/launch-baseline.md](./docs/launch-baseline.md) — 上线运营基线、生产 smoke、性能和内容资产门禁
 - [docs/css-conventions.md](./docs/css-conventions.md) — CSS 范式规范
 - [docs/cache-components-migration.md](./docs/cache-components-migration.md) — Cache Components 迁移指南
+- [docs/API.md](./docs/API.md) — 搜索 API 契约
+- [docs/performance-baseline.md](./docs/performance-baseline.md) — 性能预算、实验室基线与真实用户目标
+- [docs/handoff-to-agent.md](./docs/handoff-to-agent.md) — 当前接手入口与验证顺序
 - [docs/specs/2026-07-04-shadcn-visual-architecture-design.md](./docs/specs/2026-07-04-shadcn-visual-architecture-design.md) — shadcn 视觉组件架构收口
 - [docs/architecture-review.html](./docs/architecture-review.html) — 历史架构扫描快照
 - [AGENTS.md](./AGENTS.md) — AI 编码助手指引
+
+## 许可证
+
+源码与随附软件文档采用 [MIT License](./LICENSE)。文章如声明独立 `license`
+frontmatter，则以文章声明为准。

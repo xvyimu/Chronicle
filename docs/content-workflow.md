@@ -61,7 +61,7 @@ tags:
   - Workers
 published: true
 featured: true
-image: /images/posts/cloudflare-workers-cover.jpg
+image: /images/blog/cloudflare-workers-cover.jpg
 source: https://github.com/yuanjia1314/domain-check
 license: MIT
 ---
@@ -75,14 +75,15 @@ license: MIT
 | ----------- | -------- | -------- | ---------------------------------------------------- |
 | title       | string   | 是       | 文章标题                                             |
 | description | string   | 是       | 摘要，用于列表与 SEO                                 |
-| date        | string   | 是       | 建议使用 YYYY-MM-DD                                  |
+| date        | string   | 是       | 必须是有效的 YYYY-MM-DD 日期                         |
 | updatedAt   | string   | 否       | 文章有实质更新时填写，格式 YYYY-MM-DD，不应早于 date |
 | tags        | string[] | 否       | 标签列表，默认空数组                                 |
 | category    | string   | 否       | 显式分类；不填时会根据标签映射自动推断               |
 | series      | string   | 否       | 系列名，用于文章页展示和相关文章排序                 |
+| seriesOrder | number   | 否       | 系列内顺序，必须是正整数                             |
 | published   | boolean  | 否       | false 时表示草稿                                     |
 | featured    | boolean  | 否       | true 时可在首页等位置突出展示                        |
-| image       | string   | 否       | 封面图或 OG 图                                       |
+| image       | string   | 否       | `http(s)://` URL 或 `/` 开头的 public 路径           |
 | source      | string   | 否       | 参考项目、原始资料或来源说明                         |
 | license     | string   | 否       | 内容或示例代码许可，例如 MIT、CC-BY-4.0、Original    |
 
@@ -134,18 +135,17 @@ license: MIT
 
 根据 src/lib/projects.ts 当前校验逻辑，可用字段包括：
 
-| 字段            | 类型     | 是否必填 | 说明                   |
-| --------------- | -------- | -------- | ---------------------- |
-| id              | string   | 是       | 唯一标识               |
-| title           | string   | 是       | 项目名称               |
-| description     | string   | 是       | 简介                   |
-| tags            | string[] | 是       | 技术标签               |
-| url             | string   | 否       | 在线地址               |
-| github          | string   | 否       | 仓库地址               |
-| image           | string   | 是       | 封面图                 |
-| featured        | boolean  | 是       | 是否精选               |
-| year            | number   | 是       | 项目年份               |
-| longDescription | boolean  | 否       | 是否存在更长的说明内容 |
+| 字段        | 类型     | 是否必填 | 说明              |
+| ----------- | -------- | -------- | ----------------- |
+| id          | string   | 是       | 唯一标识          |
+| title       | string   | 是       | 项目名称          |
+| description | string   | 是       | 简介              |
+| tags        | string[] | 是       | 技术标签          |
+| url         | string   | 否       | 在线地址          |
+| github      | string   | 否       | 仓库地址          |
+| image       | string   | 否       | public 封面图路径 |
+| featured    | boolean  | 是       | 是否精选          |
+| year        | number   | 是       | 项目年份          |
 
 ### 适合 JSON 的内容
 
@@ -221,7 +221,7 @@ license: MIT
 
 建议做法：
 
-- 文章封面：public/images/posts/
+- 文章图片：public/images/blog/（当前尚无正文图片资产）
 - 项目封面：public/images/projects/
 - 站点级资源：public/images/site/
 
@@ -280,6 +280,8 @@ RSS 由 `scripts/generate-rss.ts` 在构建前生成（`tsx scripts/generate-rss
 - src/lib/site.ts
 - 环境变量 NEXT_PUBLIC_SITE_URL
 
+Feed 先按文件名倒序取最近 20 个 MDX 候选，再过滤 `published: false`，因此最终最多 20 篇，候选中有草稿时会少于 20 篇。非法 frontmatter 会让生成失败；生产环境缺少内容目录或使用 localhost 站点 URL 时也会 fail-fast。
+
 ## 9. 建议的维护习惯
 
 ### 写文章时
@@ -303,11 +305,17 @@ RSS 由 `scripts/generate-rss.ts` 在构建前生成（`tsx scripts/generate-rss
 建议至少运行：
 
 ```bash
+pnpm format:docs:check
+pnpm format:check
 pnpm lint
+pnpm typecheck
 pnpm check:seo
+pnpm check:blur
 pnpm test
-pnpm build
+pnpm exec cross-env NEXT_PUBLIC_SITE_URL=https://incca.ccwu.cc pnpm build
 ```
+
+构建会重写 `public/feed.xml` 和 `public/feed.json`。完成后检查这两个文件的 diff，避免把 localhost URL 或无关生成差异提交。涉及页面交互、移动端或路由行为时再运行 `pnpm test:e2e`。
 
 如果 build 通过，通常也能顺便验证：
 

@@ -2,6 +2,9 @@
 
 Status: implemented on 2026-07-04.
 
+> Historical snapshot: current CSS ownership lives in
+> `docs/css-conventions.md` and `docs/architecture.md`.
+
 This document records the current UI composition layer after the low-saturation
 Paper Gallery redesign and shadcn consolidation. It is a handoff note for agents
 that need to continue visual or component architecture work.

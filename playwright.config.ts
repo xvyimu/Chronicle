@@ -24,7 +24,9 @@ export default defineConfig({
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
   workers: 1,
-  reporter: isCI ? 'github' : 'list',
+  reporter: isCI
+    ? [['github'], ['html', { outputFolder: 'playwright-report', open: 'never' }]]
+    : 'list',
   timeout: 60_000,
 
   use: {

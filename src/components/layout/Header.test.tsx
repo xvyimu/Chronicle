@@ -72,6 +72,19 @@ describe('Header', () => {
     expect(screen.getByText('首页').className).not.toContain('header__link--active');
   });
 
+  it('exposes active navigation state to assistive technology', () => {
+    mockPathname.mockReturnValue('/blog');
+    render(<Header />);
+
+    expect(screen.getByRole('link', { name: '博客' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    expect(screen.getByRole('link', { name: '首页' })).not.toHaveAttribute(
+      'aria-current',
+    );
+  });
+
   it('marks blog link as active when on /blog/some-post', () => {
     mockPathname.mockReturnValue('/blog/test-post');
     render(<Header />);
@@ -121,6 +134,28 @@ describe('Header', () => {
 
     fireEvent.click(menuBtn);
     expect(menuBtn).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('moves focus into the mobile navigation when the menu opens', async () => {
+    render(<Header />);
+
+    const trigger = screen.getByLabelText('打开菜单');
+    trigger.focus();
+    fireEvent.click(trigger);
+
+    const mobileNav = await screen.findByLabelText('主导航', {
+      selector: '#mobile-nav',
+    });
+    await waitFor(() => {
+      const activeElement = document.activeElement;
+      expect(activeElement).toBeInstanceOf(HTMLElement);
+      if (!(activeElement instanceof HTMLElement)) {
+        throw new Error(
+          'Expected the mobile navigation to receive an HTML focus target.',
+        );
+      }
+      expect(mobileNav).toContainElement(activeElement);
+    });
   });
 
   it('closes mobile menu when pathname changes', () => {

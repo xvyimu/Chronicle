@@ -1,136 +1,81 @@
-# 上线运营基线（2026-07-06）
+# 上线运营基线
 
-这份文档记录当前博客项目进入内容运营阶段时的可验证基线。它用于回答三个问题：
+> 状态：当前维护版（2026-07-17）。历史上线检查见 `launch-readiness-2026-07-10.md`。
 
-- 当前线上版本是否健康
-- 后续应该看哪些指标
-- 内容资产扩展时有哪些质量门禁
+## 1. 最新生产证据
 
-## 1. 当前状态
+| 项目     | 当前值                                     | 证据                                                                      |
+| -------- | ------------------------------------------ | ------------------------------------------------------------------------- |
+| 生产域名 | `https://incca.ccwu.cc`                    | `NEXT_PUBLIC_SITE_URL` / production smoke                                 |
+| 提交     | `8ee2e712b5665c7f0c94770038e581f5621383cd` | `docs: record deferred account-dependent P2 work`                         |
+| CI run   | `29573545749`                              | [GitHub Actions](https://github.com/xvyimu/blog/actions/runs/29573545749) |
+| CI 结论  | `success`                                  | quality、bundle-analyze、e2e/Lighthouse、deploy/smoke 全绿                |
+| 内容规模 | 14 篇文章、6 个项目、10 类 123 条收藏      | 本地 MDX/JSON                                                             |
 
-| 项目             | 当前值                                      | 说明                                                                      |
-| ---------------- | ------------------------------------------- | ------------------------------------------------------------------------- |
-| 上线功能基线提交 | `0e1fc8f feat: polish content discovery UX` | 已推送并部署                                                              |
-| 功能基线 CI run  | `28790352462`                               | [GitHub Actions](https://github.com/xvyimu/blog/actions/runs/28790352462) |
-| CI 结论          | `success`                                   | `quality`、`e2e`、`bundle-analyze`、`lighthouse`、`deploy` 全绿           |
-| 功能基线 CI 时间 | 2026-07-06 20:07:54 CST 至 20:16:34 CST     | GitHub 返回 UTC，已换算为北京时间                                         |
-| 生产域名         | `https://incca.ccwu.cc`                     | `check-production-content` 已验证                                         |
-| 生产内容烟测     | 通过                                        | 首页、博客、作品、导航、RSS、Sitemap 均返回 200 并包含本地内容            |
-| 当前本地文章     | 14 篇                                       | `content/blog/*.mdx`                                                      |
-| 当前本地收藏分类 | 10 类                                       | `data/links.json`                                                         |
-| 当前本地收藏链接 | 123 条                                      | 其中 32 条已补运营元信息                                                  |
+生产证据是时间点快照。新 master 部署成功后更新本节，不要把历史报告中的提交号复制为当前状态。
 
-> 注意：本文件记录的是功能基线提交 `0e1fc8f`，包含收藏页筛选、搜索空状态引导、404/错误页恢复入口等 P2 UX 收尾改动。纯文档刷新提交不改变功能基线，最新流水线状态以 GitHub Actions 为准。
+## 2. 流水线与发布顺序
 
-## 2. 线上 Smoke 结果
+```text
+quality → e2e（production build + Playwright + Lighthouse）
+        → deploy（master push only）→ production content smoke
 
-2026-07-06 本地执行：
+bundle-analyze（并行、独立，不是 deploy 依赖）
+```
+
+- `quality`：依赖审计、代码/文档格式、lint、Vitest、类型、SEO、blur、build、RSS diff、bundle budget。
+- `bundle-analyze`：独立构建并上传 `.next/analyze/` artifact，不阻塞 e2e。
+- `e2e`：依赖 quality；一次 production build 同时供 48 项 Playwright 和 Lighthouse 使用。
+- `deploy`：依赖 quality + e2e；固定 Vercel CLI 56.2.1 上传源码并远端构建，随后检查生产内容。
+
+## 3. 当前质量基线
+
+| 门禁                | 当前证据                                             |
+| ------------------- | ---------------------------------------------------- |
+| Vitest              | 77 files / 599 tests，2026-07-17 本地通过            |
+| Playwright          | 5 files / 48 tests，最新 CI 通过                     |
+| TypeScript / ESLint | 最新 CI 通过                                         |
+| SEO / blur          | 最新 CI 通过                                         |
+| Production build    | 93 个生成条目，document routes 因 nonce 按需动态渲染 |
+| Lighthouse          | desktop preset，5 页 × 2 次，最新 CI 通过            |
+| Production smoke    | 首页、博客、项目、收藏、RSS、sitemap 等内容检查通过  |
+
+2026-07-17 Node 22 CI production build 的 bundle 快照：
+
+| 指标                   |     当前值 |      预算 |
+| ---------------------- | ---------: | --------: |
+| 最大 JS chunk          | `222.0 KB` |  `300 KB` |
+| 最大 CSS bundle        | `181.8 KB` |  `300 KB` |
+| CSS bundle 总量        | `301.4 KB` |    观察值 |
+| 总静态产物（不含字体） |  `1.15 MB` | `2.00 MB` |
+
+这是构建产物大小，不是网络传输量。趋势和历史 Lighthouse 见 [performance-baseline.md](./performance-baseline.md)。
+
+## 4. 生产内容 smoke
+
+标准命令：
 
 ```bash
 pnpm check:production-content -- --base-url=https://incca.ccwu.cc
 ```
 
-结果摘要：
+脚本检查核心 HTML、RSS、sitemap 和本地内容标志。失败时按顺序区分：
 
-| 页面           | 状态 | 字节数 |
-| -------------- | ---- | ------ |
-| `/`            | 200  | 134097 |
-| `/blog`        | 200  | 115148 |
-| `/projects`    | 200  | 76271  |
-| `/links`       | 200  | 159442 |
-| `/sitemap.xml` | 200  | 11974  |
-| `/feed.xml`    | 200  | 106860 |
+1. 部署尚未生效或域名指向旧版本；
+2. `NEXT_PUBLIC_SITE_URL` 或 Vercel 环境变量错误；
+3. MDX/JSON 未被 output tracing 带入；
+4. 页面、feed 或 sitemap 内容回归。
 
-验收标准：
+## 5. 内容与性能运营
 
-- 所有核心页面返回 200。
-- `content-type` 符合 HTML 或 XML 预期。
-- 页面包含本地内容源中的标题、项目、收藏分类或 RSS 条目。
-- 失败时先区分是部署尚未生效、环境变量错误，还是内容源缺失。
+- 内容 schema、收藏运营字段和发布流程见 [content-workflow.md](./content-workflow.md)。
+- 真实用户性能以 Vercel Speed Insights p75 为准：LCP `<=2.5s`、INP `<=200ms`、CLS `<=0.1`。
+- 当前没有可验证的真实 p75；没有 token 或样本时保持 pending，不用 Lighthouse 代填。
+- GSC/Bing 因用户禁止登录而暂停，恢复前必须重新取得账号授权。
 
-## 3. 性能与质量门禁
+## 6. 上线前后检查
 
-| 门禁          | 当前状态     | 命令或来源                                    |
-| ------------- | ------------ | --------------------------------------------- |
-| 格式检查      | CI 已通过    | `pnpm format:check`、`pnpm format:docs:check` |
-| Lint          | CI 已通过    | `pnpm lint`                                   |
-| 单元/集成测试 | CI 已通过    | `pnpm test`                                   |
-| 类型检查      | CI 已通过    | `pnpm exec tsc --noEmit`                      |
-| SEO/内容检查  | 本轮本地通过 | `pnpm check:seo`                              |
-| 生产构建      | CI 已通过    | `pnpm build`                                  |
-| E2E           | CI 已通过    | `pnpm test:e2e`                               |
-| Lighthouse    | CI 已通过    | `lighthouse.config.js` desktop preset         |
-| Bundle budget | 本轮本地通过 | 总静态产物 `1.14 MB / 2.00 MB`                |
-
-Bundle 预算快照：
-
-| 指标            | 当前值   | 预算    |
-| --------------- | -------- | ------- |
-| 最大 JS chunk   | 272.5 KB | 300 KB  |
-| 最大 CSS bundle | 272.5 KB | 300 KB  |
-| CSS bundle 总量 | 389.1 KB | 参考值  |
-| 总静态产物      | 1.14 MB  | 2.00 MB |
-
-## 4. 真实用户指标
-
-真实用户性能以 Vercel Speed Insights 为准。根布局已经接入：
-
-- `@vercel/analytics/react`
-- `@vercel/speed-insights/next`
-
-生产环境渲染条件由 `src/lib/observability.ts` 控制：`process.env.VERCEL === '1'`。
-
-建议每周记录这些 p75 指标：
-
-| 路由                      | LCP p75 | INP p75 | CLS p75 | 样本数 | 备注                  |
-| ------------------------- | ------- | ------- | ------- | ------ | --------------------- |
-| `/`                       | 待填    | 待填    | 待填    | 待填   | 首页首屏与内容发现    |
-| `/blog`                   | 待填    | 待填    | 待填    | 待填   | 搜索与文章索引        |
-| `/blog/nextjs-app-router` | 待填    | 待填    | 待填    | 待填   | 文章详情、TOC、代码块 |
-| `/projects`               | 待填    | 待填    | 待填    | 待填   | 项目图片和卡片        |
-| `/links`                  | 待填    | 待填    | 待填    | 待填   | 收藏目录，链接量最大  |
-| `/about`                  | 待填    | 待填    | 待填    | 待填   | 静态内容页            |
-
-行动阈值：
-
-| 指标    | 目标       | 需要调查  |
-| ------- | ---------- | --------- |
-| LCP p75 | `<= 2.5s`  | `> 3.0s`  |
-| INP p75 | `<= 200ms` | `> 300ms` |
-| CLS p75 | `<= 0.1`   | `> 0.1`   |
-
-## 5. 内容资产基线
-
-当前内容源：
-
-| 内容源               | 数量           | 说明                         |
-| -------------------- | -------------- | ---------------------------- |
-| `content/blog/*.mdx` | 14             | 博客文章                     |
-| `content/about.mdx`  | 1              | 关于页                       |
-| `data/projects.json` | 作品集 JSON    | 首页和作品页使用             |
-| `data/links.json`    | 10 类 / 123 条 | 个人收藏、官网入口和参考资料 |
-
-收藏链接可选运营字段：
-
-| 字段          | 用途                                               |
-| ------------- | -------------------------------------------------- |
-| `official`    | 标记官网或原始权威入口                             |
-| `priority`    | `primary`、`reference`、`watchlist` 三档运营优先级 |
-| `useCase`     | 用一句话说明为什么收藏、何时使用                   |
-| `lastChecked` | 最近人工核对日期，格式 `YYYY-MM-DD`                |
-
-`pnpm check:seo` 已覆盖这些链接资产问题：
-
-- `data/links.json` JSON 解析失败
-- schema 校验失败
-- 重复分类 id
-- 空分类
-- 重复 URL（忽略末尾 `/`）
-- `utm_*`、`aff`、`ref`、`referral`、`coupon`、`partner` 等追踪或推广参数
-
-## 6. 每次上线前检查
-
-推荐顺序：
+上线前：
 
 ```bash
 pnpm format:check
@@ -138,30 +83,20 @@ pnpm format:docs:check
 pnpm lint
 pnpm typecheck
 pnpm check:seo
+pnpm check:blur
 pnpm test
-pnpm build
+pnpm exec cross-env NEXT_PUBLIC_SITE_URL=https://incca.ccwu.cc pnpm build
+pnpm exec tsx scripts/check-bundle-budget.ts
 pnpm test:e2e
 ```
 
-部署后：
+检查 `public/feed.xml`、`public/feed.json` 和工作树没有意外生成差异。上线后运行 production smoke，并观察 CSP、搜索 API 和关键页面状态。
 
-```bash
-pnpm check:production-content -- --base-url=https://incca.ccwu.cc
-```
+## 7. 回滚
 
-若只改内容源，最低也要运行：
+- 部署故障：在获得生产权限后，将 Vercel 回滚到上一个成功 deployment。
+- 代码故障：创建新的 revert commit，走完整 CI；禁止 force push 或重写共享历史。
+- 内容故障：修复 MDX/JSON 并至少运行 SEO、build 和 production smoke。
+- CSP/环境故障：优先恢复上一份已验证配置，禁止临时加入 `unsafe-inline` 绕过。
 
-```bash
-pnpm check:seo
-pnpm build
-```
-
-## 7. 下一次刷新
-
-本文件应在以下情况下更新：
-
-- master 上产生新的生产部署
-- 收藏链接数量、文章数量或内容源结构明显变化
-- Vercel Speed Insights 有足够真实用户样本
-- Lighthouse 或 bundle budget 阈值调整
-- CI/CD 流程增加或移除门禁
+更新本文件时必须附上新的提交、CI run、smoke 结论和实测 bundle；缺失任一证据时保留旧基线并标明待验证。

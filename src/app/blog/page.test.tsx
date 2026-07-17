@@ -40,7 +40,7 @@ describe('BlogPage', () => {
 
   it('renders the blog page title', async () => {
     await renderBlogPage();
-    expect(screen.getByText('博客')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: '博客' })).toBeInTheDocument();
   });
 
   it('renders search bar with all posts', async () => {

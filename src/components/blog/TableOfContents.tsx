@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import { useEffect, useState } from 'react';
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 
 interface TocItem {
   id: string;
@@ -17,6 +18,7 @@ export default function TableOfContents({
 }: TableOfContentsProps = {}) {
   const [items, setItems] = useState<TocItem[]>([]);
   const [activeId, setActiveId] = useState<string>('');
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
     const article =
@@ -63,7 +65,9 @@ export default function TableOfContents({
             }`}
             onClick={(e) => {
               e.preventDefault();
-              document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth' });
+              document.getElementById(item.id)?.scrollIntoView({
+                behavior: prefersReducedMotion ? 'auto' : 'smooth',
+              });
             }}
           >
             {item.text}

@@ -1,6 +1,8 @@
 # Launch Readiness - 2026-07-10
 
-本文件记录 2026-07-10 本轮上线前检查结果。当前尚未部署；本轮变更仍处于本地未提交状态。
+> Historical snapshot: this pre-deploy checklist was completed by later production runs. Current production evidence is maintained in `docs/launch-baseline.md`.
+
+本文件记录 2026-07-10 当时的上线前检查结果；在该快照时间点，变更尚未提交或部署。后续生产状态不要从本文件推断。
 
 ## 1. 变更范围
 

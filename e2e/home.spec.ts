@@ -43,11 +43,7 @@ test.describe('首页', () => {
     // Verify the blog link exists in header
     const blogLink = page.locator('header a[href="/blog"]').first();
     await expect(blogLink).toBeVisible({ timeout: 10000 });
-    // Use evaluate().click() to bypass blog card ::after overlay interception
-    await page.evaluate(() => {
-      const link = document.querySelector('header a[href="/blog"]') as HTMLAnchorElement;
-      link?.click();
-    });
+    await blogLink.click();
     await expect(page).toHaveURL(/\/blog/, { timeout: 15000 });
   });
 

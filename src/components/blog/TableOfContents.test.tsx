@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent } from '@testing-library/react';
+
+const mockPrefersReducedMotion = vi.fn(() => false);
+
+vi.mock('@/hooks/usePrefersReducedMotion', () => ({
+  usePrefersReducedMotion: () => mockPrefersReducedMotion(),
+}));
 import TableOfContents from './TableOfContents';
 
 describe('TableOfContents', () => {
@@ -12,6 +18,7 @@ describe('TableOfContents', () => {
     cleanup();
     vi.restoreAllMocks();
     removeArticles();
+    mockPrefersReducedMotion.mockReturnValue(false);
   });
 
   afterEach(() => {
@@ -102,6 +109,26 @@ describe('TableOfContents', () => {
     const link = screen.getByRole('link', { name: 'Getting Started' });
     expect(link).toHaveAttribute('href', '#getting-started');
   });
+
+  it.each([
+    { reduced: false, behavior: 'smooth' as const },
+    { reduced: true, behavior: 'auto' as const },
+  ])(
+    'uses $behavior scrolling when reduced motion is $reduced',
+    ({ reduced, behavior }) => {
+      mockPrefersReducedMotion.mockReturnValue(reduced);
+      const article = document.createElement('article');
+      article.innerHTML = '<h2 id="motion">Motion</h2>';
+      document.body.appendChild(article);
+      const heading = article.querySelector('#motion') as HTMLElement;
+      heading.scrollIntoView = vi.fn();
+
+      render(<TableOfContents />);
+      fireEvent.click(screen.getByRole('link', { name: 'Motion' }));
+
+      expect(heading.scrollIntoView).toHaveBeenCalledWith({ behavior });
+    },
+  );
 
   it('indents h3 items more than h2 items', () => {
     const article = document.createElement('article');

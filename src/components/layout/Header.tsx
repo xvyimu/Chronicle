@@ -31,6 +31,7 @@ function NavLinks({
             key={item.href}
             href={item.href}
             className={`header__link ${isActive ? 'header__link--active' : ''}`}
+            aria-current={isActive ? 'page' : undefined}
             onClick={onNavigate}
           >
             {item.label}
@@ -155,10 +156,6 @@ export default function Header() {
             aria-label="主导航"
             overlayClassName={`header__backdrop${mobileOpen ? ' is-open' : ''}`}
             className={`header__nav header__nav--sheet${mobileOpen ? ' is-open' : ''}`}
-            onOpenAutoFocus={(event) => {
-              // Keep focus on the toggle for parity with the previous drawer.
-              event.preventDefault();
-            }}
           >
             <SheetTitle className="sr-only">站点导航</SheetTitle>
             <SheetDescription className="sr-only">移动端主导航菜单</SheetDescription>

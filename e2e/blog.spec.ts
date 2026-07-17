@@ -5,7 +5,7 @@ test.describe('博客列表页', () => {
     await page.goto('/blog');
     await page.waitForLoadState('domcontentloaded');
     // Use heading role to avoid matching header nav link
-    await expect(page.getByRole('heading', { name: '博客' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: '博客' })).toBeVisible();
     await expect(page.getByPlaceholder(/搜索文章/)).toBeVisible();
   });
 
@@ -39,8 +39,7 @@ test.describe('博客列表页', () => {
     // Clear button should appear after input has content
     const clearBtn = page.getByLabel('清除搜索');
     await expect(clearBtn).toBeVisible({ timeout: 10000 });
-    // Use evaluate to click — avoids overlay interception
-    await clearBtn.dispatchEvent('click');
+    await clearBtn.click();
 
     await expect(searchInput).toHaveValue('');
   });
@@ -59,8 +58,7 @@ test.describe('博客列表页', () => {
     await expect(pagination).toBeVisible();
     const nextBtn = page.getByRole('link', { name: /下一页/ });
     await expect(nextBtn).toBeVisible();
-    // dispatchEvent avoids sticky header / card overlay intercepting click
-    await nextBtn.dispatchEvent('click');
+    await nextBtn.click();
     await expect(page).toHaveURL(/page=2/, { timeout: 15000 });
     const secondPageFirstPost = await page
       .locator('main .blog__item a[href^="/blog/"]')
@@ -109,6 +107,18 @@ test.describe('博客文章详情页', () => {
     // Reading progress bar should exist (data-testid added for testability)
     const progressBar = page.locator('[data-testid="reading-progress"]');
     await expect(progressBar).toBeAttached();
+    await expect
+      .poll(() =>
+        page.locator('#main-content').evaluate((element) => {
+          return getComputedStyle(element).transform;
+        }),
+      )
+      .toBe('none');
+
+    await page.evaluate(() => window.scrollTo(0, 600));
+    await expect
+      .poll(async () => (await progressBar.boundingBox())?.y ?? Number.NaN)
+      .toBeCloseTo(0, 1);
   });
 
   test('文章页面显示目录和标签', async ({ page }) => {

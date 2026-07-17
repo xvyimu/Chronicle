@@ -20,7 +20,7 @@ A personal blog built with Next.js 16.2 (App Router), React 19, and Tailwind CSS
 - **Content**: MDX with custom frontmatter parser (`lib/parse-frontmatter.ts`, js-yaml 4.x), next-mdx-remote
 - **Syntax Highlighting**: Shiki via rehype-pretty-code
 - **Search**: fuse.js (client-side fuzzy search)
-- **Testing**: Vitest (unit/integration, 547 tests, 70 files), Playwright (E2E, 47 tests, 5 spec files)
+- **Testing**: Vitest (unit/integration, 599 tests, 77 files), Playwright (E2E, 48 tests, 5 spec files)
 - **CI**: GitHub Actions (lint / test / tsc / build / bundle-budget / e2e)
 - **Deployment**: Vercel
 
@@ -120,11 +120,12 @@ src/
 
 ```bash
 pnpm dev          # Start dev server (port 3000; Turbopack)
-pnpm build        # Generate RSS + production build (93 page artifacts; routes are dynamic due CSP nonce)
-pnpm test         # Run unit/integration tests (547 tests, 70 files)
-pnpm test:e2e     # Run E2E tests (47 tests, 5 spec files; auto-starts dev/prod server on port 3001)
+pnpm build        # Generate RSS + production build; document routes are dynamic due CSP nonce
+pnpm test         # Run unit/integration tests (599 tests, 77 files; 2026-07-17 baseline)
+pnpm test:e2e     # Run E2E tests (48 tests, 5 spec files; auto-starts dev/prod server on port 3001)
 pnpm test:e2e:raw # Playwright raw (pass-through flags, e.g. --ui)
 pnpm lint         # ESLint
+pnpm check:docs   # Internal Markdown link check
 pnpm check:seo    # SEO audit (tsx scripts/check-seo.ts)
 pnpm check:production-content # Production content smoke test against NEXT_PUBLIC_SITE_URL
 pnpm analyze      # Bundle size analysis (ANALYZE=true next build)
@@ -143,7 +144,7 @@ tsc --noEmit      # TypeScript check
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on push/PR to master:
 
-1. **quality** — pnpm audit → lint → test → tsc → generate-rss → build → bundle-budget
+1. **quality** — pnpm audit → format → check:docs → lint → test → tsc → generate-rss → build → bundle-budget
 2. **bundle-analyze** — builds with analyzer, uploads report as artifact
 3. **e2e** — installs Chromium, builds production once, then sequentially runs Playwright and Lighthouse CI (`lighthouse.config.js`)
 4. **deploy** — Vercel production deploy + production content smoke test (needs quality + e2e; master push only)

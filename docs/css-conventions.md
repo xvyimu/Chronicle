@@ -41,9 +41,9 @@ src/app/projects/[id]/layout.tsx ← project-detail.css
 ### 使用 BEM 自定义类的场景
 
 - **结构性布局**：`.section`、`.header`、`.hero`、`.cards`
-- **跨页面复用组件**：`.card`、`.btn`、`.blog__item`、`.tag-link`
+- **跨页面复用组件**：`.card`、`.blog__item`、`.tag-link`、`.pagination`
 - **需要 `:hover`/`:focus`/状态变化的复杂交互**：`.header--scrolled`、`.header__nav.is-open`
-- **需要响应式 media query 覆盖的样式**：放入 `responsive.css`
+- **全局响应式覆盖**：放入 `responsive.css`；路由专属组件的媒体查询留在所属 route CSS
 
 ### 使用 Tailwind 工具类的场景
 
@@ -85,8 +85,9 @@ src/app/projects/[id]/layout.tsx ← project-detail.css
 | `--brand`           | 品牌色     | `#59756d`                  | `#9db6ad`                   |
 | `--brand-soft`      | 品牌色浅底 | `rgba(89, 117, 109, 0.12)` | `rgba(157, 182, 173, 0.14)` |
 | `--shadow-sm/md/lg` | 阴影层级   | —                          | —                           |
-| `--radius`          | 默认圆角   | `12px`                     | `12px`                      |
-| `--radius-sm`       | 小圆角     | `8px`                      | `8px`                       |
+| `--radius`          | 默认圆角   | `14px`                     | `14px`                      |
+| `--radius-sm`       | 小圆角     | `10px`                     | `10px`                      |
+| `--radius-xs`       | 紧凑圆角   | `6px`                      | `6px`                       |
 
 ### 引用规则
 
@@ -143,30 +144,30 @@ background: #ffffff;
 
 1. **Block 名**：使用语义化名称，不用表现性名称（`.card` 不用 `.rounded-box`）
 2. **Element 名**：描述角色，不用位置（`.card__title` 不用 `.card__top`）
-3. **Modifier 名**：描述状态或变体，不用值（`.btn--primary` 不用 `.btn--indigo`）
+3. **Modifier 名**：描述状态或变体，不用值（`.card--featured` 不用 `.card--gold`）
 4. **状态类**：用 `.is-` 前缀表示运行时状态（`.is-open`、`.is-active`、`.is-loading`）
 
 ## 文件归属规则
 
-| 文件                 | 内容                                        | 示例                                        |
-| -------------------- | ------------------------------------------- | ------------------------------------------- |
-| `tokens.css`         | CSS 变量、reset、主题切换、滚动条、选中样式 | `:root`、`.dark`、`::selection`             |
-| `base.css`           | 页面骨架和全局基础                          | `.header`、`.footer`、`.skip-link`          |
-| `components.css`     | 可复用布局和基础卡片                        | `.section`、`.card`、`.cards`               |
-| `archive.css`        | 归档页和 ArchiveCard                        | `.archive-grid`、`.archive-card`            |
-| `controls.css`       | 按钮、分页、标签链接和轻量控制              | `.btn`、`.pagination`、`.tag-link`          |
-| `links.css`          | 收藏导航目录                                | `.links-directory`                          |
-| `blog-ui.css`        | 博客列表、目录和辅助界面                    | `.blog__item`、`.toc`、`.tag-cloud`         |
-| `search-ui.css`      | 搜索输入与结果列表                          | `.search-bar`、`.search-results`            |
-| `article-ui.css`     | 文章详情布局和阅读面板                      | `.article-layout`、`.article-panel`         |
-| `backdrop.css`       | 背景视觉层                                  | `body::before`、`.site-backdrop__stage`     |
-| `home.css`           | 首页主题覆盖、共享样式和响应式              | `.home-paper`、`body:has(.home-paper)`      |
-| `home-hero.css`      | 首页首屏                                    | `.editorial-hero`                           |
-| `home-sections.css`  | 首页内容区块                                | `.home-manifesto`、`.home-article-rail`     |
-| `prose.css`          | MDX 渲染的文章排版                          | `.prose h2`、`.prose code`、`.code-toolbar` |
-| `project-detail.css` | 项目详情页                                  | `.project-detail`                           |
-| `animations.css`     | 动画关键帧和动效类                          | `.reveal-on-scroll`、`.animate-fade-in`     |
-| `responsive.css`     | 媒体查询覆盖                                | `@media (max-width: 768px)`                 |
+| 文件                 | 内容                                        | 示例                                               |
+| -------------------- | ------------------------------------------- | -------------------------------------------------- |
+| `tokens.css`         | CSS 变量、reset、主题切换、滚动条、选中样式 | `:root`、`.dark`、`::selection`                    |
+| `base.css`           | 页面骨架和全局基础                          | `.header`、`.footer`、`.skip-link`                 |
+| `components.css`     | 可复用布局和基础卡片                        | `.section`、`.card`、`.cards`                      |
+| `archive.css`        | 归档页和 ArchiveCard                        | `.archive-grid`、`.archive-card`                   |
+| `controls.css`       | shadcn Button 外观、分页、标签和轻量控制    | `[data-slot='button']`、`.pagination`、`.tag-link` |
+| `links.css`          | 收藏导航目录                                | `.links-directory`                                 |
+| `blog-ui.css`        | 博客列表、目录和辅助界面                    | `.blog__item`、`.toc`、`.tag-cloud`                |
+| `search-ui.css`      | 搜索输入与结果列表                          | `.search-bar`、`.search-results`                   |
+| `article-ui.css`     | 文章详情布局和阅读面板                      | `.article-layout`、`.article-panel`                |
+| `backdrop.css`       | 背景视觉层                                  | `body::before`、`.site-backdrop__stage`            |
+| `home.css`           | 首页主题覆盖、共享样式和响应式              | `.home-paper`、`body:has(.home-paper)`             |
+| `home-hero.css`      | 首页首屏                                    | `.editorial-hero`                                  |
+| `home-sections.css`  | 首页内容区块                                | `.home-manifesto`、`.home-article-rail`            |
+| `prose.css`          | MDX 渲染的文章排版                          | `.prose h2`、`.prose code`、`.code-toolbar`        |
+| `project-detail.css` | 项目详情页                                  | `.project-detail`                                  |
+| `animations.css`     | 动画关键帧和动效类                          | `.reveal-on-scroll`、`.animate-fade-in`            |
+| `responsive.css`     | 媒体查询覆盖                                | `@media (max-width: 768px)`                        |
 
 **规则**：新组件的 CSS 放入最接近语义归属的模块。跨页面通用组件放入
 `components.css` / `archive.css` / `controls.css`；博客专属放入 `blog-ui.css` /
@@ -188,19 +189,22 @@ background: #ffffff;
 
 ### 断点
 
-| 断点   | 宽度      | 用途               |
-| ------ | --------- | ------------------ |
-| 移动端 | `≤ 768px` | 单列布局、汉堡菜单 |
-| 桌面端 | `≥ 769px` | 多列布局、完整导航 |
+| 断点        | 宽度       | 用途                 |
+| ----------- | ---------- | -------------------- |
+| 窄屏        | `≤ 374px`  | 极窄设备微调         |
+| 移动端      | `≤ 767px`  | 单列布局、Sheet 菜单 |
+| 平板/窄桌面 | `≤ 1023px` | 两列与间距调整       |
+| 桌面端      | `≥ 1024px` | 完整导航与多列布局   |
 
 ### 实现方式
 
 1. **Tailwind 响应式工具**（优先）：`md:flex`、`lg:grid-cols-3`
-2. **`responsive.css` 媒体查询**（覆盖）：当 Tailwind 工具无法满足时
+2. **route CSS 媒体查询**：只影响 home、links、search 或 project-detail 时，留在对应文件
+3. **`responsive.css` 媒体查询**：只放跨路由的最终覆盖，并保持根 layout 最后加载
 
 ```css
 /* responsive.css 中覆盖 BEM 类的响应式样式 */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .section {
     padding: 40px 16px;
   }

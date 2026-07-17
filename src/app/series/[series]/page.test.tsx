@@ -40,7 +40,7 @@ describe('SeriesDetailPage', () => {
     render(jsx);
 
     expect(
-      screen.getByRole('heading', { name: '专题：个人服务部署路线' }),
+      screen.getByRole('heading', { level: 1, name: '专题：个人服务部署路线' }),
     ).toBeInTheDocument();
 
     const list = screen.getByRole('list');

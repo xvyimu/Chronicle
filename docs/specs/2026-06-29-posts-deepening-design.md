@@ -1,5 +1,7 @@
 # 设计文档: posts.ts 深化重构 + 动态路由 adapter (S2+S4+S6 余项)
 
+> 状态：已实施。正文中的测试数量和步骤是 2026-06-29 设计快照。
+
 **日期**: 2026-06-29
 **作者**: brainstorming skill 流程
 **关联**: docs/architecture-review.html 中 S2 / S4 / S6 候选的"顺手解决"部分
@@ -56,12 +58,12 @@ src/lib/posts/
 
 **职责划分**:
 
-| 模块 | 输入 | 输出 | 职责 |
-|------|------|------|------|
-| `schema.ts` | 无 | `postFrontmatterSchema`, `PostFrontmatterInput`, `PostFrontmatterParsed` | zod schema + 类型派生 |
-| `repository.ts` | `ContentSource` | `{ getAllPosts, getPostBySlug, getAllPostSlugs, getFeaturedPosts }` | 缓存 + 读取 + frontmatter 校验 + reading-time 计算 |
-| `query.ts` | `PostMeta[]` 或 `PostFull[]` | 筛选/排序结果 | 纯函数查询 |
-| `search-text.ts` | `content: string` | `string \| string[]` | MDX 清洗 (无业务依赖) |
+| 模块             | 输入                         | 输出                                                                     | 职责                                               |
+| ---------------- | ---------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------- |
+| `schema.ts`      | 无                           | `postFrontmatterSchema`, `PostFrontmatterInput`, `PostFrontmatterParsed` | zod schema + 类型派生                              |
+| `repository.ts`  | `ContentSource`              | `{ getAllPosts, getPostBySlug, getAllPostSlugs, getFeaturedPosts }`      | 缓存 + 读取 + frontmatter 校验 + reading-time 计算 |
+| `query.ts`       | `PostMeta[]` 或 `PostFull[]` | 筛选/排序结果                                                            | 纯函数查询                                         |
+| `search-text.ts` | `content: string`            | `string \| string[]`                                                     | MDX 清洗 (无业务依赖)                              |
 
 **barrel (`index.ts`)** re-export 所有公共 API, 现有 `import { ... } from '@/lib/posts'` 调用方零改动.
 
@@ -112,11 +114,15 @@ export const postRepository = createPostRepository(filesystemSource);
 // src/lib/test-utils/in-memory-source.ts (新建)
 import type { ContentSource } from '@/lib/content-source';
 
-interface InMemoryFiles { [relativePath: string]: string; }
+interface InMemoryFiles {
+  [relativePath: string]: string;
+}
 
 export function createInMemorySource(files: InMemoryFiles): ContentSource {
   return {
-    readFile(path) { return files[path] ?? null; },
+    readFile(path) {
+      return files[path] ?? null;
+    },
     readDir(path) {
       const prefix = path.endsWith('/') ? path : `${path}/`;
       const entries = Object.keys(files)
@@ -163,9 +169,10 @@ describe('createPostRepository', () => {
 
   it('filters drafts in production', () => {
     process.env.NODE_ENV = 'production';
-    const repo = createPostRepository(createInMemorySource({
-      ...FIXTURE,
-      'content/blog/2026-06-draft.mdx': `---
+    const repo = createPostRepository(
+      createInMemorySource({
+        ...FIXTURE,
+        'content/blog/2026-06-draft.mdx': `---
 title: 草稿
 description: 草稿描述
 date: 2026-06-02
@@ -173,7 +180,8 @@ tags: [test]
 published: false
 ---
 草稿正文`,
-    }));
+      }),
+    );
     expect(repo.getAllPosts().find((p) => p.slug === 'draft')).toBeUndefined();
     process.env.NODE_ENV = 'test';
   });
@@ -255,11 +263,7 @@ export function createDynamicRoute<TData>(config: DynamicRouteConfig<TData>) {
     return config.buildMetadata(data, slug);
   }
 
-  async function Page({
-    params,
-  }: {
-    params: Promise<{ [key: string]: string }>;
-  }) {
+  async function Page({ params }: { params: Promise<{ [key: string]: string }> }) {
     const resolved = await params;
     const rawSlug = resolved[paramKey];
     const slug = decodeSlug(rawSlug);
@@ -282,6 +286,7 @@ function decodeSlug(rawSlug: string): string {
 ```
 
 **设计决策**:
+
 - `buildMetadata` 是必填字段 (非 optional), 因为 adapter 无法从泛型 `TData` 推断 title/description
 - `pathPrefix` 单独传入, 而非从 `paramKey` 推断, 因为 `/tags/[tag]` 的 paramKey 是 'tag' 但 pathPrefix 是 '/tags'
 - `decodeSlug` 内置在 adapter 中, 统一所有路由的 URL 解码行为
@@ -394,16 +399,16 @@ posts/repository.ts (注入 in-memory source, 与全局 source 隔离)
 
 ### 5.1 新增测试 (预计 +35-50 个)
 
-| 文件 | 测试数 (估) | 覆盖内容 |
-|------|------------|----------|
-| `posts/schema.test.ts` | 5-8 | schema 校验 + default + 边界 |
-| `posts/repository.test.ts` | 10-15 | in-memory source 注入 + frontmatter 校验 + reading-time + draft 过滤 |
-| `posts/query.test.ts` | 15-20 | 筛选/排序/分页/相邻/相关/系列 (用 in-memory fixture) |
-| `posts/search-text.test.ts` | 5-8 | 已有 5 个, 拆出后保持 |
-| `content-source.test.ts` | 5-8 | createPostRepository + in-memory source + 默认实例 |
-| `route-adapter.test.ts` | 8-12 | 4 个路由 × adapter 行为 (canonical / notFound / metadata) |
-| `scripts/generate-rss.test.ts` | 3-5 | schema 共享后的 RSS 生成 |
-| `scripts/check-seo.test.ts` | 3-5 | schema 共享后的 SEO 检查 |
+| 文件                           | 测试数 (估) | 覆盖内容                                                             |
+| ------------------------------ | ----------- | -------------------------------------------------------------------- |
+| `posts/schema.test.ts`         | 5-8         | schema 校验 + default + 边界                                         |
+| `posts/repository.test.ts`     | 10-15       | in-memory source 注入 + frontmatter 校验 + reading-time + draft 过滤 |
+| `posts/query.test.ts`          | 15-20       | 筛选/排序/分页/相邻/相关/系列 (用 in-memory fixture)                 |
+| `posts/search-text.test.ts`    | 5-8         | 已有 5 个, 拆出后保持                                                |
+| `content-source.test.ts`       | 5-8         | createPostRepository + in-memory source + 默认实例                   |
+| `route-adapter.test.ts`        | 8-12        | 4 个路由 × adapter 行为 (canonical / notFound / metadata)            |
+| `scripts/generate-rss.test.ts` | 3-5         | schema 共享后的 RSS 生成                                             |
+| `scripts/check-seo.test.ts`    | 3-5         | schema 共享后的 SEO 检查                                             |
 
 ### 5.2 现有测试迁移
 
@@ -414,6 +419,7 @@ posts/repository.ts (注入 in-memory source, 与全局 source 隔离)
   - `posts.integration.test.ts` (1-2 个, 验证真实 content/blog 可读)
 
 **测试断言策略**:
+
 - 现有断言 `getPostBySlug('go-cli-tool').title contains 'Go'` → 改为 in-memory fixture 中创建 slug='go-cli-tool' 的测试文章, 断言其 title
 - 现有断言 `getSeriesPosts('vps-initial-setup')` 返回 5 篇 → 改为 fixture 中创建 5 篇同 series 文章, 断言顺序
 
@@ -441,9 +447,11 @@ posts/repository.ts (注入 in-memory source, 与全局 source 隔离)
 **风险**: Next.js App Router 要求 `page.tsx` 默认导出 React 组件, `generateStaticParams` 和 `generateMetadata` 是命名导出. `createDynamicRoute` 返回的对象解构后赋值给 `export const` 是否符合 Next.js 编译要求?
 
 **缓解**: Next.js 16.2 支持以下形式:
+
 ```typescript
 export const { generateStaticParams, generateMetadata, default: Page } = createDynamicRoute({...});
 ```
+
 若不支持, 改为传统形式 (adapter 仅返回 helpers, page 仍手写).
 
 ### 6.3 风险: in-memory source 的 mtime 行为

@@ -1,12 +1,19 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 
+const mockPrefersReducedMotion = vi.fn(() => false);
+
+vi.mock('@/hooks/usePrefersReducedMotion', () => ({
+  usePrefersReducedMotion: () => mockPrefersReducedMotion(),
+}));
+
 import BackToTop from './BackToTop';
 
 describe('BackToTop', () => {
   beforeEach(() => {
     cleanup();
     vi.clearAllMocks();
+    mockPrefersReducedMotion.mockReturnValue(false);
     window.scrollY = 0;
   });
 
@@ -46,6 +53,18 @@ describe('BackToTop', () => {
     fireEvent.click(screen.getByLabelText('回到顶部'));
 
     expect(scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' });
+  });
+
+  it('uses instant scrolling when reduced motion is preferred', () => {
+    mockPrefersReducedMotion.mockReturnValue(true);
+    const scrollTo = vi.fn();
+    window.scrollTo = scrollTo;
+
+    window.scrollY = 400;
+    render(<BackToTop />);
+    fireEvent.click(screen.getByLabelText('回到顶部'));
+
+    expect(scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'auto' });
   });
 
   it('registers scroll event listener on mount', () => {

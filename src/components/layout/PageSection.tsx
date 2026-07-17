@@ -20,7 +20,7 @@ export default function PageSection({
   title,
   subtitle,
   titleId,
-  titleAs = 'h2',
+  titleAs = 'h1',
   action,
   children,
   className,

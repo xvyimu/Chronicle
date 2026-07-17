@@ -2,7 +2,7 @@
 
 > 日期：2026-06-29
 > 范围：SiteBackdrop 性能优化（D）+ globals.css 拆分（A）合并实施
-> 状态：待用户审阅
+> 状态：已实施；当前三层背景落点见 `docs/architecture.md`
 
 ---
 
@@ -14,12 +14,12 @@
 
 实现存在两个架构问题：
 
-| 问题 | 根因 | 影响 |
-|---|---|---|
-| 首屏白屏风险 | `SiteBackdrop` 是 `'use client'`，背景需等 React hydration 才渲染 | 首屏短暂无背景 |
-| 客户端 JS 浪费 | 装饰元素 DOM（飞机条/网格圈/代码块）在 client 渲染 | JS 体积 ~2-3KB，本可 SSG |
-| CSS 单文件难维护 | `globals.css` 2913 行，令牌/布局/组件/背景/首页/响应式混在一起 | 与 AGENTS.md 声称的 `src/app/styles/` 目录不符 |
-| `body::before` 机会未利用 | 静态背景层本可纯 CSS（伪元素）实现，零 JS | 性能可进一步优化 |
+| 问题                      | 根因                                                              | 影响                                           |
+| ------------------------- | ----------------------------------------------------------------- | ---------------------------------------------- |
+| 首屏白屏风险              | `SiteBackdrop` 是 `'use client'`，背景需等 React hydration 才渲染 | 首屏短暂无背景                                 |
+| 客户端 JS 浪费            | 装饰元素 DOM（飞机条/网格圈/代码块）在 client 渲染                | JS 体积 ~2-3KB，本可 SSG                       |
+| CSS 单文件难维护          | `globals.css` 2913 行，令牌/布局/组件/背景/首页/响应式混在一起    | 与 AGENTS.md 声称的 `src/app/styles/` 目录不符 |
+| `body::before` 机会未利用 | 静态背景层本可纯 CSS（伪元素）实现，零 JS                         | 性能可进一步优化                               |
 
 ### 目标
 
@@ -175,9 +175,7 @@ import { useEffect } from 'react';
 
 export default function SiteBackdropParallax() {
   useEffect(() => {
-    const prefersReduced = window.matchMedia(
-      '(prefers-reduced-motion: reduce)',
-    ).matches;
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReduced) return;
 
     const stage = document.querySelector('.site-backdrop__stage');
@@ -232,19 +230,20 @@ export default function SiteBackdropParallax() {
 ```
 
 **z-index 层级**：
+
 - `body::before/after`: `z-index: -2`（最底）
 - `.site-backdrop__stage`: `z-index: -1`（中间，含装饰元素）
 - `main` / `Header` / `Footer`: `z-index: 0+`（内容）
 
 ### 3.5 与当前实现对比
 
-| 维度 | 当前 | 优化后 |
-|---|---|---|
-| 首屏渲染 | client hydration 后才看到背景 | SSG HTML 已含背景 |
-| 客户端 JS | ~2-3KB（含装饰 DOM 渲染 + 视差） | ~0.7KB（仅视差） |
-| 装饰元素 | client 渲染 5 个 div | SSG 静态 5 个 div |
-| 视觉 | 不变 | 不变 |
-| `prefers-reduced-motion` | useEffect 内 return | useEffect 内 return（不变） |
+| 维度                     | 当前                             | 优化后                      |
+| ------------------------ | -------------------------------- | --------------------------- |
+| 首屏渲染                 | client hydration 后才看到背景    | SSG HTML 已含背景           |
+| 客户端 JS                | ~2-3KB（含装饰 DOM 渲染 + 视差） | ~0.7KB（仅视差）            |
+| 装饰元素                 | client 渲染 5 个 div             | SSG 静态 5 个 div           |
+| 视觉                     | 不变                             | 不变                        |
+| `prefers-reduced-motion` | useEffect 内 return              | useEffect 内 return（不变） |
 
 ---
 
@@ -252,31 +251,31 @@ export default function SiteBackdropParallax() {
 
 ### globals.css 现状：2913 行单文件 → 拆分为 8 个文件
 
-| 目标文件 | 行数估算 | 来源行段 | 内容 |
-|---|---|---|---|
-| `styles/tokens.css` | ~80 | 1-87 | `@theme` + `:root`（亮） + `.dark`（暗） + View Transitions + scrollbar |
-| `styles/base.css` | ~140 | 89-425 | 全局 reduced-motion、skip-link、Header、Footer、Reading Progress、Back to Top、Touch target、Section、Section head/eyebrow/title/subtitle/action/link |
-| `styles/components.css` | ~340 | 427-1378 + 1430-1830 | Card、Cards grid、Hero(旧)、Stat-pill、Buttons、Blog List、Pagination、Tag-link、Project Card、TOC、Search、Theme Toggle、Tag Cloud、Reading Prefs、Image Zoom、404、Reveal on scroll、Page Transitions、Loading Intro、Touch target 扩展 |
-| `styles/backdrop.css` | ~115 | 679-791 + 794-1042 | `.site-backdrop` 全套 + `.editorial-hero` 全套 + `body::before/after`（新增）+ `hero-mesh-rotate` / `hero-code-float` keyframes |
-| `styles/home.css` | ~340 | 1043-1429 | Home Manifesto、Reading Path、Article Rail、Links Preview、Home Projects、Home CTA |
-| `styles/prose.css` | ~280 | 2176-2475 | Prose 排版、Code block、Code toolbar、Code line、Code highlighted |
-| `styles/project-detail.css` | ~80 | 1880-1951 | Project Detail (back/header/title/meta/year/tag/image/desc/actions) |
-| `styles/responsive.css` | ~440 | 2477-2913 | 移动优先适配 (≥1024 / 768-1023 / ≤767 / ≤374 / print) |
+| 目标文件                    | 行数估算 | 来源行段             | 内容                                                                                                                                                                                                                                      |
+| --------------------------- | -------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `styles/tokens.css`         | ~80      | 1-87                 | `@theme` + `:root`（亮） + `.dark`（暗） + View Transitions + scrollbar                                                                                                                                                                   |
+| `styles/base.css`           | ~140     | 89-425               | 全局 reduced-motion、skip-link、Header、Footer、Reading Progress、Back to Top、Touch target、Section、Section head/eyebrow/title/subtitle/action/link                                                                                     |
+| `styles/components.css`     | ~340     | 427-1378 + 1430-1830 | Card、Cards grid、Hero(旧)、Stat-pill、Buttons、Blog List、Pagination、Tag-link、Project Card、TOC、Search、Theme Toggle、Tag Cloud、Reading Prefs、Image Zoom、404、Reveal on scroll、Page Transitions、Loading Intro、Touch target 扩展 |
+| `styles/backdrop.css`       | ~115     | 679-791 + 794-1042   | `.site-backdrop` 全套 + `.editorial-hero` 全套 + `body::before/after`（新增）+ `hero-mesh-rotate` / `hero-code-float` keyframes                                                                                                           |
+| `styles/home.css`           | ~340     | 1043-1429            | Home Manifesto、Reading Path、Article Rail、Links Preview、Home Projects、Home CTA                                                                                                                                                        |
+| `styles/prose.css`          | ~280     | 2176-2475            | Prose 排版、Code block、Code toolbar、Code line、Code highlighted                                                                                                                                                                         |
+| `styles/project-detail.css` | ~80      | 1880-1951            | Project Detail (back/header/title/meta/year/tag/image/desc/actions)                                                                                                                                                                       |
+| `styles/responsive.css`     | ~440     | 2477-2913            | 移动优先适配 (≥1024 / 768-1023 / ≤767 / ≤374 / print)                                                                                                                                                                                     |
 
 ### globals.css 改造后（~10 行入口）
 
 ```css
-@import "tailwindcss";
+@import 'tailwindcss';
 @plugin "@tailwindcss/typography";
 
-@import "./styles/tokens.css";
-@import "./styles/base.css";
-@import "./styles/components.css";
-@import "./styles/backdrop.css";
-@import "./styles/home.css";
-@import "./styles/prose.css";
-@import "./styles/project-detail.css";
-@import "./styles/responsive.css";
+@import './styles/tokens.css';
+@import './styles/base.css';
+@import './styles/components.css';
+@import './styles/backdrop.css';
+@import './styles/home.css';
+@import './styles/prose.css';
+@import './styles/project-detail.css';
+@import './styles/responsive.css';
 ```
 
 ### 拆分原则
@@ -356,11 +355,11 @@ T2: React hydration
 
 ### 数据流（无外部数据，纯视觉层）
 
-| 组件 | Props | State | 副作用 |
-|---|---|---|---|
-| `body::before/after` | — | — | — |
-| `<SiteBackdropStage/>` | 无 | 无 | 无（纯 server component） |
-| `<SiteBackdropParallax/>` | 无 | 无 | `window.addEventListener('mousemove')` 写 CSS 变量到 `.site-backdrop__stage` |
+| 组件                      | Props | State | 副作用                                                                       |
+| ------------------------- | ----- | ----- | ---------------------------------------------------------------------------- |
+| `body::before/after`      | —     | —     | —                                                                            |
+| `<SiteBackdropStage/>`    | 无    | 无    | 无（纯 server component）                                                    |
+| `<SiteBackdropParallax/>` | 无    | 无    | `window.addEventListener('mousemove')` 写 CSS 变量到 `.site-backdrop__stage` |
 
 **通信方式**：`<SiteBackdropParallax/>` 通过 `document.querySelector('.site-backdrop__stage')` 找到 stage 节点，写入 `--parallax-x/y` CSS 变量。stage 节点由 `<SiteBackdropStage/>` 渲染。**两个组件无 props 传递、无 context 共享**，纯靠 DOM 选择器 + CSS 变量解耦。
 
@@ -368,13 +367,13 @@ T2: React hydration
 
 ### SSG/CSR 边界规则
 
-| 规则 | 原因 |
-|---|---|
-| `<SiteBackdropStage/>` 不能是 `'use client'` | 装饰元素 DOM 是静态的，无需 hydration。SSG 渲染省 JS、省 hydration 时间 |
-| `<SiteBackdropParallax/>` 必须是 `'use client'` | `useEffect` + `window`/`document` 仅在浏览器可用 |
-| `<SiteBackdropParallax/>` `return null` | 不渲染 DOM，避免与 `<SiteBackdropStage/>` 输出冲突 |
-| `<SiteBackdropStage/>` 不接受 props | 全站背景无配置差异，硬编码装饰元素 |
-| `<SiteBackdropParallax/>` 不接受 props | 视差幅度 (8px) 硬编码在组件内 |
+| 规则                                            | 原因                                                                    |
+| ----------------------------------------------- | ----------------------------------------------------------------------- |
+| `<SiteBackdropStage/>` 不能是 `'use client'`    | 装饰元素 DOM 是静态的，无需 hydration。SSG 渲染省 JS、省 hydration 时间 |
+| `<SiteBackdropParallax/>` 必须是 `'use client'` | `useEffect` + `window`/`document` 仅在浏览器可用                        |
+| `<SiteBackdropParallax/>` `return null`         | 不渲染 DOM，避免与 `<SiteBackdropStage/>` 输出冲突                      |
+| `<SiteBackdropStage/>` 不接受 props             | 全站背景无配置差异，硬编码装饰元素                                      |
+| `<SiteBackdropParallax/>` 不接受 props          | 视差幅度 (8px) 硬编码在组件内                                           |
 
 ### CSS 变量作用域
 
@@ -383,7 +382,7 @@ T2: React hydration
 
 /* 全局变量 (body 级) */
 body {
-  --parallax-x: 0px;     /* 由 SiteBackdropParallax 动态更新 */
+  --parallax-x: 0px; /* 由 SiteBackdropParallax 动态更新 */
   --parallax-y: 0px;
 }
 
@@ -422,12 +421,12 @@ z-index: 999 .back-to-top.is-visible             (浮动按钮)
 
 ### 与 next.config.ts / CSP 的兼容性
 
-| 配置项 | 影响 |
-|---|---|
-| `next.config.ts` `remotePatterns: []` | 无远程图片，背景全 CSS，无影响 |
-| CSP nonce | `<SiteBackdropStage/>` 是 server component，无 inline script，无 nonce 需求 |
-| `<SiteBackdropParallax/>` 的 useEffect | 无 inline script，无 CSP 冲突 |
-| `body::before` 伪元素 | 在 `<style>` 标签内，由 nonce 保护，无额外 CSP 规则 |
+| 配置项                                 | 影响                                                                        |
+| -------------------------------------- | --------------------------------------------------------------------------- |
+| `next.config.ts` `remotePatterns: []`  | 无远程图片，背景全 CSS，无影响                                              |
+| CSP nonce                              | `<SiteBackdropStage/>` 是 server component，无 inline script，无 nonce 需求 |
+| `<SiteBackdropParallax/>` 的 useEffect | 无 inline script，无 CSP 冲突                                               |
+| `body::before` 伪元素                  | 在 `<style>` 标签内，由 nonce 保护，无额外 CSP 规则                         |
 
 ### SSG 验证方式
 
@@ -449,15 +448,15 @@ grep "linear-gradient" /tmp/home.html           # 应匹配 (CSS 已注入)
 
 ### 故障模式与应对
 
-| 故障 | 触发条件 | 影响 | 应对 |
-|---|---|---|---|
-| `document.querySelector('.site-backdrop__stage')` 返回 null | SSR 阶段、stage 组件未渲染 | 视差不生效，背景静止 | `if (!stage) return;` 提前退出，不抛错。视觉降级：背景仍是静态渐变 + 网格 + 装饰，仅缺视差跟随 |
-| `window.matchMedia` 抛错 | IE 等不支持 matchMedia | useEffect 内未捕获 | 不额外处理——项目目标现代浏览器，`prefers-reduced-motion` 是渐进增强 |
-| `mousemove` 监听未清理 | 组件 unmount 时未 removeEventListener | 内存泄漏 | useEffect return 清理函数，StrictMode 双调用测试覆盖 |
-| CSS `@import` 加载失败 | 网络问题、构建错误 | 背景样式缺失 | CSS 是 SSG HTML 内联 `<style>`，随 HTML 一起到达，无网络请求 |
-| 装饰元素遮挡内容 | z-index 设置错误 | 内容被装饰盖住 | z-index: -1 确保装饰在内容下，`pointer-events: none` 不拦截点击 |
-| 主题切换时背景闪烁 | dark/light 切换导致 CSS 变量重新计算 | 视觉抖动 | body::before/after 用硬编码色值（`#111426` / `#070913`），不读 CSS 变量，主题切换时背景不变 |
-| `prefers-reduced-motion` 用户仍看到装饰动画 | mesh 旋转、code 浮动 | 违反无障碍偏好 | `@media (prefers-reduced-motion: reduce)` 块覆盖 animation: none |
+| 故障                                                        | 触发条件                              | 影响                 | 应对                                                                                           |
+| ----------------------------------------------------------- | ------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------- |
+| `document.querySelector('.site-backdrop__stage')` 返回 null | SSR 阶段、stage 组件未渲染            | 视差不生效，背景静止 | `if (!stage) return;` 提前退出，不抛错。视觉降级：背景仍是静态渐变 + 网格 + 装饰，仅缺视差跟随 |
+| `window.matchMedia` 抛错                                    | IE 等不支持 matchMedia                | useEffect 内未捕获   | 不额外处理——项目目标现代浏览器，`prefers-reduced-motion` 是渐进增强                            |
+| `mousemove` 监听未清理                                      | 组件 unmount 时未 removeEventListener | 内存泄漏             | useEffect return 清理函数，StrictMode 双调用测试覆盖                                           |
+| CSS `@import` 加载失败                                      | 网络问题、构建错误                    | 背景样式缺失         | CSS 是 SSG HTML 内联 `<style>`，随 HTML 一起到达，无网络请求                                   |
+| 装饰元素遮挡内容                                            | z-index 设置错误                      | 内容被装饰盖住       | z-index: -1 确保装饰在内容下，`pointer-events: none` 不拦截点击                                |
+| 主题切换时背景闪烁                                          | dark/light 切换导致 CSS 变量重新计算  | 视觉抖动             | body::before/after 用硬编码色值（`#111426` / `#070913`），不读 CSS 变量，主题切换时背景不变    |
+| `prefers-reduced-motion` 用户仍看到装饰动画                 | mesh 旋转、code 浮动                  | 违反无障碍偏好       | `@media (prefers-reduced-motion: reduce)` 块覆盖 animation: none                               |
 
 ### 边界情况清单
 
@@ -474,11 +473,11 @@ grep "linear-gradient" /tmp/home.html           # 应匹配 (CSS 已注入)
 
 ### 回滚策略
 
-| 问题 | 回滚方式 |
-|---|---|
+| 问题                   | 回滚方式                                                                            |
+| ---------------------- | ----------------------------------------------------------------------------------- |
 | SSG 背景未渲染（白屏） | layout.tsx 恢复 `<SiteBackdrop/>`（client component 原版），移除 body::before/after |
-| Lighthouse 性能退化 | 检查 `SiteBackdropParallax` JS 体积是否超标；如超标，临时移除视差功能 |
-| CSS 拆分导致样式丢失 | globals.css 恢复单文件版本（git revert） |
+| Lighthouse 性能退化    | 检查 `SiteBackdropParallax` JS 体积是否超标；如超标，临时移除视差功能               |
+| CSS 拆分导致样式丢失   | globals.css 恢复单文件版本（git revert）                                            |
 
 **Git 单提交策略**：所有改动在 3 个 commit 内完成（背景架构 / CSS 重构 / 行为切换），便于整体回滚。
 
@@ -504,6 +503,7 @@ grep "linear-gradient" /tmp/home.html           # 应匹配 (CSS 已注入)
 **目标**：覆盖视差逻辑的 3 个分支 + 清理。
 
 测试用例：
+
 1. returns null (no DOM output)
 2. attaches mousemove listener when motion allowed
 3. updates CSS variables on mousemove
@@ -519,6 +519,7 @@ grep "linear-gradient" /tmp/home.html           # 应匹配 (CSS 已注入)
 **目标**：验证 server component 静态 DOM 输出完整。
 
 测试用例：
+
 1. renders stage container
 2. renders 2 plane elements
 3. renders mesh element
@@ -532,6 +533,7 @@ grep "linear-gradient" /tmp/home.html           # 应匹配 (CSS 已注入)
 **目标**：SSG 首屏背景已渲染（验收标准）+ 视差跟随生效。
 
 测试用例：
+
 1. SSG HTML contains backdrop DOM (curl 验证)
 2. backdrop visible on home page
 3. backdrop visible on blog post
@@ -571,15 +573,15 @@ wc -l src/app/styles/*.css                   # 每个文件 ≤ 500 行
 
 ### 测试矩阵汇总
 
-| 层级 | 文件 | 新增测试数 |
-|---|---|---|
-| 单元 | `SiteBackdropParallax.test.tsx` | 7 |
-| 单元 | `SiteBackdropStage.test.tsx` | 5 |
-| 集成 | 现有 `app/page.test.tsx` | 0（不改） |
-| E2E | `e2e/home.spec.ts`（追加） | 4 |
-| 静态 | SSG HTML grep | 手动 |
-| Lighthouse | CI job | 自动 |
-| 总计 | | **+16 新测试** |
+| 层级       | 文件                            | 新增测试数     |
+| ---------- | ------------------------------- | -------------- |
+| 单元       | `SiteBackdropParallax.test.tsx` | 7              |
+| 单元       | `SiteBackdropStage.test.tsx`    | 5              |
+| 集成       | 现有 `app/page.test.tsx`        | 0（不改）      |
+| E2E        | `e2e/home.spec.ts`（追加）      | 4              |
+| 静态       | SSG HTML grep                   | 手动           |
+| Lighthouse | CI job                          | 自动           |
+| 总计       |                                 | **+16 新测试** |
 
 **回归**：现有 279 vitest tests + 38 e2e tests 全部保持绿。
 
@@ -589,15 +591,15 @@ wc -l src/app/styles/*.css                   # 每个文件 ≤ 500 行
 
 ### 7 个阶段（P1-P7），按依赖顺序
 
-| 阶段 | 内容 | 依赖 | 验证点 |
-|---|---|---|---|
-| **P1** | 创建 `SiteBackdropStage.tsx`（server component，装饰 DOM）+ `SiteBackdropParallax.tsx`（client component，视差）。两个新文件，暂不接入 layout | 无 | tsc 通过；新组件单测全绿 |
-| **P2** | `globals.css` 拆分为 `styles/` 8 个文件 + `globals.css` 入口。**此时 `.site-backdrop` 选择器保持原样**（未迁移到 body::before） | P1 | build 成功；样式视觉无变化；CSS 单文件 ≤ 500 行 |
-| **P3** | `backdrop.css` 重构：`.site-backdrop` 容器样式迁移到 `body::before/after`；`.site-backdrop__stage` 装饰元素样式保留。删除外层 wrapper div 概念 | P2 | build 成功；视觉无变化 |
-| **P4** | `layout.tsx` 接入新背景架构：移除旧 `<SiteBackdrop/>`，引入 `<SiteBackdropStage/>` + `<SiteBackdropParallax/>` | P1, P3 | tsc + lint + test + build 全绿；dev server 视觉正确 |
-| **P5** | 单元测试 + E2E 追加：`SiteBackdropParallax.test.tsx`、`SiteBackdropStage.test.tsx`、`e2e/home.spec.ts` backdrop 块 | P4 | 279 + 12 vitest 全绿；e2e 4 个新 test 全绿 |
-| **P6** | 删除旧 `SiteBackdrop.tsx`（client component 原版）。清理 `EditorialHero` 中残留的 stage 相关样式引用 | P4 | tsc + lint 全绿 |
-| **P7** | 回归验证 + Lighthouse 检查 + SSG HTML grep 验证 | P5, P6 | 验收标准全满足；提交 + 推送 |
+| 阶段   | 内容                                                                                                                                           | 依赖   | 验证点                                              |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------ | --------------------------------------------------- |
+| **P1** | 创建 `SiteBackdropStage.tsx`（server component，装饰 DOM）+ `SiteBackdropParallax.tsx`（client component，视差）。两个新文件，暂不接入 layout  | 无     | tsc 通过；新组件单测全绿                            |
+| **P2** | `globals.css` 拆分为 `styles/` 8 个文件 + `globals.css` 入口。**此时 `.site-backdrop` 选择器保持原样**（未迁移到 body::before）                | P1     | build 成功；样式视觉无变化；CSS 单文件 ≤ 500 行     |
+| **P3** | `backdrop.css` 重构：`.site-backdrop` 容器样式迁移到 `body::before/after`；`.site-backdrop__stage` 装饰元素样式保留。删除外层 wrapper div 概念 | P2     | build 成功；视觉无变化                              |
+| **P4** | `layout.tsx` 接入新背景架构：移除旧 `<SiteBackdrop/>`，引入 `<SiteBackdropStage/>` + `<SiteBackdropParallax/>`                                 | P1, P3 | tsc + lint + test + build 全绿；dev server 视觉正确 |
+| **P5** | 单元测试 + E2E 追加：`SiteBackdropParallax.test.tsx`、`SiteBackdropStage.test.tsx`、`e2e/home.spec.ts` backdrop 块                             | P4     | 279 + 12 vitest 全绿；e2e 4 个新 test 全绿          |
+| **P6** | 删除旧 `SiteBackdrop.tsx`（client component 原版）。清理 `EditorialHero` 中残留的 stage 相关样式引用                                           | P4     | tsc + lint 全绿                                     |
+| **P7** | 回归验证 + Lighthouse 检查 + SSG HTML grep 验证                                                                                                | P5, P6 | 验收标准全满足；提交 + 推送                         |
 
 ### 关键依赖图
 
@@ -617,13 +619,13 @@ P2 ──┴──→ P3 ──┘
 
 ### 单次提交策略
 
-| Commit | 内容 |
-|---|---|
-| Commit 1 | P1 + P6（新组件 + 删除旧组件，单一架构变更） |
+| Commit   | 内容                                                   |
+| -------- | ------------------------------------------------------ |
+| Commit 1 | P1 + P6（新组件 + 删除旧组件，单一架构变更）           |
 | Commit 2 | P2 + P3（CSS 拆分 + backdrop.css 重构，单一 CSS 重构） |
-| Commit 3 | P4（layout 接入，行为切换） |
-| Commit 4 | P5（测试追加） |
-| 推送 | P7 验证后 |
+| Commit 3 | P4（layout 接入，行为切换）                            |
+| Commit 4 | P5（测试追加）                                         |
+| 推送     | P7 验证后                                              |
 
 **理由**：4 个 commit 对应架构变更/CSS 重构/行为切换/测试追加 4 个独立维度，便于 code review 和回滚。
 
@@ -631,28 +633,28 @@ P2 ──┴──→ P3 ──┘
 
 ## 9. 验收标准
 
-| 标准 | 阈值 | 验证方式 |
-|---|---|---|
-| 客户端 JS ≤ 1KB gz | `SiteBackdropParallax` chunk minified+gzip < 1024 字节 | `pnpm analyze` 检查 chunk 体积 |
-| SSG 首屏背景已渲染 | curl HTML 含 `site-backdrop__stage` / `site-backdrop__plane` / `site-backdrop__mesh` / `site-backdrop__code` / `linear-gradient` | curl + grep 验证 |
-| CSS 单文件 ≤ 500 行 | `src/app/styles/*.css` 每个文件 ≤ 500 行（`globals.css` 入口除外） | `wc -l` 验证 |
-| Lighthouse 不退化 | 5 页 desktop preset Performance / LCP / TBT ≥ baseline | CI Lighthouse job + 对比 `docs/performance-baseline.md` |
-| 视觉无变化 | 首页/博客详情/项目详情/标签/分类/关于 6 页背景视觉与优化前一致 | 浏览器手动对比 |
-| 现有测试不退化 | 279 vitest tests + 38 e2e tests 全绿 | `pnpm test && pnpm test:e2e` |
-| 新增测试全绿 | +12 vitest + +4 e2e 全绿 | `pnpm test && pnpm test:e2e` |
-| reduced-motion 守卫 | `prefers-reduced-motion: reduce` 下视差不挂监听、装饰动画停止 | 单元测试 + 浏览器 DevTools 模拟 |
+| 标准                | 阈值                                                                                                                             | 验证方式                                                |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| 客户端 JS ≤ 1KB gz  | `SiteBackdropParallax` chunk minified+gzip < 1024 字节                                                                           | `pnpm analyze` 检查 chunk 体积                          |
+| SSG 首屏背景已渲染  | curl HTML 含 `site-backdrop__stage` / `site-backdrop__plane` / `site-backdrop__mesh` / `site-backdrop__code` / `linear-gradient` | curl + grep 验证                                        |
+| CSS 单文件 ≤ 500 行 | `src/app/styles/*.css` 每个文件 ≤ 500 行（`globals.css` 入口除外）                                                               | `wc -l` 验证                                            |
+| Lighthouse 不退化   | 5 页 desktop preset Performance / LCP / TBT ≥ baseline                                                                           | CI Lighthouse job + 对比 `docs/performance-baseline.md` |
+| 视觉无变化          | 首页/博客详情/项目详情/标签/分类/关于 6 页背景视觉与优化前一致                                                                   | 浏览器手动对比                                          |
+| 现有测试不退化      | 279 vitest tests + 38 e2e tests 全绿                                                                                             | `pnpm test && pnpm test:e2e`                            |
+| 新增测试全绿        | +12 vitest + +4 e2e 全绿                                                                                                         | `pnpm test && pnpm test:e2e`                            |
+| reduced-motion 守卫 | `prefers-reduced-motion: reduce` 下视差不挂监听、装饰动画停止                                                                    | 单元测试 + 浏览器 DevTools 模拟                         |
 
 ---
 
 ## 10. 风险与缓解
 
-| 风险 | 概率 | 影响 | 缓解 |
-|---|---|---|---|
-| `@import` 在 CSS 中影响加载顺序 | 低 | Tailwind v4 + Next.js 16 支持 `@import`，构建时合并 | build 后检查 `<style>` 标签内容完整 |
-| `responsive.css` 跨组件断点可能漏拆 | 中 | 部分 `@media` 块遗漏 | 拆分后用 Grep 扫描验证 |
-| `body::before/after` 与现有 body Tailwind 类冲突 | 低 | 伪元素不受 Tailwind 类影响 | 已验证无冲突 |
-| SSG 阶段 `document.querySelector` 返回 null | 低 | 视差不生效，背景静止 | useEffect 内 `if (!stage) return` 提前退出 |
-| Lighthouse Performance 退化 | 低 | CI 失败 | P7 阶段 Lighthouse 验证，退化则回滚 |
+| 风险                                             | 概率 | 影响                                                | 缓解                                       |
+| ------------------------------------------------ | ---- | --------------------------------------------------- | ------------------------------------------ |
+| `@import` 在 CSS 中影响加载顺序                  | 低   | Tailwind v4 + Next.js 16 支持 `@import`，构建时合并 | build 后检查 `<style>` 标签内容完整        |
+| `responsive.css` 跨组件断点可能漏拆              | 中   | 部分 `@media` 块遗漏                                | 拆分后用 Grep 扫描验证                     |
+| `body::before/after` 与现有 body Tailwind 类冲突 | 低   | 伪元素不受 Tailwind 类影响                          | 已验证无冲突                               |
+| SSG 阶段 `document.querySelector` 返回 null      | 低   | 视差不生效，背景静止                                | useEffect 内 `if (!stage) return` 提前退出 |
+| Lighthouse Performance 退化                      | 低   | CI 失败                                             | P7 阶段 Lighthouse 验证，退化则回滚        |
 
 ---
 
@@ -671,31 +673,31 @@ P2 ──┴──→ P3 ──┘
 
 ### 新建文件
 
-| 文件 | 类型 | 职责 |
-|---|---|---|
-| `src/components/layout/SiteBackdropStage.tsx` | server component | 装饰元素静态 DOM |
-| `src/components/layout/SiteBackdropParallax.tsx` | client component | 视差跟随 |
-| `src/components/layout/SiteBackdropStage.test.tsx` | 单元测试 | DOM 输出验证 |
-| `src/components/layout/SiteBackdropParallax.test.tsx` | 单元测试 | 视差逻辑验证 |
-| `src/app/styles/tokens.css` | CSS | 主题变量 |
-| `src/app/styles/base.css` | CSS | 基础布局 |
-| `src/app/styles/components.css` | CSS | 通用组件 |
-| `src/app/styles/backdrop.css` | CSS | 背景层 |
-| `src/app/styles/home.css` | CSS | 首页专属 |
-| `src/app/styles/prose.css` | CSS | 文章排版 |
-| `src/app/styles/project-detail.css` | CSS | 项目详情 |
-| `src/app/styles/responsive.css` | CSS | 响应式 |
+| 文件                                                  | 类型             | 职责             |
+| ----------------------------------------------------- | ---------------- | ---------------- |
+| `src/components/layout/SiteBackdropStage.tsx`         | server component | 装饰元素静态 DOM |
+| `src/components/layout/SiteBackdropParallax.tsx`      | client component | 视差跟随         |
+| `src/components/layout/SiteBackdropStage.test.tsx`    | 单元测试         | DOM 输出验证     |
+| `src/components/layout/SiteBackdropParallax.test.tsx` | 单元测试         | 视差逻辑验证     |
+| `src/app/styles/tokens.css`                           | CSS              | 主题变量         |
+| `src/app/styles/base.css`                             | CSS              | 基础布局         |
+| `src/app/styles/components.css`                       | CSS              | 通用组件         |
+| `src/app/styles/backdrop.css`                         | CSS              | 背景层           |
+| `src/app/styles/home.css`                             | CSS              | 首页专属         |
+| `src/app/styles/prose.css`                            | CSS              | 文章排版         |
+| `src/app/styles/project-detail.css`                   | CSS              | 项目详情         |
+| `src/app/styles/responsive.css`                       | CSS              | 响应式           |
 
 ### 修改文件
 
-| 文件 | 改动 |
-|---|---|
-| `src/app/layout.tsx` | 引入 `<SiteBackdropStage/>` + `<SiteBackdropParallax/>`，移除旧 `<SiteBackdrop/>` |
-| `src/app/globals.css` | 改造为入口文件，仅 `@import` 8 个模块 |
-| `e2e/home.spec.ts` | 追加 4 个 backdrop 相关测试 |
+| 文件                  | 改动                                                                              |
+| --------------------- | --------------------------------------------------------------------------------- |
+| `src/app/layout.tsx`  | 引入 `<SiteBackdropStage/>` + `<SiteBackdropParallax/>`，移除旧 `<SiteBackdrop/>` |
+| `src/app/globals.css` | 改造为入口文件，仅 `@import` 8 个模块                                             |
+| `e2e/home.spec.ts`    | 追加 4 个 backdrop 相关测试                                                       |
 
 ### 删除文件
 
-| 文件 | 原因 |
-|---|---|
+| 文件                                     | 原因                                                         |
+| ---------------------------------------- | ------------------------------------------------------------ |
 | `src/components/layout/SiteBackdrop.tsx` | 由 `SiteBackdropStage.tsx` + `SiteBackdropParallax.tsx` 替代 |

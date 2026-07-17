@@ -1,5 +1,7 @@
 # Performance Baseline
 
+> Status: current maintenance baseline, updated 2026-07-17. Lab values are not real-user p75.
+
 This document records the performance guardrails for the blog and how to refresh them.
 
 ## Pages To Track
@@ -8,7 +10,7 @@ Track synthetic Lighthouse data and real-user Vercel Speed Insights data for:
 
 | Page           | URL path                  | Desktop CI | Mobile manual | Real-user p75 | Why it matters                                     |
 | -------------- | ------------------------- | ---------- | ------------- | ------------- | -------------------------------------------------- |
-| Home           | `/`                       | yes        | yes           | yes           | Landing page, project cards, hero canvas           |
+| Home           | `/`                       | yes        | yes           | yes           | Landing page, hero image/background, content rails |
 | Blog index     | `/blog`                   | yes        | yes           | yes           | Search entry and article discovery                 |
 | Article detail | `/blog/nextjs-app-router` | yes        | yes           | yes           | MDX, code blocks, table of contents, comments      |
 | Projects       | `/projects`               | yes        | yes           | yes           | Project images and card grid                       |
@@ -17,11 +19,11 @@ Track synthetic Lighthouse data and real-user Vercel Speed Insights data for:
 
 ## Current CI Budgets
 
-These budgets are enforced in CI today (all green on 2026-07-05):
+These budgets are enforced in CI today. Latest verified run: [29573545749](https://github.com/xvyimu/blog/actions/runs/29573545749), success on 2026-07-17.
 
 | Gate                       | Current threshold | Enforced in                                                                  |
 | -------------------------- | ----------------- | ---------------------------------------------------------------------------- |
-| Lighthouse performance     | `>= 0.80`         | `lighthouse.config.js` (error) → `.github/workflows/ci.yml` `lighthouse` job |
+| Lighthouse performance     | `>= 0.80`         | `lighthouse.config.js` (error) → `.github/workflows/ci.yml` `e2e` job        |
 | Lighthouse accessibility   | `>= 0.90`         | `lighthouse.config.js` (error) → 同上                                        |
 | Lighthouse best practices  | `>= 0.90`         | `lighthouse.config.js` (error) → 同上                                        |
 | Lighthouse SEO             | `>= 0.90`         | `lighthouse.config.js` (error) → 同上                                        |
@@ -44,7 +46,7 @@ is still being established.
 Use it after a successful production build, under the project-supported Node 22 runtime:
 
 ```bash
-pnpm build
+pnpm exec cross-env NEXT_PUBLIC_SITE_URL=https://incca.ccwu.cc pnpm build
 npx @lhci/cli autorun --config=./lighthouse.mobile.config.js
 ```
 
@@ -101,9 +103,22 @@ the same pattern.
 | 最大单 CSS bundle             | 272.5 KB | 300 KB  | 27.5 KB (9%)  |
 | 总静态产物 (JS+CSS，不含字体) | 1.08 MB  | 2.00 MB | 0.92 MB (46%) |
 
+### Current Bundle Snapshot (2026-07-17)
+
+Node 22 CI run `29573545749`, `pnpm exec tsx scripts/check-bundle-budget.ts` after a production build:
+
+| Metric                              | Measured |           Budget |
+| ----------------------------------- | -------: | ---------------: |
+| Largest JS chunk                    | 222.0 KB |           300 KB |
+| Largest CSS bundle                  | 181.8 KB |           300 KB |
+| Total CSS bundles                   | 301.4 KB | observation only |
+| Total static output, fonts excluded |  1.15 MB |          2.00 MB |
+
+These are build artifact sizes, not compressed network transfer sizes.
+
 ### Lighthouse CI Baseline (2026-06-29, desktop preset, 2 runs avg)
 
-来源：CI `lighthouse` job (run `28362770380`) artifact `lighthouse-results`，5 页 × 2 次 desktop 预设取均值。
+来源：历史 CI run `28362770380` 的 Lighthouse artifact，5 页 × 2 次 desktop 预设取均值。当前 Lighthouse 已合并到 `e2e` job。
 
 | Page                      | Perf | A11y | BestPrac | SEO  | FCP     | LCP     | CLS  | TBT  |
 | ------------------------- | ---- | ---- | -------- | ---- | ------- | ------- | ---- | ---- |

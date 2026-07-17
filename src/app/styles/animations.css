@@ -67,15 +67,14 @@
 }
 
 /* ---------- Page Transitions ---------- */
-@keyframes fade-in-up {
+@keyframes page-fade-in {
   from {
-    transform: translateY(12px);
+    opacity: 0;
   }
   to {
-    transform: translateY(0);
+    opacity: 1;
   }
 }
 .animate-fade-in {
-  opacity: 1;
-  animation: fade-in-up 0.4s var(--ease-out) both;
+  animation: page-fade-in 0.4s var(--ease-out);
 }

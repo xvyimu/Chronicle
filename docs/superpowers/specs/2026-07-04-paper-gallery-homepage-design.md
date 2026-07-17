@@ -1,6 +1,6 @@
 # Paper Gallery Homepage Redesign
 
-> Status: design approved for documentation. Implementation is not started.
+> Status: implemented. Current component and CSS ownership is documented in `docs/architecture.md` and `docs/css-conventions.md`.
 > Scope: homepage only.
 > Reference: https://shijiucode.cn/
 

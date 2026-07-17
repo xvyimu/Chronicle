@@ -17,6 +17,10 @@ Introduce a shared local content repository factory for JSON-backed content, the
 
 Implemented in `src/lib/json-content-repository.ts`. `src/lib/projects.ts` and `src/lib/links.ts` now reuse the shared read / parse / cache implementation while keeping their domain-specific methods.
 
+### Implementation status (2026-07-17)
+
+The factory is in production. Missing files and JSON syntax errors fail fast in production (`strict`) and use the configured fallback outside production (`lenient`); domain schema validation remains in the adapters. Duplicate project IDs and link asset integrity are covered by domain checks.
+
 ## Considered Alternatives
 
 - **Keep per-domain repository implementations**: lowest immediate cost, but preserves shallow modules where each interface nearly mirrors the same implementation.
@@ -35,5 +39,4 @@ Implemented in `src/lib/json-content-repository.ts`. `src/lib/projects.ts` and `
 
 - A third JSON-backed local content module is added.
 - `projects` move from JSON-only summaries to `content/projects/*.mdx`.
-- Error handling needs to become fail-fast in production instead of returning empty arrays.
 - Cache behavior changes because the project adopts Next Cache Components or external data sources.

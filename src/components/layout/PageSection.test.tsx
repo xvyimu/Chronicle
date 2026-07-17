@@ -11,17 +11,19 @@ describe('PageSection', () => {
     );
 
     expect(screen.getByText('Blog')).toHaveClass('section__eyebrow');
-    expect(screen.getByRole('heading', { name: '博客' })).toHaveClass('section__title');
+    expect(screen.getByRole('heading', { level: 1, name: '博客' })).toHaveClass(
+      'section__title',
+    );
     expect(screen.getByText('共 14 篇')).toHaveClass('section__subtitle');
     expect(screen.getByText('content')).toBeInTheDocument();
   });
 
-  it('supports compact headers, custom heading tags, and actions', () => {
+  it('supports compact headers, nested heading tags, and actions', () => {
     render(
       <PageSection
         compactHeader
         title="专题"
-        titleAs="h1"
+        titleAs="h2"
         titleId="series-title"
         action={<button type="button">查看全部</button>}
       >
@@ -29,7 +31,7 @@ describe('PageSection', () => {
       </PageSection>,
     );
 
-    expect(screen.getByRole('heading', { level: 1, name: '专题' })).toHaveAttribute(
+    expect(screen.getByRole('heading', { level: 2, name: '专题' })).toHaveAttribute(
       'id',
       'series-title',
     );

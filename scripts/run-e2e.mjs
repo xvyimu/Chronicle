@@ -1,6 +1,7 @@
 import { spawn, spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const PORT = process.env.E2E_PORT ?? '3001';
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${PORT}`;
@@ -21,21 +22,91 @@ function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function waitForServer(timeoutMs = 60_000) {
-  const started = Date.now();
-  let lastError;
+async function requestWithTimeout(baseUrl, fetchImpl, requestTimeoutMs) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), requestTimeoutMs);
 
-  while (Date.now() - started < timeoutMs) {
-    try {
-      const response = await fetch(BASE_URL, { method: 'HEAD' });
-      if (response.ok || response.status < 500) return;
-    } catch (error) {
-      lastError = error;
-    }
-    await delay(500);
+  try {
+    return await fetchImpl(baseUrl, {
+      method: 'HEAD',
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+export async function preflightServer({
+  baseUrl,
+  useExternalServer: external,
+  fetchImpl = fetch,
+  requestTimeoutMs = 2_000,
+}) {
+  if (external) return;
+
+  try {
+    await requestWithTimeout(baseUrl, fetchImpl, requestTimeoutMs);
+  } catch {
+    return;
   }
 
-  throw new Error(`Timed out waiting for ${BASE_URL}. Last error: ${String(lastError)}`);
+  throw new Error(
+    `The managed E2E port already in use at ${baseUrl}. Stop that service or set E2E_PORT to a free port.`,
+  );
+}
+
+export async function waitForServer({
+  baseUrl = BASE_URL,
+  child,
+  fetchImpl = fetch,
+  timeoutMs = 60_000,
+  requestTimeoutMs = 2_000,
+  pollIntervalMs = 500,
+} = {}) {
+  const started = Date.now();
+  let lastError;
+  let rejectChildFailure;
+  const childFailure = new Promise((_, reject) => {
+    rejectChildFailure = reject;
+  });
+  const onExit = (code, signal) => {
+    const detail = code === null ? `signal ${signal ?? 'unknown'}` : `code ${code}`;
+    rejectChildFailure(
+      new Error(`Managed E2E server exited before readiness with ${detail}.`),
+    );
+  };
+  const onError = (error) => {
+    rejectChildFailure(
+      new Error(`Managed E2E server failed before readiness: ${String(error)}`),
+    );
+  };
+
+  child?.once('exit', onExit);
+  child?.once('error', onError);
+
+  try {
+    while (Date.now() - started < timeoutMs) {
+      try {
+        const response = await Promise.race([
+          requestWithTimeout(baseUrl, fetchImpl, requestTimeoutMs),
+          childFailure,
+        ]);
+        if (response.ok) return;
+        lastError = new Error(`HTTP ${response.status}`);
+      } catch (error) {
+        lastError = error;
+        if (error instanceof Error && error.message.includes('before readiness')) {
+          throw error;
+        }
+      }
+      await Promise.race([delay(pollIntervalMs), childFailure]);
+    }
+
+    throw new Error(`Timed out waiting for ${baseUrl}. Last error: ${String(lastError)}`);
+  } finally {
+    child?.off('exit', onExit);
+    child?.off('error', onError);
+  }
 }
 
 function spawnManaged(command, args, env = process.env) {
@@ -81,7 +152,8 @@ async function main() {
   const playwrightCli = packageFile('playwright', 'cli.js');
 
   if (useExternalServer) {
-    await waitForServer();
+    await preflightServer({ baseUrl: BASE_URL, useExternalServer: true });
+    await waitForServer({ baseUrl: BASE_URL });
     const result = spawnSync(
       process.execPath,
       [playwrightCli, 'test', ...forwardedArgs],
@@ -98,6 +170,8 @@ async function main() {
     if (result.error) throw result.error;
     process.exit(result.status ?? (result.signal ? 1 : 0));
   }
+
+  await preflightServer({ baseUrl: BASE_URL, useExternalServer: false });
 
   const server = spawnManaged(process.execPath, [
     nextBin,
@@ -120,7 +194,7 @@ async function main() {
 
   let exitCode = 0;
   try {
-    await waitForServer();
+    await waitForServer({ baseUrl: BASE_URL, child: server });
     const result = spawnSync(
       process.execPath,
       [playwrightCli, 'test', ...forwardedArgs],
@@ -143,7 +217,10 @@ async function main() {
   process.exit(exitCode);
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+const entryPath = process.argv[1];
+if (entryPath && import.meta.url === pathToFileURL(path.resolve(entryPath)).href) {
+  main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}

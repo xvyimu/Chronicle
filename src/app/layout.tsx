@@ -13,7 +13,7 @@ import './styles/blog-ui.css'; // 博客列表、目录与辅助界面
 import './styles/article-ui.css'; // 文章详情布局与阅读面板
 import './styles/backdrop.css'; // 背景层 (body::before/after + stage)
 import './styles/prose.css'; // 文章排版 (.prose, code block)
-import './styles/animations.css'; // 动画 (reveal, fade-in-up)
+import './styles/animations.css'; // 动画 (reveal, page fade)
 import './styles/responsive.css'; // 响应式断点 (最后,覆盖前面)
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';

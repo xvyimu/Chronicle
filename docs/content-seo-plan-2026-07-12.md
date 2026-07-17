@@ -1,5 +1,7 @@
 # 西江月博客 · 内容 SEO Phase A
 
+> 状态：工程与 14 篇内容批次已实施；GSC/Bing 账号操作因用户禁止登录而暂停。当前边界见根 `TODO.md`。
+
 **日期：** 2026-07-12 规划 · 2026-07-13 落地  
 **线上：** https://incca.ccwu.cc  
 **sitemap：** https://incca.ccwu.cc/sitemap.xml  

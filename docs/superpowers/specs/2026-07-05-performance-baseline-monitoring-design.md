@@ -3,7 +3,7 @@
 > Date: 2026-07-05
 > Project: `D:\blog`
 > Purpose: establish a lightweight production performance monitoring loop.
-> Status: design approved for lightweight baseline; implementation not started in this document.
+> Status: implemented. Current budgets and measurements live in `docs/performance-baseline.md`.
 
 ## 1. Goal
 
