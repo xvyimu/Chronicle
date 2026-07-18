@@ -1,8 +1,12 @@
 # Performance Baseline
 
-> Status: current maintenance baseline, updated 2026-07-17. Lab values are not real-user p75.
+> Status: current maintenance baseline, updated 2026-07-18. Lab values are not real-user p75.
 
 This document records the performance guardrails for the blog and how to refresh them.
+
+Real-user p75 backfill procedure (when Vercel access is authorized): see
+[`ops-deferred-work-plan.md`](./ops-deferred-work-plan.md) §5. Until then every
+RUM cell stays `pending`.
 
 ## Pages To Track
 

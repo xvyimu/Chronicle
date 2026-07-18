@@ -64,9 +64,10 @@
 
 ## 6. 当前剩余边界
 
-- GSC/Bing：用户禁止登录，暂停属性验证与 sitemap 提交。
+- GSC/Bing：用户禁止登录，暂停属性验证与 sitemap 提交；授权后按 [ops-deferred-work-plan.md](./ops-deferred-work-plan.md) 执行。
 - Speed Insights：真实 p75 需要授权 token 和足够样本，不能用实验室 Lighthouse 代替。
-- 外部搜索、正文图 LQIP、Cache Components 和 CSS 深度下沉均有明确规模或素材触发条件，见 [TODO](../TODO.md)。
+- 外部搜索、正文图 LQIP、Cache Components 和 CSS 深度下沉均有明确规模或素材触发条件，见 [TODO](../TODO.md) 与 `pnpm check:ops-readiness`。
+- 延后事项不得伪装成无条件工程任务；就绪状态以 `check:ops-readiness` 为准。
 
 ## 7. 文档规则
 

@@ -18,6 +18,7 @@
     "typecheck": "tsc --noEmit",
     "check:seo": "tsx scripts/check-seo.ts",
     "check:production-content": "tsx scripts/check-production-content.ts",
+    "check:ops-readiness": "tsx scripts/check-ops-readiness.ts",
     "gen:blur": "node scripts/generate-blur-data.mjs",
     "check:blur": "tsx scripts/check-project-blur-coverage.ts",
     "test": "vitest run",

@@ -25,6 +25,7 @@
 | [CSS 规范](./css-conventions.md)                         | token、BEM、shadcn、文件归属         | token、CSS 文件或导入归属变化  |
 | [Cache Components 指南](./cache-components-migration.md) | 当前缓存和未来迁移门槛               | 缓存实现或外部数据源变化       |
 | [上线基线](./launch-baseline.md)                         | 最新生产证据和发布门禁               | 新生产基线或 smoke 变化        |
+| [延后运营计划](./ops-deferred-work-plan.md)              | GSC/Bing/RUM 与条件触发执行手册      | 授权剧本或门槛变化             |
 | [性能基线](./performance-baseline.md)                    | CI 预算、实验室数据、RUM 目标        | Lighthouse、bundle 或 p75 更新 |
 | [Agent 接手指南](./handoff-to-agent.md)                  | 当前状态、优先级和交接边界           | 生产状态或主要待办变化         |
 

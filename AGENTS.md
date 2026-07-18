@@ -127,6 +127,7 @@ pnpm test:e2e:raw # Playwright raw (pass-through flags, e.g. --ui)
 pnpm lint         # ESLint
 pnpm check:docs   # Internal Markdown link check
 pnpm check:seo    # SEO audit (tsx scripts/check-seo.ts)
+pnpm check:ops-readiness # Deferred ops readiness (GSC/Bing/RUM/triggers; optional --live)
 pnpm check:production-content # Production content smoke test against NEXT_PUBLIC_SITE_URL
 pnpm analyze      # Bundle size analysis (ANALYZE=true next build)
 tsc --noEmit      # TypeScript check

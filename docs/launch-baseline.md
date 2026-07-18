@@ -71,7 +71,8 @@ pnpm check:production-content -- --base-url=https://incca.ccwu.cc
 - 内容 schema、收藏运营字段和发布流程见 [content-workflow.md](./content-workflow.md)。
 - 真实用户性能以 Vercel Speed Insights p75 为准：LCP `<=2.5s`、INP `<=200ms`、CLS `<=0.1`。
 - 当前没有可验证的真实 p75；没有 token 或样本时保持 pending，不用 Lighthouse 代填。
-- GSC/Bing 因用户禁止登录而暂停，恢复前必须重新取得账号授权。
+- GSC/Bing 因用户禁止登录而暂停；授权后剧本见 [ops-deferred-work-plan.md](./ops-deferred-work-plan.md)。
+- 延后事项自动检查：`pnpm check:ops-readiness`（本地）与 `pnpm check:ops-readiness -- --live`（生产公开面）。
 
 ## 6. 上线前后检查
 
