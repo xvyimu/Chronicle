@@ -10,13 +10,13 @@
 ## 外部依赖（需用户授权，禁止代登录）
 
 - [ ] **Google Search Console**：域名级 DNS 验证并提交 `https://incca.ccwu.cc/sitemap.xml`。  
-      前置：用户明确授权 Google 账号；`pnpm check:ops-readiness -- --live` 退出 0。  
-      剧本：`docs/ops-deferred-work-plan.md` §3。状态：`blocked_auth`。
+      前置：用户 Google 登录（Agent 已验证生产 SEO 就绪；无服务账号、CF DNS 写权限、浏览器未登录）。  
+      剧本：`docs/ops-deferred-work-plan.md` §3 / §10。状态：`blocked_auth`。
 - [ ] **Bing Webmaster**：从已验证 GSC 属性导入，不单独重复 DNS。  
-      前置：GSC 完成 + 同一授权窗口。剧本：§4。状态：`blocked_auth`。
-- [ ] **Vercel Speed Insights p75**：回填首页/博客/代表文章/项目/收藏/关于 的真实用户 p75。  
-      前置：只读 Vercel 权限 + 足够样本；**禁止**用 Lighthouse 代填。  
-      工程：layout 已接入；状态：`engineering_ready_waiting_samples`。剧本：§5。
+      前置：GSC 完成。剧本：§4。状态：`blocked_auth`。
+- [ ] **Vercel Speed Insights p75**：回填六页真实用户 p75。  
+      工程：layout 已接入且 `hasData=true`；CLI token **无法**导出明细。  
+      前置：控制台只读或正式 metrics API；**禁止**用 Lighthouse 代填。状态：`engineering_ready_waiting_samples`。
 
 ## 条件触发事项（门槛未到不做）
 

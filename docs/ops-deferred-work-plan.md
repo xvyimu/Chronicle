@@ -189,3 +189,25 @@ P4 条件触发项：仅当门槛命中再开 ADR
    - 只读六页 p75；样本不足写 `pending`，禁止抄 Lighthouse
 
 完成后把「验证日期 / sitemap 状态 / 是否有 p75」发回，再更新 `launch-baseline.md` 与 `performance-baseline.md`。
+
+## 10. 2026-07-18 Agent 全自动推进结果
+
+用户要求 Agent 自行完成。已穷尽本机可用登录态与 API，**工程侧收口完毕**；账号交互仍被硬阻塞。
+
+| 通道                            | 探测结果                              | 结论                                         |
+| ------------------------------- | ------------------------------------- | -------------------------------------------- |
+| 生产 SEO / smoke / CI           | 全绿                                  | 可继续 GSC 提交                              |
+| Vercel CLI + project API        | `speedInsights.hasData=true`，id 存在 | 组件与数据管道已开                           |
+| Vercel Speed Insights 指标 API  | 多路径 404 `not_found`                | CLI token **无法**拉 p75 明细                |
+| Cloudflare wrangler             | 已登录；zone `incca.ccwu.cc` active   | 账号能看到 zone                              |
+| Cloudflare DNS API              | `Authentication error` (10000)        | OAuth **无 DNS 写/列权限**，不能代加 GSC TXT |
+| browser-act `seo-console-admin` | 打开 GSC → 跳转 Google 登录页         | Profile **未登录** Google，禁止代填密码      |
+| gcloud / GSC 服务账号           | 本机不存在                            | 无法 API 提交 sitemap                        |
+| Bing API key                    | 不存在                                | 且依赖 GSC                                   |
+
+因此当前正确终态：
+
+1. **不要再改产品代码**去“假装完成”收录或 p75。
+2. 条件触发项继续 `not_triggered`。
+3. 唯一剩余人工动作：一次 Google 登录（GSC）+ 可选 Vercel 控制台看一眼 p75。
+4. 若希望下次 Agent 可代写 DNS TXT：在 Cloudflare 提供带 `Zone.DNS Edit` 的 API token（用户创建后注入环境，勿提交仓库）。

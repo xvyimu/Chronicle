@@ -4,13 +4,15 @@
 
 ## 1. 最新生产证据
 
-| 项目     | 当前值                                     | 证据                                                                      |
-| -------- | ------------------------------------------ | ------------------------------------------------------------------------- |
-| 生产域名 | `https://incca.ccwu.cc`                    | `NEXT_PUBLIC_SITE_URL` / production smoke                                 |
-| 提交     | `a91a07dc361392eef882a59993a6eb0017cb8a40` | `feat: establish frontend-backend logical boundary`                       |
-| CI run   | `29631593044`                              | [GitHub Actions](https://github.com/xvyimu/blog/actions/runs/29631593044) |
-| CI 结论  | `success`                                  | quality、bundle-analyze、e2e/Lighthouse、deploy/smoke 全绿                |
-| 内容规模 | 14 篇文章、6 个项目、10 类 123 条收藏      | 本地 MDX/JSON                                                             |
+| 项目     | 当前值                                | 证据                                                                      |
+| -------- | ------------------------------------- | ------------------------------------------------------------------------- |
+| 生产域名 | `https://incca.ccwu.cc`               | production smoke + `check:ops-readiness --live`                           |
+| 功能基线 | `a91a07d` 前后端分层                  | CI [29631593044](https://github.com/xvyimu/blog/actions/runs/29631593044) |
+| 运营工程 | `96e0214` / 记录 `238f2c7`            | CI [29632273522](https://github.com/xvyimu/blog/actions/runs/29632273522) |
+| CI 结论  | `success`                             | quality、bundle-analyze、e2e、deploy 全绿                                 |
+| 内容规模 | 14 篇文章、6 个项目、10 类 123 条收藏 | 本地 MDX/JSON                                                             |
+| GSC/Bing | pending（需 Google 登录）             | 见 [ops-deferred-work-plan.md](./ops-deferred-work-plan.md) §10           |
+| RUM p75  | pending（API 不可导出；控制台只读）   | Speed Insights `hasData=true`，无 CLI 明细                                |
 
 生产证据是时间点快照。新 master 部署成功后更新本节，不要把历史报告中的提交号复制为当前状态。
 
