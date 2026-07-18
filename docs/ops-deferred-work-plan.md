@@ -155,3 +155,37 @@ P4 条件触发项：仅当门槛命中再开 ADR
 - 任何 Google/Bing/Vercel 登录
 - 伪造 p75
 - 引入外部搜索或 Cache Components
+
+## 9. 2026-07-18 推荐执行实测
+
+自动部分（无需账号）已全部跑通：
+
+| 检查                                 | 结果                                                 |
+| ------------------------------------ | ---------------------------------------------------- |
+| `pnpm check:ops-readiness -- --live` | exit 0                                               |
+| production content smoke             | pass                                                 |
+| CI `96e0214` run `29632273522`       | success                                              |
+| 生产 sitemap                         | 200，含 urlset                                       |
+| 生产 robots                          | 200，含 `Sitemap: https://incca.ccwu.cc/sitemap.xml` |
+| Vercel 生产项目                      | `aijiai520/blog` → `https://incca.ccwu.cc` Ready     |
+
+说明：
+
+- `robots.txt` 在源站规则前带有 **Cloudflare Managed Content-Signal** 前缀；末尾仍有本站 `Allow/Disallow/Host/Sitemap`，GSC 可正常使用。
+- Speed Insights 组件仅在 `VERCEL=1` 时注入；首页 HTML 启发式脚本痕迹可为空（异步加载），**不**据此判定未接入。
+- 本地 Vercel CLI 已登录组织 `aijiai520`，可看部署与 env 名，但**没有** Speed Insights 指标导出 token；p75 仍须控制台只读或正式 API token。
+
+### 仍需用户在场的 15 分钟窗口
+
+打开（需你自己登录，Agent 不代登）：
+
+1. GSC：https://search.google.com/search-console
+   - 添加**域名**资源：`incca.ccwu.cc`
+   - 按提示加 DNS TXT → 验证
+   - Sitemaps 提交：`https://incca.ccwu.cc/sitemap.xml`
+2. Bing：https://www.bing.com/webmasters
+   - 从 GSC 导入同一属性
+3. Vercel Speed Insights：https://vercel.com/aijiai520/blog/speed-insights
+   - 只读六页 p75；样本不足写 `pending`，禁止抄 Lighthouse
+
+完成后把「验证日期 / sitemap 状态 / 是否有 p75」发回，再更新 `launch-baseline.md` 与 `performance-baseline.md`。
