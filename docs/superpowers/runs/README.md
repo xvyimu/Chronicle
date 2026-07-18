@@ -11,5 +11,6 @@
 | `2026-07-06-content-ops-baseline`          | 内容运营和收藏资产基线完成                             |
 | `2026-07-06-p2-ux-polish`                  | 搜索、链接和异常导流完成                               |
 | `2026-07-18-frontend-backend-boundary`     | 同仓逻辑前后端分层完成并已生产部署（`a91a07d`）        |
+| `2026-07-18-deferred-ops-readiness`        | 延后运营门禁与硬阻塞记录（`96e0214` / `fa3e579`）      |
 
 继续项目时读取根 `task_plan.md`、`findings.md`、`progress.md`，不要恢复本目录中的旧计划。

@@ -12,15 +12,17 @@
 
 ## 2. 当前生产基线
 
-| 项目           | 当前证据                                                                              |
-| -------------- | ------------------------------------------------------------------------------------- |
-| 生产域名       | `https://incca.ccwu.cc`                                                               |
-| 最新已验证提交 | `a91a07dc361392eef882a59993a6eb0017cb8a40`                                            |
-| GitHub Actions | run `29631593044`：quality、bundle-analyze、e2e/Lighthouse、deploy/smoke 全部 success |
-| 内容规模       | 14 篇文章、6 个项目、10 类 123 条收藏链接                                             |
-| Vitest         | 81 files / 618 tests（2026-07-18 本地与 CI）                                          |
-| Playwright     | 5 files / 48 tests（2026-07-18 收集结果）                                             |
-| Node / pnpm    | Node 22.x / pnpm 11.8.0；Node 24 仅用于本机辅助时会出现 engine warning                |
+| 项目           | 当前证据                                                                                |
+| -------------- | --------------------------------------------------------------------------------------- |
+| 生产域名       | `https://incca.ccwu.cc`                                                                 |
+| 功能基线提交   | `a91a07d`（前后端分层）                                                                 |
+| 运营工程提交   | `96e0214`（ops-readiness）；阻塞记录 `fa3e579`                                          |
+| GitHub Actions | 最近 master CI success（见 Actions；分层 run `29631593044`，运营 run `29632273522`）    |
+| 内容规模       | 14 篇文章、6 个项目、10 类 123 条收藏链接                                               |
+| Vitest         | 81 files / 618+ tests（2026-07-18；含 ops-readiness）                                   |
+| Playwright     | 5 files / 48 tests                                                                      |
+| Node / pnpm    | Node 22.x / pnpm 11.8.0；本机 Node 24 仅 warning                                        |
+| 延后运营       | GSC/Bing/RUM pending；手册 `docs/ops-deferred-work-plan.md`；`pnpm check:ops-readiness` |
 
 生产证据是时间点快照。接手时仍需用当前 `git log`、CI 和命令重新确认，不要把本表当作永久真值。
 
