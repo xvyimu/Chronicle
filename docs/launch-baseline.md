@@ -1,14 +1,14 @@
 # 上线运营基线
 
-> 状态：当前维护版（2026-07-17）。历史上线检查见 `launch-readiness-2026-07-10.md`。
+> 状态：当前维护版（2026-07-18）。历史上线检查见 `launch-readiness-2026-07-10.md`。
 
 ## 1. 最新生产证据
 
 | 项目     | 当前值                                     | 证据                                                                      |
 | -------- | ------------------------------------------ | ------------------------------------------------------------------------- |
 | 生产域名 | `https://incca.ccwu.cc`                    | `NEXT_PUBLIC_SITE_URL` / production smoke                                 |
-| 提交     | `8ee2e712b5665c7f0c94770038e581f5621383cd` | `docs: record deferred account-dependent P2 work`                         |
-| CI run   | `29573545749`                              | [GitHub Actions](https://github.com/xvyimu/blog/actions/runs/29573545749) |
+| 提交     | `a91a07dc361392eef882a59993a6eb0017cb8a40` | `feat: establish frontend-backend logical boundary`                       |
+| CI run   | `29631593044`                              | [GitHub Actions](https://github.com/xvyimu/blog/actions/runs/29631593044) |
 | CI 结论  | `success`                                  | quality、bundle-analyze、e2e/Lighthouse、deploy/smoke 全绿                |
 | 内容规模 | 14 篇文章、6 个项目、10 类 123 条收藏      | 本地 MDX/JSON                                                             |
 
@@ -30,15 +30,15 @@ bundle-analyze（并行、独立，不是 deploy 依赖）
 
 ## 3. 当前质量基线
 
-| 门禁                | 当前证据                                             |
-| ------------------- | ---------------------------------------------------- |
-| Vitest              | 77 files / 599 tests，2026-07-17 本地通过            |
-| Playwright          | 5 files / 48 tests，最新 CI 通过                     |
-| TypeScript / ESLint | 最新 CI 通过                                         |
-| SEO / blur          | 最新 CI 通过                                         |
-| Production build    | 93 个生成条目，document routes 因 nonce 按需动态渲染 |
-| Lighthouse          | desktop preset，5 页 × 2 次，最新 CI 通过            |
-| Production smoke    | 首页、博客、项目、收藏、RSS、sitemap 等内容检查通过  |
+| 门禁                | 当前证据                                              |
+| ------------------- | ----------------------------------------------------- |
+| Vitest              | 81 files / 618 tests，2026-07-18 本地与 CI 通过       |
+| Playwright          | 5 files / 48 tests，最新 CI 通过                      |
+| TypeScript / ESLint | 最新 CI 通过                                          |
+| SEO / blur          | 最新 CI 通过                                          |
+| Production build    | 93 个生成条目，document routes 因 nonce 按需动态渲染  |
+| Lighthouse          | desktop preset，5 页 × 2 次，最新 CI 通过             |
+| Production smoke    | 首页、博客、项目、收藏、RSS、sitemap、search 检查通过 |
 
 2026-07-17 Node 22 CI production build 的 bundle 快照：
 

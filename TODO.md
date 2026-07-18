@@ -1,9 +1,9 @@
 # 西江月博客 · 当前待办
 
-> 状态：工程侧 P0-P10 已完成；当前仅保留外部依赖或条件触发事项。
-> 更新：2026-07-17
+> 状态：工程侧 P0-P10 与前后端逻辑分层已完成；当前仅保留外部依赖或条件触发事项。
+> 更新：2026-07-18
 > 生产域名：`https://incca.ccwu.cc`
-> 最新已验证生产提交：`8ee2e71`，CI run `29573545749` 全绿。
+> 最新已验证生产提交：`a91a07d`，CI run `29631593044` 全绿。
 
 ## 外部依赖
 
@@ -20,14 +20,15 @@
 
 ## 已完成工作索引
 
-| 范围           | 当前结果                                                | 证据                                                                 |
-| -------------- | ------------------------------------------------------- | -------------------------------------------------------------------- |
-| 内容与数据架构 | MDX/JSON repository、schema、cache、路由 adapter 已落地 | [架构说明](./docs/architecture.md)                                   |
-| UI 与交互      | shadcn/Radix 原语、Sheet、Popover、搜索、LQIP 已落地    | [前端实施报告](./docs/frontend-ui-optimization-report-2026-07-12.md) |
-| 搜索与 BEM     | 服务端 Fuse、短 CDN cache、限流、BEM 卫生已落地         | [搜索方案](./docs/bem-search-architecture-2026-07-12.md)             |
-| 内容 SEO       | 14 篇文章元数据、内链、主题簇和 SEO 检查已完成          | [内容 SEO 计划](./docs/content-seo-plan-2026-07-12.md)               |
-| 全栈审查       | 可由仓库验证的 P1-P3 事项已收口                         | [全栈审查](./docs/full-stack-audit-2026-07-17.md)                    |
-| 性能           | desktop CI 门禁、mobile 实验室基线、bundle 预算已建立   | [性能基线](./docs/performance-baseline.md)                           |
+| 范围           | 当前结果                                                | 证据                                                                                       |
+| -------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| 内容与数据架构 | MDX/JSON repository、schema、cache、路由 adapter 已落地 | [架构说明](./docs/architecture.md)                                                         |
+| UI 与交互      | shadcn/Radix 原语、Sheet、Popover、搜索、LQIP 已落地    | [前端实施报告](./docs/frontend-ui-optimization-report-2026-07-12.md)                       |
+| 搜索与 BEM     | 服务端 Fuse、短 CDN cache、限流、BEM 卫生已落地         | [搜索方案](./docs/bem-search-architecture-2026-07-12.md)                                   |
+| 内容 SEO       | 14 篇文章元数据、内链、主题簇和 SEO 检查已完成          | [内容 SEO 计划](./docs/content-seo-plan-2026-07-12.md)                                     |
+| 全栈审查       | 可由仓库验证的 P1-P3 事项已收口                         | [全栈审查](./docs/full-stack-audit-2026-07-17.md)                                          |
+| 性能           | desktop CI 门禁、mobile 实验室基线、bundle 预算已建立   | [性能基线](./docs/performance-baseline.md)                                                 |
+| 逻辑前后端分层 | `src/server` facade、搜索用例分层、模块边界测试已上线   | [run 归档](./docs/superpowers/runs/2026-07-18-frontend-backend-boundary/) · 提交 `a91a07d` |
 
 历史阶段和旧测试数量保留在日期型报告与 `docs/superpowers/runs/` 中，不在本文件重复维护。
 

@@ -15,11 +15,11 @@
 | 项目           | 当前证据                                                                              |
 | -------------- | ------------------------------------------------------------------------------------- |
 | 生产域名       | `https://incca.ccwu.cc`                                                               |
-| 最新已验证提交 | `8ee2e712b5665c7f0c94770038e581f5621383cd`                                            |
-| GitHub Actions | run `29573545749`：quality、bundle-analyze、e2e/Lighthouse、deploy/smoke 全部 success |
+| 最新已验证提交 | `a91a07dc361392eef882a59993a6eb0017cb8a40`                                            |
+| GitHub Actions | run `29631593044`：quality、bundle-analyze、e2e/Lighthouse、deploy/smoke 全部 success |
 | 内容规模       | 14 篇文章、6 个项目、10 类 123 条收藏链接                                             |
-| Vitest         | 77 files / 599 tests（2026-07-17 本地复验）                                           |
-| Playwright     | 5 files / 48 tests（2026-07-17 收集结果）                                             |
+| Vitest         | 81 files / 618 tests（2026-07-18 本地与 CI）                                          |
+| Playwright     | 5 files / 48 tests（2026-07-18 收集结果）                                             |
 | Node / pnpm    | Node 22.x / pnpm 11.8.0；Node 24 仅用于本机辅助时会出现 engine warning                |
 
 生产证据是时间点快照。接手时仍需用当前 `git log`、CI 和命令重新确认，不要把本表当作永久真值。
