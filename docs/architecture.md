@@ -85,6 +85,21 @@ content/blog/*.mdx
   -> components/blog/*
 ```
 
+#### 3.1.1 Wikilink 与反链（数字花园 G0/G1）
+
+```text
+MDX body [[slug]] / [[slug|label]]
+  -> lib/posts/wikilink.ts (extract)
+  -> lib/posts/remark-wikilink.ts + MdxContent remark pipeline
+  -> lib/posts/link-graph.ts (createCache reverse index; fail-closed targets)
+  -> server/content.getBacklinks
+  -> app/blog/[slug] + ArticleBacklinks
+```
+
+- 语法仅支持 `[[slug]]` 与 `[[slug|label]]`；slug 为 `filenameToSlug` 结果（作者直接写最终 slug，不带日期前缀）。
+- 构图仅扫描**可见**文章；目标不在可见集合 → 抛错（fail closed），不在 UI 画死链。
+- 无 Quartz / 无客户端读 FS；CSP 不变；图谱 UI（G2）未做。
+
 关键规则：
 
 - 文件名采用 `YYYY-MM-topic.mdx`，slug 会去掉日期前缀；
@@ -100,6 +115,9 @@ content/blog/*.mdx
 - `src/lib/posts/repository.ts`
 - `src/lib/posts/query.ts`
 - `src/lib/posts/search-text.ts`
+- `src/lib/posts/wikilink.ts`
+- `src/lib/posts/remark-wikilink.ts`
+- `src/lib/posts/link-graph.ts`
 - `src/lib/content-source.ts`
 - `src/lib/test-utils/in-memory-source.ts`
 

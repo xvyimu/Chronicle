@@ -69,10 +69,22 @@ describe('MdxContent', () => {
       expect(plugins.remarkPlugins).toBeDefined();
       expect(plugins.rehypePlugins).toBeDefined();
       expect(Array.isArray(plugins.remarkPlugins)).toBe(true);
-      expect(plugins.remarkPlugins!.length).toBeGreaterThan(0);
+      expect(plugins.remarkPlugins!.length).toBeGreaterThanOrEqual(2);
       expect(Array.isArray(plugins.rehypePlugins)).toBe(true);
       expect(plugins.rehypePlugins!.length).toBeGreaterThan(0);
     }
+  });
+
+  it('includes remarkWikilink after remarkGfm', async () => {
+    const { remarkWikilink } = await import('@/lib/posts/remark-wikilink');
+    const MDXRemoteMock = vi.mocked(mdxRemote.MDXRemote);
+    render(<MdxContent source="[[x]]" />);
+
+    const lastCall = MDXRemoteMock.mock.calls[MDXRemoteMock.mock.calls.length - 1];
+    const remarkPlugins = lastCall[0].options?.mdxOptions?.remarkPlugins as unknown[];
+    expect(remarkPlugins).toBeDefined();
+    expect(remarkPlugins!.length).toBeGreaterThanOrEqual(2);
+    expect(remarkPlugins).toContain(remarkWikilink);
   });
 
   it('renders within a prose container', () => {

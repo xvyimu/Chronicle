@@ -5,8 +5,11 @@
  *   repository.ts   — 缓存 + 读取 + frontmatter 校验
  *   query.ts        — 筛选/排序/分页 (纯函数)
  *   search-text.ts  — MDX 清洗 (纯函数)
+ *   wikilink.ts     — wikilink 纯解析
+ *   link-graph.ts   — 反链索引 + fail-closed 校验
  *
  * barrel re-export 提供统一的公共 API, app/ 调用方统一从 '@/lib/posts' 导入.
+ * remark 插件不从此 barrel 导出（仅 MdxContent 直接导入）。
  */
 
 import { postRepository } from './repository';
@@ -23,6 +26,18 @@ export {
   extractPostExcerpt,
   buildPostSearchText,
 } from './search-text';
+
+// wikilink pure helpers
+export { normalizeWikilinkSlug, wikilinkHref, extractWikilinks } from './wikilink';
+export type { WikilinkMatch } from './wikilink';
+
+// link graph / backlinks
+export {
+  getBacklinks,
+  assertWikilinksValid,
+  buildBacklinkIndex,
+  createLinkGraph,
+} from './link-graph';
 
 /**
  * 公共 API — 委托给默认 postRepository 实例.

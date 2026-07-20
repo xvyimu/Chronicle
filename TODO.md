@@ -1,7 +1,7 @@
 # 西江月博客 · 当前待办
 
-> 状态：**工程侧可无条件推进的事项已关闭**；仅剩外部账号或条件触发。  
-> 更新：2026-07-18（归档收口）  
+> 状态：**工程侧可无条件推进的事项已关闭**；仅剩外部账号或条件触发。数字花园 G0/G1 已合入本仓（产品增量，非外部 ops）。  
+> 更新：2026-07-21（花园 G0/G1）  
 > 生产：`https://incca.ccwu.cc`  
 > 归档 HEAD：`61ffd47`  
 > 功能基线：`a91a07d` · 运营工程：`96e0214` · 硬阻塞记录：`fa3e579`  
@@ -31,14 +31,21 @@
 - [ ] **prose/article-ui 下沉**：Coverage + 层叠方案 + ADR。
 - [ ] **Cache Components**：外部数据/ISR/失效需求 + 迁移指南。
 
+## 数字花园（Next 内增量）
+
+- [x] G0 wikilink remark + pure helpers（`[[slug]]` / `[[slug|label]]` → `/blog/{slug}`）
+- [x] G1 backlinks panel + link graph cache（fail-closed 坏链；`getBacklinks`）
+- [ ] G2 graph UI（本轮明确不做）
+
 ## 已完成索引（本阶段）
 
-| 范围           | 结果                          | 证据                                        |
-| -------------- | ----------------------------- | ------------------------------------------- |
-| 逻辑前后端分层 | `src/server` + 边界测试已上线 | run `frontend-backend-boundary` · `a91a07d` |
-| 延后运营工程化 | 就绪门禁 + 手册 + live 实测   | run `deferred-ops-readiness` · `96e0214`    |
-| 生产质量       | CI/e2e/deploy/smoke 绿        | launch-baseline                             |
-| 阶段归档       | TODO/记忆/run 索引收口        | `61ffd47`                                   |
+| 范围           | 结果                          | 证据                                          |
+| -------------- | ----------------------------- | --------------------------------------------- |
+| 逻辑前后端分层 | `src/server` + 边界测试已上线 | run `frontend-backend-boundary` · `a91a07d`   |
+| 延后运营工程化 | 就绪门禁 + 手册 + live 实测   | run `deferred-ops-readiness` · `96e0214`      |
+| 生产质量       | CI/e2e/deploy/smoke 绿        | launch-baseline                               |
+| 阶段归档       | TODO/记忆/run 索引收口        | `61ffd47`                                     |
+| 数字花园 G0/G1 | wikilink + 反链面板           | 本仓 `src/lib/posts/wikilink*` · `link-graph` |
 
 更早 P0–P10 见历史报告与 `docs/superpowers/runs/`，不在此重复。
 

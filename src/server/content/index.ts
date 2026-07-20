@@ -2,6 +2,7 @@ import {
   getAdjacentPosts as readAdjacentPosts,
   getAllPostSlugs as readAllPostSlugs,
   getAllPosts as readAllPosts,
+  getBacklinks as readBacklinks,
   getPaginatedPosts as readPaginatedPosts,
   getPostBySlug as readPostBySlug,
   getPostsByTag as readPostsByTag,
@@ -53,6 +54,9 @@ export const getRelatedPosts = readRelatedPosts;
 
 /** 按文章 slug 读取同系列文章；无系列或未命中时返回空数组。 */
 export const getSeriesPosts = readSeriesPosts;
+
+/** 读取链到指定 slug 的可见文章（反链）；无入边时返回空数组。坏链在构图时抛出。 */
+export const getBacklinks = readBacklinks;
 
 /** 按页码和页容量读取文章分页；页码钳制语义由底层查询保持。 */
 export const getPaginatedPosts = readPaginatedPosts;

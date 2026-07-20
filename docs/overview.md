@@ -14,20 +14,21 @@
 
 ## 当前维护文档
 
-| 文档                                                     | 负责内容                             | 更新触发条件                   |
-| -------------------------------------------------------- | ------------------------------------ | ------------------------------ |
-| [README](../README.md)                                   | 项目入口、安装、功能、路由、命令     | 依赖、路由、脚本或功能变化     |
-| [AGENTS](../AGENTS.md)                                   | AI 协作规则和项目约定                | 工具链、目录、测试或工作流变化 |
-| [TODO](../TODO.md)                                       | 仅保留当前未完成或条件触发事项       | 待办完成、取消或条件变化       |
-| [架构说明](./architecture.md)                            | 当前模块和运行时边界                 | 模块、数据流、渲染或部署变化   |
-| [Search API](./API.md)                                   | `/api/search` 请求、响应、错误和缓存 | route、DTO、限流或缓存变化     |
-| [内容工作流](./content-workflow.md)                      | 文章、项目、收藏、RSS 发布           | schema、内容目录或检查脚本变化 |
-| [CSS 规范](./css-conventions.md)                         | token、BEM、shadcn、文件归属         | token、CSS 文件或导入归属变化  |
-| [Cache Components 指南](./cache-components-migration.md) | 当前缓存和未来迁移门槛               | 缓存实现或外部数据源变化       |
-| [上线基线](./launch-baseline.md)                         | 最新生产证据和发布门禁               | 新生产基线或 smoke 变化        |
-| [延后运营计划](./ops-deferred-work-plan.md)              | GSC/Bing/RUM 与条件触发执行手册      | 授权剧本或门槛变化             |
-| [性能基线](./performance-baseline.md)                    | CI 预算、实验室数据、RUM 目标        | Lighthouse、bundle 或 p75 更新 |
-| [Agent 接手指南](./handoff-to-agent.md)                  | 当前状态、优先级和交接边界           | 生产状态或主要待办变化         |
+| 文档                                                                              | 负责内容                                           | 更新触发条件                   |
+| --------------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------ |
+| [README](../README.md)                                                            | 项目入口、安装、功能、路由、命令                   | 依赖、路由、脚本或功能变化     |
+| [AGENTS](../AGENTS.md)                                                            | AI 协作规则和项目约定                              | 工具链、目录、测试或工作流变化 |
+| [TODO](../TODO.md)                                                                | 仅保留当前未完成或条件触发事项                     | 待办完成、取消或条件变化       |
+| [架构说明](./architecture.md)                                                     | 当前模块和运行时边界                               | 模块、数据流、渲染或部署变化   |
+| [Search API](./API.md)                                                            | `/api/search` 请求、响应、错误和缓存               | route、DTO、限流或缓存变化     |
+| [内容工作流](./content-workflow.md)                                               | 文章、项目、收藏、RSS 发布                         | schema、内容目录或检查脚本变化 |
+| [CSS 规范](./css-conventions.md)                                                  | token、BEM、shadcn、文件归属                       | token、CSS 文件或导入归属变化  |
+| [Cache Components 指南](./cache-components-migration.md)                          | 当前缓存和未来迁移门槛                             | 缓存实现或外部数据源变化       |
+| [上线基线](./launch-baseline.md)                                                  | 最新生产证据和发布门禁                             | 新生产基线或 smoke 变化        |
+| [延后运营计划](./ops-deferred-work-plan.md)                                       | GSC/Bing/RUM 与条件触发执行手册                    | 授权剧本或门槛变化             |
+| [性能基线](./performance-baseline.md)                                             | CI 预算、实验室数据、RUM 目标                      | Lighthouse、bundle 或 p75 更新 |
+| [Agent 接手指南](./handoff-to-agent.md)                                           | 当前状态、优先级和交接边界                         | 生产状态或主要待办变化         |
+| [架构优化整合调研 2026-07-21](./architecture-optimization-research-2026-07-21.md) | 同类对照、多方案对比、目标/约束/验收与下一轨道决策 | 用户决议变更或架构假设变化     |
 
 ## 决策与设计记录
 

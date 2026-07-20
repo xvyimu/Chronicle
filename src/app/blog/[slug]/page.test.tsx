@@ -127,6 +127,25 @@ describe('BlogPostPage', () => {
     ).toHaveAttribute('href', '/blog/vps-initial-setup');
   });
 
+  it('renders backlinks region for a post with inbound wikilinks', async () => {
+    const jsx = await BlogPostPage({
+      params: Promise.resolve({ slug: 'docker-deploy-guide' }),
+    });
+    render(jsx);
+
+    const section = screen.getByRole('region', { name: '反向链接' });
+    expect(within(section).getByText('Backlinks')).toBeInTheDocument();
+    // Triangle content: vps + nginx link to docker
+    expect(
+      within(section).getByRole('link', { name: /VPS 初始化安全与运维配置清单/ }),
+    ).toHaveAttribute('href', '/blog/vps-initial-setup');
+    expect(
+      within(section).getByRole('link', {
+        name: /Nginx 反向代理与负载均衡实战/,
+      }),
+    ).toHaveAttribute('href', '/blog/nginx-reverse-proxy');
+  });
+
   it('renders series and category badges when a post has no tags', async () => {
     vi.resetModules();
     vi.doMock('@/server/content', () => ({
@@ -135,6 +154,7 @@ describe('BlogPostPage', () => {
       getAdjacentPosts: () => ({ prev: null, next: null }),
       getRelatedPosts: () => [],
       getSeriesPosts: () => [],
+      getBacklinks: () => [],
     }));
 
     const { default: MockedBlogPostPage } = await import('@/app/blog/[slug]/page');
