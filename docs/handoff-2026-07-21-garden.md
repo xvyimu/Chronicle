@@ -4,12 +4,12 @@
 
 ## 状态
 
-| 项            | 值                                                                           |
-| ------------- | ---------------------------------------------------------------------------- |
-| 本地 HEAD     | `b96b3c3` · `feat(garden): wikilink G0 and backlinks G1 digital garden loop` |
-| origin / 生产 | `dfc057b` · `https://incca.ccwu.cc` · **未含本提交**                         |
-| 分支          | `master` **ahead 1**，工作树 clean                                           |
-| 用户边界      | 已本地 commit；**未授权 push**                                               |
+| 项            | 值                                                     |
+| ------------- | ------------------------------------------------------ |
+| 本地 HEAD     | `0f27b92` docs handoff · 功能 `b96b3c3` garden G0/G1   |
+| origin / 生产 | `dfc057b` · `https://incca.ccwu.cc` · **未含本批提交** |
+| 分支          | `master` **ahead 2**，工作树 clean                     |
+| 用户边界      | 已本地 commit；**未授权 push**                         |
 
 ## 已完成
 
