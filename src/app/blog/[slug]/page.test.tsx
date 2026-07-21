@@ -146,6 +146,19 @@ describe('BlogPostPage', () => {
     ).toHaveAttribute('href', '/blog/nginx-reverse-proxy');
   });
 
+  it('renders folded neighbors for a post with wikilinks', async () => {
+    const jsx = await BlogPostPage({
+      params: Promise.resolve({ slug: 'docker-deploy-guide' }),
+    });
+    render(jsx);
+
+    expect(screen.getByText('邻接笔记')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /打开全站花园/ })).toHaveAttribute(
+      'href',
+      '/garden',
+    );
+  });
+
   it('renders series and category badges when a post has no tags', async () => {
     vi.resetModules();
     vi.doMock('@/server/content', () => ({
@@ -155,6 +168,7 @@ describe('BlogPostPage', () => {
       getRelatedPosts: () => [],
       getSeriesPosts: () => [],
       getBacklinks: () => [],
+      getNeighbors: () => ({ outbound: [], inbound: [] }),
     }));
 
     const { default: MockedBlogPostPage } = await import('@/app/blog/[slug]/page');

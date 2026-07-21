@@ -99,7 +99,7 @@ MDX body [[slug]] / [[slug|label]]
 - 语法仅支持 `[[slug]]` 与 `[[slug|label]]`；slug 为 `filenameToSlug` 结果（作者直接写最终 slug，不带日期前缀）。
 - 构图仅扫描**可见**文章；目标不在可见集合 → 抛错（fail closed），不在 UI 画死链。
 - 无 Quartz / 无客户端读 FS；CSP 不变。
-- **G2 窄原型**：`getGardenGraph()` → `src/app/garden` 次级页（边列表 + 可选静态 SVG 圆环）；`prefers-reduced-motion` 下隐藏示意；禁止首页力导向。
+- **G2**：`getGardenGraph()` / `getNeighbors()` → `/garden`（筛选 + 自研力导向 SVG）与文章折叠邻接；`prefers-reduced-motion` 降级列表；无 d3 依赖、无 eval。
 
 关键规则：
 

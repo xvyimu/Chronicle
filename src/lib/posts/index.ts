@@ -35,12 +35,19 @@ export type { WikilinkMatch } from './wikilink';
 export {
   getBacklinks,
   getGardenGraph,
+  getNeighbors,
   assertWikilinksValid,
   buildBacklinkIndex,
   buildGardenEdges,
   createLinkGraph,
 } from './link-graph';
-export type { GardenGraph, GardenGraphEdge, GardenGraphNode } from './link-graph';
+export type {
+  GardenGraph,
+  GardenGraphEdge,
+  GardenGraphNode,
+  NeighborBundle,
+} from './link-graph';
+export { layoutForceGraph, filterGardenGraph } from './force-layout';
 
 /**
  * 公共 API — 委托给默认 postRepository 实例.

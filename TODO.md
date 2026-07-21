@@ -35,8 +35,9 @@
 
 - [x] G0 wikilink remark + pure helpers（`[[slug]]` / `[[slug|label]]` → `/blog/{slug}`）
 - [x] G1 backlinks panel + link graph cache（fail-closed 坏链；`getBacklinks`）
-- [x] G2 次级原型 `/garden`（边列表 + 静态圆环示意；`prefers-reduced-motion` 隐藏示意；非首屏力导向）
-- [ ] G2 增强（可选）：交互筛选 / 文章内折叠邻接 / 真力图——需另立项
+- [x] G2 次级原型 `/garden`（边列表 + 力导向 + 专题/标签筛选；`prefers-reduced-motion` 降级列表）
+- [x] 文章页折叠邻接（`ArticleNeighbors` 出/入边）
+- [ ] G2 再增强（可选）：拖拽节点 / 保存视图 / 更多布局算法
 
 ## 已完成索引（本阶段）
 

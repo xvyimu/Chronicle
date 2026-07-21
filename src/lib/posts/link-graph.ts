@@ -12,6 +12,9 @@ export type LinkGraphPost = {
 export type GardenGraphNode = {
   slug: string;
   title: string;
+  series?: string;
+  tags: string[];
+  category?: string;
 };
 
 export type GardenGraphEdge = {
@@ -22,6 +25,13 @@ export type GardenGraphEdge = {
 export type GardenGraph = {
   nodes: GardenGraphNode[];
   edges: GardenGraphEdge[];
+};
+
+export type NeighborBundle = {
+  /** Outbound wikilink targets (unique, slug asc). */
+  outbound: PostMeta[];
+  /** Inbound backlinks (date desc — same as getBacklinks). */
+  inbound: PostMeta[];
 };
 
 type BacklinkIndexPayload = {
@@ -90,6 +100,7 @@ export function createLinkGraph(options: {
 }): {
   getBacklinks(slug: string): PostMeta[];
   getGardenGraph(): GardenGraph;
+  getNeighbors(slug: string): NeighborBundle;
   assertValid(): void;
 } {
   function buildPayload(): BacklinkIndexPayload {
@@ -148,9 +159,26 @@ export function createLinkGraph(options: {
   function getGardenGraph(): GardenGraph {
     const { metaBySlug, edges } = getPayload();
     const nodes = [...metaBySlug.values()]
-      .map((m) => ({ slug: m.slug, title: m.title }))
+      .map((m) => ({
+        slug: m.slug,
+        title: m.title,
+        series: m.series,
+        tags: m.tags ?? [],
+        category: m.category,
+      }))
       .sort((a, b) => a.slug.localeCompare(b.slug));
     return { nodes, edges };
+  }
+
+  function getNeighbors(slug: string): NeighborBundle {
+    const { edges, metaBySlug } = getPayload();
+    const outboundSlugs = [
+      ...new Set(edges.filter((e) => e.from === slug).map((e) => e.to)),
+    ].sort((a, b) => a.localeCompare(b));
+    const outbound = outboundSlugs
+      .map((s) => metaBySlug.get(s))
+      .filter((m): m is PostMeta => m != null);
+    return { outbound, inbound: getBacklinks(slug) };
   }
 
   function assertValid(): void {
@@ -159,7 +187,7 @@ export function createLinkGraph(options: {
     getPayload();
   }
 
-  return { getBacklinks, getGardenGraph, assertValid };
+  return { getBacklinks, getGardenGraph, getNeighbors, assertValid };
 }
 
 const defaultGraph = createLinkGraph({
@@ -178,6 +206,11 @@ export function getBacklinks(slug: string): PostMeta[] {
 /** Full garden adjacency for secondary UI (nodes + directed edges). */
 export function getGardenGraph(): GardenGraph {
   return defaultGraph.getGardenGraph();
+}
+
+/** Outbound + inbound neighbors for article fold panel. */
+export function getNeighbors(slug: string): NeighborBundle {
+  return defaultGraph.getNeighbors(slug);
 }
 
 /**

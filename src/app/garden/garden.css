@@ -155,3 +155,124 @@
     display: none;
   }
 }
+
+/* Explorer (client filters + force layout) */
+.garden-explorer {
+  display: grid;
+  gap: 20px;
+}
+
+.garden-explorer__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  padding: 14px 16px;
+}
+
+.garden-explorer__field {
+  display: grid;
+  gap: 4px;
+  min-width: 10rem;
+}
+
+.garden-explorer__field-label {
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.garden-explorer__select {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated, var(--surface));
+  color: var(--text);
+  font-size: 0.9rem;
+  padding: 8px 10px;
+}
+
+.garden-explorer__reset {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--brand-hover);
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+.garden-explorer__reset:hover {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.garden-explorer__count {
+  margin: 0;
+  flex: 1 1 100%;
+  color: var(--text-dim);
+  font-size: 0.82rem;
+}
+
+.garden-explorer__canvas-wrap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.garden-explorer__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 480px;
+}
+
+.garden-explorer__edge {
+  stroke: color-mix(in srgb, var(--brand) 50%, var(--border));
+  stroke-width: 1.2;
+}
+
+.garden-explorer__edge--dim {
+  opacity: 0.18;
+}
+
+.garden-explorer__node {
+  fill: var(--brand);
+  stroke: var(--surface);
+  stroke-width: 1.5;
+  cursor: pointer;
+}
+
+.garden-explorer__node--dim {
+  opacity: 0.28;
+}
+
+.garden-explorer__label {
+  fill: var(--text-soft);
+  font-size: 10px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.garden-explorer__label--dim {
+  opacity: 0.35;
+}
+
+.garden-explorer__node-link {
+  outline: none;
+}
+
+.garden-explorer__list-only-hint {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+.garden-explorer__meta-chip {
+  margin-left: 8px;
+  color: var(--text-dim);
+  font-size: 0.75rem;
+}

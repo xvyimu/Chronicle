@@ -4,6 +4,7 @@ import {
   getAllPosts as readAllPosts,
   getBacklinks as readBacklinks,
   getGardenGraph as readGardenGraph,
+  getNeighbors as readNeighbors,
   getPaginatedPosts as readPaginatedPosts,
   getPostBySlug as readPostBySlug,
   getPostsByTag as readPostsByTag,
@@ -61,6 +62,9 @@ export const getBacklinks = readBacklinks;
 
 /** 数字花园次级页用：可见笔记节点 + 有向 wikilink 边。 */
 export const getGardenGraph = readGardenGraph;
+
+/** 文章页折叠邻接：出边 + 入边。 */
+export const getNeighbors = readNeighbors;
 
 /** 按页码和页容量读取文章分页；页码钳制语义由底层查询保持。 */
 export const getPaginatedPosts = readPaginatedPosts;

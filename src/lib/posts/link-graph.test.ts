@@ -8,6 +8,7 @@ import {
   assertWikilinksValid,
   getBacklinks,
   getGardenGraph,
+  getNeighbors,
 } from './link-graph';
 
 function meta(slug: string, overrides: Partial<PostMeta> = {}): PostMeta {
@@ -120,15 +121,37 @@ describe('createLinkGraph', () => {
     );
   });
 
-  it('exposes garden graph nodes and edges', () => {
-    const posts = [meta('a', { title: 'A' }), meta('b', { title: 'B' })];
+  it('exposes garden graph nodes and edges with series/tags', () => {
+    const posts = [
+      meta('a', { title: 'A', series: 'S1', tags: ['t1'] }),
+      meta('b', { title: 'B', tags: ['t2'] }),
+    ];
     const graph = createLinkGraph({
       getVisiblePosts: () => posts,
       getPostContent: (slug) => (slug === 'a' ? 'to [[b]]' : 'plain'),
     });
     const garden = graph.getGardenGraph();
     expect(garden.nodes.map((n) => n.slug).sort()).toEqual(['a', 'b']);
+    expect(garden.nodes.find((n) => n.slug === 'a')?.series).toBe('S1');
+    expect(garden.nodes.find((n) => n.slug === 'a')?.tags).toEqual(['t1']);
     expect(garden.edges).toEqual([{ from: 'a', to: 'b' }]);
+  });
+
+  it('getNeighbors returns outbound and inbound', () => {
+    const posts = [meta('a'), meta('b'), meta('c')];
+    const graph = createLinkGraph({
+      getVisiblePosts: () => posts,
+      getPostContent: (slug) => {
+        if (slug === 'a') return '[[b]] [[c]]';
+        if (slug === 'c') return '[[b]]';
+        return 'x';
+      },
+    });
+    const n = graph.getNeighbors('b');
+    expect(n.outbound).toEqual([]);
+    expect(n.inbound.map((p) => p.slug).sort()).toEqual(['a', 'c']);
+    const fromA = graph.getNeighbors('a');
+    expect(fromA.outbound.map((p) => p.slug)).toEqual(['b', 'c']);
   });
 
   it('rebuilds after resetAllCaches when fixtures change', () => {
@@ -175,5 +198,14 @@ describe('assertWikilinksValid (filesystem content)', () => {
     expect(garden.nodes.length).toBeGreaterThanOrEqual(14);
     expect(garden.edges.length).toBeGreaterThan(0);
     expect(garden.edges.some((e) => e.from === 'docker-deploy-guide')).toBe(true);
+    expect(garden.nodes.every((n) => Array.isArray(n.tags))).toBe(true);
+  });
+
+  it('getNeighbors works on real sample post', () => {
+    const n = getNeighbors('docker-deploy-guide');
+    expect(n.outbound.map((p) => p.slug)).toEqual(
+      expect.arrayContaining(['vps-initial-setup', 'nginx-reverse-proxy']),
+    );
+    expect(n.inbound.length).toBeGreaterThan(0);
   });
 });
