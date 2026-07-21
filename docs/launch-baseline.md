@@ -32,15 +32,15 @@ bundle-analyze（并行、独立，不是 deploy 依赖）
 
 ## 3. 当前质量基线
 
-| 门禁                | 当前证据                                                   |
-| ------------------- | ---------------------------------------------------------- |
-| Vitest              | 93 files / 685 tests，2026-07-21 本地通过（CI 待 v3 ship） |
-| Playwright          | 5 files / 48 tests，最新 CI 通过                           |
-| TypeScript / ESLint | 最新 CI 通过                                               |
-| SEO / blur          | 最新 CI 通过                                               |
-| Production build    | 93 个生成条目，document routes 因 nonce 按需动态渲染       |
-| Lighthouse          | desktop preset，5 页 × 2 次，最新 CI 通过                  |
-| Production smoke    | 首页、博客、项目、收藏、RSS、sitemap、search 检查通过      |
+| 门禁                | 当前证据                                              |
+| ------------------- | ----------------------------------------------------- |
+| Vitest              | 93 files / 688 tests，2026-07-21 本地通过（T1 后）    |
+| Playwright          | 5 files / 48 tests，最新 CI 通过                      |
+| TypeScript / ESLint | 最新 CI 通过                                          |
+| SEO / blur          | 最新 CI 通过                                          |
+| Production build    | 93 个生成条目，document routes 因 nonce 按需动态渲染  |
+| Lighthouse          | desktop preset，5 页 × 2 次，最新 CI 通过             |
+| Production smoke    | 首页、博客、项目、收藏、RSS、sitemap、search 检查通过 |
 
 2026-07-17 Node 22 CI production build 的 bundle 快照：
 

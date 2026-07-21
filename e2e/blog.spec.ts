@@ -143,4 +143,25 @@ test.describe('博客文章详情页', () => {
     const copyBtn = codeBlocks.first().locator('button:has-text("复制")');
     await expect(copyBtn).toBeVisible();
   });
+
+  test('wikilink 悬停显示预览卡片 (G3)', async ({ page }) => {
+    // This post contains an inline body wikilink to another article.
+    await page.goto('/blog/nextjs-app-router', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('article h1')).toBeVisible({ timeout: 15000 });
+
+    const wikilink = page.locator('a.wikilink[data-wikilink]').first();
+    await expect(wikilink).toBeVisible({ timeout: 15000 });
+
+    const previewResponse = page.waitForResponse(
+      (res) => res.url().includes('/api/preview/') && res.ok(),
+      { timeout: 15000 },
+    );
+    await wikilink.hover();
+    await previewResponse;
+
+    // Tooltip appears and carries the accessible relationship.
+    const tooltip = page.getByRole('tooltip');
+    await expect(tooltip).toBeVisible({ timeout: 10000 });
+    await expect(wikilink).toHaveAttribute('aria-describedby', /.+/);
+  });
 });

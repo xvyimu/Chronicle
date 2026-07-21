@@ -4,10 +4,10 @@
 > 运行时：Node.js（内容读取基于 fs，不面向 Edge）。  
 > 规范源补充：`docs/architecture-optimization-research-2026-07-21-v4.md` §7。
 
-| 路径                      | 用途                        | 限流                     | 成功缓存                   |
-| ------------------------- | --------------------------- | ------------------------ | -------------------------- |
-| `GET /api/search`         | 全文/元数据模糊搜索         | 60 次 / 60s / origin key | `s-maxage=60, swr=300`     |
-| `GET /api/preview/[slug]` | wikilink 悬停卡片轻量元数据 | **当前无限流**           | `s-maxage=3600, swr=86400` |
+| 路径                      | 用途                        | 限流                                         | 成功缓存                   |
+| ------------------------- | --------------------------- | -------------------------------------------- | -------------------------- |
+| `GET /api/search`         | 全文/元数据模糊搜索         | 60 次 / 60s / origin key                     | `s-maxage=60, swr=300`     |
+| `GET /api/preview/[slug]` | wikilink 悬停卡片轻量元数据 | 120 次 / 60s / origin key（`preview:` 前缀） | `s-maxage=3600, swr=86400` |
 
 ---
 
@@ -178,26 +178,32 @@ curl -sS "http://localhost:3000/api/preview/react-compiler-in-practice"
 Cache-Control: s-maxage=3600, stale-while-revalidate=86400
 ```
 
-### 错误响应 `404`
+### 错误响应
 
-文章不存在，或存在但不可见（`published: false` 等，与 `getPostBySlug` 可见性一致）时：
+错误 body 与 search 对齐为 `error` + `code`：
+
+| 状态  | `code`         | 触发                                                                  | 额外行为                                                             |
+| ----- | -------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `404` | `NOT_FOUND`    | 文章不存在或不可见（与 `getPostBySlug` 一致）                         | —                                                                    |
+| `429` | `RATE_LIMITED` | 当前 origin 进程窗口超过 **120 次 / 60s**（key 前缀 `preview:` 隔离） | `Retry-After`、`X-RateLimit-Remaining: 0`、`Cache-Control: no-store` |
+| `500` | `SERVER_ERROR` | repository 抛错等                                                     | `Cache-Control: no-store`，不暴露 stack                              |
 
 ```json
-{ "error": "not found" }
+{ "error": "not found", "code": "NOT_FOUND" }
 ```
 
-状态码 `404`。调用方（`WikilinkPopover`）对非 ok 响应保持静默，可停留在「加载中…」而不向读者抛错。
+调用方（`WikilinkPopover`）对非 ok 响应显示「暂无预览」，不向读者抛全局错误。
 
 ### 与 search 的差异
 
-| 维度       | search                      | preview                                      |
-| ---------- | --------------------------- | -------------------------------------------- |
-| 输入       | 自由文本 `q`                | 精确 `slug`                                  |
-| 引擎       | Fuse 模糊                   | 直接 repository 查找                         |
-| 限流       | 有（60/60s）                | **无**（v4 记为 P2 可评估）                  |
-| 缓存       | 短（60s）                   | 长（1h + SWR 1d）                            |
-| 错误码风格 | `error` + `code`            | 当前仅 `{ error }` 字符串（无 `code` 字段）  |
-| 500 处理   | 显式 catch → `SERVER_ERROR` | **当前未单独 catch**（P1 债：可对齐 search） |
+| 维度       | search                      | preview                       |
+| ---------- | --------------------------- | ----------------------------- |
+| 输入       | 自由文本 `q`                | 精确 `slug`                   |
+| 引擎       | Fuse 模糊                   | 直接 repository 查找          |
+| 限流       | 60/60s                      | **120/60s**（独立 key 前缀）  |
+| 缓存       | 短（60s）                   | 长（1h + SWR 1d）             |
+| 错误码风格 | `error` + `code`            | **同** `error` + `code`       |
+| 500 处理   | 显式 catch → `SERVER_ERROR` | **同** catch → `SERVER_ERROR` |
 
 ### 客户端行为
 
@@ -205,7 +211,9 @@ Cache-Control: s-maxage=3600, stale-while-revalidate=86400
 
 - 仅当锚点带 `data-wikilink` 时请求本 API；普通外链不请求。
 - `AbortController` 取消过期请求；组件卸载时 abort。
-- 首次成功结果缓存在组件 state；同一实例二次 hover **不重新请求**。
+- 首次成功结果缓存在组件 state；同一实例二次 hover **不重新请求**；失败可重试。
+- 打开时设置 `aria-describedby` 指向 `role="tooltip"`；视口上方空间不足时卡片翻到链接下方。
+- 触屏无可靠 hover：`title` 提示直接点开链接。
 - 预览标题/描述/日期以 React 文本节点渲染（自动转义），禁止 HTML 注入。
 
 ### 实现位置（preview）
