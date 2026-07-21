@@ -11,6 +11,9 @@ import { NextRequest, NextResponse } from 'next/server';
  * Vercel Analytics / Speed Insights load scripts from va.vercel-scripts.com
  * (debug) and same-origin /_vercel/* in production; connect stays 'self'.
  */
+/** report-to 分组名，绑定到同源收集端点 /api/csp-report。 */
+const CSP_REPORT_GROUP = 'csp-endpoint';
+
 export function proxy(_request: NextRequest) {
   const isDev = process.env.NODE_ENV === 'development';
 
@@ -37,6 +40,11 @@ export function proxy(_request: NextRequest) {
     "manifest-src 'self'",
     "worker-src 'self'",
     'upgrade-insecure-requests',
+    // T3: collect-only violation reporting. report-to (Reporting API) is the
+    // modern channel; report-uri is kept for browsers that ignore report-to.
+    // Enforcement is unchanged — this only adds a telemetry sink, no relaxation.
+    'report-uri /api/csp-report',
+    `report-to ${CSP_REPORT_GROUP}`,
   ].join('; ');
 
   const requestHeaders = new Headers(_request.headers);
@@ -50,6 +58,8 @@ export function proxy(_request: NextRequest) {
   });
 
   response.headers.set('Content-Security-Policy', csp);
+  // Reporting-Endpoints binds the report-to group name to the same-origin sink.
+  response.headers.set('Reporting-Endpoints', `${CSP_REPORT_GROUP}="/api/csp-report"`);
   return response;
 }
 

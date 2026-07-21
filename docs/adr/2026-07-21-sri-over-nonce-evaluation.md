@@ -2,7 +2,7 @@
 
 - Status: Evaluation (not yet enabled in production)
 - Date: 2026-07-21
-- Updated: 2026-07-21 (local prep — algorithm shape corrected; no production enable)
+- Updated: 2026-07-21 (T3 — `ENABLE_SRI` env gate added; local on/off trial verified; no production enable)
 - Related: `docs/adr/2026-07-17-csp-nonce-over-ssg.md`, `next.config.ts`, `src/proxy.ts`, `docs/architecture-optimization-research-2026-07-21-v3.md` R-E, `content/blog/2026-07-csp-nonce-and-sri.mdx`
 
 ## Context
@@ -61,24 +61,22 @@ Revisit this ADR and move toward enabling SRI when **any** of the following beco
 
 Before enabling in production, run on a **preview branch** (not `master`):
 
-1. **Enable the flag** in `next.config.ts`:
-
-   ```ts
-   experimental: {
-     viewTransition: true,
-     turbopackFileSystemCacheForDev: true,
-     sri: { algorithm: 'sha384' },
-   }
-   ```
+1. **Enable the flag** — no manual `next.config.ts` edit needed. As of T3
+   (`feat/t3-csp-report-sri-preview`) the flag is env-gated: `next.config.ts`
+   spreads `sri: { algorithm: 'sha384' }` into `experimental` **only** when
+   `ENABLE_SRI=1`. Merging to `master` never enables it — CI/production build
+   with the var unset. Set it just for the trial build/preview deploy.
 
 2. **Production-shaped local build** (never commit feed pollution from localhost):
 
    ```bash
-   # PowerShell
+   # PowerShell — flag on for this build only
    $env:NEXT_PUBLIC_SITE_URL = 'https://incca.ccwu.cc'
+   $env:ENABLE_SRI = '1'
    pnpm build
    # search build output / .next for integrity=
-   rg -n "integrity=" .next -g "*.html" | Select-Object -First 10
+   rg -n "integrity=" .next -g "*.html"
+   Remove-Item Env:\ENABLE_SRI   # leave the flag off afterwards
    ```
 
 3. **CSP regression** — document routes still emit per-request nonce; no `unsafe-inline` introduced:
@@ -104,15 +102,37 @@ Before enabling in production, run on a **preview branch** (not `master`):
 
 If any step regresses, abandon the branch and record the failure here. After a successful preview, update this ADR Status to Accepted (enable prod) or keep Evaluation with notes.
 
-## Local prep status (2026-07-21)
+## Local prep status (2026-07-21, updated T3)
 
-| Step                          | Status                                     |
-| ----------------------------- | ------------------------------------------ |
-| Types verified in Next 16.2.9 | Done — `sri?: { algorithm?: … }`           |
-| ADR checklist corrected       | Done (this file)                           |
-| Production config changed     | **No** — still disabled                    |
-| Local build with SRI on       | Optional; do not leave flag on after trial |
-| Vercel preview deploy         | **Blocked** — no deploy authorization      |
+| Step                             | Status                                                            |
+| -------------------------------- | ----------------------------------------------------------------- |
+| Types verified in Next 16.2.9    | Done — `sri?: { algorithm?: … }`                                  |
+| ADR checklist corrected          | Done (this file)                                                  |
+| Flag mechanism landed            | Done — `ENABLE_SRI=1` gates `sri: { algorithm: 'sha384' }`        |
+| Production config changed        | **No** — flag defaults off; master/CI build emits no `integrity=` |
+| Local build with SRI on (trial)  | Done — `ENABLE_SRI=1 pnpm build` emitted `integrity="sha384-…"`   |
+| Local build with SRI off (trial) | Done — default build emits **zero** `integrity=` in `.next`       |
+| Vercel preview deploy            | **Blocked** — no deploy authorization                             |
+
+### T3 gating mechanism
+
+SRI is wired through an env flag in `next.config.ts` so a `master` merge can never
+turn it on:
+
+```ts
+const sriEnabled = process.env.ENABLE_SRI === '1';
+const sriExperiment = sriEnabled ? ({ sri: { algorithm: 'sha384' } } as const) : {};
+// experimental: { ...sriExperiment }  — key omitted entirely when off
+```
+
+Local trial evidence (production-shaped `NEXT_PUBLIC_SITE_URL`):
+
+- `ENABLE_SRI=1 pnpm build` → chunks carry `integrity="sha384-…"` (verified via `rg integrity= .next`).
+- default `pnpm build` → no `integrity=` attributes anywhere in `.next`.
+
+Production enable remains a **separate, explicitly-authorized PR** — setting the flag
+on a Vercel preview environment first, running steps 3–6, then flipping master only
+after a clean preview.
 
 ## Alternatives considered
 

@@ -165,3 +165,45 @@ test.describe('博客文章详情页', () => {
     await expect(wikilink).toHaveAttribute('aria-describedby', /.+/);
   });
 });
+
+test.describe('CSP 违规上报 (T3)', () => {
+  test('文档响应头声明上报通道且不放宽 nonce', async ({ page }) => {
+    const response = await page.goto('/blog', { waitUntil: 'domcontentloaded' });
+    const csp = response?.headers()['content-security-policy'] ?? '';
+
+    // Dev 跳过 CSP；仅在生产型构建（CI/preview）下断言上报指令存在。
+    test.skip(csp === '', 'CSP header absent (dev server skips CSP)');
+
+    expect(csp).toContain('report-uri /api/csp-report');
+    expect(csp).toContain('report-to csp-endpoint');
+    // 上报是新增遥测，不得引入 nonce 放宽。
+    expect(csp).toMatch(/script-src[^;]*'nonce-/);
+    expect(csp).not.toContain("'unsafe-inline' 'nonce-");
+
+    const reporting = response?.headers()['reporting-endpoints'] ?? '';
+    expect(reporting).toContain('/api/csp-report');
+  });
+
+  test('上报端点接受 POST 并返回 204', async ({ request }) => {
+    const res = await request.post('/api/csp-report', {
+      headers: { 'content-type': 'application/csp-report' },
+      data: JSON.stringify({
+        'csp-report': {
+          'document-uri': 'https://incca.ccwu.cc/blog',
+          'violated-directive': 'script-src',
+          'blocked-uri': 'https://evil.example/x.js',
+        },
+      }),
+    });
+    expect(res.status()).toBe(204);
+  });
+
+  test('畸形上报体不致 5xx', async ({ request }) => {
+    const res = await request.post('/api/csp-report', {
+      headers: { 'content-type': 'application/csp-report' },
+      data: 'not json at all',
+    });
+    // 端点吞掉解析错误，返回 204（绝不 500）。
+    expect(res.status()).toBe(204);
+  });
+});
