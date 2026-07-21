@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server';
-import { checkCspReportRateLimit, clientKeyFromRequest } from '@/server/search';
+// Direct rate-limit import — avoid the search barrel so this collect-only
+// handler does not cold-start Fuse / content pipeline on the telemetry isolate.
+import {
+  checkCspReportRateLimit,
+  clientKeyFromRequest,
+} from '@/server/search/rate-limit';
 
 /** 显式 Node runtime：与其余 Route Handler 一致，便于日志与限流共享进程状态。 */
 export const runtime = 'nodejs';
@@ -43,6 +48,17 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 
   try {
+    // Early-out on Content-Length when present: avoid buffering multi-MB spam
+    // bodies on a public unauthenticated sink. Missing/forged length still
+    // falls through to the post-read size gate.
+    const contentLength = request.headers.get('content-length');
+    if (contentLength !== null) {
+      const declared = Number(contentLength);
+      if (Number.isFinite(declared) && declared > MAX_REPORT_BYTES) {
+        return noContent();
+      }
+    }
+
     const raw = await request.text();
     if (raw.length > MAX_REPORT_BYTES) {
       return noContent();

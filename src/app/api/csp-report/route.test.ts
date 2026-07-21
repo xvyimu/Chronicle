@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { CSP_REPORT_RATE_LIMIT_MAX, resetSearchRateLimitForTests } from '@/server/search';
+import {
+  CSP_REPORT_RATE_LIMIT_MAX,
+  resetSearchRateLimitForTests,
+} from '@/server/search/rate-limit';
 import { POST } from './route';
 
 function reportUriRequest(body: unknown, headers?: HeadersInit) {
@@ -88,6 +91,24 @@ describe('POST /api/csp-report', () => {
   it('drops oversized payloads without logging', async () => {
     const huge = 'x'.repeat(20_000);
     const res = await POST(reportUriRequest({ 'csp-report': { 'document-uri': huge } }));
+    expect(res.status).toBe(204);
+    expect(console.warn).not.toHaveBeenCalled();
+  });
+
+  it('drops by Content-Length early without reading a huge body', async () => {
+    // Fetch Request forbids body larger than Content-Length, so construct a
+    // tiny body with a forged large Content-Length — the early-out only needs
+    // the header, not the body bytes.
+    const res = await POST(
+      new Request('http://localhost/api/csp-report', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/csp-report',
+          'content-length': String(20_000),
+        },
+        body: '{}',
+      }),
+    );
     expect(res.status).toBe(204);
     expect(console.warn).not.toHaveBeenCalled();
   });
