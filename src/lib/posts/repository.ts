@@ -6,6 +6,8 @@ import { parseFrontmatter } from '@/lib/parse-frontmatter';
 import { createCache } from '@/lib/cache';
 import { inferCategory } from '@/lib/category-rules';
 import { postFrontmatterSchema } from '@/lib/schemas/post-frontmatter';
+import { createSnapshotPostRepository } from '@/lib/content-snapshot/snapshot-repository';
+import { resolveContentBackend } from '@/lib/content-snapshot/paths';
 import type { PostFull, PostMeta } from '@/types';
 import {
   extractPostHeadings,
@@ -156,7 +158,15 @@ export function createPostRepository(source: ContentSource): PostRepository {
 }
 
 /**
- * 默认 PostRepository 实例 (基于 filesystemSource).
- * app/ 调用方使用此实例, 测试使用 createPostRepository(inMemorySource).
+ * 默认 PostRepository 实例.
+ * production 默认 snapshot；dev/test 默认 fs（可用 CONTENT_BACKEND 覆盖）.
+ * 测试工厂 createPostRepository(inMemorySource) 不受此切换影响.
  */
-export const postRepository = createPostRepository(filesystemSource);
+function createDefaultPostRepository(): PostRepository {
+  if (resolveContentBackend() === 'snapshot') {
+    return createSnapshotPostRepository();
+  }
+  return createPostRepository(filesystemSource);
+}
+
+export const postRepository = createDefaultPostRepository();

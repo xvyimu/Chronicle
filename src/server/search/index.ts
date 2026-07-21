@@ -6,9 +6,11 @@
 export { searchPosts, searchPostsCached } from './engine';
 export {
   checkSearchRateLimit,
+  checkPreviewRateLimit,
   clientKeyFromRequest,
   resetSearchRateLimitForTests,
   SEARCH_RATE_LIMIT_MAX,
+  PREVIEW_RATE_LIMIT_MAX,
   SEARCH_RATE_LIMIT_WINDOW_MS,
   type RateLimitResult,
 } from './rate-limit';

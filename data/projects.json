@@ -1,32 +1,32 @@
 [
   {
-    "id": "nav-site",
+    "id": "chrono-portal",
     "title": "公益API导航站",
     "description": "精心收录 AI 大模型 API 的导航站，基于 Next.js + Supabase + Redis 构建，支持用户提交、分类浏览、搜索和状态监控。",
     "tags": ["Next.js", "Supabase", "TypeScript", "Redis"],
     "url": "https://yuanjia1314.ccwu.cc",
-    "github": "https://github.com/xvyimu/nav-site",
+    "github": "https://github.com/xvyimu/ChronoPortal",
     "image": "/images/projects/nav-site.png",
     "featured": true,
     "year": 2026
   },
   {
-    "id": "blog",
+    "id": "chronicle",
     "title": "个人博客",
     "description": "基于 Next.js 16 App Router + Tailwind v4 + MDX 的技术博客兼作品集，支持明暗主题、全文 RSS、Giscus 评论。",
     "tags": ["Next.js", "Tailwind CSS", "MDX", "TypeScript"],
     "url": "https://incca.ccwu.cc",
-    "github": "https://github.com/xvyimu/blog",
+    "github": "https://github.com/xvyimu/Chronicle",
     "image": "/images/projects/blog.png",
     "featured": true,
     "year": 2026
   },
   {
-    "id": "relaycheck-desktop",
+    "id": "chrono-relay",
     "title": "RelayCheck Desktop",
     "description": "NewAPI / OneAPI / Sub2API 本地运营控制台，Go + React + SQLite 全栈桌面应用。",
     "tags": ["Go", "React", "SQLite", "Desktop"],
-    "github": "https://github.com/xvyimu/relaycheck-desktop",
+    "github": "https://github.com/xvyimu/ChronoRelay",
     "image": "/images/projects/relaycheck.png",
     "featured": true,
     "year": 2025

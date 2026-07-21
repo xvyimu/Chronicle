@@ -2,12 +2,23 @@
   "name": "blog",
   "version": "0.1.0",
   "private": true,
+  "description": "Chronicle (GitHub) — personal blog & portfolio (Next.js). Local package name remains blog.",
+  "license": "MIT",
+  "homepage": "https://incca.ccwu.cc",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xvyimu/Chronicle.git"
+  },
+  "bugs": {
+    "url": "https://github.com/xvyimu/Chronicle/issues"
+  },
   "engines": {
     "node": "22.x"
   },
   "scripts": {
     "dev": "next dev",
-    "build": "tsx scripts/generate-rss.ts && next build",
+    "content:build": "tsx scripts/build-content-snapshot.ts",
+    "build": "tsx scripts/generate-rss.ts && tsx scripts/build-content-snapshot.ts && next build",
     "start": "next start",
     "lint": "eslint",
     "format": "prettier --write \"src/**/*.{ts,tsx,mjs,mts,css}\" \"scripts/**/*.{ts,mjs}\" \"e2e/**/*.ts\" \"*.{ts,mjs,mts,js}\"",

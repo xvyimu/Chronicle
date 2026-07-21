@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { PostFull } from '@/types';
+import { PREVIEW_RATE_LIMIT_MAX, resetSearchRateLimitForTests } from '@/server/search';
 
 const MOCK_POST: PostFull = {
   title: 'Next.js App Router 实战',
@@ -25,8 +26,8 @@ vi.mock('@/server/content', () => ({
 import { getPostBySlug } from '@/server/content';
 import { GET } from './route';
 
-function requestFor(slug: string) {
-  return new Request(`http://localhost/api/preview/${slug}`);
+function requestFor(slug: string, headers?: HeadersInit) {
+  return new Request(`http://localhost/api/preview/${slug}`, { headers });
 }
 
 function paramsFor(slug: string) {
@@ -36,6 +37,7 @@ function paramsFor(slug: string) {
 describe('GET /api/preview/[slug]', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetSearchRateLimitForTests();
   });
 
   it('returns lightweight metadata for a known post', async () => {
@@ -56,7 +58,6 @@ describe('GET /api/preview/[slug]', () => {
       category: '前端开发',
       tags: ['nextjs', 'react'],
     });
-    // Body MDX must never be projected into the popover payload.
     expect(body).not.toHaveProperty('content');
     expect(body).not.toHaveProperty('searchText');
     expect(body).not.toHaveProperty('headings');
@@ -66,13 +67,13 @@ describe('GET /api/preview/[slug]', () => {
     expect(getPostBySlug).toHaveBeenCalledWith('nextjs-app-router');
   });
 
-  it('returns 404 when the post is missing', async () => {
+  it('returns 404 with code when the post is missing', async () => {
     vi.mocked(getPostBySlug).mockResolvedValue(null as never);
 
     const res = await GET(requestFor('does-not-exist'), paramsFor('does-not-exist'));
     expect(res.status).toBe(404);
     const body = await res.json();
-    expect(body).toEqual({ error: 'not found' });
+    expect(body).toEqual({ error: 'not found', code: 'NOT_FOUND' });
   });
 
   it('projects category as null when the post has none', async () => {
@@ -88,5 +89,42 @@ describe('GET /api/preview/[slug]', () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.category).toBeNull();
+  });
+
+  it('returns 429 with RATE_LIMITED after the preview window is exhausted', async () => {
+    vi.mocked(getPostBySlug).mockResolvedValue(MOCK_POST as never);
+    const headers = { 'x-vercel-forwarded-for': '203.0.113.9' };
+
+    for (let i = 0; i < PREVIEW_RATE_LIMIT_MAX; i++) {
+      const res = await GET(
+        requestFor('nextjs-app-router', headers),
+        paramsFor('nextjs-app-router'),
+      );
+      expect(res.status).toBe(200);
+    }
+
+    const limited = await GET(
+      requestFor('nextjs-app-router', headers),
+      paramsFor('nextjs-app-router'),
+    );
+    expect(limited.status).toBe(429);
+    const body = await limited.json();
+    expect(body.code).toBe('RATE_LIMITED');
+    expect(limited.headers.get('Retry-After')).toBeTruthy();
+    expect(limited.headers.get('Cache-Control')).toBe('no-store');
+  });
+
+  it('returns 500 with SERVER_ERROR when the repository throws', async () => {
+    vi.mocked(getPostBySlug).mockRejectedValue(new Error('disk failed') as never);
+
+    const res = await GET(
+      requestFor('nextjs-app-router'),
+      paramsFor('nextjs-app-router'),
+    );
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body).toEqual({ error: 'preview unavailable', code: 'SERVER_ERROR' });
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
+    expect(body).not.toHaveProperty('stack');
   });
 });

@@ -155,7 +155,7 @@ describe('WikilinkPopover', () => {
     expect(tooltip.querySelector('img')).toBeNull();
   });
 
-  it('stays silent when the fetch fails', async () => {
+  it('shows a soft error label when the fetch fails', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 404 }));
 
     render(
@@ -166,10 +166,32 @@ describe('WikilinkPopover', () => {
 
     fireEvent.mouseEnter(screen.getByRole('link'));
 
-    // Loading label remains; no crash, no preview title.
     await waitFor(() => {
-      expect(screen.getByText('加载中…')).toBeInTheDocument();
+      expect(screen.getByText('暂无预览')).toBeInTheDocument();
     });
     expect(screen.queryByText(PREVIEW.title)).not.toBeInTheDocument();
+  });
+
+  it('wires aria-describedby to the open tooltip', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => PREVIEW }),
+    );
+
+    render(
+      <WikilinkPopover href="/blog/nextjs-app-router" data-wikilink="nextjs-app-router">
+        App Router
+      </WikilinkPopover>,
+    );
+
+    const link = screen.getByRole('link');
+    fireEvent.mouseEnter(link);
+
+    await waitFor(() => {
+      expect(link).toHaveAttribute('aria-describedby');
+    });
+    const tipId = link.getAttribute('aria-describedby');
+    expect(tipId).toBeTruthy();
+    expect(document.getElementById(tipId!)).toHaveAttribute('role', 'tooltip');
   });
 });

@@ -23,6 +23,8 @@ const buckets = new Map<string, Bucket>();
 
 /** 每个 key 在窗口内允许的最大请求数。 */
 export const SEARCH_RATE_LIMIT_MAX = 60;
+/** 预览 API 窗口内最大请求数（hover 可能短时连发多个 slug）。 */
+export const PREVIEW_RATE_LIMIT_MAX = 120;
 /** 限流窗口长度（毫秒）。 */
 export const SEARCH_RATE_LIMIT_WINDOW_MS = 60_000;
 
@@ -93,6 +95,18 @@ export function checkSearchRateLimit(
     remaining,
     resetMs: bucket.reset,
   };
+}
+
+/**
+ * 预览 API 限流：与搜索共用固定窗口实现，key 加 `preview:` 前缀隔离配额。
+ */
+export function checkPreviewRateLimit(
+  key: string,
+  now = Date.now(),
+  max = PREVIEW_RATE_LIMIT_MAX,
+  windowMs = SEARCH_RATE_LIMIT_WINDOW_MS,
+): RateLimitResult {
+  return checkSearchRateLimit(`preview:${key}`, now, max, windowMs);
 }
 
 /** 测试专用：清空限流桶与操作计数，避免用例间串扰。 */

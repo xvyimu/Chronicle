@@ -11,10 +11,16 @@ export const CONTENT_DIR = {
   links: 'data/links.json',
 } as const;
 
+/** Committed content snapshot used when CONTENT_BACKEND=snapshot (production default). */
+export const CONTENT_SNAPSHOT_TRACE_ROOT = 'generated';
+
 const CONTENT_TRACE_ROUTE = '/**';
 
 const CONTENT_TRACE_ROOTS = Array.from(
-  new Set(Object.values(CONTENT_DIR).map((relativePath) => relativePath.split('/')[0])),
+  new Set([
+    ...Object.values(CONTENT_DIR).map((relativePath) => relativePath.split('/')[0]),
+    CONTENT_SNAPSHOT_TRACE_ROOT,
+  ]),
 );
 
 export const CONTENT_TRACE_INCLUDES: Record<string, string[]> = {

@@ -2,9 +2,21 @@
 
 > This file helps AI coding assistants understand the project structure and conventions.
 
+## Identity
+
+| 项                  | 值                                                                                                       |
+| ------------------- | -------------------------------------------------------------------------------------------------------- |
+| GitHub              | [xvyimu/Chronicle](https://github.com/xvyimu/Chronicle)（由 `blog` 改名）                                |
+| 产品显示名          | 西江月博客                                                                                               |
+| 本地路径 / npm name | 真路径 `D:\Chronicle` · junction `D:\blog` · package `"name": "blog"`（private；**不是** GitHub 仓库名） |
+| 生产                | https://incca.ccwu.cc                                                                                    |
+| License             | MIT · `LICENSE` · Copyright 2026 雨天狂奔                                                                |
+| Giscus 默认 repo    | `xvyimu/Chronicle`（`src/lib/site.ts`；可用 env 覆盖）                                                   |
+| 作品集 GitHub 链接  | `data/projects.json`（Chronicle / ChronoPortal / ChronoRelay …）                                         |
+
 ## Project Overview
 
-A personal blog built with Next.js 16.2 (App Router), React 19, and Tailwind CSS 4. Content is authored in MDX, stored in `content/blog/`. Projects data is in `data/projects.json`.
+A personal blog built with Next.js 16.2 (App Router), React 19, and Tailwind CSS 4. Content is authored in MDX, stored in `content/blog/`. Projects data is in `data/projects.json`. Production reads `generated/content-snapshot/` by default (`CONTENT_BACKEND=snapshot`); after editing MDX run `pnpm content:build` and commit the snapshot.
 
 ## Skill Routing
 
@@ -20,7 +32,7 @@ A personal blog built with Next.js 16.2 (App Router), React 19, and Tailwind CSS
 - **Content**: MDX with custom frontmatter parser (`lib/parse-frontmatter.ts`, js-yaml 4.x), next-mdx-remote
 - **Syntax Highlighting**: Shiki via rehype-pretty-code
 - **Search**: fuse.js via production `GET /api/search` (server Fuse + projected DTO); tests may embed client Fuse
-- **Testing**: Vitest (unit/integration, 685 tests, 93 files), Playwright (E2E, 48 tests, 5 spec files)
+- **Testing**: Vitest (unit/integration, 701 tests, 94 files), Playwright (E2E, 49 tests, 5 spec files)
 - **CI**: GitHub Actions (lint / test / tsc / build / bundle-budget / e2e)
 - **Deployment**: Vercel
 
@@ -121,7 +133,7 @@ src/
 ```bash
 pnpm dev          # Start dev server (port 3000; Turbopack)
 pnpm build        # Generate RSS + production build; document routes are dynamic due CSP nonce
-pnpm test         # Run unit/integration tests (685 tests, 93 files; 2026-07-21 baseline)
+pnpm test         # Run unit/integration tests (701 tests, 94 files; 2026-07-21 baseline)
 pnpm test:e2e     # Run E2E tests (48 tests, 5 spec files; auto-starts dev/prod server on port 3001)
 pnpm test:e2e:raw # Playwright raw (pass-through flags, e.g. --ui)
 pnpm lint         # ESLint
