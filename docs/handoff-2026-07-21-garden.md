@@ -1,23 +1,24 @@
-# 收工交接 · 数字花园 G2 增强 · 2026-07-21
+# 收工交接 · 花园已上线 · 2026-07-21
 
-> 日常接手：`handoff-to-agent.md` · `TODO.md` · `architecture.md`。
+> 日常：`handoff-to-agent.md` · `TODO.md` · `architecture.md`。
 
 ## 状态
 
-| 项            | 值                                           |
-| ------------- | -------------------------------------------- |
-| 本地 HEAD     | **`a346f63`+**（TODO 小修后见 `git log -1`） |
-| origin / 生产 | `dfc057b` · **未含本批**                     |
-| 分支          | `master` **ahead ≥7** · 未 push              |
+| 项                  | 值                                     |
+| ------------------- | -------------------------------------- |
+| tip / origin / 生产 | **`98568b6`**                          |
+| CI                  | success · deploy success               |
+| 生产检查            | `pnpm check:production-content` passed |
+| 冒烟                | `/garden` · docker/vps 邻接+反链 200   |
 
-## 交付
+## 已上线
 
-- G0/G1 + 延伸阅读 wikilink + v2 体验包（Q10–Q15）
-- G2：`/garden` 筛选 + 自研力导向 + 文内 `ArticleNeighbors`
-- 冒烟 `:3001`：/garden 200 含 filters/svg；docker/vps 文含邻接+反链
+G0/G1 + 延伸阅读 wikilink · v2 体验 · G2 筛选/力导向/拖拽/存视图 · 文内邻接
 
-## 下一步
+## 硬边界
 
-1. **你确认后再 push**
-2. 可选：节点拖拽 / 保存视图
-3. 勿假 GSC；勿换栈 / 放宽 CSP
+勿假 GSC · 勿换栈 · 勿放宽 CSP
+
+## 可选
+
+更多布局算法 / 导出 PNG · 运营账号仍 blocked
