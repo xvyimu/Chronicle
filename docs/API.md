@@ -1,13 +1,14 @@
 # 公开 HTTP API
 
-> 状态：当前契约（2026-07-21）。本站公开、只读的 Route Handler 共两个：搜索与 wikilink 预览。均不要求登录，不接受 JSON 请求体。  
+> 状态：当前契约（2026-07-21）。公开 Route Handler：只读的搜索与 wikilink 预览（`GET`，无请求体），以及只写的 CSP 违规上报（`POST`，collect-only）。均不要求登录。  
 > 运行时：Node.js（内容读取基于 fs，不面向 Edge）。  
 > 规范源补充：`docs/architecture-optimization-research-2026-07-21-v4.md` §7。
 
-| 路径                      | 用途                        | 限流                                         | 成功缓存                   |
-| ------------------------- | --------------------------- | -------------------------------------------- | -------------------------- |
-| `GET /api/search`         | 全文/元数据模糊搜索         | 60 次 / 60s / origin key                     | `s-maxage=60, swr=300`     |
-| `GET /api/preview/[slug]` | wikilink 悬停卡片轻量元数据 | 120 次 / 60s / origin key（`preview:` 前缀） | `s-maxage=3600, swr=86400` |
+| 路径                      | 用途                         | 限流                                           | 成功缓存                   |
+| ------------------------- | ---------------------------- | ---------------------------------------------- | -------------------------- |
+| `GET /api/search`         | 全文/元数据模糊搜索          | 60 次 / 60s / origin key                       | `s-maxage=60, swr=300`     |
+| `GET /api/preview/[slug]` | wikilink 悬停卡片轻量元数据  | 120 次 / 60s / origin key（`preview:` 前缀）   | `s-maxage=3600, swr=86400` |
+| `POST /api/csp-report`    | CSP 违规上报（collect-only） | 30 次 / 60s / origin key（`csp-report:` 前缀） | `no-store`（204，无 body） |
 
 ---
 
@@ -235,3 +236,57 @@ pnpm lint
 ```
 
 修改投影字段时必须同步：本文件、popover UI、route 测试。
+
+---
+
+## `POST /api/csp-report`
+
+> 状态：`feat/t3-csp-report-sri-preview` 新增（2026-07-21）。Route Handler：`src/app/api/csp-report/route.ts`。CSP 违规**收集端点**，collect-only：只写服务端日志，不落库、不外发、不回显。
+
+浏览器在 CSP 违规时把报告 POST 到本端点。`src/proxy.ts` 在每个响应的 CSP 上同时挂了两条上报通道：
+
+- `report-to csp-endpoint` —— 现代 Reporting API，配合 `Reporting-Endpoints: csp-endpoint="/api/csp-report"` 响应头。
+- `report-uri /api/csp-report` —— 旧浏览器回退。
+
+**本端点只增加遥测出口，不放宽任何 CSP 指令**：nonce + `strict-dynamic` 的执行策略完全不变。
+
+### 请求
+
+| 维度         | 值                                                                                                                     |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| 方法         | `POST`（仅浏览器自动发起；无鉴权、公开可达）                                                                           |
+| Content-Type | `application/csp-report`（report-uri）或 `application/reports+json`（Reporting API）；实际按 body 结构解析，不强校验头 |
+| 请求体上限   | 16 KiB；超过直接丢弃不解析                                                                                             |
+| 限流         | 30 次 / 60s / origin key（`csp-report:` 前缀隔离，与 search/preview 共用固定窗口）                                     |
+
+两种 body 结构都接受：
+
+```jsonc
+// report-uri
+{ "csp-report": { "document-uri": "...", "violated-directive": "...", "blocked-uri": "..." } }
+
+// Reporting API（数组）
+[{ "type": "csp-violation", "body": { "documentURL": "...", "effectiveDirective": "...", "blockedURL": "..." } }]
+```
+
+### 响应
+
+| 状态  | 触发                       | 说明                                                                    |
+| ----- | -------------------------- | ----------------------------------------------------------------------- |
+| `204` | 正常收集 / body 畸形或超限 | 无响应体；`Cache-Control: no-store`。畸形上报也返回 204，不暴露解析细节 |
+| `429` | 超过 30 次 / 60s           | 无响应体；带 `Retry-After`、`Cache-Control: no-store`                   |
+
+### 安全边界
+
+- 端点无鉴权、公开可 POST，故用进程限流防日志刷量；这不是安全配额，硬限制放平台 WAF。
+- 只提取白名单字段（documentUri / violatedDirective / effectiveDirective / blockedUri / disposition），每字段截断 512 字符，**绝不把攻击者可控的原始结构整体写进日志**。
+- 不落库、不转发第三方、不回显给客户端。
+
+### 实现位置（csp-report）
+
+| 职责               | 路径                                                           |
+| ------------------ | -------------------------------------------------------------- |
+| HTTP 映射 / 规范化 | `src/app/api/csp-report/route.ts`                              |
+| 单测               | `src/app/api/csp-report/route.test.ts`                         |
+| CSP 指令 / 上报头  | `src/proxy.ts`                                                 |
+| 限流               | `src/server/search/rate-limit.ts`（`checkCspReportRateLimit`） |

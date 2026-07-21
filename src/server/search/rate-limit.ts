@@ -1,11 +1,15 @@
 /**
- * 搜索 API 进程内固定窗口限流。
+ * 公开 Route Handler 的进程内固定窗口限流（origin 尽力而为）。
  *
- * 语义（origin 尽力而为）：
+ * 语义：
  * - 只统计到达本 Node isolate 的请求（缓存未命中/未缓存）
  * - 带 s-maxage 的 CDN 命中不会进入本 Map
  * - 多实例 serverless 不跨 isolate 共享计数
  * - 不是全局安全边界；硬配额应放在平台 Firewall/WAF
+ *
+ * 当前消费者：search / preview / csp-report。共用同一 Map，用 key 前缀隔离配额
+ *（`preview:`、`csp-report:`）。模块仍放在 `server/search` 是历史路径；
+ * 第四个非搜索消费者出现时再抽到 `server/rate-limit`。
  *
  * IP key 仅信任平台所有的 `x-vercel-forwarded-for`，忽略可伪造的通用转发头。
  */
@@ -25,6 +29,12 @@ const buckets = new Map<string, Bucket>();
 export const SEARCH_RATE_LIMIT_MAX = 60;
 /** 预览 API 窗口内最大请求数（hover 可能短时连发多个 slug）。 */
 export const PREVIEW_RATE_LIMIT_MAX = 120;
+/**
+ * CSP 违规上报窗口内最大请求数。
+ * 浏览器可能对单页多条违规连发上报；给一个宽松但有界的配额，
+ * 防止被伪造上报刷爆日志（report 端点无鉴权、公开可 POST）。
+ */
+export const CSP_REPORT_RATE_LIMIT_MAX = 30;
 /** 限流窗口长度（毫秒）。 */
 export const SEARCH_RATE_LIMIT_WINDOW_MS = 60_000;
 
@@ -107,6 +117,19 @@ export function checkPreviewRateLimit(
   windowMs = SEARCH_RATE_LIMIT_WINDOW_MS,
 ): RateLimitResult {
   return checkSearchRateLimit(`preview:${key}`, now, max, windowMs);
+}
+
+/**
+ * CSP 上报限流：与搜索共用固定窗口实现，key 加 `csp-report:` 前缀隔离配额。
+ * 端点公开无鉴权，限流是防日志刷量的尽力而为措施，不是安全边界。
+ */
+export function checkCspReportRateLimit(
+  key: string,
+  now = Date.now(),
+  max = CSP_REPORT_RATE_LIMIT_MAX,
+  windowMs = SEARCH_RATE_LIMIT_WINDOW_MS,
+): RateLimitResult {
+  return checkSearchRateLimit(`csp-report:${key}`, now, max, windowMs);
 }
 
 /** 测试专用：清空限流桶与操作计数，避免用例间串扰。 */

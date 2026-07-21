@@ -8,6 +8,20 @@ const withBundleAnalyzer = bundleAnalyzer({
 
 const isDev = process.env.NODE_ENV === 'development';
 
+/*
+ * T3: Subresource Integrity (SRI) for /_next/static/* assets.
+ *
+ * Gated behind ENABLE_SRI so merging to master never turns it on in production.
+ * Flip ENABLE_SRI=1 only on a preview branch/deploy to run the ADR verification
+ * checklist (docs/adr/2026-07-21-sri-over-nonce-evaluation.md). Production enable
+ * is a separate, explicitly-authorized change — not a side effect of this flag.
+ *
+ * Next 16.2.9 type: experimental.sri is `{ algorithm?: 'sha256'|'sha384'|'sha512' }`,
+ * NOT a boolean. Omit the key entirely when disabled so the experiment is inert.
+ */
+const sriExperiment =
+  process.env.ENABLE_SRI === '1' ? ({ sri: { algorithm: 'sha384' } } as const) : {};
+
 // Fail fast if production URL is missing — SEO metadata, OG images,
 // canonical URLs, RSS, sitemap, and JSON-LD must not point to localhost.
 if (!isDev && !process.env.NEXT_PUBLIC_SITE_URL) {
@@ -42,6 +56,8 @@ const nextConfig: NextConfig = {
     // Persist Turbopack's filesystem cache across dev sessions (Next 16.2).
     // Speeds up cold dev starts; no effect on production build.
     turbopackFileSystemCacheForDev: true,
+    // SRI is spread in only when ENABLE_SRI=1 (see sriExperiment above).
+    ...sriExperiment,
   },
   /*
    * The content repositories read local MDX/JSON files with fs at request time.
