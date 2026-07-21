@@ -1,8 +1,8 @@
 {
-  "name": "blog",
+  "name": "chronicle",
   "version": "0.1.0",
   "private": true,
-  "description": "Chronicle (GitHub) — personal blog & portfolio (Next.js). Local package name remains blog.",
+  "description": "Chronicle — personal blog & portfolio built with Next.js 16, MDX and Tailwind CSS.",
   "license": "MIT",
   "homepage": "https://incca.ccwu.cc",
   "repository": {

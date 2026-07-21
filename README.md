@@ -2,12 +2,11 @@
 
 **GitHub：** [xvyimu/Chronicle](https://github.com/xvyimu/Chronicle)  
 **产品显示名：** 西江月博客  
-**本地路径 / package 名：** 真路径 `D:\Chronicle` · junction `D:\blog` · npm private name `blog`（**不是** GitHub 仓库名）  
+**本地路径 / package 名：** 真路径 `D:\Chronicle` · junction `D:\blog` · npm private name `chronicle`  
 **线上：** https://incca.ccwu.cc  
 **许可：** [MIT](./LICENSE)
 
-> 仓库由 `xvyimu/blog` **改名**为 `xvyimu/Chronicle`（2026-07-21）。  
-> 产品品牌仍为「西江月」；GitHub 身份一律用 **Chronicle**。  
+> 产品品牌为「西江月」；工程与 GitHub 身份统一用 **Chronicle**。  
 > 身份卡：[GITHUB_IDENTITY.md](./GITHUB_IDENTITY.md)
 
 基于 Next.js 16 App Router 的个人博客兼作品集：MDX 驱动、本地内容驱动、严格 CSP nonce、数字花园与双 API（search / preview）。
@@ -79,7 +78,7 @@ NEXT_PUBLIC_GISCUS_CATEGORY_ID=your_category_id
 ├─ .github/workflows/ci.yml     # quality / e2e / deploy（master + PR→master）
 ├─ AGENTS.md                    # AI 协作约定
 ├─ LICENSE                      # MIT · Copyright 2026 雨天狂奔
-└─ package.json                 # private · repository → Chronicle
+└─ package.json                 # private · name: chronicle
 ```
 
 ## 路由
