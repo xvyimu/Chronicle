@@ -205,9 +205,20 @@
   cursor: pointer;
 }
 
-.garden-explorer__reset:hover {
+.garden-explorer__reset:hover:not(:disabled) {
   border-color: var(--brand);
   background: var(--brand-soft);
+}
+
+.garden-explorer__reset:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.garden-explorer__view-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .garden-explorer__count {
@@ -244,7 +255,12 @@
   fill: var(--brand);
   stroke: var(--surface);
   stroke-width: 1.5;
-  cursor: pointer;
+  cursor: grab;
+  touch-action: none;
+}
+
+.garden-explorer__node:active {
+  cursor: grabbing;
 }
 
 .garden-explorer__node--dim {

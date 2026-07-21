@@ -48,6 +48,16 @@ export type {
   NeighborBundle,
 } from './link-graph';
 export { layoutForceGraph, filterGardenGraph } from './force-layout';
+export {
+  serializeGardenView,
+  parseGardenView,
+  mergePositions,
+  loadGardenViewFromStorage,
+  saveGardenViewToStorage,
+  clearGardenViewStorage,
+  GARDEN_VIEW_STORAGE_KEY,
+} from './garden-view-storage';
+export type { GardenSavedView, GardenViewPosition } from './garden-view-storage';
 
 /**
  * 公共 API — 委托给默认 postRepository 实例.

@@ -37,7 +37,8 @@
 - [x] G1 backlinks panel + link graph cache（fail-closed 坏链；`getBacklinks`）
 - [x] G2 次级原型 `/garden`（边列表 + 力导向 + 专题/标签筛选；`prefers-reduced-motion` 降级列表）
 - [x] 文章页折叠邻接（`ArticleNeighbors` 出/入边）
-- [ ] G2 再增强（可选）：拖拽节点 / 保存视图 / 更多布局算法
+- [x] G2 再增强：节点拖拽 + 本机保存/恢复视图（localStorage）
+- [ ] G2 可选：更多布局算法 / 导出 PNG
 
 ## 已完成索引（本阶段）
 

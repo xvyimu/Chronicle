@@ -8,7 +8,7 @@ import './garden.css';
 export const metadata: Metadata = buildPageMetadata({
   title: '数字花园',
   description:
-    '文章 wikilink 邻接：专题/标签筛选、力导向布局与边列表（可按系统设置关闭动效）。',
+    '文章 wikilink 邻接：专题/标签筛选、力导向与节点拖拽、本机保存视图；可按系统设置关闭动效。',
   path: '/garden',
 });
 

@@ -1,19 +1,57 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from 'react';
 import Link from 'next/link';
 import type { GardenGraph } from '@/lib/posts/link-graph';
 import { filterGardenGraph, layoutForceGraph } from '@/lib/posts/force-layout';
+import {
+  clearGardenViewStorage,
+  loadGardenViewFromStorage,
+  mergePositions,
+  saveGardenViewToStorage,
+  serializeGardenView,
+  type GardenViewPosition,
+} from '@/lib/posts/garden-view-storage';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 
 const WIDTH = 640;
 const HEIGHT = 420;
+const DRAG_CLICK_THRESHOLD = 5;
+
+function mapToRecord(
+  map: Map<string, GardenViewPosition>,
+): Record<string, GardenViewPosition> {
+  return Object.fromEntries(map.entries());
+}
 
 export default function GardenExplorer({ graph }: { graph: GardenGraph }) {
   const reducedMotion = usePrefersReducedMotion();
   const [series, setSeries] = useState('');
   const [tag, setTag] = useState('');
   const [focus, setFocus] = useState<string | null>(null);
+  const [positions, setPositions] = useState<Map<string, GardenViewPosition> | null>(
+    null,
+  );
+  const [viewStatus, setViewStatus] = useState<string | null>(null);
+  const [hydrated, setHydrated] = useState(false);
+
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  const dragRef = useRef<{
+    slug: string;
+    startClientX: number;
+    startClientY: number;
+    moved: boolean;
+    pointerId: number;
+  } | null>(null);
+  // Skip one force recompute after applying a saved view (filters + positions).
+  const skipNextLayoutRef = useRef(false);
 
   const seriesOptions = useMemo(() => {
     const set = new Set<string>();
@@ -36,26 +74,168 @@ export default function GardenExplorer({ graph }: { graph: GardenGraph }) {
     [graph, series, tag],
   );
 
-  const positions = useMemo(() => {
-    if (reducedMotion || filtered.nodes.length === 0) return null;
-    return layoutForceGraph(
-      filtered.nodes.map((n) => n.slug),
-      filtered.edges.map((e) => ({ source: e.from, target: e.to })),
-      { width: WIDTH, height: HEIGHT, iterations: 140 },
-    );
-  }, [filtered, reducedMotion]);
-
   const titleBySlug = useMemo(
     () => new Map(graph.nodes.map((n) => [n.slug, n.title])),
     [graph.nodes],
   );
 
-  // Clear focus if filtered out
+  // Restore saved view after mount
+  useEffect(() => {
+    const saved = loadGardenViewFromStorage(
+      typeof window !== 'undefined' ? window.localStorage : null,
+    );
+    if (saved) {
+      skipNextLayoutRef.current = true;
+      setSeries(saved.series);
+      setTag(saved.tag);
+      setPositions(new Map(Object.entries(saved.positions)));
+      setViewStatus('已恢复本机保存的视图');
+    }
+    setHydrated(true);
+  }, []);
+
+  // Recompute force layout when filters / motion / graph change
+  useEffect(() => {
+    if (!hydrated) return;
+    if (reducedMotion || filtered.nodes.length === 0) {
+      if (!skipNextLayoutRef.current) setPositions(null);
+      skipNextLayoutRef.current = false;
+      return;
+    }
+    if (skipNextLayoutRef.current) {
+      skipNextLayoutRef.current = false;
+      // Ensure every visible node has a position (new nodes after content add)
+      setPositions((prev) => {
+        const layout = layoutForceGraph(
+          filtered.nodes.map((n) => n.slug),
+          filtered.edges.map((e) => ({ source: e.from, target: e.to })),
+          { width: WIDTH, height: HEIGHT, iterations: 140 },
+        );
+        return mergePositions(layout, prev ? mapToRecord(prev) : null);
+      });
+      return;
+    }
+    const layout = layoutForceGraph(
+      filtered.nodes.map((n) => n.slug),
+      filtered.edges.map((e) => ({ source: e.from, target: e.to })),
+      { width: WIDTH, height: HEIGHT, iterations: 140 },
+    );
+    setPositions(layout);
+  }, [filtered, reducedMotion, hydrated]);
+
   useEffect(() => {
     if (focus && !filtered.nodes.some((n) => n.slug === focus)) {
       setFocus(null);
     }
   }, [filtered.nodes, focus]);
+
+  const clientToSvg = useCallback((clientX: number, clientY: number) => {
+    const svg = svgRef.current;
+    if (!svg) return null;
+    const pt = svg.createSVGPoint();
+    pt.x = clientX;
+    pt.y = clientY;
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return null;
+    const local = pt.matrixTransform(ctm.inverse());
+    return {
+      x: Math.min(WIDTH - 24, Math.max(24, local.x)),
+      y: Math.min(HEIGHT - 24, Math.max(24, local.y)),
+    };
+  }, []);
+
+  const onNodePointerDown = (slug: string, e: ReactPointerEvent<SVGCircleElement>) => {
+    if (reducedMotion || !positions) return;
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    dragRef.current = {
+      slug,
+      startClientX: e.clientX,
+      startClientY: e.clientY,
+      moved: false,
+      pointerId: e.pointerId,
+    };
+    setFocus(slug);
+  };
+
+  const onNodePointerMove = (e: ReactPointerEvent<SVGCircleElement>) => {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== e.pointerId) return;
+    const dx = e.clientX - drag.startClientX;
+    const dy = e.clientY - drag.startClientY;
+    if (!drag.moved && Math.hypot(dx, dy) < DRAG_CLICK_THRESHOLD) return;
+    drag.moved = true;
+    const local = clientToSvg(e.clientX, e.clientY);
+    if (!local) return;
+    setPositions((prev) => {
+      if (!prev) return prev;
+      const next = new Map(prev);
+      next.set(drag.slug, local);
+      return next;
+    });
+  };
+
+  const endDrag = (e: ReactPointerEvent<SVGCircleElement>, navigateIfClick: boolean) => {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== e.pointerId) return;
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      /* already released */
+    }
+    const wasClick = navigateIfClick && !drag.moved;
+    const slug = drag.slug;
+    dragRef.current = null;
+    if (wasClick) {
+      window.location.assign(`/blog/${slug}`);
+    }
+  };
+
+  const onNodePointerUp = (e: ReactPointerEvent<SVGCircleElement>) => {
+    endDrag(e, true);
+  };
+
+  const onNodePointerCancel = (e: ReactPointerEvent<SVGCircleElement>) => {
+    endDrag(e, false);
+  };
+
+  const handleSaveView = () => {
+    if (!positions || positions.size === 0) {
+      setViewStatus('没有可保存的节点位置');
+      return;
+    }
+    const view = serializeGardenView(series, tag, positions);
+    const ok = saveGardenViewToStorage(
+      typeof window !== 'undefined' ? window.localStorage : null,
+      view,
+    );
+    setViewStatus(ok ? '视图已保存到本机' : '保存失败（隐私模式或存储已满）');
+  };
+
+  const handleClearView = () => {
+    clearGardenViewStorage(typeof window !== 'undefined' ? window.localStorage : null);
+    setViewStatus('已清除本机保存的视图');
+    // Re-run layout for current filters
+    if (!reducedMotion && filtered.nodes.length > 0) {
+      const layout = layoutForceGraph(
+        filtered.nodes.map((n) => n.slug),
+        filtered.edges.map((e) => ({ source: e.from, target: e.to })),
+        { width: WIDTH, height: HEIGHT, iterations: 140 },
+      );
+      setPositions(layout);
+    }
+  };
+
+  const handleRelayout = () => {
+    if (reducedMotion || filtered.nodes.length === 0) return;
+    const layout = layoutForceGraph(
+      filtered.nodes.map((n) => n.slug),
+      filtered.edges.map((e) => ({ source: e.from, target: e.to })),
+      { width: WIDTH, height: HEIGHT, iterations: 160 },
+    );
+    setPositions(layout);
+    setViewStatus('已重新计算力导向布局');
+  };
 
   return (
     <div className="garden-explorer">
@@ -102,19 +282,48 @@ export default function GardenExplorer({ graph }: { graph: GardenGraph }) {
             清除筛选
           </button>
         )}
+        <div className="garden-explorer__view-actions">
+          <button
+            type="button"
+            className="garden-explorer__reset"
+            onClick={handleSaveView}
+            disabled={!positions}
+          >
+            保存视图
+          </button>
+          <button
+            type="button"
+            className="garden-explorer__reset"
+            onClick={handleClearView}
+          >
+            清除保存
+          </button>
+          <button
+            type="button"
+            className="garden-explorer__reset"
+            onClick={handleRelayout}
+            disabled={reducedMotion || !positions}
+          >
+            重新布局
+          </button>
+        </div>
         <p className="garden-explorer__count">
           {filtered.nodes.length} 节点 · {filtered.edges.length} 边
-          {reducedMotion ? ' · 已按系统设置关闭力导向动画' : ' · 力导向布局'}
+          {reducedMotion
+            ? ' · 已按系统设置关闭力导向'
+            : ' · 力导向 · 拖拽节点 · 轻点打开文章'}
+          {viewStatus ? ` · ${viewStatus}` : ''}
         </p>
       </div>
 
-      {positions ? (
+      {positions && !reducedMotion ? (
         <div className="garden-explorer__canvas-wrap">
           <svg
+            ref={svgRef}
             className="garden-explorer__svg"
             viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
             role="img"
-            aria-label="笔记力导向连线"
+            aria-label="笔记力导向连线，可拖拽节点"
           >
             {filtered.edges.map((edge) => {
               const from = positions.get(edge.from);
@@ -143,21 +352,30 @@ export default function GardenExplorer({ graph }: { graph: GardenGraph }) {
               const dim = focus != null && !active;
               return (
                 <g key={node.slug} transform={`translate(${p.x},${p.y})`}>
-                  <a href={`/blog/${node.slug}`} className="garden-explorer__node-link">
-                    <circle
-                      r={active ? 8 : 6}
-                      className={
-                        dim
-                          ? 'garden-explorer__node garden-explorer__node--dim'
-                          : 'garden-explorer__node'
+                  <circle
+                    r={active ? 8 : 6}
+                    className={
+                      dim
+                        ? 'garden-explorer__node garden-explorer__node--dim'
+                        : 'garden-explorer__node'
+                    }
+                    tabIndex={0}
+                    role="link"
+                    aria-label={node.title}
+                    onPointerDown={(e) => onNodePointerDown(node.slug, e)}
+                    onPointerMove={onNodePointerMove}
+                    onPointerUp={onNodePointerUp}
+                    onPointerCancel={onNodePointerCancel}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        window.location.assign(`/blog/${node.slug}`);
                       }
-                      onMouseEnter={() => setFocus(node.slug)}
-                      onMouseLeave={() => setFocus(null)}
-                      onFocus={() => setFocus(node.slug)}
-                      onBlur={() => setFocus(null)}
-                    />
-                    <title>{node.title}</title>
-                  </a>
+                    }}
+                    onFocus={() => setFocus(node.slug)}
+                    onBlur={() => setFocus(null)}
+                  />
+                  <title>{`${node.title}（拖拽移动，轻点打开）`}</title>
                   <text
                     y={-12}
                     textAnchor="middle"
