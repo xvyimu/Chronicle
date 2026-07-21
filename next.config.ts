@@ -33,9 +33,15 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  /* React Compiler (stable in Next 16): automatic memoization, no manual useMemo needed.
+     Requires babel-plugin-react-compiler (installed as devDependency). */
+  reactCompiler: true,
   /* Enable View Transitions API (experimental) */
   experimental: {
     viewTransition: true,
+    // Persist Turbopack's filesystem cache across dev sessions (Next 16.2).
+    // Speeds up cold dev starts; no effect on production build.
+    turbopackFileSystemCacheForDev: true,
   },
   /*
    * The content repositories read local MDX/JSON files with fs at request time.
