@@ -65,6 +65,13 @@ jobs:
       - name: Verify RSS artifacts are committed
         run: git diff --exit-code -- public/feed.xml public/feed.json
 
+      # Content snapshot (T2): rebuild and ensure generated/ is committed
+      - name: Rebuild content snapshot
+        run: pnpm content:build
+
+      - name: Verify content snapshot is committed
+        run: git diff --exit-code -- generated/content-snapshot
+
       # Bundle budget: fail if static output exceeds thresholds
       - run: pnpm exec tsx scripts/check-bundle-budget.ts
 

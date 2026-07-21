@@ -7,7 +7,8 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "tsx scripts/generate-rss.ts && next build",
+    "content:build": "tsx scripts/build-content-snapshot.ts",
+    "build": "tsx scripts/generate-rss.ts && tsx scripts/build-content-snapshot.ts && next build",
     "start": "next start",
     "lint": "eslint",
     "format": "prettier --write \"src/**/*.{ts,tsx,mjs,mts,css}\" \"scripts/**/*.{ts,mjs}\" \"e2e/**/*.ts\" \"*.{ts,mjs,mts,js}\"",

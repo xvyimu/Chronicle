@@ -82,20 +82,18 @@ Git content/ (SSOT, PR 写作)
 3. **e2e**：文章页 wikilink hover 冒烟 — **用例已写**（`e2e/blog.spec.ts`）
 4. 文档：`API.md` 错误码对称 — **已更新**
 
-**验收**：单元 **688** 测绿；e2e 含 popover（CI/本地 `pnpm test:e2e`）；生产 CSP 无新增违规。  
+**验收**：单元 **700** 测绿（含 T2）；e2e 含 popover（CI/本地 `pnpm test:e2e`）；生产 CSP 无新增违规。  
 **状态（2026-07-21）**：代码与单测完成，待 commit / push / 合入授权。
 
 ### T2 · 内容计算左移（1–2 周）· 中破坏
 
-1. `pnpm content:build`：生成 `.content-snapshot/` 或 `generated/`
-   - posts meta
-   - search documents
-   - garden graph + **预计算 positions**
-2. runtime repository **优先读快照**，fs 仅 dev fallback 或删除（旗标）
-3. CI：`content:build` 后 `git diff --exit-code generated` 或 artifact 上传
-4. Fuse **读固化索引**（请求路径不扫 MDX）
+1. `pnpm content:build` → `generated/content-snapshot/` — **本地已实现**
+2. runtime `CONTENT_BACKEND`（prod 默认 snapshot / dev·test 默认 fs）— **已实现**
+3. CI rebuild + `git diff --exit-code generated/content-snapshot` — **已写入 ci.yml**
+4. 搜索经 postRepository 读固化 meta — **已实现**
 
-**验收**：冷启动 API 延迟下降可测；构图与现网边集合一致（黄金测）。
+**验收**：`pnpm content:build` 幂等；700 测绿；旗标可回滚 fs。
+**状态（2026-07-21）**：在 `feat/t1-popover-preview-hardening`，待 commit/push。
 
 ### T3 · 安全增强（1 周，可与 T2 后半并行）· 中高破坏
 
