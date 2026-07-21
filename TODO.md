@@ -3,8 +3,8 @@
 > 状态：**工程侧可无条件推进的事项已关闭**；仅剩外部账号或条件触发。数字花园 G0/G1 已合入；G2 为次级 `/garden`（筛选 + 力导向 + 文内邻接，非首页）。  
 > 更新：2026-07-21（花园 G0–G2 增强 + v2 体验包）  
 > 生产：`https://incca.ccwu.cc`  
-> 归档 HEAD：`61ffd47`  
-> 功能基线：`a91a07d` · 运营工程：`96e0214` · 硬阻塞记录：`fa3e579`  
+> 归档 HEAD：`ef77986`  
+> 功能基线：`ef77986`（G2 数字花园上线）· 运营工程：`96e0214` · 硬阻塞记录：`fa3e579`  
 > 手册：[ops-deferred-work-plan.md](./docs/ops-deferred-work-plan.md)  
 > 自动检查：`pnpm check:ops-readiness`（可选 `-- --live`）  
 > run 归档：
@@ -47,7 +47,7 @@
 | 逻辑前后端分层 | `src/server` + 边界测试已上线 | run `frontend-backend-boundary` · `a91a07d`   |
 | 延后运营工程化 | 就绪门禁 + 手册 + live 实测   | run `deferred-ops-readiness` · `96e0214`      |
 | 生产质量       | CI/e2e/deploy/smoke 绿        | launch-baseline                               |
-| 阶段归档       | TODO/记忆/run 索引收口        | `61ffd47`                                     |
+| 阶段归档       | TODO/记忆/run 索引收口        | `ef77986`                                     |
 | 数字花园 G0/G1 | wikilink + 反链面板           | 本仓 `src/lib/posts/wikilink*` · `link-graph` |
 
 更早 P0–P10 见历史报告与 `docs/superpowers/runs/`，不在此重复。

@@ -6,7 +6,7 @@
 
 | 项                  | 值                                     |
 | ------------------- | -------------------------------------- |
-| tip / origin / 生产 | **`98568b6`**                          |
+| tip / origin / 生产 | **`ef77986`**                          |
 | CI                  | success · deploy success               |
 | 生产检查            | `pnpm check:production-content` passed |
 | 冒烟                | `/garden` · docker/vps 邻接+反链 200   |

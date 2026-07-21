@@ -105,25 +105,26 @@ NEXT_PUBLIC_GISCUS_CATEGORY_ID=your_category_id
 
 ## 路由
 
-| 路由                     | 说明                                         |
-| ------------------------ | -------------------------------------------- |
-| `/`                      | Paper Gallery 首页（文章路径 + 项目 + 收藏） |
-| `/about`                 | 关于页                                       |
-| `/blog`                  | 博客列表（fuse.js 模糊搜索 + 键盘导航）      |
-| `/blog/[slug]`           | 文章详情（TOC + 阅读进度 + 阅读偏好 + 评论） |
-| `/categories`            | 分类汇总                                     |
-| `/categories/[category]` | 单分类归档                                   |
-| `/links`                 | 技术收藏导航与关键词筛选                     |
-| `/projects`              | 作品集                                       |
-| `/projects/[id]`         | 作品详情                                     |
-| `/series`                | 专题列表                                     |
-| `/series/[series]`       | 专题详情                                     |
-| `/tags`                  | 标签汇总                                     |
-| `/tags/[tag]`            | 单标签归档                                   |
-| `/feed.xml`              | RSS 订阅                                     |
-| `/feed.json`             | JSON Feed                                    |
-| `/sitemap.xml`           | 站点地图                                     |
-| `/robots.txt`            | 爬虫规则                                     |
+| 路由                     | 说明                                                |
+| ------------------------ | --------------------------------------------------- |
+| `/`                      | Paper Gallery 首页（文章路径 + 项目 + 收藏）        |
+| `/about`                 | 关于页                                              |
+| `/blog`                  | 博客列表（fuse.js 模糊搜索 + 键盘导航）             |
+| `/blog/[slug]`           | 文章详情（TOC + 阅读进度 + 阅读偏好 + 评论）        |
+| `/categories`            | 分类汇总                                            |
+| `/categories/[category]` | 单分类归档                                          |
+| `/links`                 | 技术收藏导航与关键词筛选                            |
+| `/projects`              | 作品集                                              |
+| `/projects/[id]`         | 作品详情                                            |
+| `/series`                | 专题列表                                            |
+| `/series/[series]`       | 专题详情                                            |
+| `/tags`                  | 标签汇总                                            |
+| `/tags/[tag]`            | 单标签归档                                          |
+| `/garden`                | 数字花园（G2：力导向图谱 + 筛选 + 拖拽 + 视图存档） |
+| `/feed.xml`              | RSS 订阅                                            |
+| `/feed.json`             | JSON Feed                                           |
+| `/sitemap.xml`           | 站点地图                                            |
+| `/robots.txt`            | 爬虫规则                                            |
 
 ## 设计系统
 
@@ -158,6 +159,7 @@ CSS 自定义属性 + Tailwind v4 `@theme` 令牌，当前按 17 个显式导入
 - 文章卡片 magnetic hover 微交互
 - 三层 Paper Gallery 背景（CSS + server DOM + reduced-motion 视差）
 - 阅读进度条 + 目录 + 相关文章 + 上一篇/下一篇 + 回到顶部
+- 数字花园 G0/G1/G2：wikilink `[[slug]]` + 反链面板 + 力导向图谱 + 节点拖拽 + localStorage 视图存档
 - Giscus 评论（主题同步）
 - RSS / JSON Feed / Sitemap / PWA manifest
 - WCAG 无障碍（focus-visible / aria-label / skip-link）
@@ -167,7 +169,7 @@ CSS 自定义属性 + Tailwind v4 `@theme` 令牌，当前按 17 个显式导入
 
 | 层级      | 工具                     | 数量               | 覆盖范围                                                                       |
 | --------- | ------------------------ | ------------------ | ------------------------------------------------------------------------------ |
-| 单元/集成 | Vitest + Testing Library | 599 用例 / 77 文件 | lib 数据层 / 组件交互 / 页面渲染                                               |
+| 单元/集成 | Vitest + Testing Library | 672 用例 / 90 文件 | lib 数据层 / 组件交互 / 页面渲染                                               |
 | E2E       | Playwright               | 48 用例 / 5 文件   | 首页 / 博客 / 导航 / 主题 / 作品 / 标签 / 分类 / 专题 / RSS / Sitemap / 移动端 |
 
 ```bash
