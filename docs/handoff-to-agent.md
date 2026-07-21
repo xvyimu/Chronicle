@@ -1,6 +1,6 @@
 # 西江月博客 · Agent 接手指南
 
-> 状态：当前维护版（2026-07-21 增补仓库身份）。详细模块说明见 [architecture.md](./architecture.md)，当前未完成事项只以根 [TODO](../TODO.md) 为准。
+> 状态：当前维护版（2026-07-22）。详细模块说明见 [architecture.md](./architecture.md)，当前未完成事项只以根 [TODO](../TODO.md) 为准。
 
 ## 0. 仓库身份
 
@@ -22,17 +22,17 @@
 
 ## 2. 当前生产基线
 
-| 项目           | 当前证据                                                                                |
-| -------------- | --------------------------------------------------------------------------------------- |
-| 生产域名       | `https://incca.ccwu.cc`                                                                 |
-| 功能基线提交   | `a91a07d`（前后端分层）                                                                 |
-| 运营工程提交   | `96e0214`（ops-readiness）；阻塞记录 `fa3e579`                                          |
-| GitHub Actions | 最近 master CI success（见 Actions；分层 run `29631593044`，运营 run `29632273522`）    |
-| 内容规模       | 14 篇文章、6 个项目、10 类 123 条收藏链接                                               |
-| Vitest         | 81 files / 618+ tests（2026-07-18；含 ops-readiness）                                   |
-| Playwright     | 5 files / 48 tests                                                                      |
-| Node / pnpm    | Node 22.x / pnpm 11.8.0；本机 Node 24 仅 warning                                        |
-| 延后运营       | GSC/Bing/RUM pending；手册 `docs/ops-deferred-work-plan.md`；`pnpm check:ops-readiness` |
+| 项目           | 当前证据                                                                                                                               |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| 生产域名       | `https://incca.ccwu.cc`                                                                                                                |
+| origin/master  | **`078a056`**（PR#15 T3 CSP report + SRI 门控；含 #14 T1+T2、#16 软脱离）                                                              |
+| GitHub Actions | master CI success · deploy success（run 见 Actions；近期 [29853631322](https://github.com/xvyimu/Chronicle/actions/runs/29853631322)） |
+| 内容规模       | 20 篇文章、6 个项目、10 类 123 条收藏链接                                                                                              |
+| Vitest         | 95 files / 708 tests（2026-07-22；含 csp-report）                                                                                      |
+| Playwright     | 5 files / 49+ tests（含 CSP 上报冒烟）                                                                                                 |
+| Node / pnpm    | Node 22.x / pnpm 11.8.0；本机 Node 24 仅 warning                                                                                       |
+| 延后运营       | GSC/Bing/RUM pending；手册 `docs/ops-deferred-work-plan.md`；`pnpm check:ops-readiness`                                                |
+| SRI            | 默认关 · `ENABLE_SRI=1` 才启用 · 生产开需单独授权                                                                                      |
 
 生产证据是时间点快照。接手时仍需用当前 `git log`、CI 和命令重新确认，不要把本表当作永久真值。
 
@@ -44,6 +44,7 @@
 - 缓存统一使用 `createCache<T>`；测试替换 ContentSource 后调用 `resetAllCaches()`。
 - `globals.css` 不承载本地 CSS `@import` 链。全局语义 CSS 由根 layout 显式导入，home/search/links/project-detail 样式由最近路由入口导入。
 - 搜索生产路径为 Node runtime `GET /api/search`：限流与用例在 `src/server/search`，共享契约在 `src/lib/search`；当前规模不上外部搜索服务。
+- CSP 违规仅 collect-only：`POST /api/csp-report` + `proxy.ts` 的 `report-to`/`report-uri`；不落库、不回显、不放宽指令。
 - 客户端与 `src/lib` 不得导入 `@/server`；由 `src/lib/module-boundaries.test.ts` 守门。
 - 图片默认只允许本地资源，`next.config.ts` 的 `remotePatterns` 保持为空，除非明确审核远程主机。
 
@@ -51,14 +52,16 @@
 
 | 需求             | 首要文件                                                                         | 必须联查                                                                  |
 | ---------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| 新增文章         | `content/blog/*.mdx`                                                             | schema、SEO、RSS、sitemap、内链                                           |
+| 新增文章         | `content/blog/*.mdx`                                                             | schema、SEO、RSS、sitemap、内链、`pnpm content:build`                     |
 | 修改项目         | `data/projects.json`                                                             | `src/lib/projects.ts`、图片、项目页测试                                   |
 | 修改收藏         | `data/links.json`                                                                | `src/lib/links.ts`、首页预览、SEO 检查                                    |
 | 新增路由         | `src/app/**`                                                                     | metadata、导航、sitemap、测试                                             |
 | 修改搜索         | `src/app/api/search/route.ts`、`src/server/search/`、`src/lib/search/`（仅契约） | [API 文档](./API.md)、客户端 hook、`module-boundaries`、限流/service 测试 |
+| 修改 preview     | `src/app/api/preview/[slug]/route.ts`                                            | WikilinkPopover、API.md                                                   |
+| 修改 CSP / 上报  | `src/proxy.ts`、`src/app/api/csp-report/`                                        | layout、`src/lib/csp.ts`、API.md、ADR                                     |
+| 修改 SRI 门控    | `next.config.ts`（`ENABLE_SRI`）                                                 | ADR `2026-07-21-sri-over-nonce-evaluation.md`                             |
 | 修改内容读取入口 | `src/server/content`、相关 `src/app/**` 页面                                     | 底层 `src/lib/*` repository、页面测试 mock 路径                           |
 | 修改视觉 token   | `src/app/styles/tokens.css`                                                      | 明暗主题、CSS 规范、移动端与截图检查                                      |
-| 修改 CSP         | `src/proxy.ts`、`src/lib/csp.ts`                                                 | layout、第三方脚本、ADR、生产 header                                      |
 | 修改 CI/部署     | `.github/workflows/ci.yml`                                                       | Node 22、RSS 一致性、smoke、回滚                                          |
 
 ## 5. 验证矩阵
@@ -66,7 +69,7 @@
 | 变更类型         | 最低验证                                                         |
 | ---------------- | ---------------------------------------------------------------- |
 | 仅文档           | `pnpm format:docs:check`、`pnpm check:docs`、`git diff --check`  |
-| 内容/JSON        | 上述 + `pnpm check:seo`、`pnpm build`                            |
+| 内容/JSON        | 上述 + `pnpm check:seo`、`pnpm content:build`、`pnpm build`      |
 | TypeScript/组件  | `pnpm format:check`、`pnpm lint`、`pnpm typecheck`、受影响测试   |
 | 路由/交互/响应式 | 上述 + `pnpm test`、`pnpm test:e2e`                              |
 | 构建/CSS/性能    | 上述 + `pnpm build`、bundle budget、必要的 Lighthouse/浏览器验证 |
@@ -79,11 +82,12 @@
 - GSC/Bing：用户禁止登录，暂停属性验证与 sitemap 提交；授权后按 [ops-deferred-work-plan.md](./ops-deferred-work-plan.md) 执行。
 - Speed Insights：真实 p75 需要授权 token 和足够样本，不能用实验室 Lighthouse 代替。
 - 外部搜索、正文图 LQIP、Cache Components 和 CSS 深度下沉均有明确规模或素材触发条件，见 [TODO](../TODO.md) 与 `pnpm check:ops-readiness`。
+- SRI 生产启用与 PPR 实验分 PR，禁止同周强上。
 - 延后事项不得伪装成无条件工程任务；就绪状态以 `check:ops-readiness` 为准。
 
 ## 7. 文档规则
 
 - 当前操作以 [文档总览](./overview.md) 中“当前维护文档”为准。
-- 日期型审查、spec 和 `docs/superpowers/runs/` 是历史快照，其中的旧测试数和未勾选项不是当前待办。
+- 日期型审查、spec 和 `docs/superpowers/runs/`、`docs/archive/` 是历史快照，其中的旧测试数和未勾选项不是当前待办。
 - 行为描述必须先读源码；接口参数、错误码和命令不得凭旧报告补写。
 - 改动当前行为后，在同一批次同步对应维护文档。

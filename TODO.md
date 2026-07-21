@@ -1,16 +1,11 @@
 # 西江月博客 · 当前待办
 
-> 状态：**工程侧可无条件推进的事项已关闭**；仅剩外部账号或条件触发。数字花园 G0–G3 已合入 `feat/v3-ship`（未 push）。  
-> 更新：2026-07-21（v3 ship + G3/G2 测试补全 · 685/93）  
+> 状态：**工程侧可无条件推进的事项已关闭**；仅剩外部账号或条件触发。  
+> 更新：2026-07-22（master **`078a056`** · PR#14 T1+T2 · PR#15 T3 CSP/SRI 门控 · PR#16 软脱离 · package `chronicle`）  
 > 生产：`https://incca.ccwu.cc`  
-> 归档 HEAD：`ef77986`（origin/master）  
-> 功能基线：`feat/v3-ship`（G3 popover + G2 hover + React Compiler + VT）· 运营工程：`96e0214` · 硬阻塞记录：`fa3e579`  
 > 手册：[ops-deferred-work-plan.md](./docs/ops-deferred-work-plan.md)  
 > 自动检查：`pnpm check:ops-readiness`（可选 `-- --live`）  
-> run 归档：
->
-> - [前后端分层](./docs/superpowers/runs/2026-07-18-frontend-backend-boundary/)
-> - [延后运营](./docs/superpowers/runs/2026-07-18-deferred-ops-readiness/)
+> 基线文档：[docs/launch-baseline.md](./docs/launch-baseline.md) · [docs/handoff-to-agent.md](./docs/handoff-to-agent.md)
 
 ## 外部依赖（需真人账号；Agent 已穷尽自动路径）
 
@@ -30,34 +25,22 @@
 - [ ] **正文图 LQIP**：`public/images/blog/**` 有图 → `pnpm gen:blur && pnpm check:blur`。
 - [ ] **prose/article-ui 下沉**：Coverage + 层叠方案 + ADR。
 - [ ] **Cache Components**：外部数据/ISR/失效需求 + 迁移指南。
+- [ ] **SRI 生产启用**：`ENABLE_SRI=1` 已门控；需 Vercel preview 验证 + 单独授权（见 ADR `2026-07-21-sri-over-nonce-evaluation.md`）。
+- [ ] **G2 可选**：更多布局算法 / 导出 PNG（兴奋型，非阻塞）。
 
-## 数字花园（Next 内增量）
+## 已完成索引（近期）
 
-- [x] G0 wikilink remark + pure helpers（`[[slug]]` / `[[slug|label]]` → `/blog/{slug}`）
-- [x] G1 backlinks panel + link graph cache（fail-closed 坏链；`getBacklinks`）
-- [x] G2 次级原型 `/garden`（边列表 + 力导向 + 专题/标签筛选；`prefers-reduced-motion` 降级列表）
-- [x] 文章页折叠邻接（`ArticleNeighbors` 出/入边）
-- [x] G2 再增强：节点拖拽 + 本机保存/恢复视图（localStorage）
-- [x] G2 hover 邻居高亮（`hoverSlug` + `neighborsOf` dim）+ 测试
-- [x] G3 wikilink popover（`/api/preview/[slug]` + `WikilinkPopover`）+ 测试
-- [ ] G2 可选：更多布局算法 / 导出 PNG
-- [x] Q28 正文概念链加深 6 篇 MDX（2026-07 · Compiler/VT/CSP·SRI/花园/MDX管线/Turbopack DX）
-- [x] Q29 本地 SRI 准备（类型形状 + ADR checklist；**未** enable、**未** deploy）
-- [ ] Q29 Vercel preview 验证（需 deploy 授权）
+| 范围              | 结果                                                       | 证据              |
+| ----------------- | ---------------------------------------------------------- | ----------------- |
+| T1 preview 契约   | a11y popover + `error`+`code` + 120/60s 限流               | PR#14             |
+| T2 content 快照   | `generated/content-snapshot/` · `CONTENT_BACKEND=snapshot` | PR#14             |
+| 软脱离身份        | npm `chronicle` · 无 former-name 叙事                      | PR#16 · `5c629e7` |
+| T3 CSP 上报 + SRI | collect-only `/api/csp-report` · `ENABLE_SRI` 默认关       | PR#15 · `078a056` |
+| 数字花园 G0–G3    | wikilink / 反链 / `/garden` / popover                      | 已合 master       |
+| 逻辑前后端分层    | `src/server` + 边界测试                                    | 历史 run          |
+| 延后运营工程化    | 就绪门禁 + 手册                                            | 历史 run          |
 
-## 已完成索引（本阶段）
-
-| 范围           | 结果                          | 证据                                          |
-| -------------- | ----------------------------- | --------------------------------------------- |
-| 逻辑前后端分层 | `src/server` + 边界测试已上线 | run `frontend-backend-boundary` · `a91a07d`   |
-| 延后运营工程化 | 就绪门禁 + 手册 + live 实测   | run `deferred-ops-readiness` · `96e0214`      |
-| 生产质量       | CI/e2e/deploy/smoke 绿        | launch-baseline                               |
-| 阶段归档       | TODO/记忆/run 索引收口        | `ef77986`                                     |
-| v3 ship 工程   | Compiler + FS cache + VT + G3 | `feat/v3-ship` · `pnpm build` 94/94 绿        |
-| v3 测试补全    | G3/G2 + preview route 13 测   | 685 tests / 93 files                          |
-| 数字花园 G0/G1 | wikilink + 反链面板           | 本仓 `src/lib/posts/wikilink*` · `link-graph` |
-
-更早 P0–P10 见历史报告与 `docs/superpowers/runs/`，不在此重复。
+更早 P0–P10 与日期型审查见 `docs/archive/`、`docs/superpowers/runs/`，不在此重复。
 
 ## 接手规则
 
