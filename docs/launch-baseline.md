@@ -34,7 +34,7 @@ bundle-analyze（并行、独立，不是 deploy 依赖）
 
 | 门禁                | 当前证据                                              |
 | ------------------- | ----------------------------------------------------- |
-| Vitest              | 94 files / 700 tests，2026-07-21 本地通过（T1+T2）    |
+| Vitest              | 94 files / 701 tests，2026-07-21 本地通过（T1+T2）    |
 | Playwright          | 5 files / 48 tests，最新 CI 通过                      |
 | TypeScript / ESLint | 最新 CI 通过                                          |
 | SEO / blur          | 最新 CI 通过                                          |
