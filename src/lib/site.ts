@@ -51,7 +51,7 @@ export const SITE_CONFIG = {
     email: '',
   },
   giscus: {
-    repo: process.env.NEXT_PUBLIC_GISCUS_REPO ?? 'xvyimu/blog',
+    repo: process.env.NEXT_PUBLIC_GISCUS_REPO ?? 'xvyimu/Chronicle',
     repoId: process.env.NEXT_PUBLIC_GISCUS_REPO_ID ?? 'R_kgDOTBAmxA',
     category: 'Announcements',
     categoryId: process.env.NEXT_PUBLIC_GISCUS_CATEGORY_ID ?? 'DIC_kwDOTBAmxM4C_mwW',
