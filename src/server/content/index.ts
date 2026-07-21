@@ -3,6 +3,7 @@ import {
   getAllPostSlugs as readAllPostSlugs,
   getAllPosts as readAllPosts,
   getBacklinks as readBacklinks,
+  getGardenGraph as readGardenGraph,
   getPaginatedPosts as readPaginatedPosts,
   getPostBySlug as readPostBySlug,
   getPostsByTag as readPostsByTag,
@@ -57,6 +58,9 @@ export const getSeriesPosts = readSeriesPosts;
 
 /** 读取链到指定 slug 的可见文章（反链）；无入边时返回空数组。坏链在构图时抛出。 */
 export const getBacklinks = readBacklinks;
+
+/** 数字花园次级页用：可见笔记节点 + 有向 wikilink 边。 */
+export const getGardenGraph = readGardenGraph;
 
 /** 按页码和页容量读取文章分页；页码钳制语义由底层查询保持。 */
 export const getPaginatedPosts = readPaginatedPosts;

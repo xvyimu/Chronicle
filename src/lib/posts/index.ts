@@ -34,10 +34,13 @@ export type { WikilinkMatch } from './wikilink';
 // link graph / backlinks
 export {
   getBacklinks,
+  getGardenGraph,
   assertWikilinksValid,
   buildBacklinkIndex,
+  buildGardenEdges,
   createLinkGraph,
 } from './link-graph';
+export type { GardenGraph, GardenGraphEdge, GardenGraphNode } from './link-graph';
 
 /**
  * 公共 API — 委托给默认 postRepository 实例.

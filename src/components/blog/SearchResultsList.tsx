@@ -87,6 +87,9 @@ export default function SearchResultsList({
           <div className="search-results-popover__empty-actions">
             <Link href="/blog">查看全部文章</Link>
             <Link href="/tags">浏览标签</Link>
+            <Link href="/series">浏览专题</Link>
+            <Link href="/garden">数字花园</Link>
+            <Link href="/projects">看作品</Link>
           </div>
         </div>
       ) : fuseReady && results.length > 0 ? (
@@ -145,10 +148,13 @@ export default function SearchResultsList({
       ) : fuseReady && results.length === 0 ? (
         <div className="search-results-popover__empty" role="status">
           <strong>没有匹配的文章</strong>
-          <span>换个关键词，或从下面的入口重新探索。</span>
+          <span>换个关键词，或从专题、花园与作品入口重新探索。</span>
           <div className="search-results-popover__empty-actions">
             <Link href="/blog">查看全部文章</Link>
             <Link href="/tags">浏览标签</Link>
+            <Link href="/series">浏览专题</Link>
+            <Link href="/garden">数字花园</Link>
+            <Link href="/projects">看作品</Link>
           </div>
         </div>
       ) : null}

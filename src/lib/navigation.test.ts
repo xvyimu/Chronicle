@@ -6,6 +6,7 @@ describe('navigation', () => {
     expect(MAIN_NAV_ITEMS.map((item) => item.href)).toEqual([
       '/',
       '/blog',
+      '/garden',
       '/links',
       '/categories',
       '/series',

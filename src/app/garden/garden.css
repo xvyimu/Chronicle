@@ -1,0 +1,157 @@
+/* Secondary garden prototype — paper tokens only */
+
+.garden-page__inner {
+  max-width: 960px;
+}
+
+.garden-page__header {
+  margin-bottom: 28px;
+}
+
+.garden-page__label {
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.garden-page__title {
+  margin: 8px 0 12px;
+  color: var(--text);
+  font-family: var(--font-display), Georgia, serif;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 500;
+  line-height: 1.15;
+}
+
+.garden-page__desc {
+  max-width: 46rem;
+  color: var(--text-soft);
+  font-size: 0.98rem;
+  line-height: 1.7;
+}
+
+.garden-page__code {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 0.88em;
+  color: var(--brand-hover);
+}
+
+.garden-page__meta {
+  margin-top: 10px;
+  color: var(--text-dim);
+  font-size: 0.86rem;
+}
+
+.garden-page__layout {
+  display: grid;
+  gap: 24px;
+}
+
+@media (min-width: 900px) {
+  .garden-page__layout {
+    grid-template-columns: minmax(240px, 320px) 1fr;
+    align-items: start;
+  }
+}
+
+.garden-page__visual {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  padding: 16px;
+}
+
+.garden-page__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 320px;
+}
+
+.garden-page__edge {
+  stroke: color-mix(in srgb, var(--brand) 45%, var(--border));
+  stroke-width: 1;
+}
+
+.garden-page__node {
+  fill: var(--brand);
+}
+
+.garden-page__visual-hint {
+  margin-top: 8px;
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.garden-page__lists {
+  display: grid;
+  gap: 20px;
+}
+
+.garden-page__panel {
+  margin: 0;
+}
+
+.garden-page__edge-list,
+.garden-page__node-list {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.garden-page__edge-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+}
+
+.garden-page__edge-link,
+.garden-page__node-link {
+  color: var(--text-soft);
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.garden-page__edge-link:hover,
+.garden-page__node-link:hover {
+  color: var(--brand-hover);
+}
+
+.garden-page__arrow {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.garden-page__node-list li {
+  border-bottom: 1px solid var(--border);
+  padding: 8px 0;
+}
+
+.garden-page__foot {
+  margin-top: 28px;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+.garden-page__foot a {
+  color: var(--brand-hover);
+  font-weight: 700;
+}
+
+/* Reduced motion / no-JS-friendly: hide decorative SVG, keep lists */
+@media (prefers-reduced-motion: reduce) {
+  .garden-page__visual--motion {
+    display: none;
+  }
+}

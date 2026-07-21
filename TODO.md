@@ -1,7 +1,7 @@
 # 西江月博客 · 当前待办
 
-> 状态：**工程侧可无条件推进的事项已关闭**；仅剩外部账号或条件触发。数字花园 G0/G1 已合入本仓（产品增量，非外部 ops）。  
-> 更新：2026-07-21（花园 G0/G1）  
+> 状态：**工程侧可无条件推进的事项已关闭**；仅剩外部账号或条件触发。数字花园 G0/G1 已合入；G2 为次级 `/garden` 窄原型（非首屏力导向）。  
+> 更新：2026-07-21（花园 G0/G1 + G2 原型 + v2 体验包）  
 > 生产：`https://incca.ccwu.cc`  
 > 归档 HEAD：`61ffd47`  
 > 功能基线：`a91a07d` · 运营工程：`96e0214` · 硬阻塞记录：`fa3e579`  
@@ -35,7 +35,8 @@
 
 - [x] G0 wikilink remark + pure helpers（`[[slug]]` / `[[slug|label]]` → `/blog/{slug}`）
 - [x] G1 backlinks panel + link graph cache（fail-closed 坏链；`getBacklinks`）
-- [ ] G2 graph UI（本轮明确不做）
+- [x] G2 次级原型 `/garden`（边列表 + 静态圆环示意；`prefers-reduced-motion` 隐藏示意；非首屏力导向）
+- [ ] G2 增强（可选）：交互筛选 / 文章内折叠邻接 / 真力图——需另立项
 
 ## 已完成索引（本阶段）
 

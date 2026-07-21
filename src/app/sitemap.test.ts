@@ -27,6 +27,7 @@ describe('sitemap', () => {
     for (const path of [
       '',
       '/blog',
+      '/garden',
       '/categories',
       '/projects',
       '/tags',

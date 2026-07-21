@@ -16,12 +16,14 @@ license: 'MIT'
 
 Cloudflare Workers 是一个在 Cloudflare 全球边缘网络上运行的无服务器计算平台。简单理解：你写一段 JavaScript/TypeScript 代码，提交到 Cloudflare，它在全球 300+ 个节点上自动部署。用户请求时会从距离最近的节点响应，延迟极低。
 
-相比传统的 VPS + Nginx 部署方式，Workers 的优势很明显：
+相比传统的 VPS + [[nginx-reverse-proxy|Nginx 反向代理]] 部署方式，Workers 的优势很明显：
 
 - **无需管理服务器**——只管写代码，Cloudflare 负责运行
 - **全球部署**——一个指令，分布到 300+ 节点
 - **冷启动极快**——基于 V8 Isolate，比传统 Serverless 运行时（如 AWS Lambda）启动快得多
 - **免费额度慷慨**——每天 10 万次请求免费
+
+需要长连接、重 CPU 或完整容器编排时，仍应回到 [[docker-deploy-guide|容器部署]] 与源站运维，而不是硬把一切塞进边缘。
 
 ## 第一个 Worker
 

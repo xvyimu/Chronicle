@@ -11,6 +11,8 @@ license: 'CC-BY-4.0'
 
 > 结论先说：默认全是服务端组件，只在交互边界加 `"use client"`；数据在服务端直接取，表单走 Server Actions，Suspense 负责流式首屏。
 
+流式与拆分客户端边界最终要落到用户可感指标上——LCP/INP/CLS 的优先序见 [[web-performance-optimization|Web 性能优化实战]]。
+
 ## Pages Router vs App Router
 
 Next.js 13 引入的 App Router 在 16 版本已经稳定，成为推荐的首选路由方案：

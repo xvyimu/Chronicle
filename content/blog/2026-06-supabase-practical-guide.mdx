@@ -18,10 +18,12 @@ Supabase 常被称为"开源版 Firebase"。它提供了一套完整的后端服
 
 选择理由：
 
-- **PostgreSQL 原生**——不是 NoSQL 封装，就是原生 SQL，能直接用 PG 的全部能力
+- **PostgreSQL 原生**——不是 NoSQL 封装，就是原生 SQL，能直接用 PG 的全部能力；慢查询与索引仍按 [[postgresql-performance|PostgreSQL 性能优化]] 那套方法论处理
 - **Row Level Security**——在数据库层面控制每行数据的访问权限，安全又灵活
 - **Realtime**——通过 WebSocket 实现数据库变更的实时推送
 - **自托管友好**——开源，可以自己部署
+
+读多场景下也可以在应用层叠 [[redis-caching-strategies|Redis 缓存]]，但源真相仍在 Postgres。
 
 ## 快速开始
 

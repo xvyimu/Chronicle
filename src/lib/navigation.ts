@@ -6,6 +6,7 @@ export type NavItem = {
 export const MAIN_NAV_ITEMS: NavItem[] = [
   { href: '/', label: '首页' },
   { href: '/blog', label: '博客' },
+  { href: '/garden', label: '花园' },
   { href: '/links', label: '导航' },
   { href: '/categories', label: '分类' },
   { href: '/series', label: '专题' },

@@ -49,6 +49,7 @@ describe('Header', () => {
     render(<Header />);
     expect(screen.getByText('首页')).toBeInTheDocument();
     expect(screen.getByText('博客')).toBeInTheDocument();
+    expect(screen.getByText('花园')).toBeInTheDocument();
     expect(screen.getByText('导航')).toBeInTheDocument();
     expect(screen.getByText('分类')).toBeInTheDocument();
     expect(screen.getByText('专题')).toBeInTheDocument();

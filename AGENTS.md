@@ -19,7 +19,7 @@ A personal blog built with Next.js 16.2 (App Router), React 19, and Tailwind CSS
 - **UI**: React 19.2, Tailwind CSS 4, BEM custom CSS
 - **Content**: MDX with custom frontmatter parser (`lib/parse-frontmatter.ts`, js-yaml 4.x), next-mdx-remote
 - **Syntax Highlighting**: Shiki via rehype-pretty-code
-- **Search**: fuse.js (client-side fuzzy search)
+- **Search**: fuse.js via production `GET /api/search` (server Fuse + projected DTO); tests may embed client Fuse
 - **Testing**: Vitest (unit/integration, 618 tests, 81 files), Playwright (E2E, 48 tests, 5 spec files)
 - **CI**: GitHub Actions (lint / test / tsc / build / bundle-budget / e2e)
 - **Deployment**: Vercel

@@ -269,6 +269,37 @@ a.article__badge:hover {
   color: var(--text-dim);
 }
 
+.article-backlinks__more {
+  margin-top: 12px;
+}
+
+.article-backlinks__more-summary {
+  cursor: pointer;
+  color: var(--brand-hover);
+  font-size: 0.86rem;
+  font-weight: 700;
+  list-style: none;
+}
+
+.article-backlinks__more-summary::-webkit-details-marker {
+  display: none;
+}
+
+.article-backlinks__list--rest {
+  margin-top: 12px;
+}
+
+/* Reserve title band to reduce font-fallback CLS on long display titles */
+.article-shell .article__header {
+  min-height: 7.5rem;
+}
+
+@media (min-width: 768px) {
+  .article-shell .article__header {
+    min-height: 9rem;
+  }
+}
+
 .article-related {
   margin-top: 64px;
   border-top: 1px solid var(--border);

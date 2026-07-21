@@ -3,9 +3,11 @@ import { resetAllCaches } from '@/lib/cache';
 import type { PostMeta } from '@/types';
 import {
   buildBacklinkIndex,
+  buildGardenEdges,
   createLinkGraph,
   assertWikilinksValid,
   getBacklinks,
+  getGardenGraph,
 } from './link-graph';
 
 function meta(slug: string, overrides: Partial<PostMeta> = {}): PostMeta {
@@ -45,6 +47,20 @@ describe('buildBacklinkIndex', () => {
   it('records self-links in the raw index', () => {
     const index = buildBacklinkIndex([{ slug: 'a', content: 'self [[a]]' }]);
     expect(index.get('a')).toEqual(['a']);
+  });
+});
+
+describe('buildGardenEdges', () => {
+  it('emits unique directed edges and skips self-links', () => {
+    const edges = buildGardenEdges([
+      { slug: 'a', content: '[[b]] [[b|Bee]] [[a]] [[c]]' },
+      { slug: 'b', content: '[[c]]' },
+    ]);
+    expect(edges).toEqual([
+      { from: 'a', to: 'b' },
+      { from: 'a', to: 'c' },
+      { from: 'b', to: 'c' },
+    ]);
   });
 });
 
@@ -104,6 +120,17 @@ describe('createLinkGraph', () => {
     );
   });
 
+  it('exposes garden graph nodes and edges', () => {
+    const posts = [meta('a', { title: 'A' }), meta('b', { title: 'B' })];
+    const graph = createLinkGraph({
+      getVisiblePosts: () => posts,
+      getPostContent: (slug) => (slug === 'a' ? 'to [[b]]' : 'plain'),
+    });
+    const garden = graph.getGardenGraph();
+    expect(garden.nodes.map((n) => n.slug).sort()).toEqual(['a', 'b']);
+    expect(garden.edges).toEqual([{ from: 'a', to: 'b' }]);
+  });
+
   it('rebuilds after resetAllCaches when fixtures change', () => {
     let contentA = 'links [[b]]';
     const posts = [meta('a'), meta('b')];
@@ -141,5 +168,12 @@ describe('assertWikilinksValid (filesystem content)', () => {
     const slugs = result.map((p) => p.slug);
     expect(slugs).toContain('vps-initial-setup');
     expect(slugs).toContain('nginx-reverse-proxy');
+  });
+
+  it('getGardenGraph includes real posts and edges', () => {
+    const garden = getGardenGraph();
+    expect(garden.nodes.length).toBeGreaterThanOrEqual(14);
+    expect(garden.edges.length).toBeGreaterThan(0);
+    expect(garden.edges.some((e) => e.from === 'docker-deploy-guide')).toBe(true);
   });
 });

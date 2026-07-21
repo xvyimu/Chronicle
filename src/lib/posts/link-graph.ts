@@ -9,11 +9,28 @@ export type LinkGraphPost = {
   content: string;
 } & Partial<PostMeta>;
 
+export type GardenGraphNode = {
+  slug: string;
+  title: string;
+};
+
+export type GardenGraphEdge = {
+  from: string;
+  to: string;
+};
+
+export type GardenGraph = {
+  nodes: GardenGraphNode[];
+  edges: GardenGraphEdge[];
+};
+
 type BacklinkIndexPayload = {
   /** target slug -> unique source slugs (unsorted) */
   reverse: Map<string, string[]>;
   /** slug -> PostMeta for visible posts (no content) */
   metaBySlug: Map<string, PostMeta>;
+  /** directed outbound edges (self-links omitted) */
+  edges: GardenGraphEdge[];
 };
 
 /**
@@ -45,10 +62,36 @@ export function buildBacklinkIndex(
   return out;
 }
 
+/** Unique directed edges from post bodies (self-links skipped). */
+export function buildGardenEdges(
+  posts: Array<{ slug: string; content: string }>,
+): GardenGraphEdge[] {
+  const seen = new Set<string>();
+  const edges: GardenGraphEdge[] = [];
+  for (const post of posts) {
+    for (const link of extractWikilinks(post.content)) {
+      if (link.slug === post.slug) continue;
+      const key = `${post.slug}\0${link.slug}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      edges.push({ from: post.slug, to: link.slug });
+    }
+  }
+  edges.sort((a, b) => {
+    const f = a.from.localeCompare(b.from);
+    return f !== 0 ? f : a.to.localeCompare(b.to);
+  });
+  return edges;
+}
+
 export function createLinkGraph(options: {
   getVisiblePosts: () => PostMeta[];
   getPostContent: (slug: string) => string | null;
-}): { getBacklinks(slug: string): PostMeta[]; assertValid(): void } {
+}): {
+  getBacklinks(slug: string): PostMeta[];
+  getGardenGraph(): GardenGraph;
+  assertValid(): void;
+} {
   function buildPayload(): BacklinkIndexPayload {
     const visible = options.getVisiblePosts();
     const metaBySlug = new Map<string, PostMeta>();
@@ -74,7 +117,8 @@ export function createLinkGraph(options: {
     }
 
     const reverse = buildBacklinkIndex(withContent);
-    return { reverse, metaBySlug };
+    const edges = buildGardenEdges(withContent);
+    return { reverse, metaBySlug, edges };
   }
 
   // Cache is created per factory instance so tests can inject fixtures
@@ -101,13 +145,21 @@ export function createLinkGraph(options: {
     });
   }
 
+  function getGardenGraph(): GardenGraph {
+    const { metaBySlug, edges } = getPayload();
+    const nodes = [...metaBySlug.values()]
+      .map((m) => ({ slug: m.slug, title: m.title }))
+      .sort((a, b) => a.slug.localeCompare(b.slug));
+    return { nodes, edges };
+  }
+
   function assertValid(): void {
     // Force rebuild / validation
     cache.invalidate();
     getPayload();
   }
 
-  return { getBacklinks, assertValid };
+  return { getBacklinks, getGardenGraph, assertValid };
 }
 
 const defaultGraph = createLinkGraph({
@@ -121,6 +173,11 @@ const defaultGraph = createLinkGraph({
  */
 export function getBacklinks(slug: string): PostMeta[] {
   return defaultGraph.getBacklinks(slug);
+}
+
+/** Full garden adjacency for secondary UI (nodes + directed edges). */
+export function getGardenGraph(): GardenGraph {
+  return defaultGraph.getGardenGraph();
 }
 
 /**

@@ -115,6 +115,8 @@
   overflow-x: auto;
   border-radius: var(--radius);
   background: #121613;
+  /* Soft floor height so mono font swap is less likely to collapse the block */
+  min-height: 3.5rem;
 }
 
 html:not(.dark) .prose pre {
