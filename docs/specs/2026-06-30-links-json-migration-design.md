@@ -4,7 +4,7 @@
 
 **日期**: 2026-06-30
 **作者**: brainstorming skill 流程
-**关联**: docs/architecture-review.html 中 W2 候选 (links.ts 633 行纯数据 → JSON)
+**关联**: docs/archive/architecture-review.html 中 W2 候选 (links.ts 633 行纯数据 → JSON)
 **前置条件**: S4 ContentSource 抽象层已落地 (src/lib/content-source.ts + createCache)
 
 ---

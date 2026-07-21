@@ -3,7 +3,7 @@
 - Status: Accepted
 - Date: 2026-07-17
 - Supersedes: `0001-csp-nonce-vs-ssg.md`
-- Related: `src/proxy.ts`, `src/lib/csp.ts`, `docs/architecture.md`, `docs/full-stack-audit-2026-07-17.md`
+- Related: `src/proxy.ts`, `src/lib/csp.ts`, `docs/architecture.md`, `docs/archive/full-stack-audit-2026-07-17.md`
 
 ## Context
 

@@ -4,7 +4,7 @@
 
 **日期**: 2026-06-29
 **作者**: brainstorming skill 流程
-**关联**: docs/architecture-review.html 中 S2 / S4 / S6 候选的"顺手解决"部分
+**关联**: docs/archive/architecture-review.html 中 S2 / S4 / S6 候选的"顺手解决"部分
 **前置条件**: 已完成的 S1-S6 表层重构 (commits 5c76273..f537c2c)
 
 ---
@@ -13,7 +13,7 @@
 
 ### 1.1 目标
 
-完成 architecture-review.html 中三个 Strong 候选的深水区:
+完成 archive/architecture-review.html 中三个 Strong 候选的深水区:
 
 - **S2 余项**: posts.ts god-module (255 行 / 13 export) 拆分为 4 个职责单一的模块
 - **S4 余项**: posts.test.ts 改用 in-memory ContentSource 注入夹具, 解耦内容编辑与代码测试反馈循环

@@ -2,7 +2,7 @@
 
 > 状态：当前维护版（2026-07-18）
 >
-> 这份文档是面向接手者的架构摘要：说明内容从哪里来、如何被解析、页面如何渲染、样式和安全边界在哪里，以及新增能力时应该落在哪一层。更细的运行状态与后续方向见 [`docs/handoff-to-agent.md`](./handoff-to-agent.md)，具体设计决策见 `docs/specs/` 与 `docs/adr/`。全栈审查：[`docs/full-stack-audit-2026-07-17.md`](./full-stack-audit-2026-07-17.md)。
+> 这份文档是面向接手者的架构摘要：说明内容从哪里来、如何被解析、页面如何渲染、样式和安全边界在哪里，以及新增能力时应该落在哪一层。更细的运行状态与后续方向见 [`docs/handoff-to-agent.md`](./handoff-to-agent.md)，具体设计决策见 `docs/specs/` 与 `docs/adr/`。历史全栈审查快照：[`docs/archive/full-stack-audit-2026-07-17.md`](./archive/full-stack-audit-2026-07-17.md)。
 
 ## 1. 项目定位
 
@@ -211,7 +211,7 @@ HomeCtaSection
 - 服务端用例/引擎/限流：`src/server/search/`
 - 限流：进程内 60 req / IP / min，配合 `s-maxage=60`
 - 边界门禁：`src/lib/module-boundaries.test.ts` 阻断 client/lib → server
-- 规模：~14 文不上外部引擎；见 `docs/bem-search-architecture-2026-07-12.md`
+- 规模：当前 20 文不上外部引擎；搜索 BEM 历史见 [`docs/archive/bem-search-architecture-2026-07-12.md`](./archive/bem-search-architecture-2026-07-12.md)
 
 ## 6. CSS 与视觉架构
 
@@ -307,8 +307,8 @@ push master
 
 | 层         | 基线                                                         |
 | ---------- | ------------------------------------------------------------ |
-| Vitest     | 700 tests / 94 files                                         |
-| Playwright | 48 tests / 5 spec files                                      |
+| Vitest     | 708 tests / 95 files                                         |
+| Playwright | 49+ tests / 5 spec files                                     |
 | Build      | production build succeeds; document routes remain dynamic    |
 | CI         | quality / bundle-analyze / e2e（含 Lighthouse）/ deploy 全绿 |
 

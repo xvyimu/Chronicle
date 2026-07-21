@@ -1,6 +1,6 @@
 # 公开 HTTP API
 
-> 状态：当前契约（2026-07-21）。公开 Route Handler：只读的搜索与 wikilink 预览（`GET`，无请求体），以及只写的 CSP 违规上报（`POST`，collect-only）。均不要求登录。  
+> 状态：当前契约（2026-07-22）。公开 Route Handler：只读的搜索与 wikilink 预览（`GET`，无请求体），以及只写的 CSP 违规上报（`POST`，collect-only）。均不要求登录。  
 > 运行时：Node.js（内容读取基于 fs，不面向 Edge）。  
 > 规范源补充：`docs/architecture-optimization-research-2026-07-21-v4.md` §7。
 
@@ -127,7 +127,7 @@ pnpm lint
 
 ## `GET /api/preview/[slug]`
 
-> 状态：`feat/v3-ship` 已实现（2026-07-21）；**生产 origin/master 在合入前可能无此路由**。Route Handler：`src/app/api/preview/[slug]/route.ts`。内容读取经 `@/server/content` 的 `getPostBySlug`。
+> 状态：已上线（master）。Route Handler：`src/app/api/preview/[slug]/route.ts`。内容读取经 `@/server/content` 的 `getPostBySlug`。
 
 G3 wikilink popover 在 hover/focus 时请求本接口，获取**不含正文**的轻量元数据。接口公开、只读、无请求体。
 
