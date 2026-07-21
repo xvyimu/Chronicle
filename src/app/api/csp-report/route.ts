@@ -76,11 +76,11 @@ function normalizeReports(raw: string): NormalizedReport[] {
 
   // Reporting API：数组，每项 { type: 'csp-violation', body: {...} }
   if (Array.isArray(parsed)) {
-    return parsed
-      .filter((entry): entry is Record<string, unknown> => isRecord(entry))
-      .filter((entry) => entry.type === 'csp-violation' || 'body' in entry)
-      .map((entry) => projectReport(entry.body))
-      .filter((report): report is NormalizedReport => report !== null);
+    return parsed.flatMap((entry) => {
+      if (!isRecord(entry)) return [];
+      const projected = projectReport(entry.body);
+      return projected ? [projected] : [];
+    });
   }
 
   // report-uri：{ "csp-report": {...} }
@@ -96,25 +96,32 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
+/**
+ * 从 body 取第一个非空字符串字段（camelCase / kebab-case 双写）。
+ * 模块级，避免每条 report 再分配闭包。
+ */
+function pickString(
+  body: Record<string, unknown>,
+  ...keys: string[]
+): string | undefined {
+  for (const key of keys) {
+    const value = body[key];
+    if (typeof value === 'string' && value.length > 0) {
+      // 截断以防超长 URI 撑爆日志行。
+      return value.slice(0, 512);
+    }
+  }
+  return undefined;
+}
+
 /** camelCase（Reporting API）与 kebab-case（report-uri）字段都取。 */
 function projectReport(body: unknown): NormalizedReport | null {
   if (!isRecord(body)) return null;
-  const pick = (...keys: string[]): string | undefined => {
-    for (const key of keys) {
-      const value = body[key];
-      if (typeof value === 'string' && value.length > 0) {
-        // 截断以防超长 URI 撑爆日志行。
-        return value.slice(0, 512);
-      }
-    }
-    return undefined;
-  };
-
   return {
-    documentUri: pick('documentURL', 'document-uri'),
-    violatedDirective: pick('violatedDirective', 'violated-directive'),
-    effectiveDirective: pick('effectiveDirective', 'effective-directive'),
-    blockedUri: pick('blockedURL', 'blocked-uri'),
-    disposition: pick('disposition'),
+    documentUri: pickString(body, 'documentURL', 'document-uri'),
+    violatedDirective: pickString(body, 'violatedDirective', 'violated-directive'),
+    effectiveDirective: pickString(body, 'effectiveDirective', 'effective-directive'),
+    blockedUri: pickString(body, 'blockedURL', 'blocked-uri'),
+    disposition: pickString(body, 'disposition'),
   };
 }

@@ -19,8 +19,8 @@ const isDev = process.env.NODE_ENV === 'development';
  * Next 16.2.9 type: experimental.sri is `{ algorithm?: 'sha256'|'sha384'|'sha512' }`,
  * NOT a boolean. Omit the key entirely when disabled so the experiment is inert.
  */
-const sriEnabled = process.env.ENABLE_SRI === '1';
-const sriExperiment = sriEnabled ? ({ sri: { algorithm: 'sha384' } } as const) : {};
+const sriExperiment =
+  process.env.ENABLE_SRI === '1' ? ({ sri: { algorithm: 'sha384' } } as const) : {};
 
 // Fail fast if production URL is missing — SEO metadata, OG images,
 // canonical URLs, RSS, sitemap, and JSON-LD must not point to localhost.

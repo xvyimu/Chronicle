@@ -120,8 +120,8 @@ SRI is wired through an env flag in `next.config.ts` so a `master` merge can nev
 turn it on:
 
 ```ts
-const sriEnabled = process.env.ENABLE_SRI === '1';
-const sriExperiment = sriEnabled ? ({ sri: { algorithm: 'sha384' } } as const) : {};
+const sriExperiment =
+  process.env.ENABLE_SRI === '1' ? ({ sri: { algorithm: 'sha384' } } as const) : {};
 // experimental: { ...sriExperiment }  — key omitted entirely when off
 ```
 
