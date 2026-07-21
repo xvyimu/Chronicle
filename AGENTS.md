@@ -4,15 +4,15 @@
 
 ## Identity
 
-| 项                  | 值                                                                                                       |
-| ------------------- | -------------------------------------------------------------------------------------------------------- |
-| GitHub              | [xvyimu/Chronicle](https://github.com/xvyimu/Chronicle)（由 `blog` 改名）                                |
-| 产品显示名          | 西江月博客                                                                                               |
-| 本地路径 / npm name | 真路径 `D:\Chronicle` · junction `D:\blog` · package `"name": "blog"`（private；**不是** GitHub 仓库名） |
-| 生产                | https://incca.ccwu.cc                                                                                    |
-| License             | MIT · `LICENSE` · Copyright 2026 雨天狂奔                                                                |
-| Giscus 默认 repo    | `xvyimu/Chronicle`（`src/lib/site.ts`；可用 env 覆盖）                                                   |
-| 作品集 GitHub 链接  | `data/projects.json`（Chronicle / ChronoPortal / ChronoRelay …）                                         |
+| 项                  | 值                                                                                    |
+| ------------------- | ------------------------------------------------------------------------------------- |
+| GitHub              | [xvyimu/Chronicle](https://github.com/xvyimu/Chronicle)                               |
+| 产品显示名          | 西江月博客                                                                            |
+| 本地路径 / npm name | 真路径 `D:\Chronicle` · junction `D:\blog` · package `"name": "chronicle"`（private） |
+| 生产                | https://incca.ccwu.cc                                                                 |
+| License             | MIT · `LICENSE` · Copyright 2026 雨天狂奔                                             |
+| Giscus 默认 repo    | `xvyimu/Chronicle`（`src/lib/site.ts`；可用 env 覆盖）                                |
+| 作品集 GitHub 链接  | `data/projects.json`（Chronicle / ChronoPortal / ChronoRelay …）                      |
 
 ## Project Overview
 

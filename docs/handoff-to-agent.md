@@ -4,13 +4,13 @@
 
 ## 0. 仓库身份
 
-| 项      | 值                                                                                          |
-| ------- | ------------------------------------------------------------------------------------------- |
-| GitHub  | **[xvyimu/Chronicle](https://github.com/xvyimu/Chronicle)**（旧名 `blog`，GitHub 会重定向） |
-| 产品名  | 西江月博客                                                                                  |
-| 本地    | 真路径 `D:\Chronicle` · junction `D:\blog` · package name `blog`（private）                 |
-| 生产    | https://incca.ccwu.cc                                                                       |
-| LICENSE | MIT · Copyright 2026 雨天狂奔                                                               |
+| 项      | 值                                                                               |
+| ------- | -------------------------------------------------------------------------------- |
+| GitHub  | **[xvyimu/Chronicle](https://github.com/xvyimu/Chronicle)**                      |
+| 产品名  | 西江月博客                                                                       |
+| 本地    | 真路径 `D:\Chronicle` · junction `D:\blog` · package name `chronicle`（private） |
+| 生产    | https://incca.ccwu.cc                                                            |
+| LICENSE | MIT · Copyright 2026 雨天狂奔                                                    |
 
 ## 1. 接手顺序
 

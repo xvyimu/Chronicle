@@ -149,7 +149,7 @@ pnpm content:build
 
 - data/projects.json
 
-GitHub 仓库身份（2026-07-21 改名后）：
+GitHub 仓库身份：
 
 | 作品 id         | GitHub                                 |
 | --------------- | -------------------------------------- |
