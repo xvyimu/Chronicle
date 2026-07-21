@@ -4,15 +4,15 @@
 
 ## 1. 最新生产证据
 
-| 项目     | 当前值                                 | 证据                                                                                                                |
-| -------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| 生产域名 | `https://incca.ccwu.cc`                | production smoke + `check:ops-readiness --live`                                                                     |
-| 功能基线 | `a91a07d` 前后端分层                   | CI [29631593044](https://github.com/xvyimu/blog/actions/runs/29631593044)                                           |
-| 运营工程 | `96e0214` · 记录 `238f2c7` / `fa3e579` | CI [29632273522](https://github.com/xvyimu/blog/actions/runs/29632273522) · [ops plan](./ops-deferred-work-plan.md) |
-| CI 结论  | `success`                              | quality、bundle-analyze、e2e、deploy 全绿                                                                           |
-| 内容规模 | 14 篇文章、6 个项目、10 类 123 条收藏  | 本地 MDX/JSON                                                                                                       |
-| GSC/Bing | pending（需 Google 登录）              | 见 [ops-deferred-work-plan.md](./ops-deferred-work-plan.md) §10                                                     |
-| RUM p75  | pending（API 不可导出；控制台只读）    | Speed Insights `hasData=true`，无 CLI 明细                                                                          |
+| 项目     | 当前值                                 | 证据                                                                                                                    |
+| -------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| 生产域名 | `https://incca.ccwu.cc`                | production smoke + `check:ops-readiness --live`                                                                         |
+| 功能基线 | `ef77986` G2 数字花园上线              | CI 待 v3 ship 后刷新；上一可验证 CI [29631593044](https://github.com/xvyimu/blog/actions/runs/29631593044)（`a91a07d`） |
+| 运营工程 | `96e0214` · 记录 `238f2c7` / `fa3e579` | CI [29632273522](https://github.com/xvyimu/blog/actions/runs/29632273522) · [ops plan](./ops-deferred-work-plan.md)     |
+| CI 结论  | `success`                              | quality、bundle-analyze、e2e、deploy 全绿                                                                               |
+| 内容规模 | 20 篇文章、6 个项目、10 类 123 条收藏  | 本地 MDX/JSON                                                                                                           |
+| GSC/Bing | pending（需 Google 登录）              | 见 [ops-deferred-work-plan.md](./ops-deferred-work-plan.md) §10                                                         |
+| RUM p75  | pending（API 不可导出；控制台只读）    | Speed Insights `hasData=true`，无 CLI 明细                                                                              |
 
 生产证据是时间点快照。新 master 部署成功后更新本节，不要把历史报告中的提交号复制为当前状态。
 
@@ -32,15 +32,15 @@ bundle-analyze（并行、独立，不是 deploy 依赖）
 
 ## 3. 当前质量基线
 
-| 门禁                | 当前证据                                              |
-| ------------------- | ----------------------------------------------------- |
-| Vitest              | 81 files / 618 tests，2026-07-18 本地与 CI 通过       |
-| Playwright          | 5 files / 48 tests，最新 CI 通过                      |
-| TypeScript / ESLint | 最新 CI 通过                                          |
-| SEO / blur          | 最新 CI 通过                                          |
-| Production build    | 93 个生成条目，document routes 因 nonce 按需动态渲染  |
-| Lighthouse          | desktop preset，5 页 × 2 次，最新 CI 通过             |
-| Production smoke    | 首页、博客、项目、收藏、RSS、sitemap、search 检查通过 |
+| 门禁                | 当前证据                                                   |
+| ------------------- | ---------------------------------------------------------- |
+| Vitest              | 93 files / 685 tests，2026-07-21 本地通过（CI 待 v3 ship） |
+| Playwright          | 5 files / 48 tests，最新 CI 通过                           |
+| TypeScript / ESLint | 最新 CI 通过                                               |
+| SEO / blur          | 最新 CI 通过                                               |
+| Production build    | 93 个生成条目，document routes 因 nonce 按需动态渲染       |
+| Lighthouse          | desktop preset，5 页 × 2 次，最新 CI 通过                  |
+| Production smoke    | 首页、博客、项目、收藏、RSS、sitemap、search 检查通过      |
 
 2026-07-17 Node 22 CI production build 的 bundle 快照：
 

@@ -24,7 +24,11 @@ export default function BlogCard({ post }: { post: PostMeta }) {
         )}
       </div>
       <h3 className="blog__title group-hover:text-[var(--brand)] transition-colors duration-300">
-        <Link href={`/blog/${post.slug}`} className="after:absolute after:inset-0">
+        <Link
+          href={`/blog/${post.slug}`}
+          className="after:absolute after:inset-0"
+          transitionTypes={['blog-detail']}
+        >
           {post.title}
         </Link>
       </h3>
