@@ -29,7 +29,7 @@ export default async function BlogPage({
   searchParams,
 }: {
   searchParams?: Promise<BlogPageSearchParams>;
-} = {}) {
+}) {
   const requestedPage = parsePageParam((await searchParams)?.page);
   // Search uses GET /api/search — do not embed the full PostMeta index in the RSC payload.
   const { posts, totalPages, currentPage, totalPosts } = getPaginatedPosts(
