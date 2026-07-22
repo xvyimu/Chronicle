@@ -1,0 +1,3 @@
+# Orca worktree setup — Next/pnpm site. Secrets (.env*) are gitignored; copy from main checkout if needed.
+scripts:
+  setup: pnpm install
