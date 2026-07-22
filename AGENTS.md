@@ -18,6 +18,13 @@
 
 A personal blog built with Next.js 16.2 (App Router), React 19, and Tailwind CSS 4. Content is authored in MDX, stored in `content/blog/`. Projects data is in `data/projects.json`. Production reads `generated/content-snapshot/` by default (`CONTENT_BACKEND=snapshot`); after editing MDX run `pnpm content:build` and commit the snapshot.
 
+## 形态与栈（先读）
+
+- **SSOT：** [`docs/PROJECT.md`](./docs/PROJECT.md) — 产品形态（个人博客 Web）+ 唯一技术栈 + 防漂移
+- 实现分层：[`docs/architecture.md`](./docs/architecture.md)
+- 全局门闩：未定形态 / 栈未入档 → 禁业务编码（`~/CLAUDE.md` §8）
+- 小修沿用本栈；换栈先 ADR + 改 PROJECT.md
+
 ## Skill Routing
 
 - Routine project continuation: use `superpower`.
