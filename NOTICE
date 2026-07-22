@@ -1,0 +1,52 @@
+Chronicle Notices
+=================
+
+Product / repository
+--------------------
+  Name:       Chronicle / 西江月博客 (package: chronicle)
+  GitHub:     https://github.com/xvyimu/Chronicle
+  Production: https://incca.ccwu.cc
+  Copyright (c) 2026 雨天狂奔
+  License:    MIT — see LICENSE
+
+First-party sources
+-------------------
+  Application code lives under `src/`, content under `content/` and `data/`,
+  build/ops tooling under `scripts/`, and documentation under `docs/`.
+  Generated snapshots under `generated/` are build artifacts derived from
+  first-party content.
+
+Third-party software
+--------------------
+  Runtime and development dependencies are declared in `package.json` and
+  locked by the package manager lockfile. Each package retains its own
+  license; this NOTICE does not restate full license texts.
+
+  A curated summary of **direct** production and major tooling dependencies
+  (name, role, SPDX license id as declared by the package at pin time) is
+  maintained in:
+
+    docs/THIRD_PARTY.md
+
+  For a machine-readable inventory of the full tree, use the package manager
+  license report against the lockfile (e.g. `pnpm licenses list`). That report
+  is authoritative for transitive packages; `docs/THIRD_PARTY.md` is the
+  human-facing direct-deps digest for compliance review.
+
+Third-party services (runtime integrations)
+-------------------------------------------
+  The public site may load or call the following third-party services when
+  configured; they are not redistributed as source in this repository:
+
+  - Vercel platform (hosting, Analytics, Speed Insights) — Vercel terms
+  - Giscus (comments via GitHub Discussions) — giscus.app / GitHub terms
+  - Fonts / CDN assets only if explicitly added (default: prefer self-host)
+
+  Chronicle does not claim ownership of third-party trademarks or host
+  platforms.
+
+Attribution
+-----------
+  If you redistribute this Software, retain the MIT copyright notice in
+  LICENSE and this NOTICE (or an equivalent attribution that preserves
+  first-party copyright and third-party license obligations).
