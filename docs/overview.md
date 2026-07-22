@@ -15,26 +15,37 @@
 
 ## 当前维护文档
 
-| 文档                                                                                    | 负责内容                                                | 更新触发条件                   |
-| --------------------------------------------------------------------------------------- | ------------------------------------------------------- | ------------------------------ |
-| [README](../README.md)                                                                  | 项目入口、安装、功能、路由、命令                        | 依赖、路由、脚本或功能变化     |
-| [AGENTS](../AGENTS.md)                                                                  | AI 协作规则和项目约定                                   | 工具链、目录、测试或工作流变化 |
-| [GITHUB_IDENTITY](../GITHUB_IDENTITY.md)                                                | 仓库/产品/包名/生产域/许可身份卡                        | 身份字段变化                   |
-| [TODO](../TODO.md)                                                                      | 仅保留当前未完成或条件触发事项                          | 待办完成、取消或条件变化       |
-| [架构说明](./architecture.md)                                                           | 当前模块和运行时边界                                    | 模块、数据流、渲染或部署变化   |
-| [架构 As-Is](./ARCHITECTURE_ASIS.md)                                                    | L2 测绘事实（语言/API/偏离清单）                        | 栈或产品边界变化               |
-| [架构 Target](./ARCHITECTURE_TARGET.md)                                                 | L2 目标态与允许/禁止维护边界                            | 策略标签或禁止项变化           |
-| [第三方依赖摘要](./THIRD_PARTY.md)                                                      | 直接依赖 SPDX 摘要；全树以 lockfile 为准                | 直接依赖或合规口径变化         |
-| [公开 API](./API.md)                                                                    | `/api/search` · `/api/preview` · `/api/csp-report` 契约 | route、DTO、限流或缓存变化     |
-| [内容工作流](./content-workflow.md)                                                     | 文章、项目、收藏、RSS、content snapshot                 | schema、内容目录或检查脚本变化 |
-| [CSS 规范](./css-conventions.md)                                                        | token、BEM、shadcn、文件归属                            | token、CSS 文件或导入归属变化  |
-| [Cache Components 指南](./cache-components-migration.md)                                | 当前缓存和未来迁移门槛                                  | 缓存实现或外部数据源变化       |
-| [上线基线](./launch-baseline.md)                                                        | 最新生产证据和发布门禁                                  | 新生产基线或 smoke 变化        |
-| [延后运营计划](./ops-deferred-work-plan.md)                                             | GSC/Bing/RUM 与条件触发执行手册                         | 授权剧本或门槛变化             |
-| [性能基线](./performance-baseline.md)                                                   | CI 预算、实验室数据、RUM 目标                           | Lighthouse、bundle 或 p75 更新 |
-| [Agent 接手指南](./handoff-to-agent.md)                                                 | 当前状态、优先级和交接边界                              | 生产状态或主要待办变化         |
-| [架构升级 C 档计划](./architecture-upgrade-radical-c-2026-07-21.md)                     | Merge Train T0–T9（T1–T3 已合）                         | 列车状态变化                   |
-| [架构优化整合调研 v4 2026-07-21](./architecture-optimization-research-2026-07-21-v4.md) | 决策快照：双 API、交付优先评分等（v1–v3 同目录为历史）  | 交付策略或契约变化             |
+| 文档                                                                                    | 负责内容                                                             | 更新触发条件                   |
+| --------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------ |
+| [README](../README.md)                                                                  | 项目入口、安装、功能、路由、命令                                     | 依赖、路由、脚本或功能变化     |
+| [AGENTS](../AGENTS.md)                                                                  | AI 协作规则和项目约定                                                | 工具链、目录、测试或工作流变化 |
+| [GITHUB_IDENTITY](../GITHUB_IDENTITY.md)                                                | 仓库/产品/包名/生产域/许可身份卡                                     | 身份字段变化                   |
+| [TODO](../TODO.md)                                                                      | 仅保留当前未完成或条件触发事项                                       | 待办完成、取消或条件变化       |
+| [架构说明](./architecture.md)                                                           | 当前模块和运行时边界                                                 | 模块、数据流、渲染或部署变化   |
+| [架构 As-Is](./ARCHITECTURE_ASIS.md)                                                    | L2 测绘事实（语言/API/偏离清单）                                     | 栈或产品边界变化               |
+| [架构 Target](./ARCHITECTURE_TARGET.md)                                                 | L2 目标态与允许/禁止维护边界                                         | 策略标签或禁止项变化           |
+| [第三方依赖摘要](./THIRD_PARTY.md)                                                      | 直接依赖 SPDX 摘要；全树以 lockfile 为准                             | 直接依赖或合规口径变化         |
+| [公开 API](./API.md)                                                                    | `/api/search` · `/api/preview` · `/api/csp-report` 契约              | route、DTO、限流或缓存变化     |
+| [内容工作流](./content-workflow.md)                                                     | 文章、项目、收藏、RSS、content snapshot                              | schema、内容目录或检查脚本变化 |
+| [CSS 规范](./css-conventions.md)                                                        | token、BEM、shadcn、文件归属                                         | token、CSS 文件或导入归属变化  |
+| [Cache Components 指南](./cache-components-migration.md)                                | 当前缓存和未来迁移门槛                                               | 缓存实现或外部数据源变化       |
+| [上线基线](./launch-baseline.md)                                                        | 最新生产证据和发布门禁                                               | 新生产基线或 smoke 变化        |
+| [延后运营计划](./ops-deferred-work-plan.md)                                             | GSC/Bing/RUM 与条件触发执行手册                                      | 授权剧本或门槛变化             |
+| [性能基线](./performance-baseline.md)                                                   | CI 预算、实验室数据、RUM 目标                                        | Lighthouse、bundle 或 p75 更新 |
+| [Agent 接手指南](./handoff-to-agent.md)                                                 | 当前状态、优先级和交接边界                                           | 生产状态或主要待办变化         |
+| [架构升级 C 档计划](./architecture-upgrade-radical-c-2026-07-21.md)                     | Merge Train T0–T9（T1–T3 已合）                                      | 列车状态变化                   |
+| [架构优化整合调研 v4 2026-07-21](./architecture-optimization-research-2026-07-21-v4.md) | 决策快照：双 API、交付优先评分等（v1–v3 同目录为历史）               | 交付策略或契约变化             |
+| [SRI 本地 smoke / checker](./ops/sri-smoke.md)                                          | `check:sri-smoke` · `check:sri` · `test:sri`；本地 ENABLE_SRI on/off | SRI 脚本或本地验证步骤变化     |
+
+### SRI 本地验证命令（不改生产 env）
+
+| Command                                            | 作用                                                                    |
+| -------------------------------------------------- | ----------------------------------------------------------------------- |
+| `pnpm check:sri-smoke`                             | Offline 门闩（`next.config` 的 `ENABLE_SRI=1` + sha384）；可选 `--live` |
+| `pnpm check:sri -- --file <html> --expect on\|off` | 断言 `/_next/static/` script/stylesheet 上的 sha384 有/无               |
+| `pnpm test:sri`                                    | `scripts/check-sri.mjs` 单元测试                                        |
+
+本地 build on/off 步骤见 [ops/sri-smoke.md](./ops/sri-smoke.md)。**禁止**在未授权时切换生产 `ENABLE_SRI`。
 
 ## 决策与设计记录
 
