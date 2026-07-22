@@ -21,4 +21,22 @@ describe('postFrontmatterSchema', () => {
       postFrontmatterSchema.parse({ ...valid, updatedAt: '2026-13-01' }),
     ).toThrow();
   });
+
+  it('accepts optional seriesSlug with unicode and hyphens', () => {
+    const parsed = postFrontmatterSchema.parse({
+      ...valid,
+      series: '个人服务部署路线',
+      seriesSlug: '个人服务部署路线',
+    });
+    expect(parsed.seriesSlug).toBe('个人服务部署路线');
+  });
+
+  it('rejects seriesSlug with spaces or leading hyphens', () => {
+    expect(() =>
+      postFrontmatterSchema.parse({ ...valid, seriesSlug: 'bad slug' }),
+    ).toThrow();
+    expect(() =>
+      postFrontmatterSchema.parse({ ...valid, seriesSlug: '-leading' }),
+    ).toThrow();
+  });
 });

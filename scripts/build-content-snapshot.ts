@@ -6,7 +6,12 @@
  * Dev keeps `CONTENT_BACKEND=fs` by default and still reads drafts from disk.
  *
  * Usage: `pnpm content:build`
- * Env: `CONTENT_BUILD_FORCE=1` to rewrite even when contentHash is unchanged.
+ * Env:
+ *   `CONTENT_BUILD_FORCE=1` — rewrite even when contentHash is unchanged
+ *   `SOURCE_DATE_EPOCH=<unix>` — freeze manifest.builtAt for reproducible builds
+ *                                (CI still gates on contentHash via git diff of
+ *                                posts/meta/graph; builtAt alone does not fail the gate
+ *                                when contentHash matches — write is skipped).
  */
 import path from 'node:path';
 import { createPostRepository } from '@/lib/posts/repository';

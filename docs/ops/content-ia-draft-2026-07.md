@@ -1,7 +1,7 @@
 # Chronicle · 内容信息架构草案 · 2026-07
 
-> **性质**：W1 **设计冻结增量** · 不要求本波改代码  
-> **As-Is 路由依据**：`docs/ARCHITECTURE_ASIS.md` §2.3 · `src/lib/navigation.ts` · `src/lib/content-dirs.ts`  
+> **性质**：W1 设计冻结 + **W2 最小落地**（`seriesSlug` 可选字段与存量对齐）  
+> **As-Is 路由依据**：`docs/ARCHITECTURE_ASIS.md` §2.3 · `src/lib/navigation.ts` · `src/lib/content-dirs.ts` · `src/lib/series.ts`  
 > **Schema**：`src/lib/schemas/post-frontmatter.ts`  
 > **产品边界**：内容与作品集站 · **不是** AI SaaS（组合宪章）
 
@@ -41,36 +41,37 @@
 
 ## 3. 博文 frontmatter 约定（作者契约）
 
-| 字段                 | 必需 | 规则                                                      |
-| -------------------- | ---- | --------------------------------------------------------- |
-| `title`              | ✓    | 非空                                                      |
-| `description`        | ✓    | 非空 · SEO/卡片                                           |
-| `date`               | ✓    | `YYYY-MM-DD` 有效日历日                                   |
-| `updatedAt`          |      | 同上格式                                                  |
-| `tags`               |      | string[] · 默认 `[]` · 驱动标签页 + 可选分类推断          |
-| `category`           |      | 显式分类名；与 `TAG_TO_CATEGORY` 可并存                   |
-| `series`             |      | 专题**显示名**（中文可）；路由 slug 由 `slugifyTag(name)` |
-| `seriesOrder`        |      | 正整数；专题内排序主键，缺省靠后再按 date/slug            |
-| `published`          |      | 默认 `true`                                               |
-| `featured`           |      | 默认 `false`                                              |
-| `image`              |      | `http(s)://` 或 `/` 绝对路径                              |
-| `source` / `license` |      | 可选；本站常见 `CC-BY-4.0`                                |
+| 字段                 | 必需 | 规则                                                                                         |
+| -------------------- | ---- | -------------------------------------------------------------------------------------------- |
+| `title`              | ✓    | 非空                                                                                         |
+| `description`        | ✓    | 非空 · SEO/卡片                                                                              |
+| `date`               | ✓    | `YYYY-MM-DD` 有效日历日                                                                      |
+| `updatedAt`          |      | 同上格式                                                                                     |
+| `tags`               |      | string[] · 默认 `[]` · 驱动标签页 + 可选分类推断                                             |
+| `category`           |      | 显式分类名；与 `TAG_TO_CATEGORY` 可并存                                                      |
+| `series`             |      | 专题**显示名**（中文可）                                                                     |
+| `seriesSlug`         |      | **稳定** URL 段；优先于 `slugifyTag(series)`；字母/数字/中文与连字符；新连载**强烈建议**填写 |
+| `seriesOrder`        |      | 正整数；专题内排序主键，缺省靠后再按 date/slug                                               |
+| `published`          |      | 默认 `true`                                                                                  |
+| `featured`           |      | 默认 `false`                                                                                 |
+| `image`              |      | `http(s)://` 或 `/` 绝对路径                                                                 |
+| `source` / `license` |      | 可选；本站常见 `CC-BY-4.0`                                                                   |
 
 文件名惯例（现状）：`YYYY-MM-<kebab-slug>.mdx` · **路由 slug** 来自文件名解析（非 title slugify），写作时保持稳定 URL。
 
 ### 3.1 分类 vs 标签 vs 专题
 
-| 维度     | 语义                      | 路由                     | 派生                                         |
-| -------- | ------------------------- | ------------------------ | -------------------------------------------- |
-| **标签** | 细粒度主题词              | `/tags/[tag]`            | 文内 `tags[]` 聚合                           |
-| **分类** | 粗桶（前端/后端/DevOps…） | `/categories/[category]` | 显式 `category` 和/或 `TAG_TO_CATEGORY` 映射 |
-| **专题** | **有序连载**              | `/series/[series]`       | `series` + `seriesOrder`                     |
+| 维度     | 语义                      | 路由                     | 派生                                                                   |
+| -------- | ------------------------- | ------------------------ | ---------------------------------------------------------------------- |
+| **标签** | 细粒度主题词              | `/tags/[tag]`            | 文内 `tags[]` 聚合                                                     |
+| **分类** | 粗桶（前端/后端/DevOps…） | `/categories/[category]` | 显式 `category` 和/或 `TAG_TO_CATEGORY` 映射                           |
+| **专题** | **有序连载**              | `/series/[series]`       | `seriesSlug`（优先）或 `slugifyTag(series)` + `series` + `seriesOrder` |
 
-**作者指引（草案）：**
+**作者指引：**
 
 1. 每篇至少 1–3 个稳定标签；新标签需考虑是否补 `category-rules-data.ts`。
-2. 连载用 **同一** `series` 字符串 + 递增 `seriesOrder`（现例：「个人服务部署路线」1–5）。
-3. 专题名变更 = 新系列；避免 silent rename 导致 slug/SEO 断链（W2 若落地可加 alias 表，**W1 不实现**）。
+2. 连载用 **同一** `series` 显示名 + **同一** `seriesSlug` + 递增 `seriesOrder`（现例：「个人服务部署路线」1–5，`seriesSlug: 个人服务部署路线`）。
+3. **改显示名**：只改 `series`，**不要**改 `seriesSlug`（URL 保持）；组内 `seriesSlug` 冲突会在聚合时报错。
 4. 花园只消费 **已发布** 文的 wikilink 图；`[[slug|label]]` 指向稳定 slug。
 
 ## 4. 花园（Garden）
@@ -104,33 +105,36 @@
 
 **禁止**：把 API 扩成多租户 CMS 写接口（产品边界）。
 
-## 7. 路由与 SEO 约定（W1 冻结 · W2 可编码）
+## 7. 路由与 SEO 约定（W2 落地）
 
-1. **中文 path**：categories 直接用中文 segment（Next encode）；series 用 slugify 后的 ASCII/兼容段。
+1. **中文 path**：categories 直接用中文 segment（Next encode）；series 路由段 = **`seriesSlug` 或 `slugifyTag(series)`**（现专题仍为中文 segment，与历史 URL 兼容）。
 2. **canonical / OG**：走 `buildPageMetadata` + `NEXT_PUBLIC_SITE_URL`（生产必填）。
 3. **sitemap/robots**：App Router 生成；RSS 构建写入 `public/feed.*` 且 CI 要求已提交。
-4. **未发布**（`published: false`）：不得进列表/花园/搜索/sitemap（实现以 repository 过滤为准；W2 抽查用例）。
-5. **重定向**：旧 slug 迁移用 `next.config` redirects 表（按需 PR）；W1 不预置。
+4. **未发布**（`published: false`）：不得进列表/花园/搜索/sitemap（repository 过滤）。
+5. **重定向**：旧 slug / 旧 series 段迁移用 `next.config` redirects 表（按需 PR）；无预置 alias 表。
+6. **文章页专题徽章**：链到 `/series/${encodeURIComponent(seriesSlug)}`（`ArticleHeader`）。
 
-## 8. 目标 IA（W2+ 可选演进 · 本波仅列）
+## 8. 目标 IA（后续波）
 
-| 演进                                          | 动机          | 风险        | 建议波               |
-| --------------------------------------------- | ------------- | ----------- | -------------------- |
-| frontmatter `category` 必填或 CI lint         | 分类页空洞    | 存量补数据  | W2                   |
-| series slug **显式**字段（与显示名分离）      | rename 不断链 | 迁移脚本    | W2                   |
-| 内容类型枚举 `type: essay\|note\|project-log` | 花园/列表筛选 | 过度设计    | 仅有 ≥2 种体裁证据时 |
-| 性能预算挂钩关键路由                          | LCP           | 需 RUM 样本 | W3                   |
+| 演进                                          | 动机          | 风险        | 状态 / 建议波                       |
+| --------------------------------------------- | ------------- | ----------- | ----------------------------------- |
+| series slug **显式**字段（与显示名分离）      | rename 不断链 | 存量补字段  | **W2 已做**（可选字段 + 存量 5 篇） |
+| frontmatter `category` 必填或 CI lint         | 分类页空洞    | 存量补数据  | 仍可选 · 不强制本波                 |
+| 内容类型枚举 `type: essay\|note\|project-log` | 花园/列表筛选 | 过度设计    | 仅有 ≥2 种体裁证据时                |
+| 性能预算挂钩关键路由                          | LCP           | 需 RUM 样本 | W3                                  |
 
-## 9. 验收（对照 W1 题单）
+## 9. 验收
 
-| 项                        | 状态                                     |
-| ------------------------- | ---------------------------------------- |
-| 本草案存在                | ✓ `docs/ops/content-ia-draft-2026-07.md` |
-| 与现路由一致              | ✓ 基于 ASIS + `MAIN_NAV_ITEMS`           |
-| 无 Astro/Vue / 无大改代码 | ✓ 纯文档                                 |
+| 项                                   | 状态 |
+| ------------------------------------ | ---- |
+| 本约定文档与路由一致                 | ✓    |
+| `seriesSlug` 在 schema + series 聚合 | ✓ W2 |
+| 存量专题 frontmatter 对齐（5 篇）    | ✓ W2 |
+| 无 Astro/Vue / 无路由大重构          | ✓    |
 
 ## 10. 变更记录
 
-| 日期       | 变更        |
-| ---------- | ----------- |
-| 2026-07-23 | W1 草案首版 |
+| 日期       | 变更                                                                |
+| ---------- | ------------------------------------------------------------------- |
+| 2026-07-23 | W1 草案首版                                                         |
+| 2026-07-23 | W2：`seriesSlug` 落地；作者指引 / 路由约定同步；存量连载补显式 slug |

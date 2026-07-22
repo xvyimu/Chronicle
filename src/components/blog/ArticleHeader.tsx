@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import TagLink from '@/components/blog/TagLink';
 import type { PostFull } from '@/types';
+import { resolveSeriesSlug } from '@/lib/series';
 import { formatDate, slugifyTag } from '@/lib/utils';
 
 export default function ArticleHeader({
@@ -11,6 +12,7 @@ export default function ArticleHeader({
   category?: string;
 }) {
   const hasMetadataBadges = Boolean(post.series || category || post.tags.length > 0);
+  const seriesSlug = resolveSeriesSlug(post);
 
   return (
     <header className="article__header">
@@ -90,7 +92,16 @@ export default function ArticleHeader({
       </div>
       {hasMetadataBadges && (
         <div className="article__badges">
-          {post.series && <span className="article__badge">{post.series}</span>}
+          {post.series && seriesSlug ? (
+            <Link
+              href={`/series/${encodeURIComponent(seriesSlug)}`}
+              className="article__badge"
+            >
+              {post.series}
+            </Link>
+          ) : post.series ? (
+            <span className="article__badge">{post.series}</span>
+          ) : null}
           {category && (
             <Link
               href={`/categories/${encodeURIComponent(category)}`}

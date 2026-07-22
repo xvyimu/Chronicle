@@ -71,21 +71,22 @@ license: MIT
 
 ### 字段说明
 
-| 字段        | 类型     | 是否必填 | 说明                                                 |
-| ----------- | -------- | -------- | ---------------------------------------------------- |
-| title       | string   | 是       | 文章标题                                             |
-| description | string   | 是       | 摘要，用于列表与 SEO                                 |
-| date        | string   | 是       | 必须是有效的 YYYY-MM-DD 日期                         |
-| updatedAt   | string   | 否       | 文章有实质更新时填写，格式 YYYY-MM-DD，不应早于 date |
-| tags        | string[] | 否       | 标签列表，默认空数组                                 |
-| category    | string   | 否       | 显式分类；不填时会根据标签映射自动推断               |
-| series      | string   | 否       | 系列名，用于文章页展示和相关文章排序                 |
-| seriesOrder | number   | 否       | 系列内顺序，必须是正整数                             |
-| published   | boolean  | 否       | false 时表示草稿                                     |
-| featured    | boolean  | 否       | true 时可在首页等位置突出展示                        |
-| image       | string   | 否       | `http(s)://` URL 或 `/` 开头的 public 路径           |
-| source      | string   | 否       | 参考项目、原始资料或来源说明                         |
-| license     | string   | 否       | 内容或示例代码许可，例如 MIT、CC-BY-4.0、Original    |
+| 字段        | 类型     | 是否必填 | 说明                                                                                             |
+| ----------- | -------- | -------- | ------------------------------------------------------------------------------------------------ |
+| title       | string   | 是       | 文章标题                                                                                         |
+| description | string   | 是       | 摘要，用于列表与 SEO                                                                             |
+| date        | string   | 是       | 必须是有效的 YYYY-MM-DD 日期                                                                     |
+| updatedAt   | string   | 否       | 文章有实质更新时填写，格式 YYYY-MM-DD，不应早于 date                                             |
+| tags        | string[] | 否       | 标签列表，默认空数组                                                                             |
+| category    | string   | 否       | 显式分类；不填时会根据标签映射自动推断                                                           |
+| series      | string   | 否       | 专题**显示名**，用于文章页与相关排序                                                             |
+| seriesSlug  | string   | 否       | 专题 **URL 段**（稳定）；不填则 `slugifyTag(series)`。新连载建议显式填写，改显示名时不要改本字段 |
+| seriesOrder | number   | 否       | 系列内顺序，必须是正整数                                                                         |
+| published   | boolean  | 否       | false 时表示草稿                                                                                 |
+| featured    | boolean  | 否       | true 时可在首页等位置突出展示                                                                    |
+| image       | string   | 否       | `http(s)://` URL 或 `/` 开头的 public 路径                                                       |
+| source      | string   | 否       | 参考项目、原始资料或来源说明                                                                     |
+| license     | string   | 否       | 内容或示例代码许可，例如 MIT、CC-BY-4.0、Original                                                |
 
 ### 自动生成的内容索引
 
@@ -98,21 +99,27 @@ license: MIT
 
 因此新增文章时不需要手写这些字段，但要保证标题层级清晰、标签命名稳定。
 
-### 内容快照（生产读取）
+### 内容快照（生产读取 · 可重复构建门闩）
 
 生产默认从 **`generated/content-snapshot/`** 读文章与花园图（`CONTENT_BACKEND=snapshot`），不再在请求路径扫 MDX。
 
-修改 `content/blog/*.mdx` 后必须：
+修改 `content/blog/*.mdx`（或影响 frontmatter / 正文指纹的字段）后必须：
 
 ```bash
 pnpm content:build
 # 将 generated/content-snapshot/* 的 diff 一并提交（与 public/feed.* 同模式）
 ```
 
+| 环境变量                | 作用                                                                                    |
+| ----------------------- | --------------------------------------------------------------------------------------- |
+| `CONTENT_BUILD_FORCE=1` | 即使 `contentHash` 相同也重写文件                                                       |
+| `SOURCE_DATE_EPOCH`     | Unix 秒；冻结 `manifest.builtAt`（可重复时间戳）。hash 未变时仍 **skip write**，不漂 CI |
+
+- **contentHash** 覆盖：slug + date + title + series/seriesSlug/seriesOrder + category + tags + 正文 sha256（IA 元数据变更也会让 CI 要求重提 snapshot）。
 - 开发默认 `CONTENT_BACKEND=fs`：改 MDX 即时生效，无需每次重建快照。
 - 快照只含 **published !== false** 的文章；草稿不会进入生产快照。
 - 回滚：`CONTENT_BACKEND=fs` 或非 production `NODE_ENV`。
-- CI 会在 quality job 中重跑 `content:build` 并对 `generated/content-snapshot` 做 `git diff --exit-code`。
+- CI：`pnpm content:build` + `git diff --exit-code -- generated/content-snapshot`。
 
 ### 草稿机制
 

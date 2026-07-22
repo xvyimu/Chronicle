@@ -28,6 +28,19 @@ export const postFrontmatterSchema = z
     tags: z.array(z.string()).optional().default([]),
     category: z.string().min(1).optional(),
     series: z.string().min(1).optional(),
+    /**
+     * Explicit series URL segment (stable). When omitted, routes fall back to
+     * `slugifyTag(series)`. Prefer setting this when starting a series so renames
+     * of the display name do not break `/series/[series]` URLs.
+     */
+    seriesSlug: z
+      .string()
+      .min(1)
+      .regex(
+        /^[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*$/u,
+        'seriesSlug 仅允许字母/数字/中文与连字符，且不以连字符开头或结尾',
+      )
+      .optional(),
     seriesOrder: z.number().int().positive().optional(),
     published: z.boolean().optional().default(true),
     featured: z.boolean().optional().default(false),

@@ -12,6 +12,18 @@ export interface SeriesInfo {
   wordCount: number;
 }
 
+/**
+ * Resolve the stable series URL segment for a post.
+ * Prefer explicit `seriesSlug`; otherwise derive from display name via slugifyTag.
+ */
+export function resolveSeriesSlug(
+  post: Pick<PostMeta, 'series' | 'seriesSlug'>,
+): string | null {
+  if (post.seriesSlug) return post.seriesSlug;
+  if (post.series) return slugifyTag(post.series);
+  return null;
+}
+
 function sortSeriesPosts(posts: PostMeta[]): PostMeta[] {
   return [...posts].sort((a, b) => {
     const orderA = a.seriesOrder ?? Number.MAX_SAFE_INTEGER;
@@ -22,13 +34,25 @@ function sortSeriesPosts(posts: PostMeta[]): PostMeta[] {
   });
 }
 
+function resolveGroupSeriesSlug(name: string, posts: PostMeta[]): string {
+  const explicit = new Set(
+    posts.map((p) => p.seriesSlug).filter((s): s is string => Boolean(s)),
+  );
+  if (explicit.size > 1) {
+    const values = [...explicit].sort().join(', ');
+    throw new Error(`[series] conflicting seriesSlug for series "${name}": ${values}`);
+  }
+  if (explicit.size === 1) return [...explicit][0]!;
+  return slugifyTag(name);
+}
+
 function buildSeriesInfo(name: string, posts: PostMeta[]): SeriesInfo {
   const sortedPosts = sortSeriesPosts(posts);
   const dates = sortedPosts.map((post) => post.date).sort();
 
   return {
     name,
-    slug: slugifyTag(name),
+    slug: resolveGroupSeriesSlug(name, sortedPosts),
     count: sortedPosts.length,
     posts: sortedPosts,
     startDate: dates[0] ?? '',

@@ -3,7 +3,11 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { PostFull, PostMeta } from '@/types';
-import { buildContentSnapshotPayload, computeContentHash } from './build';
+import {
+  buildContentSnapshotPayload,
+  computeContentHash,
+  resolveSnapshotBuiltAt,
+} from './build';
 import { resolveContentBackend } from './paths';
 import { readContentSnapshot, resetContentSnapshotCacheForTests } from './read';
 import { writeContentSnapshot } from './write';
@@ -132,6 +136,41 @@ describe('buildContentSnapshotPayload', () => {
     const b = post('x', 'wxyz', { date: '2026-06-01', title: 'Same' });
     expect(a.content.length).toBe(b.content.length);
     expect(computeContentHash([a])).not.toBe(computeContentHash([b]));
+  });
+
+  it('changes contentHash when seriesSlug changes without body edit', () => {
+    const a = post('x', 'body', {
+      date: '2026-06-01',
+      title: 'Same',
+      series: '路线',
+      seriesSlug: 'route-a',
+    });
+    const b = post('x', 'body', {
+      date: '2026-06-01',
+      title: 'Same',
+      series: '路线',
+      seriesSlug: 'route-b',
+    });
+    expect(computeContentHash([a])).not.toBe(computeContentHash([b]));
+  });
+});
+
+describe('resolveSnapshotBuiltAt', () => {
+  it('prefers explicit builtAt', () => {
+    expect(
+      resolveSnapshotBuiltAt({
+        builtAt: '2026-07-01T00:00:00.000Z',
+        env: { SOURCE_DATE_EPOCH: '1' },
+      }),
+    ).toBe('2026-07-01T00:00:00.000Z');
+  });
+
+  it('uses SOURCE_DATE_EPOCH when set', () => {
+    expect(
+      resolveSnapshotBuiltAt({
+        env: { SOURCE_DATE_EPOCH: '1719792000' },
+      }),
+    ).toBe('2024-07-01T00:00:00.000Z');
   });
 });
 
