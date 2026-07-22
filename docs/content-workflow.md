@@ -321,7 +321,8 @@ Feed 先按文件名倒序取最近 20 个 MDX 候选，再过滤 `published: fa
 
 - 先写 frontmatter，再写正文
 - 标签命名尽量统一，例如不要混用 Next.js、NextJS
-- 有系列关系的文章填写相同的 series，相关文章排序会优先考虑它
+- 有系列关系的文章：填写**相同**的 `series` 显示名 + **相同**的 `seriesSlug`（URL 段）+ 递增 `seriesOrder`；改显示名时**不要**改 `seriesSlug`（见 `docs/ops/content-ia-draft-2026-07.md`）
+- 新连载强烈建议显式写 `seriesSlug`；缺省时回退 `slugifyTag(series)`，组内 slug 冲突会 fail closed
 - 大幅修订正文时补 updatedAt，小改错别字通常不需要
 - 如果文章会被首页推荐，再显式加上 featured: true
 
