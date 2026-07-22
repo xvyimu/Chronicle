@@ -6,6 +6,10 @@ overrides:
   qs: '6.15.2'
   tmp: '>=0.2.6'
   uuid: '>=11.1.1'
+  # GHSA-v2hh-gcrm-f6hx fast-uri host confusion (via stryker → ajv)
+  fast-uri: '>=3.1.4'
+  # GHSA-f88m-g3jw-g9cj sharp/libvips CVEs (via next)
+  sharp: '>=0.35.0'
   # GHSA-3jxr-9vmj-r5cp brace-expansion DoS
   brace-expansion@1: '1.1.16'
   brace-expansion@2: '2.0.2'
