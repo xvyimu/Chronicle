@@ -59,48 +59,58 @@ Revisit this ADR and move toward enabling SRI when **any** of the following beco
 
 ## Preview verification checklist (when triggered)
 
-Before enabling in production, run on a **preview branch** (not `master`):
+Before enabling in production, run on a **preview branch / Vercel Preview env**
+(not production `master` env). Do **not** set `ENABLE_SRI` on production until
+this checklist is green and the user explicitly authorizes a separate enable PR
+or Vercel Production env flip.
 
-1. **Enable the flag** — no manual `next.config.ts` edit needed. As of T3
-   (`feat/t3-csp-report-sri-preview`) the flag is env-gated: `next.config.ts`
-   spreads `sri: { algorithm: 'sha384' }` into `experimental` **only** when
-   `ENABLE_SRI=1`. Merging to `master` never enables it — CI/production build
-   with the var unset. Set it just for the trial build/preview deploy.
+### Operator checklist (copy/paste)
 
-2. **Production-shaped local build** (never commit feed pollution from localhost):
+| #   | Step                                 | Pass criteria                                                                                                      | Owner         |
+| --- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------ | ------------- |
+| 0   | Branch from current master           | clean working tree                                                                                                 | agent/user    |
+| 1   | Local SRI-on build                   | `integrity="sha384-…"` present under `.next`                                                                       | agent         |
+| 2   | Local SRI-off build                  | **zero** `integrity=` under `.next`                                                                                | agent         |
+| 3   | CSP / unit gates                     | `pnpm check:seo` + `pnpm test` green; CSP still nonce + no `unsafe-inline` for scripts                             | agent         |
+| 4   | Bundle budget                        | `pnpm exec tsx scripts/check-bundle-budget.ts` within budget                                                       | agent         |
+| 5   | E2E                                  | `pnpm test:e2e` green with SRI-on preview build if practical                                                       | agent         |
+| 6   | Vercel **Preview** env               | set `ENABLE_SRI=1` **only** on Preview (not Production); deploy preview URL                                        | **user auth** |
+| 7   | Browser DevTools on preview          | `<script>` / CSS links for `/_next/static/*` show `integrity`; document CSP still has nonce/`strict-dynamic`       | user/agent    |
+| 8   | Optional tamper smoke (preview only) | alter a static chunk hash in DevTools → browser blocks; never on production                                        | user/agent    |
+| 9   | CSP report noise                     | `/api/csp-report` does not flood from legitimate SRI loads                                                         | agent         |
+| 10  | Production enable                    | **separate** authorization: Production env `ENABLE_SRI=1` **or** dedicated PR + deploy; update this ADR → Accepted | **user**      |
 
-   ```bash
-   # PowerShell — flag on for this build only
-   $env:NEXT_PUBLIC_SITE_URL = 'https://incca.ccwu.cc'
-   $env:ENABLE_SRI = '1'
-   pnpm build
-   # search build output / .next for integrity=
-   rg -n "integrity=" .next -g "*.html"
-   Remove-Item Env:\ENABLE_SRI   # leave the flag off afterwards
-   ```
+### Commands (PowerShell)
 
-3. **CSP regression** — document routes still emit per-request nonce; no `unsafe-inline` introduced:
+```powershell
+# 1) SRI on — production-shaped local build (do not commit polluted feeds)
+$env:NEXT_PUBLIC_SITE_URL = 'https://incca.ccwu.cc'
+$env:ENABLE_SRI = '1'
+pnpm build
+rg -n "integrity=" .next -g "*.html"
+Remove-Item Env:\ENABLE_SRI
 
-   ```bash
-   pnpm check:seo
-   pnpm test
-   ```
+# 2) SRI off control
+$env:NEXT_PUBLIC_SITE_URL = 'https://incca.ccwu.cc'
+pnpm build
+# expect: no integrity= hits
 
-4. **Bundle budget**:
+# 3–5) gates
+pnpm check:seo
+pnpm test
+pnpm exec tsx scripts/check-bundle-budget.ts
+pnpm test:e2e
+```
 
-   ```bash
-   pnpm exec tsx scripts/check-bundle-budget.ts
-   ```
+### Vercel Preview only (blocked without user auth)
 
-5. **E2E**:
+1. Vercel Project → Settings → Environment Variables
+2. Add `ENABLE_SRI=1` scoped to **Preview** (not Production, not Development unless intentional)
+3. Redeploy a preview deployment from a non-master branch or Preview rebuild
+4. Open preview URL → View Source / DevTools → confirm `integrity=` on static assets
+5. Confirm Production still has **no** `ENABLE_SRI` until step 10
 
-   ```bash
-   pnpm test:e2e
-   ```
-
-6. **Deploy Vercel preview** (requires explicit user auth) and verify in browser DevTools that script tags carry `integrity` and CSP still has nonce. Simulate tamper only in preview (never production).
-
-If any step regresses, abandon the branch and record the failure here. After a successful preview, update this ADR Status to Accepted (enable prod) or keep Evaluation with notes.
+If any step regresses, abandon the enable attempt and record the failure here. After a successful preview, update this ADR Status to Accepted (enable prod) or keep Evaluation with notes.
 
 ## Local prep status (2026-07-21, updated T3)
 

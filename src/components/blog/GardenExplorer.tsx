@@ -31,7 +31,20 @@ function mapToRecord(
   return Object.fromEntries(map.entries());
 }
 
-export default function GardenExplorer({ graph }: { graph: GardenGraph }) {
+type GardenExplorerProps = {
+  graph: GardenGraph;
+  /**
+   * T2/T7 seed: precomputed force positions (snapshot positions.json).
+   * Used when no localStorage view is restored and filters are open (full graph).
+   * Client-side filter / relayout still recompute or merge as needed.
+   */
+  initialPositions?: Record<string, GardenViewPosition> | null;
+};
+
+export default function GardenExplorer({
+  graph,
+  initialPositions = null,
+}: GardenExplorerProps) {
   const reducedMotion = usePrefersReducedMotion();
   const [series, setSeries] = useState('');
   const [tag, setTag] = useState('');
@@ -106,7 +119,9 @@ export default function GardenExplorer({ graph }: { graph: GardenGraph }) {
     setHydrated(true);
   }, []);
 
-  // Recompute force layout when filters / motion / graph change
+  // Seed / recompute force layout when filters / motion / graph change.
+  // Prefer T2 snapshot seeds on the open (unfiltered) graph to avoid a main-thread
+  // force pass on first paint; filtered views still recompute for the subset.
   useEffect(() => {
     if (!hydrated) return;
     if (reducedMotion || filtered.nodes.length === 0) {
@@ -127,13 +142,42 @@ export default function GardenExplorer({ graph }: { graph: GardenGraph }) {
       });
       return;
     }
+
+    const unfiltered = !series.trim() && !tag.trim();
+    const seed =
+      unfiltered && initialPositions && Object.keys(initialPositions).length > 0
+        ? initialPositions
+        : null;
+
+    if (seed) {
+      const seeded = new Map<string, GardenViewPosition>();
+      for (const n of filtered.nodes) {
+        const pos = seed[n.slug];
+        if (pos && Number.isFinite(pos.x) && Number.isFinite(pos.y)) {
+          seeded.set(n.slug, pos);
+        }
+      }
+      // Complete seed → no main-thread force pass (T7). Incomplete → fill gaps.
+      if (seeded.size === filtered.nodes.length) {
+        setPositions(seeded);
+        return;
+      }
+      const layout = layoutForceGraph(
+        filtered.nodes.map((n) => n.slug),
+        filtered.edges.map((e) => ({ source: e.from, target: e.to })),
+        { width: WIDTH, height: HEIGHT, iterations: 140 },
+      );
+      setPositions(mergePositions(layout, seed));
+      return;
+    }
+
     const layout = layoutForceGraph(
       filtered.nodes.map((n) => n.slug),
       filtered.edges.map((e) => ({ source: e.from, target: e.to })),
       { width: WIDTH, height: HEIGHT, iterations: 140 },
     );
     setPositions(layout);
-  }, [filtered, reducedMotion, hydrated]);
+  }, [filtered, reducedMotion, hydrated, series, tag, initialPositions]);
 
   useEffect(() => {
     if (focus && !filtered.nodes.some((n) => n.slug === focus)) {

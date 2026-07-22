@@ -5,9 +5,12 @@ import { resolveContentBackend } from '@/lib/content-snapshot/paths';
 import {
   getSnapshotGardenGraph,
   getSnapshotPostsMeta,
+  getSnapshotPositions,
 } from '@/lib/content-snapshot/read';
+import type { GardenPosition } from '@/lib/content-snapshot/types';
 import { postRepository } from './repository';
 import { extractWikilinks } from './wikilink';
+import { layoutForceGraph } from './force-layout';
 
 export type LinkGraphPost = {
   slug: string;
@@ -303,6 +306,31 @@ export function getBacklinks(slug: string): PostMeta[] {
 /** Full garden adjacency for secondary UI (nodes + directed edges). */
 export function getGardenGraph(): GardenGraph {
   return defaultGraph.getGardenGraph();
+}
+
+/**
+ * Precomputed garden node positions (T2 snapshot / T7 client seed).
+ * Snapshot backend reads `positions.json`; fs backend recomputes the same
+ * deterministic force layout so local dev stays aligned with content:build.
+ */
+export function getGardenPositions(): Record<string, GardenPosition> {
+  if (resolveContentBackend() === 'snapshot') {
+    return getSnapshotPositions();
+  }
+
+  const graph = defaultGraph.getGardenGraph();
+  const layout = layoutForceGraph(
+    graph.nodes.map((n) => n.slug),
+    graph.edges.map((e) => ({ source: e.from, target: e.to })),
+    { width: 640, height: 420, iterations: 140 },
+  );
+  const positions: Record<string, GardenPosition> = {};
+  for (const [slug, pos] of [...layout.entries()].sort((a, b) =>
+    a[0].localeCompare(b[0]),
+  )) {
+    positions[slug] = { x: pos.x, y: pos.y };
+  }
+  return positions;
 }
 
 /** Outbound + inbound neighbors for article fold panel. */

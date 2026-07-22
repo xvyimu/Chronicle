@@ -35,6 +35,7 @@ export type { WikilinkMatch } from './wikilink';
 export {
   getBacklinks,
   getGardenGraph,
+  getGardenPositions,
   getNeighbors,
   assertWikilinksValid,
   buildBacklinkIndex,

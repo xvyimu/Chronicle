@@ -25,10 +25,10 @@
 | 项目           | 当前证据                                                                                                                               |
 | -------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | 生产域名       | `https://incca.ccwu.cc`                                                                                                                |
-| origin/master  | **`078a056`**（PR#15 T3 CSP report + SRI 门控；含 #14 T1+T2、#16 软脱离）                                                              |
+| origin/master  | **`6b4937b`**（PR#17 文档 hygiene；含 #14 T1+T2、#15 T3 CSP/SRI 门控、#16 软脱离）                                                     |
 | GitHub Actions | master CI success · deploy success（run 见 Actions；近期 [29853631322](https://github.com/xvyimu/Chronicle/actions/runs/29853631322)） |
 | 内容规模       | 20 篇文章、6 个项目、10 类 123 条收藏链接                                                                                              |
-| Vitest         | 95 files / 708 tests（2026-07-22；含 csp-report）                                                                                      |
+| Vitest         | 95 files / 709 tests（2026-07-22；含 garden seed + csp-report）                                                                        |
 | Playwright     | 5 files / 49+ tests（含 CSP 上报冒烟）                                                                                                 |
 | Node / pnpm    | Node 22.x / pnpm 11.8.0；本机 Node 24 仅 warning                                                                                       |
 | 延后运营       | GSC/Bing/RUM pending；手册 `docs/ops-deferred-work-plan.md`；`pnpm check:ops-readiness`                                                |
@@ -81,8 +81,9 @@
 
 - GSC/Bing：用户禁止登录，暂停属性验证与 sitemap 提交；授权后按 [ops-deferred-work-plan.md](./ops-deferred-work-plan.md) 执行。
 - Speed Insights：真实 p75 需要授权 token 和足够样本，不能用实验室 Lighthouse 代替。
-- 外部搜索、正文图 LQIP、Cache Components 和 CSS 深度下沉均有明确规模或素材触发条件，见 [TODO](../TODO.md) 与 `pnpm check:ops-readiness`。
-- SRI 生产启用与 PPR 实验分 PR，禁止同周强上。
+- 外部搜索、正文图 LQIP、Cache Components 和 CSS 深度下沉均有明确规模或素材触发条件，见 [TODO](../TODO.md) 与 `pnpm check:ops-readiness`。T4 已 ADR：**维持 Fuse**（`docs/adr/2026-07-22-search-engine-keep-fuse.md`）。
+- SRI：本地门控已验证；**Vercel Preview → 生产** 清单见 ADR `2026-07-21-sri-over-nonce-evaluation.md`；与 PPR 分 PR。
+- Giscus：GitHub Discussions 已开；默认 `xvyimu/Chronicle` / `R_kgDOTBAmxA` / Announcements `DIC_kwDOTBAmxM4C_mwW`。生产 env 若残留旧仓名需用户在 Vercel 改。
 - 延后事项不得伪装成无条件工程任务；就绪状态以 `check:ops-readiness` 为准。
 
 ## 7. 文档规则

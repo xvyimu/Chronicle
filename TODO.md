@@ -1,7 +1,7 @@
 # 西江月博客 · 当前待办
 
 > 状态：**工程侧可无条件推进的事项已关闭**；仅剩外部账号或条件触发。  
-> 更新：2026-07-22（master **`078a056`** · PR#14 T1+T2 · PR#15 T3 CSP/SRI 门控 · PR#16 软脱离 · package `chronicle`）  
+> 更新：2026-07-22（master **`6b4937b`** · PR#14–#17 · package `chronicle`）  
 > 生产：`https://incca.ccwu.cc`  
 > 手册：[ops-deferred-work-plan.md](./docs/ops-deferred-work-plan.md)  
 > 自动检查：`pnpm check:ops-readiness`（可选 `-- --live`）  
@@ -25,8 +25,9 @@
 - [ ] **正文图 LQIP**：`public/images/blog/**` 有图 → `pnpm gen:blur && pnpm check:blur`。
 - [ ] **prose/article-ui 下沉**：Coverage + 层叠方案 + ADR。
 - [ ] **Cache Components**：外部数据/ISR/失效需求 + 迁移指南。
-- [ ] **SRI 生产启用**：`ENABLE_SRI=1` 已门控；需 Vercel preview 验证 + 单独授权（见 ADR `2026-07-21-sri-over-nonce-evaluation.md`）。
-- [ ] **G2 可选**：更多布局算法 / 导出 PNG（兴奋型，非阻塞）。
+- [ ] **SRI 生产启用**：`ENABLE_SRI=1` 已门控；按 ADR checklist 先 **Vercel Preview**，再生产（单独授权）。
+- [ ] **Giscus 生产 env**：代码默认 `xvyimu/Chronicle` + 已核对 repoId/categoryId；若 Vercel 仍写旧仓名 `xvyimu/blog`，改三项 `NEXT_PUBLIC_GISCUS_*` 后 redeploy（勿提交密钥）。
+- [ ] **G2 / T7 余量**：Worker · 径向/时间线 · 导出 PNG/SVG（兴奋型，非阻塞；预坐标 seed 已接线）。
 
 ## 已完成索引（近期）
 
@@ -36,6 +37,7 @@
 | T2 content 快照   | `generated/content-snapshot/` · `CONTENT_BACKEND=snapshot` | PR#14             |
 | 软脱离身份        | npm `chronicle` · 无 former-name 叙事                      | PR#16 · `5c629e7` |
 | T3 CSP 上报 + SRI | collect-only `/api/csp-report` · `ENABLE_SRI` 默认关       | PR#15 · `078a056` |
+| 文档 hygiene      | archive 历史报告 · 基线刷新 · format:docs 覆盖             | PR#17 · `6b4937b` |
 | 数字花园 G0–G3    | wikilink / 反链 / `/garden` / popover                      | 已合 master       |
 | 逻辑前后端分层    | `src/server` + 边界测试                                    | 历史 run          |
 | 延后运营工程化    | 就绪门禁 + 手册                                            | 历史 run          |

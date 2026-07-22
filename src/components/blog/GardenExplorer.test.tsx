@@ -90,4 +90,21 @@ describe('GardenExplorer hover neighbor highlight', () => {
       'garden-explorer__node--dim',
     );
   });
+
+  it('uses initialPositions seed without waiting on force recompute', async () => {
+    const initialPositions = {
+      a: { x: 100, y: 110 },
+      b: { x: 200, y: 210 },
+      c: { x: 300, y: 310 },
+    };
+    const { container } = render(
+      <GardenExplorer graph={graph} initialPositions={initialPositions} />,
+    );
+    await waitFor(() =>
+      expect(container.querySelector('circle[aria-label="Node A"]')).not.toBeNull(),
+    );
+    const a = circleByLabel(container, 'Node A');
+    // Nodes are positioned via <g transform="translate(x,y)">, not cx/cy.
+    expect(a.parentElement?.getAttribute('transform')).toBe('translate(100,110)');
+  });
 });

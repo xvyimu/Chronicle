@@ -4,6 +4,7 @@ import {
   getAllPosts as readAllPosts,
   getBacklinks as readBacklinks,
   getGardenGraph as readGardenGraph,
+  getGardenPositions as readGardenPositions,
   getNeighbors as readNeighbors,
   getPaginatedPosts as readPaginatedPosts,
   getPostBySlug as readPostBySlug,
@@ -62,6 +63,9 @@ export const getBacklinks = readBacklinks;
 
 /** 数字花园次级页用：可见笔记节点 + 有向 wikilink 边。 */
 export const getGardenGraph = readGardenGraph;
+
+/** 数字花园力导向预坐标（snapshot positions.json / fs 确定性重算）。 */
+export const getGardenPositions = readGardenPositions;
 
 /** 文章页折叠邻接：出边 + 入边。 */
 export const getNeighbors = readNeighbors;

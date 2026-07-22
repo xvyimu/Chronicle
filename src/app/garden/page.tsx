@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { getGardenGraph } from '@/server/content';
+import { getGardenGraph, getGardenPositions } from '@/server/content';
 import { buildPageMetadata } from '@/lib/metadata';
 import GardenExplorer from '@/components/blog/GardenExplorer';
 import './garden.css';
@@ -14,6 +14,8 @@ export const metadata: Metadata = buildPageMetadata({
 
 export default function GardenPage() {
   const graph = getGardenGraph();
+  // T7: seed client force layout with T2 snapshot positions (or fs recompute).
+  const initialPositions = getGardenPositions();
 
   return (
     <section className="section garden-page">
@@ -32,7 +34,7 @@ export default function GardenPage() {
           </p>
         </header>
 
-        <GardenExplorer graph={graph} />
+        <GardenExplorer graph={graph} initialPositions={initialPositions} />
 
         <p className="garden-page__foot">
           <Link href="/blog">← 返回博客</Link>

@@ -1,9 +1,9 @@
 # 架构升级总计划 · 档 C 激进重构（表单决议）
 
-> **状态**：规划 SSOT（2026-07-21）· **未开始大规模实现**  
+> **状态**：规划 SSOT（2026-07-21）· **T1–T3 已合 master** · tip 见 `docs/handoff-to-agent.md`  
 > **表单**：升级野心 = **C**；渲染/安全/内容/体验 **全选**  
-> **生产锚点**：`5eef5de` · 放开硬约束仅适用于本计划窗口；每列车合入仍需单独授权  
-> **路径**：`D:\blog`
+> **生产锚点**：以 handoff / launch-baseline 为准（2026-07-22：`6b4937b`）  
+> **路径**：`D:\Chronicle`（junction `D:\blog`）
 
 ---
 
@@ -66,52 +66,53 @@ Git content/ (SSOT, PR 写作)
 
 ## 4. 列车编排（Merge Train）
 
-### T0 · 宪章与护栏（0.5–1 天）· **当前应执行**
+### T0 · 宪章与护栏（0.5–1 天）· **已收口**
 
 - [x] 本文件落盘
-- [ ] ADR：`2026-07-21-radical-upgrade-charter.md`（目标/非目标/回滚）
-- [ ] 风险登记与成功度量（构建时长、TTFB、INP、API p95、CSP 报告量）
-- [ ] 明确：**每列车单独 PR + 可 revert**；生产部署另授权
+- [x] ADR：`2026-07-21-radical-upgrade-charter.md`（目标/非目标/回滚）
+- [x] 成功度量方向与回滚矩阵（本文件 §5–§6；RUM p75 仍外部阻塞）
+- [x] 明确：**每列车单独 PR + 可 revert**；生产部署另授权
 
-### T1 · 体验与契约速赢（2–4 天）· 低破坏
+### T1 · 体验与契约速赢（2–4 天）· 低破坏 · **已合**
 
 不依赖 monorepo，立刻改善生产质量：
 
-1. **E1** popover：视口防裁切、对比度、`aria`、触屏文案 — **本地已实现**
-2. **preview 契约**：与 search 对齐 `error`+`code`；try/catch 500；进程限流 120/60s — **本地已实现**
-3. **e2e**：文章页 wikilink hover 冒烟 — **用例已写**（`e2e/blog.spec.ts`）
-4. 文档：`API.md` 错误码对称 — **已更新**
+1. **E1** popover：视口防裁切、对比度、`aria`、触屏文案 — **已合**
+2. **preview 契约**：与 search 对齐 `error`+`code`；try/catch 500；进程限流 120/60s — **已合**
+3. **e2e**：文章页 wikilink hover 冒烟 — **已合**（`e2e/blog.spec.ts`）
+4. 文档：`API.md` 错误码对称 — **已合**
 
-**验收**：单元 **700** 测绿（含 T2）；e2e 含 popover（CI/本地 `pnpm test:e2e`）；生产 CSP 无新增违规。  
-**状态（2026-07-21）**：代码与单测完成，待 commit / push / 合入授权。
+**验收**：单元 **708**/95 绿（2026-07-22）；e2e 含 popover；生产 CSP 无新增违规。  
+**状态**：**PR#14 MERGED**。
 
-### T2 · 内容计算左移（1–2 周）· 中破坏
+### T2 · 内容计算左移（1–2 周）· 中破坏 · **已合**
 
-1. `pnpm content:build` → `generated/content-snapshot/` — **本地已实现**
-2. runtime `CONTENT_BACKEND`（prod 默认 snapshot / dev·test 默认 fs）— **已实现**
-3. CI rebuild + `git diff --exit-code generated/content-snapshot` — **已写入 ci.yml**
-4. 搜索经 postRepository 读固化 meta — **已实现**
+1. `pnpm content:build` → `generated/content-snapshot/` — **已合**
+2. runtime `CONTENT_BACKEND`（prod 默认 snapshot / dev·test 默认 fs）— **已合**
+3. CI rebuild + `git diff --exit-code generated/content-snapshot` — **已合**
+4. 搜索经 postRepository 读固化 meta — **已合**
 
-**验收**：`pnpm content:build` 幂等；700 测绿；旗标可回滚 fs。
-**状态（2026-07-21）**：在 `feat/t1-popover-preview-hardening`，待 commit/push。
+**验收**：`pnpm content:build` 幂等；旗标可回滚 fs。  
+**状态**：**PR#14 MERGED**（与 T1 同列车）。
 
-### T3 · 安全增强（1 周，可与 T2 后半并行）· 中高破坏
+### T3 · 安全增强（1 周）· 中高破坏 · **门控已合；生产 SRI 未开**
 
-1. CSP **`report-to` / report-uri 端点**（收集 only）
-2. 分支 enable **`experimental.sri: { algorithm: 'sha384' }`**
-3. Preview：完整性属性抽查 + e2e + LH
-4. **通过后** 再生产 enable SRI（独立 PR）
-5. 禁止同 PR 改 CSP 放宽
+1. CSP **`report-to` / report-uri 端点**（收集 only）— **已合** PR#15
+2. `ENABLE_SRI=1` 门控 `experimental.sri: { algorithm: 'sha384' }` — **已合**；默认关
+3. 本地 on/off 构建已验证；**Vercel Preview 仍需用户授权**
+4. 生产 enable SRI = **独立授权**（ADR checklist）
+5. 禁止同 PR 改 CSP 放宽 — 守住
 
-**验收**：预览 HTML 含 integrity；CSP 仍 nonce；无大规模 report 噪音误报。
+**验收**：预览 HTML 含 integrity；CSP 仍 nonce；无大规模 report 噪音误报。  
+**状态**：工程门控 **PR#15**；生产 SRI **未启用**。
 
-### T4 · 搜索阶梯评估（3–5 天）· 中破坏
+### T4 · 搜索阶梯评估 · **已决策：维持 Fuse**
 
-1. 基准：固化 Fuse p95（本地+预览）
-2. Spike：Orama 与 Pagefind 各一天
-3. 中文查询集（标题/标签/正文）对比
-4. ADR 选定 **单一** 后继引擎或「维持 Fuse」
-5. 若换引擎：双跑影子流量一周（可选）
+1. 现状：snapshot 固化 search docs + Fuse WeakMap（n=20）
+2. Orama / Pagefind 全量 spike **不做**（规模门槛未到）
+3. 中文查询集 / 双跑 **延后** 至 re-open 触发
+4. ADR：**`2026-07-22-search-engine-keep-fuse.md` Accepted**（维持 Fuse）
+5. 重开条件：≥200 文或 p95 证据（见 ADR）
 
 ### T5 · libSQL 只读副本（1–2 周）· 高破坏
 
@@ -130,13 +131,13 @@ Git content/ (SSOT, PR 写作)
 3. 仅 1–2 条路由试验
 4. 失败则 **整支丢弃**，不污染 master
 
-### T7 · 花园进阶（与 T2 坐标衔接，3–5 天）
+### T7 · 花园进阶（与 T2 坐标衔接）· **部分完成**
 
-1. force layout **Worker**
-2. 使用 T2 预坐标，客户端只拖拽覆盖
-3. 多布局：力导向 / 径向 / 时间线（配置）
-4. 导出 PNG/SVG（client）
-5. 节点规模阈值文档（>200 再谈 Canvas）
+1. force layout **Worker** — 未做（n=20 主线程可接受；seed 后首屏不再全量迭代）
+2. 使用 T2 预坐标，客户端只拖拽覆盖 — **已做**（`getGardenPositions` + `GardenExplorer.initialPositions`）
+3. 多布局：力导向 / 径向 / 时间线 — 未做（兴奋型，见 TODO G2）
+4. 导出 PNG/SVG（client）— 未做（兴奋型）
+5. 节点规模阈值：>200 再谈 Canvas / Worker — 记入 TODO
 
 ### T8 · C 档结构（可选 monorepo，2–4 周）
 
@@ -191,9 +192,10 @@ packages/search   # engine adapters
 
 ## 7. 建议立即执行的下一步（需你点头）
 
-**推荐启动顺序**：`T0 收尾 ADR` → **`T1` 速赢** → `T2` 快照。
+**当前（2026-07-22）**：T0–T4 决策面已收口；T7 预坐标已接线。  
+下一可选：Vercel Preview 跑 SRI checklist · T7 Worker/多布局（兴奋型）· T5 libSQL（高破坏，另授权）。
 
-不推荐一上来 monorepo 或生产 SRI+PPR 同周落地。
+不推荐 monorepo 或生产 SRI+PPR 同周落地。
 
 ---
 
