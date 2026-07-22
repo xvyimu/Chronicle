@@ -13,11 +13,16 @@ export const metadata: Metadata = buildPageMetadata({
 export default function LinksPage() {
   const linkCategories = getAllLinkCategories();
 
+  const totalLinks = linkCategories.reduce(
+    (sum, category) => sum + category.items.length,
+    0,
+  );
+
   return (
     <PageSection
       eyebrow="Links"
       title="导航"
-      subtitle="精选技术文档、VPS 官网、开发工具和趣味小站"
+      subtitle={`${linkCategories.length} 类 · ${totalLinks} 个站点 · 精选技术文档、VPS 官网、开发工具和趣味小站`}
     >
       <LinksDirectory categories={linkCategories} />
     </PageSection>

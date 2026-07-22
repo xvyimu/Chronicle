@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getGardenGraph, getGardenPositions } from '@/server/content';
 import { buildPageMetadata } from '@/lib/metadata';
+import PageSection from '@/components/layout/PageSection';
 import GardenExplorer from '@/components/blog/GardenExplorer';
 import './garden.css';
 
@@ -18,30 +19,29 @@ export default function GardenPage() {
   const initialPositions = getGardenPositions();
 
   return (
-    <section className="section garden-page">
-      <div className="section__inner garden-page__inner">
-        <header className="garden-page__header">
-          <p className="garden-page__label">Digital garden</p>
-          <h1 className="garden-page__title">笔记邻接</h1>
-          <p className="garden-page__desc">
-            基于正文与延伸阅读中的 <code className="garden-page__code">[[wikilink]]</code>
-            。支持专题/标签筛选与力导向布局；
-            <code className="garden-page__code">prefers-reduced-motion</code>{' '}
-            时仅保留列表。
-          </p>
-          <p className="garden-page__meta">
-            全库 {graph.nodes.length} 篇 · {graph.edges.length} 条有向边
-          </p>
-        </header>
-
-        <GardenExplorer graph={graph} initialPositions={initialPositions} />
-
-        <p className="garden-page__foot">
-          <Link href="/blog">← 返回博客</Link>
-          {' · '}
-          <Link href="/series">专题</Link>
-        </p>
-      </div>
-    </section>
+    <PageSection
+      eyebrow="Garden"
+      title="数字花园"
+      subtitle={
+        <>
+          基于正文与延伸阅读中的 <code className="garden-page__code">[[wikilink]]</code>
+          。支持专题/标签筛选与力导向布局；
+          <code className="garden-page__code">prefers-reduced-motion</code> 时仅保留列表。
+          全库 {graph.nodes.length} 篇 · {graph.edges.length} 条有向边。
+        </>
+      }
+      action={
+        <div className="section__action-group">
+          <Link href="/blog" className="section__link">
+            博客
+          </Link>
+          <Link href="/series" className="section__link">
+            专题
+          </Link>
+        </div>
+      }
+    >
+      <GardenExplorer graph={graph} initialPositions={initialPositions} />
+    </PageSection>
   );
 }

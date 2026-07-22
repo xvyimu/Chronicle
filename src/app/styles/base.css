@@ -120,19 +120,21 @@ body {
 .header__nav {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
+  flex-wrap: nowrap;
 }
 
 .header__link {
   position: relative;
   display: inline-flex;
   align-items: center;
-  min-height: 38px;
-  padding: 8px 13px;
+  min-height: 36px;
+  padding: 7px 10px;
   border-radius: var(--radius-full);
   color: var(--text-soft);
-  font-size: 0.9rem;
+  font-size: 0.86rem;
   font-weight: 650;
+  white-space: nowrap;
   transition:
     background var(--transition-fast),
     color var(--transition-fast),
@@ -142,9 +144,9 @@ body {
 .header__link::after {
   content: '';
   position: absolute;
-  left: 14px;
-  right: 14px;
-  bottom: 5px;
+  left: 12px;
+  right: 12px;
+  bottom: 4px;
   height: 1px;
   background: currentColor;
   opacity: 0;
@@ -168,6 +170,7 @@ body {
 
 .header__link--active {
   color: var(--brand-hover);
+  background: color-mix(in srgb, var(--brand-soft) 70%, transparent);
 }
 
 .header__actions {

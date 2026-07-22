@@ -1,17 +1,18 @@
 /* ============================================================
    Links directory · personal collection index
+   Aligns with PageSection (max-width 1160) + card/archive tokens.
    ============================================================ */
 
 .links-directory {
-  max-width: 1080px;
-  margin: 0 auto;
+  /* Fill the section shell — do not nest a second max-width */
+  width: 100%;
 }
 
 .links-directory__summary {
   display: grid;
-  grid-template-columns: repeat(2, minmax(120px, 150px)) minmax(0, 1fr);
-  gap: 12px;
-  margin-bottom: 18px;
+  grid-template-columns: repeat(2, minmax(112px, 140px)) minmax(0, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
 }
 
 .links-directory__metric,
@@ -19,13 +20,13 @@
 .links-directory__card,
 .links-directory__tools {
   border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--surface) 76%, transparent);
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
   box-shadow: var(--shadow-xs);
 }
 
 .links-directory__metric {
   border-radius: var(--radius);
-  padding: 16px;
+  padding: 18px 16px;
 }
 
 .links-directory__metric span,
@@ -37,14 +38,26 @@
   height: auto;
 }
 
+.links-directory__metric span {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .links-directory__metric strong {
   display: block;
-  margin-top: 7px;
+  margin-top: 8px;
   color: var(--text);
   font-family: var(--font-display), Georgia, serif;
-  font-size: 2rem;
+  font-size: clamp(1.75rem, 3vw, 2.1rem);
   font-weight: 500;
   line-height: 1;
+}
+
+.links-directory__metric small {
+  display: block;
+  margin-top: 6px;
 }
 
 .links-directory__nav {
@@ -81,7 +94,7 @@
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 16px;
-  margin-bottom: 46px;
+  margin-bottom: 40px;
   border-radius: var(--radius);
   padding: 14px;
 }
@@ -162,7 +175,7 @@
 
 .links-directory__sections {
   display: grid;
-  gap: 54px;
+  gap: 48px;
 }
 
 .links-directory__category {
@@ -175,27 +188,29 @@
   border-bottom: 1px solid var(--border);
 }
 
+/* Match section__eyebrow + section__title scale (one step down for h3) */
 .links-directory__category h3 {
-  margin-top: 8px;
+  margin-top: 10px;
   color: var(--text);
   font-family: var(--font-display), Georgia, serif;
-  font-size: clamp(1.65rem, 3vw, 2.6rem);
+  font-size: clamp(1.55rem, 2.8vw, 2.15rem);
   font-weight: 500;
   letter-spacing: 0;
-  line-height: 1;
+  line-height: 1.1;
 }
 
 .links-directory__category p {
-  max-width: 680px;
+  max-width: 660px;
   margin-top: 10px;
-  color: var(--text-soft);
+  color: var(--text-dim);
+  font-size: 0.94rem;
   line-height: 1.75;
 }
 
 .links-directory__grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+  gap: 18px; /* same as .cards */
 }
 
 .links-directory__item {
@@ -209,7 +224,7 @@
   flex-direction: column;
   gap: 10px;
   border-radius: inherit;
-  padding: 18px;
+  padding: 20px 18px;
   transition:
     background var(--transition-fast),
     border-color var(--transition-fast),
@@ -218,7 +233,7 @@
 }
 
 .links-directory__card:hover {
-  border-color: var(--brand);
+  border-color: var(--border-strong);
   background: var(--surface);
   box-shadow: var(--shadow-sm);
   transform: translateY(-2px);
@@ -226,14 +241,15 @@
 
 .links-directory__title {
   color: var(--text);
-  font-size: 1rem;
+  font-size: 1.02rem;
+  font-weight: 800;
   line-height: 1.35;
 }
 
 .links-directory__desc {
-  color: var(--text-dim);
-  font-size: 0.88rem;
-  line-height: 1.65;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+  line-height: 1.7;
 }
 
 .links-directory__use-case {
@@ -309,10 +325,14 @@
   }
 
   .links-directory__tools {
-    margin-bottom: 34px;
+    margin-bottom: 28px;
   }
 
   .links-directory__search-input {
     padding-right: 70px;
+  }
+
+  .links-directory__sections {
+    gap: 36px;
   }
 }

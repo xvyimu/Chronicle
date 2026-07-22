@@ -16,11 +16,11 @@ export default function AboutPage() {
 
   return (
     <PageSection eyebrow="About" title="关于" subtitle="了解这个博客和它背后的技术">
-      <article className="mx-auto" style={{ maxWidth: 720 }}>
+      <article className="page-prose">
         {content ? (
           <MdxContent source={content} />
         ) : (
-          <div className="space-y-4 text-[var(--text-soft)]">
+          <div className="page-prose__fallback">
             <p>欢迎来到 {SITE_CONFIG.name}。</p>
             <p>{SITE_CONFIG.description}</p>
           </div>
