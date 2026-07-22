@@ -2,11 +2,12 @@
 
 **GitHub：** [xvyimu/Chronicle](https://github.com/xvyimu/Chronicle)  
 **产品显示名：** 西江月博客  
-**本地路径 / package 名：** 真路径 `D:\Chronicle` · junction `D:\blog` · npm private name `chronicle`  
+**本地路径 / package 名：** `D:\Chronicle` · npm private name `chronicle`  
 **线上：** https://incca.ccwu.cc  
 **许可：** [MIT](./LICENSE)
 
 > 产品品牌为「西江月」；工程与 GitHub 身份统一用 **Chronicle**。  
+> **自有工程** · MIT · [LICENSE](./LICENSE) · 非 GitHub fork · 仅 `origin`。  
 > 身份卡：[GITHUB_IDENTITY.md](./GITHUB_IDENTITY.md)
 
 基于 Next.js 16 App Router 的个人博客兼作品集：MDX 驱动、本地内容驱动、严格 CSP nonce、数字花园与双 API（search / preview）。

@@ -1,7 +1,7 @@
 # 项目文档总览
 
 > 状态：当前维护版（2026-07-22）。本页是文档导航的唯一入口。  
-> **GitHub：** [xvyimu/Chronicle](https://github.com/xvyimu/Chronicle) · 产品名「西江月」· package `chronicle` · 本地 `D:\Chronicle`（junction `D:\blog`）
+> **GitHub：** [xvyimu/Chronicle](https://github.com/xvyimu/Chronicle) · 产品名「西江月」· package `chronicle` · 本地 `D:\Chronicle`（入口 `D:\projects\Chronicle`）
 
 项目文档分为四类：当前维护文档、架构决策、已实施设计、历史报告与运行记录。只有“当前维护文档”描述现行操作；日期型报告、spec 和 run 中的测试数、提交和待办都是当时快照，不应作为当前基线。
 
