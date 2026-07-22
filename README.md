@@ -16,6 +16,8 @@
 
 Next.js 16.2 · React 19.2 · TypeScript 5 strict · Tailwind CSS v4 · MDX (next-mdx-remote) · Shiki (rehype-pretty-code) · Giscus · fuse.js · Vitest · Playwright · ESLint 9 · pnpm 11
 
+**形态与栈 SSOT（Agent/立项）：** [`docs/PROJECT.md`](./docs/PROJECT.md) — 个人博客 Web；换栈先改该文档。
+
 ## 快速启动
 
 ```bash
