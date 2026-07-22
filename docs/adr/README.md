@@ -5,7 +5,7 @@
 | ADR                                                                | 状态                   | 决策                                                        |
 | ------------------------------------------------------------------ | ---------------------- | ----------------------------------------------------------- |
 | [CSP nonce over full-site SSG](./2026-07-17-csp-nonce-over-ssg.md) | Accepted               | 保留每请求 nonce 和动态 HTML，不用 `unsafe-inline` 换取 SSG |
-| [SRI evaluation](./2026-07-21-sri-over-nonce-evaluation.md)        | Evaluation             | 评估 Next 16.2 SRI 与 nonce CSP 的互补关系；条件触发启用    |
+| [SRI evaluation](./2026-07-21-sri-over-nonce-evaluation.md)        | **Accepted** (prod on) | Next 16.2 SRI + nonce 互补；`ENABLE_SRI=1` 生产已开         |
 | [Radical upgrade charter](./2026-07-21-radical-upgrade-charter.md) | Accepted               | 档 C 列车边界：可回滚、非目标、生产另授权                   |
 | [Keep Fuse search (T4)](./2026-07-22-search-engine-keep-fuse.md)   | Accepted               | n=20 维持 Fuse；Orama/Pagefind 待 ≥200 文或 p95 证据        |
 | [ADR 0002](./0002-local-content-repository-factory.md)             | Accepted / Implemented | JSON 内容复用 repository factory，领域查询留在 adapter      |

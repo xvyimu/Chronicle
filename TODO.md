@@ -1,7 +1,7 @@
 # 西江月博客 · 当前待办
 
 > 状态：**工程侧可无条件推进的事项已关闭**；仅剩外部账号或条件触发。  
-> 更新：2026-07-22（master **`6b4937b`** · PR#14–#17 · package `chronicle`）  
+> 更新：2026-07-22（master **`3111acc`** + 生产 SRI 启用 · package `chronicle`）  
 > 生产：`https://incca.ccwu.cc`  
 > 手册：[ops-deferred-work-plan.md](./docs/ops-deferred-work-plan.md)  
 > 自动检查：`pnpm check:ops-readiness`（可选 `-- --live`）  
@@ -25,22 +25,22 @@
 - [ ] **正文图 LQIP**：`public/images/blog/**` 有图 → `pnpm gen:blur && pnpm check:blur`。
 - [ ] **prose/article-ui 下沉**：Coverage + 层叠方案 + ADR。
 - [ ] **Cache Components**：外部数据/ISR/失效需求 + 迁移指南。
-- [ ] **SRI 生产启用**：`ENABLE_SRI=1` 已门控；按 ADR checklist 先 **Vercel Preview**，再生产（单独授权）。
-- [ ] **Giscus 生产 env**：代码默认 `xvyimu/Chronicle` + 已核对 repoId/categoryId；若 Vercel 仍写旧仓名 `xvyimu/blog`，改三项 `NEXT_PUBLIC_GISCUS_*` 后 redeploy（勿提交密钥）。
+- [x] **SRI 生产启用**（2026-07-22）：Production+Preview `ENABLE_SRI=1`；生产 HTML 含 `integrity="sha384-…"`；CSP nonce 保留。回滚：去掉 Production env 并 redeploy。
+- [x] **Giscus 生产 env**（2026-07-22）：Vercel 从 `xvyimu/blog` → `xvyimu/Chronicle` + repoId/categoryId；生产 chunk 含 `xvyimu/Chronicle` / `R_kgDOTBAmxA`。
 - [ ] **G2 / T7 余量**：Worker · 径向/时间线 · 导出 PNG/SVG（兴奋型，非阻塞；预坐标 seed 已接线）。
 
 ## 已完成索引（近期）
 
-| 范围              | 结果                                                       | 证据              |
-| ----------------- | ---------------------------------------------------------- | ----------------- |
-| T1 preview 契约   | a11y popover + `error`+`code` + 120/60s 限流               | PR#14             |
-| T2 content 快照   | `generated/content-snapshot/` · `CONTENT_BACKEND=snapshot` | PR#14             |
-| 软脱离身份        | npm `chronicle` · 无 former-name 叙事                      | PR#16 · `5c629e7` |
-| T3 CSP 上报 + SRI | collect-only `/api/csp-report` · `ENABLE_SRI` 默认关       | PR#15 · `078a056` |
-| 文档 hygiene      | archive 历史报告 · 基线刷新 · format:docs 覆盖             | PR#17 · `6b4937b` |
-| 数字花园 G0–G3    | wikilink / 反链 / `/garden` / popover                      | 已合 master       |
-| 逻辑前后端分层    | `src/server` + 边界测试                                    | 历史 run          |
-| 延后运营工程化    | 就绪门禁 + 手册                                            | 历史 run          |
+| 范围              | 结果                                                       | 证据                   |
+| ----------------- | ---------------------------------------------------------- | ---------------------- |
+| T1 preview 契约   | a11y popover + `error`+`code` + 120/60s 限流               | PR#14                  |
+| T2 content 快照   | `generated/content-snapshot/` · `CONTENT_BACKEND=snapshot` | PR#14                  |
+| 软脱离身份        | npm `chronicle` · 无 former-name 叙事                      | PR#16 · `5c629e7`      |
+| T3 CSP 上报 + SRI | collect-only `/api/csp-report` · 门控后生产已开 SRI        | PR#15 · 2026-07-22 env |
+| 文档 hygiene      | archive 历史报告 · 基线刷新 · format:docs 覆盖             | PR#17 · `6b4937b`      |
+| 数字花园 G0–G3    | wikilink / 反链 / `/garden` / popover                      | 已合 master            |
+| 逻辑前后端分层    | `src/server` + 边界测试                                    | 历史 run               |
+| 延后运营工程化    | 就绪门禁 + 手册                                            | 历史 run               |
 
 更早 P0–P10 与日期型审查见 `docs/archive/`、`docs/superpowers/runs/`，不在此重复。
 

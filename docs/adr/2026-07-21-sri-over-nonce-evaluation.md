@@ -1,8 +1,8 @@
 # ADR: Evaluate Subresource Integrity (SRI) alongside CSP nonce
 
-- Status: Evaluation (not yet enabled in production)
+- Status: **Accepted (enabled in production via `ENABLE_SRI=1`)**
 - Date: 2026-07-21
-- Updated: 2026-07-21 (T3 — `ENABLE_SRI` env gate added; local on/off trial verified; no production enable)
+- Updated: 2026-07-22 (production enable authorized; Vercel Production env `ENABLE_SRI=1`; deploy `dpl_2EcxgkhP84U7jE3BuQAnFipef6DD`; homepage `/_next/static` scripts carry `integrity="sha384-…"` while CSP nonce retained)
 - Related: `docs/adr/2026-07-17-csp-nonce-over-ssg.md`, `next.config.ts`, `src/proxy.ts`, `docs/architecture-optimization-research-2026-07-21-v3.md` R-E, `content/blog/2026-07-csp-nonce-and-sri.mdx`
 
 ## Context
@@ -25,12 +25,22 @@ SRI does **not** replace nonce CSP; it adds a layer for static resources that no
 
 ## Decision
 
-**Evaluation only.** Do not enable `experimental.sri` in production yet. SRI is recorded as a condition-triggered candidate with the following assessment:
+**Enable SRI in production** behind the existing `ENABLE_SRI=1` env gate (`experimental.sri: { algorithm: 'sha384' }`), while **keeping** the CSP nonce model. SRI and nonce remain complementary:
 
 1. **No conflict with current CSP nonce model.** SRI targets `/_next/static/*` resources; nonce targets inline + allowlisted scripts. They operate on disjoint surfaces.
-2. **Marginal additional benefit at current scale.** The site runs on Vercel's managed edge (TLS-terminated, signed deploys). CDN tamper risk is low. The primary XSS defense remains nonce CSP.
-3. **Experimental status carries regression risk.** Next 16.2 SRI is flagged experimental; enabling it in production would require a full Lighthouse + bundle + e2e regression pass and a rollback path.
-4. **Cost is non-trivial.** Build time increases (hash computation for every chunk), HTML payload grows (`integrity` attributes on every script/link tag), and the benefit is defence-in-depth rather than user-visible.
+2. **Defence-in-depth accepted.** Vercel edge already signs deploys; SRI adds browser-side verification of static chunks against build-time hashes.
+3. **Experimental risk accepted with rollback.** Next 16.2 SRI is still experimental; rollback is unset/remove Production `ENABLE_SRI` and redeploy (no code revert required).
+4. **Cost accepted.** Slightly larger HTML (`integrity` attrs) and hash work at build time.
+
+### Production evidence (2026-07-22)
+
+| Check                          | Result                                                                                                     |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| Vercel Production `ENABLE_SRI` | set to `1`                                                                                                 |
+| Deploy                         | `dpl_2EcxgkhP84U7jE3BuQAnFipef6DD` · build log shows `Experiments · sri` · aliased `https://incca.ccwu.cc` |
+| HTML `/_next/static` scripts   | multiple `integrity="sha384-…"` (sample verified via HTTP + Playwright)                                    |
+| CSP                            | still per-request `nonce-…` + `strict-dynamic` + `report-to`/`report-uri`                                  |
+| Preview                        | same flag on Preview; earlier preview deploy also logged `· sri`                                           |
 
 ## Config shape (Next 16.2.9, verified in `config-shared.d.ts`)
 
@@ -112,22 +122,22 @@ pnpm test:e2e
 
 If any step regresses, abandon the enable attempt and record the failure here. After a successful preview, update this ADR Status to Accepted (enable prod) or keep Evaluation with notes.
 
-## Local prep status (2026-07-21, updated T3)
+## Local prep status (2026-07-22)
 
-| Step                             | Status                                                            |
-| -------------------------------- | ----------------------------------------------------------------- |
-| Types verified in Next 16.2.9    | Done — `sri?: { algorithm?: … }`                                  |
-| ADR checklist corrected          | Done (this file)                                                  |
-| Flag mechanism landed            | Done — `ENABLE_SRI=1` gates `sri: { algorithm: 'sha384' }`        |
-| Production config changed        | **No** — flag defaults off; master/CI build emits no `integrity=` |
-| Local build with SRI on (trial)  | Done — `ENABLE_SRI=1 pnpm build` emitted `integrity="sha384-…"`   |
-| Local build with SRI off (trial) | Done — default build emits **zero** `integrity=` in `.next`       |
-| Vercel preview deploy            | **Blocked** — no deploy authorization                             |
+| Step                            | Status                                                                   |
+| ------------------------------- | ------------------------------------------------------------------------ |
+| Types verified in Next 16.2.9   | Done — `sri?: { algorithm?: … }`                                         |
+| Flag mechanism landed           | Done — `ENABLE_SRI=1` gates `sri: { algorithm: 'sha384' }`               |
+| Local on/off trial              | Done                                                                     |
+| Vercel Preview `ENABLE_SRI`     | Done — Preview env set; preview deploy logged `Experiments · sri`        |
+| Vercel Production `ENABLE_SRI`  | **Done** — Production env set; deploy `dpl_2EcxgkhP84U7jE3BuQAnFipef6DD` |
+| Production HTML integrity check | **Done** — homepage 6/13 `/_next/static` scripts with `sha384-…`         |
+| CSP nonce retained              | **Done** — still `nonce-…` + `strict-dynamic` + report endpoints         |
 
 ### T3 gating mechanism
 
-SRI is wired through an env flag in `next.config.ts` so a `master` merge can never
-turn it on:
+SRI is wired through an env flag in `next.config.ts`. Code default remains off;
+Production/Preview enablement is **env-only** (no master code flip required):
 
 ```ts
 const sriExperiment =
@@ -135,24 +145,17 @@ const sriExperiment =
 // experimental: { ...sriExperiment }  — key omitted entirely when off
 ```
 
-Local trial evidence (production-shaped `NEXT_PUBLIC_SITE_URL`):
-
-- `ENABLE_SRI=1 pnpm build` → chunks carry `integrity="sha384-…"` (verified via `rg integrity= .next`).
-- default `pnpm build` → no `integrity=` attributes anywhere in `.next`.
-
-Production enable remains a **separate, explicitly-authorized PR** — setting the flag
-on a Vercel preview environment first, running steps 3–6, then flipping master only
-after a clean preview.
+**Rollback:** remove Production `ENABLE_SRI` (or set ≠ `1`) and redeploy.
 
 ## Alternatives considered
 
-1. **Enable SRI now (experimental).** Rejected: experimental flag in production violates the "stability > functionality" principle; no current threat model justifies the regression surface.
+1. **Keep Evaluation forever.** Rejected after user authorization + green production deploy with verified `integrity=` + retained nonce CSP.
 2. **SRI + drop nonce for `unsafe-inline`.** Rejected: would weaken the existing XSS baseline (see `2026-07-17-csp-nonce-over-ssg.md`).
 3. **Do nothing, never evaluate.** Rejected: Next 16.2 SRI is a meaningful new capability worth recording so future maintainers do not re-research from scratch.
 
 ## Consequences
 
-- SRI remains documented but disabled. No production behavior change.
-- Future maintainers can fast-track to preview verification when a trigger condition fires.
-- This ADR should be updated (status to Accepted or Rejected) once a preview run completes.
+- Production static assets from `/_next/static/*` now include SRI `integrity` hashes when built with `ENABLE_SRI=1`.
+- CSP nonce model is unchanged; both layers run together.
+- Rollback is env-only (remove Production `ENABLE_SRI` + redeploy), no code revert required.
 - Concept explainer for humans: `/blog/csp-nonce-and-sri`.
