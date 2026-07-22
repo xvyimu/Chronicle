@@ -44,8 +44,12 @@ describe('LinksDirectory', () => {
   it('renders collection metrics and category index links', () => {
     render(<LinksDirectory categories={categories} />);
 
-    expect(screen.getByText('2')).toBeInTheDocument();
-    expect(screen.getByText('3')).toBeInTheDocument();
+    const metrics = screen.getByLabelText('收藏概览');
+    // Metric values must remain plain digits (mono-styled in CSS).
+    expect(within(metrics).getByText('2')).toBeInTheDocument();
+    expect(within(metrics).getByText('3')).toBeInTheDocument();
+    expect(within(metrics).getByText('分类')).toBeInTheDocument();
+    expect(within(metrics).getByText('站点')).toBeInTheDocument();
 
     const nav = screen.getByRole('navigation', { name: '链接分类' });
     expect(within(nav).getByRole('link', { name: 'AI 工具 2 个' })).toHaveAttribute(
@@ -63,7 +67,6 @@ describe('LinksDirectory', () => {
 
     expect(screen.getByText('2 个站点')).toBeInTheDocument();
     expect(screen.getByText('1 个站点')).toBeInTheDocument();
-    expect(screen.getByText('2 个站点')).toHaveAttribute('data-slot', 'badge');
     expect(screen.getByText('openai.com')).toBeInTheDocument();
     expect(screen.getByText('hetzner.com')).toBeInTheDocument();
   });

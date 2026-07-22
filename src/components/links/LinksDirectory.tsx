@@ -123,32 +123,34 @@ export function LinksDirectory({ categories }: { categories: LinkCategory[] }) {
 
   return (
     <div className="links-directory">
-      <div className="links-directory__summary" aria-label="收藏概览">
+      {/* Row 1: stats only — mono digits (never display serif: 1/0 → I/O) */}
+      <div className="links-directory__metrics" aria-label="收藏概览">
         <div className="links-directory__metric">
-          <span>Collections</span>
-          <strong>{categories.length}</strong>
-          <small>分类</small>
+          <span className="links-directory__metric-label">分类</span>
+          <strong className="links-directory__metric-value">{categories.length}</strong>
         </div>
         <div className="links-directory__metric">
-          <span>Links</span>
-          <strong>{totalLinks}</strong>
-          <small>站点</small>
+          <span className="links-directory__metric-label">站点</span>
+          <strong className="links-directory__metric-value">{totalLinks}</strong>
         </div>
-        <nav className="links-directory__nav" aria-label="链接分类">
-          {categories.map((category) => (
-            <a
-              key={category.id}
-              href={`#${category.id}`}
-              className="links-directory__nav-link"
-              aria-label={`${category.title} ${category.items.length} 个`}
-            >
-              <span>{category.title}</span>
-              <small>{category.items.length} 个</small>
-            </a>
-          ))}
-        </nav>
       </div>
 
+      {/* Row 2: category jump chips full width */}
+      <nav className="links-directory__nav" aria-label="链接分类">
+        {categories.map((category) => (
+          <a
+            key={category.id}
+            href={`#${category.id}`}
+            className="links-directory__nav-link"
+            aria-label={`${category.title} ${category.items.length} 个`}
+          >
+            <span className="links-directory__nav-title">{category.title}</span>
+            <span className="links-directory__nav-count">{category.items.length}</span>
+          </a>
+        ))}
+      </nav>
+
+      {/* Row 3: search — blog SearchBar rhythm (full-width primary) */}
       <div className="links-directory__tools" role="search">
         <label className="links-directory__search">
           <span className="sr-only">筛选收藏链接</span>
@@ -192,13 +194,13 @@ export function LinksDirectory({ categories }: { categories: LinkCategory[] }) {
         <p className="links-directory__filter-count" aria-live="polite">
           {hasFilter ? (
             <>
-              <strong>
+              <strong className="links-directory__filter-nums">
                 {visibleLinks} / {totalLinks}
               </strong>
               <span>匹配站点</span>
             </>
           ) : (
-            <span>可按分类、标签、官网域名和使用场景快速定位收藏。</span>
+            <span>可按分类、标签、官网域名和使用场景快速定位。</span>
           )}
         </p>
       </div>
@@ -210,15 +212,13 @@ export function LinksDirectory({ categories }: { categories: LinkCategory[] }) {
             id={category.id}
             className="links-directory__category"
           >
-            <div className="links-directory__category-head">
-              <div>
-                <MetaBadge className="links-directory__count">
-                  {category.items.length} 个站点
-                </MetaBadge>
-                <h3>{category.title}</h3>
-                <p>{category.description}</p>
-              </div>
-            </div>
+            <header className="links-directory__category-head">
+              <p className="links-directory__category-eyebrow">
+                {category.items.length} 个站点
+              </p>
+              <h3 className="links-directory__category-title">{category.title}</h3>
+              <p className="links-directory__category-desc">{category.description}</p>
+            </header>
             <ul className="links-directory__grid" aria-label={`${category.title}链接`}>
               {category.items.map((item) => (
                 <LinkCard key={item.url} item={item} />

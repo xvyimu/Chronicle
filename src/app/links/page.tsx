@@ -22,7 +22,7 @@ export default function LinksPage() {
     <PageSection
       eyebrow="Links"
       title="导航"
-      subtitle={`${linkCategories.length} 类 · ${totalLinks} 个站点 · 精选技术文档、VPS 官网、开发工具和趣味小站`}
+      subtitle={`${linkCategories.length} 个分类 · ${totalLinks} 个站点`}
     >
       <LinksDirectory categories={linkCategories} />
     </PageSection>
