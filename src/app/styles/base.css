@@ -67,12 +67,31 @@ body {
   z-index: 100;
   border-bottom: 1px solid var(--border);
   background: rgba(var(--bg-rgb), 0.84);
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  /* V1a Atelier: chrome blur ≤12 (was 18) */
+  backdrop-filter: blur(var(--atelier-panel-blur, 12px)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--atelier-panel-blur, 12px)) saturate(140%);
   transition:
     background var(--transition-fast),
     border-color var(--transition-fast),
     box-shadow var(--transition-fast);
+}
+
+/* Atelier 签名：顶缘极细 brand 轨（非彩虹） */
+.header::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    var(--brand) 0%,
+    var(--brand-2) 45%,
+    var(--featured) 100%
+  );
+  opacity: 0.9;
 }
 
 .header.is-scrolled {

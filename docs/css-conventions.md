@@ -71,23 +71,27 @@ src/app/projects/[id]/layout.tsx ← project-detail.css
 
 ### 令牌清单
 
-| 令牌                | 用途       | 亮色值                     | 暗色值                      |
-| ------------------- | ---------- | -------------------------- | --------------------------- |
-| `--bg`              | 页面背景   | `#f1f0eb`                  | `#141716`                   |
-| `--bg-soft`         | 次级背景   | `#e7e7df`                  | `#1c211f`                   |
-| `--surface`         | 卡片表面   | `#f8f7f2`                  | `#1a1f1d`                   |
-| `--surface-raised`  | 抬升表面   | `var(--bg-elevated)`       | `var(--bg-elevated)`        |
-| `--surface-muted`   | 弱化表面   | `var(--bg-soft)`           | `var(--bg-soft)`            |
-| `--text`            | 主文字     | `#242827`                  | `#eceee8`                   |
-| `--text-soft`       | 次级文字   | `#4d5652`                  | `#c4cbc3`                   |
-| `--text-dim`        | 弱化文字   | `#737b72`                  | `#8e978f`                   |
-| `--border`          | 默认边框   | `rgba(36, 40, 39, 0.13)`   | `rgba(236, 238, 232, 0.12)` |
-| `--brand`           | 品牌色     | `#59756d`                  | `#9db6ad`                   |
-| `--brand-soft`      | 品牌色浅底 | `rgba(89, 117, 109, 0.12)` | `rgba(157, 182, 173, 0.14)` |
-| `--shadow-sm/md/lg` | 阴影层级   | —                          | —                           |
-| `--radius`          | 默认圆角   | `14px`                     | `14px`                      |
-| `--radius-sm`       | 小圆角     | `10px`                     | `10px`                      |
-| `--radius-xs`       | 紧凑圆角   | `6px`                      | `6px`                       |
+| 令牌                   | 用途                                        | 亮色值                     | 暗色值                      |
+| ---------------------- | ------------------------------------------- | -------------------------- | --------------------------- |
+| `--bg`                 | 页面背景                                    | `#f1f0eb`                  | `#141716`                   |
+| `--bg-soft`            | 次级背景                                    | `#e7e7df`                  | `#1c211f`                   |
+| `--surface`            | 卡片表面                                    | `#f8f7f2`                  | `#1a1f1d`                   |
+| `--surface-raised`     | 抬升表面                                    | `var(--bg-elevated)`       | `var(--bg-elevated)`        |
+| `--surface-muted`      | 弱化表面                                    | `var(--bg-soft)`           | `var(--bg-soft)`            |
+| `--text`               | 主文字                                      | `#242827`                  | `#eceee8`                   |
+| `--text-soft`          | 次级文字                                    | `#4d5652`                  | `#c4cbc3`                   |
+| `--text-dim`           | 弱化文字                                    | `#737b72`                  | `#8e978f`                   |
+| `--border`             | 默认边框                                    | `rgba(36, 40, 39, 0.13)`   | `rgba(236, 238, 232, 0.12)` |
+| `--brand`              | 品牌色（鼠尾草）                            | `#59756d`                  | `#9db6ad`                   |
+| `--brand-soft`         | 品牌色浅底                                  | `rgba(89, 117, 109, 0.12)` | `rgba(157, 182, 173, 0.14)` |
+| `--cta`                | Atelier 附加强调（稀有 · 默认交互仍 brand） | `#f97316`                  | 同左                        |
+| `--atelier-panel-blur` | 顶栏等 chrome 霜                            | `12px`                     | `12px`                      |
+| `--shadow-sm/md/lg`    | 阴影层级                                    | —                          | —                           |
+| `--radius`             | 默认圆角（V1a）                             | `8px`                      | `8px`                       |
+| `--radius-sm`          | 卡/控件                                     | `8px`                      | `8px`                       |
+| `--radius-xs`          | 紧凑圆角                                    | `4px`                      | `4px`                       |
+
+> **V1a Atelier（2026-07-23）：** 矩阵见 [`docs/design/atelier-v1a-matrix.md`](./design/atelier-v1a-matrix.md)。新间距优先 4/8/16/24/32；组合 SSOT 在 orca `portfolio-visual-fluent-glass-2026-07-23/atelier-token-ssot.md`。
 
 ### 引用规则
 
