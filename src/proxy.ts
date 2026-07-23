@@ -1,4 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import {
+  buildProductionCsp,
+  buildReportingEndpointsHeader,
+  createCspNonce,
+  shouldApplyCsp,
+} from '@/lib/csp';
 
 /**
  * Proxy — sets per-request CSP headers.
@@ -10,43 +16,17 @@ import { NextRequest, NextResponse } from 'next/server';
  *
  * Vercel Analytics / Speed Insights load scripts from va.vercel-scripts.com
  * (debug) and same-origin /_vercel/* in production; connect stays 'self'.
+ *
+ * Policy construction is centralized in src/lib/csp.ts so tests can lock
+ * invariants (nonce, no script-src unsafe-inline, report channels) without
+ * depending on NextRequest wiring.
  */
-/** report-to 分组名 + 同源收集路径，两处 header 共用，避免改路径时脱节。 */
-const CSP_REPORT_GROUP = 'csp-endpoint';
-const CSP_REPORT_PATH = '/api/csp-report';
-
 export function proxy(_request: NextRequest) {
-  const isDev = process.env.NODE_ENV === 'development';
-
   // In dev, skip CSP — Turbopack HMR needs inline scripts and websocket
-  if (isDev) return NextResponse.next();
+  if (!shouldApplyCsp()) return NextResponse.next();
 
-  const nonce = btoa(crypto.randomUUID());
-  const csp = [
-    "default-src 'self'",
-    // strict-dynamic trusts nonce-tagged scripts; allow Vercel + Giscus hosts for their loaders
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://giscus.app https://va.vercel-scripts.com`,
-    // style-src keeps 'unsafe-inline' — Tailwind v4 injects inline styles
-    // that are harder to nonce. Styles are lower risk than scripts for XSS.
-    "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data:",
-    "font-src 'self' data:",
-    // Analytics/vitals POST to same-origin /_vercel/*; Giscus API as needed
-    "connect-src 'self' https://giscus.app",
-    'frame-src https://giscus.app',
-    "frame-ancestors 'self'",
-    "base-uri 'self'",
-    "form-action 'self'",
-    "object-src 'none'",
-    "manifest-src 'self'",
-    "worker-src 'self'",
-    'upgrade-insecure-requests',
-    // T3: collect-only violation reporting. report-to (Reporting API) is the
-    // modern channel; report-uri is kept for browsers that ignore report-to.
-    // Enforcement is unchanged — this only adds a telemetry sink, no relaxation.
-    `report-uri ${CSP_REPORT_PATH}`,
-    `report-to ${CSP_REPORT_GROUP}`,
-  ].join('; ');
+  const nonce = createCspNonce();
+  const csp = buildProductionCsp(nonce);
 
   const requestHeaders = new Headers(_request.headers);
   requestHeaders.set('x-nonce', nonce);
@@ -60,7 +40,7 @@ export function proxy(_request: NextRequest) {
 
   response.headers.set('Content-Security-Policy', csp);
   // Reporting-Endpoints binds the report-to group name to the same-origin sink.
-  response.headers.set('Reporting-Endpoints', `${CSP_REPORT_GROUP}="${CSP_REPORT_PATH}"`);
+  response.headers.set('Reporting-Endpoints', buildReportingEndpointsHeader());
   return response;
 }
 
