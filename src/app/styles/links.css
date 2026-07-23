@@ -187,6 +187,9 @@
 
 .links-directory__category {
   scroll-margin-top: 96px;
+  /* Off-screen categories skip layout/paint until near viewport (CH-PERF-007). */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 480px;
 }
 
 .links-directory__category-head {
