@@ -19,6 +19,9 @@ export default function MockNextImage({
   unoptimized: _unoptimized,
   onLoadingComplete: _onLoadingComplete,
   fetchPriority,
+  loading,
+  width,
+  height,
   ...props
 }: ImgHTMLAttributes<HTMLImageElement> & {
   fill?: boolean;
@@ -41,6 +44,9 @@ export default function MockNextImage({
       data-fill={fill ? 'true' : undefined}
       data-preload={_preload ? 'true' : undefined}
       fetchPriority={fetchPriority}
+      loading={loading}
+      width={width}
+      height={height}
       {...props}
     />
   );

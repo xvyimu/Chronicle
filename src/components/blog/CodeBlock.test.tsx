@@ -2,10 +2,65 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
 import CodeBlock from '@/components/blog/CodeBlock';
 
+class MockIntersectionObserver {
+  private callback: IntersectionObserverCallback;
+  static instances: MockIntersectionObserver[] = [];
+  static elements: Element[] = [];
+
+  constructor(cb: IntersectionObserverCallback) {
+    this.callback = cb;
+    MockIntersectionObserver.instances.push(this);
+  }
+  observe(target: Element) {
+    MockIntersectionObserver.elements.push(target);
+  }
+  unobserve() {}
+  disconnect() {}
+  takeRecords() {
+    return [];
+  }
+  root = null;
+  rootMargin = '';
+  thresholds = [];
+
+  static fireIntersection(isIntersecting: boolean) {
+    const entry = {
+      isIntersecting,
+      target: MockIntersectionObserver.elements[0],
+      intersectionRatio: isIntersecting ? 1 : 0,
+      intersectionRect: {} as DOMRectReadOnly,
+      rootBounds: null,
+      boundingClientRect: {} as DOMRectReadOnly,
+      time: 0,
+    } as unknown as IntersectionObserverEntry;
+    for (const observer of MockIntersectionObserver.instances) {
+      observer.callback([entry], observer as unknown as IntersectionObserver);
+    }
+  }
+
+  static reset() {
+    MockIntersectionObserver.instances = [];
+    MockIntersectionObserver.elements = [];
+  }
+}
+
+globalThis.IntersectionObserver =
+  MockIntersectionObserver as unknown as typeof IntersectionObserver;
+
+async function revealCopyButton() {
+  await act(async () => {
+    MockIntersectionObserver.fireIntersection(true);
+  });
+  await vi.waitFor(() => {
+    expect(screen.getByRole('button', { name: '复制' })).toBeInTheDocument();
+  });
+}
+
 describe('CodeBlock', () => {
   beforeEach(() => {
     cleanup();
     vi.restoreAllMocks();
+    MockIntersectionObserver.reset();
   });
 
   it('renders a pre element with children', () => {
@@ -27,12 +82,23 @@ describe('CodeBlock', () => {
     expect(container.querySelector('.code-toolbar pre')).toBeInTheDocument();
   });
 
-  it('shows a copy button with default label', () => {
+  it('defers copy button until near viewport', () => {
     render(
       <CodeBlock>
         <code>test</code>
       </CodeBlock>,
     );
+    expect(screen.queryByRole('button', { name: '复制' })).not.toBeInTheDocument();
+    expect(document.querySelector('[data-copy-ready="false"]')).toBeInTheDocument();
+  });
+
+  it('shows a copy button after intersection', async () => {
+    render(
+      <CodeBlock>
+        <code>test</code>
+      </CodeBlock>,
+    );
+    await revealCopyButton();
     expect(screen.getByRole('button', { name: '复制' })).toBeInTheDocument();
   });
 
@@ -45,6 +111,7 @@ describe('CodeBlock', () => {
         <code>console.log(&apos;hello&apos;)</code>
       </CodeBlock>,
     );
+    await revealCopyButton();
 
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: '复制' }));
@@ -53,7 +120,6 @@ describe('CodeBlock', () => {
   });
 
   it('shows "已复制 ✓" after successful copy', async () => {
-    vi.useFakeTimers();
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, { clipboard: { writeText } });
 
@@ -62,22 +128,25 @@ describe('CodeBlock', () => {
         <code>test</code>
       </CodeBlock>,
     );
+    await revealCopyButton();
 
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: '复制' }));
-    });
-    // Wait for the promise to resolve
-    await vi.waitFor(() => {
+    vi.useFakeTimers();
+    try {
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: '复制' }));
+      });
+      await act(async () => {
+        await Promise.resolve();
+      });
       expect(screen.getByRole('button', { name: '已复制 ✓' })).toBeInTheDocument();
-    });
 
-    // After 2 seconds, should revert
-    act(() => {
-      vi.advanceTimersByTime(2000);
-    });
-    expect(screen.getByRole('button', { name: '复制' })).toBeInTheDocument();
-
-    vi.useRealTimers();
+      act(() => {
+        vi.advanceTimersByTime(2000);
+      });
+      expect(screen.getByRole('button', { name: '复制' })).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('shows a failure message when clipboard write and fallback both fail', async () => {
@@ -95,6 +164,7 @@ describe('CodeBlock', () => {
         <code>test</code>
       </CodeBlock>,
     );
+    await revealCopyButton();
 
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: '复制' }));

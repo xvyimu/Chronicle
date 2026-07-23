@@ -34,6 +34,35 @@ describe('ImageZoom', () => {
     expect(thumb).toBeInTheDocument();
     expect(thumb).toHaveAttribute('src', '/test.jpg');
     expect(thumb).toHaveClass('image-zoom__trigger');
+    expect(thumb).toHaveAttribute('width', '1200');
+    expect(thumb).toHaveAttribute('height', '630');
+    expect(thumb).toHaveAttribute('loading', 'lazy');
+  });
+
+  it('honors explicit width/height/sizes and priority loading', () => {
+    render(
+      <ImageZoom
+        src="/hero.jpg"
+        alt="Hero"
+        width={800}
+        height={400}
+        sizes="100vw"
+        priority
+      />,
+    );
+    const thumb = screen.getByRole('button', { name: 'Hero — 点击放大' });
+    expect(thumb).toHaveAttribute('width', '800');
+    expect(thumb).toHaveAttribute('height', '400');
+    // Mock strips sizes; priority maps to no lazy loading attr from component path
+    expect(thumb).not.toHaveAttribute('loading', 'lazy');
+  });
+
+  it('uses blurDataURL when provided', () => {
+    render(
+      <ImageZoom src="/test.jpg" alt="Blur" blurDataURL="data:image/webp;base64,AAAA" />,
+    );
+    // Mock strips blur props; ensure render still succeeds with explicit LQIP
+    expect(screen.getByRole('button', { name: 'Blur — 点击放大' })).toBeInTheDocument();
   });
 
   it('preserves caller classes and inline thumbnail overrides', () => {
