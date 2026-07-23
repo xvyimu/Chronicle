@@ -5,6 +5,15 @@ import type { ContentSource } from './content-source';
 import { filesystemSource } from './content-source';
 import { createJsonContentRepository } from './json-content-repository';
 
+// Pure helpers live in links-filter (client-safe). Re-export for server/tests.
+export {
+  countLinkItems,
+  filterLinkCategories,
+  getLinkHost,
+  getSearchableLinkText,
+  normalizeLinkFilterText,
+} from './links-filter';
+
 /**
  * links 模块 — 读取 + 校验 data/links.json.
  *

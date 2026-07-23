@@ -11,8 +11,9 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 export default function LinksPage() {
+  // Server-load catalog once; LinksDirectory SSRs the full grid and only
+  // hydrates the search island (see CH-PERF-007).
   const linkCategories = getAllLinkCategories();
-
   const totalLinks = linkCategories.reduce(
     (sum, category) => sum + category.items.length,
     0,

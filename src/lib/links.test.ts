@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { createLinksRepository, getLinkAssetIssues, parseLinks } from '@/lib/links';
+import {
+  countLinkItems,
+  createLinksRepository,
+  filterLinkCategories,
+  getLinkAssetIssues,
+  getLinkHost,
+  parseLinks,
+} from '@/lib/links';
 import type { ContentSource } from '@/lib/content-source';
 
 function makeJsonSource(data: unknown): ContentSource {
@@ -170,6 +177,63 @@ describe('parseLinks', () => {
         },
       ]),
     ).toThrow();
+  });
+});
+
+describe('link filter helpers', () => {
+  const sample = [
+    {
+      id: 'ai',
+      title: 'AI 工具',
+      description: '常用 AI 产品',
+      items: [
+        {
+          title: 'OpenAI',
+          url: 'https://www.openai.com/',
+          description: '模型与 API',
+          tags: ['model'],
+          official: true,
+        },
+        {
+          title: 'Claude',
+          url: 'https://claude.ai/',
+          description: '长上下文',
+        },
+      ],
+    },
+    {
+      id: 'vps',
+      title: 'VPS',
+      description: '云服务器',
+      items: [
+        {
+          title: 'Hetzner',
+          url: 'https://www.hetzner.com/',
+          description: '欧洲云',
+        },
+      ],
+    },
+  ];
+
+  it('strips www from hostnames', () => {
+    expect(getLinkHost('https://www.openai.com/')).toBe('openai.com');
+    expect(getLinkHost('not-a-url')).toBe('not-a-url');
+  });
+
+  it('counts items across categories', () => {
+    expect(countLinkItems(sample)).toBe(3);
+  });
+
+  it('filters by tag, host, and title without dropping empty categories incorrectly', () => {
+    expect(filterLinkCategories(sample, 'model')).toEqual([
+      {
+        ...sample[0],
+        items: [sample[0].items[0]],
+      },
+    ]);
+    expect(filterLinkCategories(sample, 'hetzner.com')[0].items[0].title).toBe('Hetzner');
+    expect(filterLinkCategories(sample, '  ')).toEqual(sample);
+    expect(filterLinkCategories(sample, 'zzznomatch')).toEqual([]);
   });
 });
 
