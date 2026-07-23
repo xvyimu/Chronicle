@@ -36,6 +36,7 @@
 | [架构升级 C 档计划](./architecture-upgrade-radical-c-2026-07-21.md)                     | Merge Train T0–T9（T1–T3 已合）                                      | 列车状态变化                   |
 | [架构优化整合调研 v4 2026-07-21](./architecture-optimization-research-2026-07-21-v4.md) | 决策快照：双 API、交付优先评分等（v1–v3 同目录为历史）               | 交付策略或契约变化             |
 | [SRI 本地 smoke / checker](./ops/sri-smoke.md)                                          | `check:sri-smoke` · `check:sri` · `test:sri`；本地 ENABLE_SRI on/off | SRI 脚本或本地验证步骤变化     |
+| [Security / Deps 证据索引](./ops/ch-security-deps-index.md)                             | deps/security/day 证据导航 · audit 0 · major-later 债入口           | 新 hardening/scan 证据或 tip 变化 |
 
 ### SRI 本地验证命令（不改生产 env）
 
