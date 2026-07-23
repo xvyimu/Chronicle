@@ -10,6 +10,9 @@ interface EditorialHeroProps {
 
 const HERO_IMAGE = '/images/projects/blog.png';
 
+/** Display width of the hero frame at desktop (≥1024px). Mobile/tablet use near-full viewport. */
+const HERO_SIZES = '(max-width: 1023px) 92vw, 420px';
+
 export default function EditorialHero({ postCount, projectCount }: EditorialHeroProps) {
   return (
     <section className="editorial-hero" aria-labelledby="home-hero-title">
@@ -40,9 +43,10 @@ export default function EditorialHero({ postCount, projectCount }: EditorialHero
               src={HERO_IMAGE}
               alt="个人博客首页界面预览"
               fill
-              priority
-              loading="eager"
-              sizes="(max-width: 767px) 82vw, 420px"
+              preload
+              fetchPriority="high"
+              quality={70}
+              sizes={HERO_SIZES}
               className="editorial-hero__image"
               {...imageBlurProps(HERO_IMAGE)}
             />
