@@ -93,3 +93,6 @@ next-env.d.ts
 
 # local tool (codebase-memory) - do not commit
 .cbmignore
+
+# Firecrawl CLI scrape/crawl cache — never commit site dumps
+.firecrawl/
