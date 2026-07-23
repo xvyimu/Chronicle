@@ -213,10 +213,25 @@ html:not(.dark) .prose pre {
   letter-spacing: 0.04em;
 }
 
-.copy-btn {
+/* Absolute slot so lazy-mounted copy control does not shift layout. */
+.copy-btn-slot {
   position: absolute;
   right: 8px;
   top: 8px;
+  z-index: 1;
+  min-height: 1.75rem;
+  min-width: 3rem;
+  pointer-events: none;
+}
+
+.copy-btn-slot .copy-btn {
+  pointer-events: auto;
+}
+
+.copy-btn {
+  position: absolute;
+  right: 0;
+  top: 0;
   z-index: 1;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-xs);

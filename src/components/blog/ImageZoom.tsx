@@ -3,14 +3,38 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { blurDataFor } from '@/lib/image-blur-data';
 
 interface ImageZoomProps {
   src?: string;
   alt?: string;
   className?: string;
   style?: React.CSSProperties;
+  /** Explicit width from MDX/HTML; falls back to content default. */
+  width?: number | string;
+  /** Explicit height from MDX/HTML; falls back to content default. */
+  height?: number | string;
+  /** Responsive sizes hint for next/image. */
+  sizes?: string;
+  /** Eager-load when true (hero/above-fold only). Default: lazy. */
+  priority?: boolean;
   /** Optional LQIP; when set, next/image uses blur placeholder on the thumb. */
   blurDataURL?: string;
+}
+
+const DEFAULT_WIDTH = 1200;
+const DEFAULT_HEIGHT = 630;
+const DEFAULT_SIZES = '(max-width: 768px) 100vw, min(720px, 92vw)';
+
+function parsePositiveDim(value: number | string | undefined): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+    return Math.round(value);
+  }
+  if (typeof value === 'string') {
+    const n = Number.parseFloat(value);
+    if (Number.isFinite(n) && n > 0) return Math.round(n);
+  }
+  return undefined;
 }
 
 /**
@@ -23,14 +47,18 @@ interface ImageZoomProps {
  * - Tab/Shift+Tab 焦点循环（focus trap）
  * - 可见关闭按钮（aria-label="关闭"）
  *
- * 使用 next/image 优化图片加载。MDX 中的图片尺寸未知，
- * 因此内联图片使用默认尺寸 + 响应式 CSS，放大层使用 fill 布局。
+ * 使用 next/image 优化图片加载。优先消费 MDX 上的 width/height；
+ * 未知尺寸时用稳定默认值 + CSS height:auto，避免无尺寸 CLS。
  */
 export default function ImageZoom({
   src,
   alt,
   className,
   style,
+  width,
+  height,
+  sizes,
+  priority = false,
   blurDataURL,
 }: ImageZoomProps) {
   const [zoomed, setZoomed] = useState(false);
@@ -94,22 +122,30 @@ export default function ImageZoom({
 
   if (!src) return null;
 
+  const resolvedWidth = parsePositiveDim(width) ?? DEFAULT_WIDTH;
+  const resolvedHeight = parsePositiveDim(height) ?? DEFAULT_HEIGHT;
+  const resolvedBlur = blurDataURL ?? blurDataFor(src);
+  const resolvedSizes = sizes ?? DEFAULT_SIZES;
+
   return (
     <>
       <Image
         ref={triggerRef as React.RefObject<HTMLImageElement>}
         src={src}
         alt={alt ?? ''}
-        width={1200}
-        height={630}
+        width={resolvedWidth}
+        height={resolvedHeight}
+        sizes={resolvedSizes}
+        loading={priority ? undefined : 'lazy'}
+        priority={priority}
         onClick={open}
         className={cn('image-zoom__trigger', className)}
         style={style}
         tabIndex={0}
         role="button"
         aria-label={alt ? `${alt} — 点击放大` : '点击放大图片'}
-        placeholder={blurDataURL ? 'blur' : undefined}
-        blurDataURL={blurDataURL}
+        placeholder={resolvedBlur ? 'blur' : undefined}
+        blurDataURL={resolvedBlur}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
@@ -154,6 +190,7 @@ export default function ImageZoom({
             className="image-zoom__img"
             onClick={(e) => e.stopPropagation()}
             sizes="92vw"
+            priority
           />
         </div>
       )}

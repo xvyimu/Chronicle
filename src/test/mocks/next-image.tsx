@@ -17,6 +17,9 @@ export default function MockNextImage({
   quality: _quality,
   unoptimized: _unoptimized,
   onLoadingComplete: _onLoadingComplete,
+  loading,
+  width,
+  height,
   ...props
 }: ImgHTMLAttributes<HTMLImageElement> & {
   fill?: boolean;
@@ -35,6 +38,9 @@ export default function MockNextImage({
       src={String(src ?? '')}
       alt={alt ?? ''}
       data-fill={fill ? 'true' : undefined}
+      loading={loading}
+      width={width}
+      height={height}
       {...props}
     />
   );
