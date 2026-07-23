@@ -1,25 +1,29 @@
 # Changelog
 
-All notable changes to **Chronicle** are documented in this file.
+Notable **documented** changes to **Chronicle** live here when maintainers
+choose to record them. This file is **not** a complete product history:
+day-to-day work is in **git** on `master` (and GitHub Releases when used).
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
-for tagged releases when published.
-
-> Day-to-day history also lives in git history and GitHub Releases (when used).
-> Prefer Conventional Commits on `master`.
+Format inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+Tagged releases, when published, aim to follow
+[Semantic Versioning](https://semver.org/spec/v2.0.0.html). Prefer
+Conventional Commits on `master`.
 
 ## [Unreleased]
 
 ### Added
 
-- Community kit: `CODE_OF_CONDUCT.md`, this `CHANGELOG.md`, and root `.editorconfig`
-  (OSS portfolio gate P2; no runtime behavior change).
+- Root community docs: `CODE_OF_CONDUCT.md`, this `CHANGELOG.md`, and
+  `.editorconfig` (aligned with Prettier: 2-space, LF).
+- README / CONTRIBUTING links; conduct reporting kept **separate** from
+  `SECURITY.md` (Advisories = product security only).
+- CI doc tooling coverage: `format:docs*` and `check:docs` include the new
+  community markdown files.
 
 ### Notes
 
-- Production site and package remain under active development (`package.json`
-  version may lag git tips). See `README.md` and `docs/PROJECT.md` for stack SSOT.
+- `package.json` version may lag git tips while the site is under active
+  development. Stack SSOT: `docs/PROJECT.md`.
 
 <!--
 ## [x.y.z] — YYYY-MM-DD

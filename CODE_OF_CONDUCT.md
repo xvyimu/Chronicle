@@ -38,30 +38,41 @@ behavior that they deem inappropriate, threatening, offensive, or harmful.
 
 ## Scope
 
-This Code of Conduct applies within all community spaces, and also applies when
-an individual is officially representing the community in public spaces.
+This Code of Conduct applies within all community spaces for this project
+(GitHub Issues, Discussions, PRs, and maintainer-run project channels), and
+also when an individual is officially representing the project in public spaces.
 
-## Enforcement
+## Reporting
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to the maintainers via the private channels described in
-[SECURITY.md](./SECURITY.md) (security-sensitive) or by contacting
-[@xvyimu](https://github.com/xvyimu) for conduct issues.
+**Community / conduct issues are not security vulnerabilities.**
 
-All complaints will be reviewed and investigated promptly and fairly.
+- Do **not** use GitHub Security Advisories for harassment or CoC reports.
+  Advisories are for product security only — see [SECURITY.md](./SECURITY.md).
+- Prefer a **private** contact to the maintainer
+  [@xvyimu](https://github.com/xvyimu) (GitHub profile contact options).
+- Do **not** open a public Issue that names alleged victims or includes
+  private details needed only for investigation.
+
+We aim to acknowledge conduct reports within **48 hours**.
 
 ## Enforcement Guidelines
 
-Maintainers will follow these Community Impact Guidelines:
+Maintainers will follow these Community Impact Guidelines in determining
+consequences for any action they deem in violation of this Code of Conduct:
 
-1. **Correction** — Private written warning; clarity on violation.
-2. **Warning** — Interaction restrictions for a specified period.
-3. **Temporary ban** — Temporary ban from community interaction.
-4. **Permanent ban** — Permanent ban for repeated or severe violations.
+1. **Correction** — Private written warning; clarity on the violation and
+   expected change in behavior.
+2. **Warning** — Warning with consequences for continued behavior; temporary
+   interaction restrictions may apply.
+3. **Temporary ban** — Temporary ban from community interaction for a
+   specified period.
+4. **Permanent ban** — Permanent ban from any community interaction for
+   repeated or severe violations.
 
 ## Attribution
 
-This Code of Conduct is adapted from the
-[Contributor Covenant](https://www.contributor-covenant.org), version 2.1,
-available at
-https://www.contributor-covenant.org/version/2/1/code_of_conduct.html.
+This Code of Conduct is **adapted from** the
+[Contributor Covenant](https://www.contributor-covenant.org), version 2.1
+([full text](https://www.contributor-covenant.org/version/2/1/code_of_conduct.html)).
+Sections are shortened for a single-maintainer project; the spirit and impact
+ladder above still apply. For the complete official document, use the link.

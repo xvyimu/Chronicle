@@ -93,6 +93,11 @@ NEXT_PUBLIC_GISCUS_CATEGORY_ID=your_category_id
 │  └─ types/
 ├─ .github/workflows/ci.yml     # quality / e2e / deploy（master + PR→master）
 ├─ AGENTS.md                    # AI 协作约定
+├─ CONTRIBUTING.md              # 协作 · CoC 同意
+├─ CODE_OF_CONDUCT.md           # 社区行为准则
+├─ SECURITY.md                  # 漏洞上报（非 CoC）
+├─ CHANGELOG.md                 # 选择性版本记录（完整史见 git）
+├─ .editorconfig                # 与 Prettier 对齐
 ├─ LICENSE                      # MIT · Copyright 2026 雨天狂奔
 └─ package.json                 # private · name: chronicle
 ```

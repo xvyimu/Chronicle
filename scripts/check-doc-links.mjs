@@ -10,6 +10,11 @@ const ROOT_DOCS = [
   'task_plan.md',
   'findings.md',
   'progress.md',
+  'CONTRIBUTING.md',
+  'CODE_OF_CONDUCT.md',
+  'SECURITY.md',
+  'CHANGELOG.md',
+  'GITHUB_IDENTITY.md',
 ];
 
 function walkMarkdown(directory) {

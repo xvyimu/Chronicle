@@ -2,6 +2,9 @@
 
 Personal blog + portfolio (西江月). Issues and PRs welcome.
 
+By participating (Issues, Discussions, or PRs), you agree to follow the
+[Code of Conduct](CODE_OF_CONDUCT.md).
+
 ## Guidelines
 
 1. Read [`docs/PROJECT.md`](docs/PROJECT.md) and [`docs/PRODUCT-LAYERS.md`](docs/PRODUCT-LAYERS.md).
@@ -23,8 +26,11 @@ pnpm build
 
 ## Code of Conduct
 
-[`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
+Full text: [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).  
+Conduct reports go to the maintainer privately (see that file) — **not** via
+GitHub Security Advisories.
 
 ## Security
 
-[`SECURITY.md`](SECURITY.md).
+Product vulnerabilities: [`SECURITY.md`](SECURITY.md) (Advisories / private
+maintainer contact). Do not file public issues with exploit details.
