@@ -16,7 +16,6 @@ import ReadingPathSection, {
 import FeaturedArticleRail from '@/components/home/FeaturedArticleRail';
 import CuratedLinksPreview from '@/components/home/CuratedLinksPreview';
 import HomeCtaSection from '@/components/home/HomeCtaSection';
-import RevealOnScroll from '@/components/home/RevealOnScroll';
 import { getCspNonce } from '@/lib/csp';
 import { selectHomeLinkPreviewCategories } from '@/lib/link-preview';
 // Route-scoped homepage CSS (FE-1): keep off other routes.
@@ -90,20 +89,16 @@ export default async function HomePage() {
 
         <ManifestoSection />
 
-        <RevealOnScroll as="section" className="home-path__reveal">
-          <ReadingPathSection paths={readingPaths} />
-        </RevealOnScroll>
-
-        <RevealOnScroll as="section" className="home-article-rail__reveal">
-          <FeaturedArticleRail posts={featuredArticlePosts} />
-        </RevealOnScroll>
-
-        <RevealOnScroll as="section" className="home-links-preview__reveal">
-          <CuratedLinksPreview categories={previewLinkCategories} />
-        </RevealOnScroll>
+        {/*
+          CH-PERF-003: below-fold sections stay server-only (no RevealOnScroll islands).
+          Scroll-reveal client deferral residual → CH-PERF-006.
+        */}
+        <ReadingPathSection paths={readingPaths} />
+        <FeaturedArticleRail posts={featuredArticlePosts} />
+        <CuratedLinksPreview categories={previewLinkCategories} />
 
         {featuredProjects.length > 0 && (
-          <RevealOnScroll as="section" className="home-projects section">
+          <section className="home-projects section">
             <div className="section__inner">
               <div className="section__head">
                 <div>
@@ -119,17 +114,16 @@ export default async function HomePage() {
                 </div>
               </div>
               <div className="cards cards--2">
-                {featuredProjects.map((project, index) => (
-                  <ProjectCard key={project.id} project={project} priority={index < 2} />
+                {/* No priority/preload: project images are below the fold and must not compete with hero LCP. */}
+                {featuredProjects.map((project) => (
+                  <ProjectCard key={project.id} project={project} />
                 ))}
               </div>
             </div>
-          </RevealOnScroll>
+          </section>
         )}
 
-        <RevealOnScroll as="section" className="home-cta__reveal">
-          <HomeCtaSection />
-        </RevealOnScroll>
+        <HomeCtaSection />
       </div>
     </>
   );

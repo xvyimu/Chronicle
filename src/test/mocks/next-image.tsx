@@ -10,6 +10,7 @@ export default function MockNextImage({
   alt,
   fill,
   priority: _priority,
+  preload: _preload,
   sizes: _sizes,
   placeholder: _placeholder,
   blurDataURL: _blurDataURL,
@@ -17,10 +18,12 @@ export default function MockNextImage({
   quality: _quality,
   unoptimized: _unoptimized,
   onLoadingComplete: _onLoadingComplete,
+  fetchPriority,
   ...props
 }: ImgHTMLAttributes<HTMLImageElement> & {
   fill?: boolean;
   priority?: boolean;
+  preload?: boolean;
   sizes?: string;
   placeholder?: string;
   blurDataURL?: string;
@@ -28,6 +31,7 @@ export default function MockNextImage({
   quality?: number;
   unoptimized?: boolean;
   onLoadingComplete?: unknown;
+  fetchPriority?: 'high' | 'low' | 'auto';
 }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
@@ -35,6 +39,8 @@ export default function MockNextImage({
       src={String(src ?? '')}
       alt={alt ?? ''}
       data-fill={fill ? 'true' : undefined}
+      data-preload={_preload ? 'true' : undefined}
+      fetchPriority={fetchPriority}
       {...props}
     />
   );

@@ -63,6 +63,14 @@ describe('EditorialHero', () => {
     );
   });
 
+  it('marks the hero image as the LCP preload candidate', () => {
+    render(<EditorialHero postCount={5} projectCount={3} />);
+    const img = screen.getByAltText('个人博客首页界面预览');
+    expect(img).toHaveAttribute('data-fill', 'true');
+    expect(img).toHaveAttribute('data-preload', 'true');
+    expect(img).toHaveAttribute('fetchpriority', 'high');
+  });
+
   it('has accessible overview label', () => {
     render(<EditorialHero postCount={5} projectCount={3} />);
     expect(screen.getByLabelText('站点概览')).toBeInTheDocument();
