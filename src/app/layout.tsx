@@ -27,9 +27,14 @@ import BackToTop from '@/components/ui/BackToTop';
 import DarkModeScript from '@/components/ui/DarkModeScript';
 import { getCspNonce } from '@/lib/csp';
 
+// Font preload matrix (CH-PERF-002):
+// - Noto 400/700 preload=true  → body + chrome emphasis (700 used sitewide; 800 synthesizes)
+// - Cormorant 500 preload=true → home hero / section titles are LCP candidates; keep dual preload
+// - JetBrains 400/700 preload=false → code/labels; swap on demand, never compete with LCP
+// Dual preload is intentional for `/` LCP (display hero + body). Do not drop Cormorant preload.
 const notoSansSC = Noto_Sans_SC({
   subsets: ['latin'],
-  // Two weights cover body + emphasis without the 500 face cost
+  // 400 body + 700 emphasis; 500 unused; 800 UI weights synthesize from 700
   weight: ['400', '700'],
   variable: '--font-noto-sans-sc',
   display: 'swap',
@@ -39,6 +44,7 @@ const notoSansSC = Noto_Sans_SC({
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
+  // Labels use 700; inline code may request 600 → nearest face
   weight: ['400', '700'],
   variable: '--font-jetbrains-mono',
   display: 'swap',
@@ -49,7 +55,8 @@ const jetbrainsMono = JetBrains_Mono({
 
 const cormorantGaramond = Cormorant_Garamond({
   subsets: ['latin'],
-  weight: ['500', '600'],
+  // All --font-display rules use 500; drop unused 600 face
+  weight: ['500'],
   variable: '--font-display',
   display: 'swap',
   preload: true,
