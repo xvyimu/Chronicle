@@ -25,7 +25,9 @@ Next.js 16.2 · React 19.2 · TypeScript 5 strict · Tailwind CSS v4 · MDX (nex
 | [docs/PRODUCT-LAYERS.md](./docs/PRODUCT-LAYERS.md) | 产品分层 L0–L6 · **L0 身份** · **L4 验收** |
 | [docs/PROJECT.md](./docs/PROJECT.md)               | 形态与栈 SSOT                              |
 | [CONTRIBUTING.md](./CONTRIBUTING.md)               | 协作 · Issues/PRs                          |
+| [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)         | 社区行为准则                               |
 | [SECURITY.md](./SECURITY.md)                       | 安全策略与漏洞报告                         |
+| [CHANGELOG.md](./CHANGELOG.md)                     | 版本记录（Keep a Changelog）               |
 
 完整索引见 `docs/`。
 

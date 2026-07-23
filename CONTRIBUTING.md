@@ -21,6 +21,10 @@ pnpm build
 
 **MIT** — `LICENSE`.
 
+## Code of Conduct
+
+[`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
+
 ## Security
 
 [`SECURITY.md`](SECURITY.md).
