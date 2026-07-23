@@ -18,6 +18,17 @@ Next.js 16.2 · React 19.2 · TypeScript 5 strict · Tailwind CSS v4 · MDX (nex
 
 **形态与栈 SSOT（Agent/立项）：** [`docs/PROJECT.md`](./docs/PROJECT.md) — 个人博客 Web；换栈先改该文档。
 
+## 产品方案与文档地图
+
+| 文档                                               | 用途                                       |
+| -------------------------------------------------- | ------------------------------------------ |
+| [docs/PRODUCT-LAYERS.md](./docs/PRODUCT-LAYERS.md) | 产品分层 L0–L6 · **L0 身份** · **L4 验收** |
+| [docs/PROJECT.md](./docs/PROJECT.md)               | 形态与栈 SSOT                              |
+| [CONTRIBUTING.md](./CONTRIBUTING.md)               | 协作 · Issues/PRs                          |
+| [SECURITY.md](./SECURITY.md)                       | 安全策略与漏洞报告                         |
+
+完整索引见 `docs/`。
+
 ## 快速启动
 
 ```bash
