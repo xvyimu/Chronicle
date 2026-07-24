@@ -90,8 +90,9 @@ export default async function HomePage() {
         <ManifestoSection />
 
         {/*
-          CH-PERF-003: below-fold sections stay server-only (no RevealOnScroll islands).
-          Scroll-reveal client deferral residual → CH-PERF-006.
+          CH-PERF-003 / W2 ch-cwv-home: below-fold sections stay server-only
+          (no RevealOnScroll islands on first paint). Scroll-reveal reintroduction
+          if needed → WEEK W4 rsc-client-boundary, not this page.
         */}
         <ReadingPathSection paths={readingPaths} />
         <FeaturedArticleRail posts={featuredArticlePosts} />

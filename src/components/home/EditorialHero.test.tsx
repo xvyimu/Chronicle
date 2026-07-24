@@ -21,7 +21,7 @@ vi.mock('next/image', async () => {
   return { default: MockNextImage };
 });
 
-import EditorialHero from './EditorialHero';
+import EditorialHero, { HERO_QUALITY, HERO_SIZES } from './EditorialHero';
 
 describe('EditorialHero', () => {
   beforeEach(() => {
@@ -69,6 +69,16 @@ describe('EditorialHero', () => {
     expect(img).toHaveAttribute('data-fill', 'true');
     expect(img).toHaveAttribute('data-preload', 'true');
     expect(img).toHaveAttribute('fetchpriority', 'high');
+    expect(img).toHaveAttribute('data-quality', String(HERO_QUALITY));
+    expect(img).toHaveAttribute('data-sizes', HERO_SIZES);
+    expect(img).toHaveAttribute('decoding', 'async');
+  });
+
+  it('locks the image frame to the source aspect ratio', () => {
+    const { container } = render(<EditorialHero postCount={5} projectCount={3} />);
+    const frame = container.querySelector('.editorial-hero__image-frame') as HTMLElement;
+    expect(frame).toBeTruthy();
+    expect(frame.style.aspectRatio).toBe('16 / 9');
   });
 
   it('has accessible overview label', () => {

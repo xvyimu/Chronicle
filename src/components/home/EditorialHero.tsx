@@ -10,8 +10,13 @@ interface EditorialHeroProps {
 
 const HERO_IMAGE = '/images/projects/blog.png';
 
-/** Display width of the hero frame at desktop (≥1024px). Mobile/tablet use near-full viewport. */
-const HERO_SIZES = '(max-width: 1023px) 92vw, 420px';
+/**
+ * LCP candidate sizing (source 1600×900 PNG ~298KB).
+ * Breakpoints match home.css: ≤767 mobile, ≤1023 single-column stage, ≥1024 dual column (~420px frame).
+ * quality kept ≤65 so optimized WebP/AVIF stays lighter than the raw PNG without visible poster degradation.
+ */
+export const HERO_SIZES = '(max-width: 767px) 100vw, (max-width: 1023px) 92vw, 420px';
+export const HERO_QUALITY = 65;
 
 export default function EditorialHero({ postCount, projectCount }: EditorialHeroProps) {
   return (
@@ -38,15 +43,20 @@ export default function EditorialHero({ postCount, projectCount }: EditorialHero
         </div>
 
         <div className="editorial-hero__visual" aria-label="站点概览">
-          <div className="editorial-hero__image-frame">
+          <div
+            className="editorial-hero__image-frame"
+            // 16:9 matches source asset; locks frame ratio before optimized bytes paint (CLS).
+            style={{ aspectRatio: '16 / 9' }}
+          >
             <Image
               src={HERO_IMAGE}
               alt="个人博客首页界面预览"
               fill
               preload
               fetchPriority="high"
-              quality={70}
+              quality={HERO_QUALITY}
               sizes={HERO_SIZES}
+              decoding="async"
               className="editorial-hero__image"
               {...imageBlurProps(HERO_IMAGE)}
             />
