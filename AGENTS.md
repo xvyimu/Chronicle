@@ -66,19 +66,19 @@ src/
 │   │   ├── base.css        # Global base (skip-link, header, footer, not-found)
 │   │   ├── components.css   # Generic layout and card components
 │   │   ├── archive.css      # Archive grids/cards/lists (categories + series layouts)
-│   │   ├── controls.css     # CTA buttons, pagination, tag links, project card controls
+│   │   ├── controls.css     # Global CTA button + theme-toggle hit area
 │   │   ├── links.css       # Links directory (links/layout)
-│   │   ├── blog-ui.css     # Blog list, TOC, tag cloud, image zoom (blog/tags/categories)
+│   │   ├── blog-ui.css     # Blog list, TagLink, tag cloud (+ blog media queries)
 │   │   ├── search-ui.css   # Search input and results (blog/layout)
-│   │   ├── article-ui.css  # Article detail (blog/[slug]/layout)
+│   │   ├── article-ui.css  # Article detail + reading-prefs (+ article media queries)
 │   │   ├── backdrop.css    # Backdrop layer (body::before/after + .site-backdrop__stage)
 │   │   ├── home.css        # Home paper theme (page.tsx only)
 │   │   ├── home-hero.css   # Home editorial hero (page.tsx only)
 │   │   ├── home-sections.css # Home sections (page.tsx only)
-│   │   ├── prose.css      # MDX typography (blog/[slug] + about layouts)
-│   │   ├── project-detail.css # Project detail (projects/[id]/layout)
+│   │   ├── prose.css      # MDX typography (+ prose media queries; blog/[slug] + about)
+│   │   ├── project-detail.css # Project detail (+ title media queries)
 │   │   ├── animations.css # Animations (reveal, fade-in-up)
-│   │   └── responsive.css  # Responsive breakpoints (loaded last, overrides above)
+│   │   └── responsive.css  # Global chrome/section/cards breakpoints (loaded last)
 │   ├── globals.css         # CSS entry (Tailwind v4 only, ~12 lines, NO @import chain)
 │   ├── layout.tsx          # Root layout (global CSS only; route CSS in segment layouts)
 │   ├── manifest.ts         # PWA manifest (from site config)
@@ -125,7 +125,7 @@ src/
 ## Conventions
 
 - **CSS**: BEM for structural components, Tailwind for utilities. See `docs/css-conventions.md`
-- **CSS Module Loading**: ⚠️ Tailwind v4 `@tailwindcss/postcss` silently drops `@import "./styles/xxx.css"` in `globals.css`. Every CSS module MUST be explicitly imported from a root/segment `layout.tsx` or its owning `page.tsx`: global modules stay in the root layout (tokens → base → components → archive → controls → blog-ui → article-ui → backdrop → prose → animations → responsive last); route-only `home*`, `search-ui`, `links`, and `project-detail` modules stay with their owning route. See `docs/specs/2026-06-29-css-import-fix-design.md`
+- **CSS Module Loading**: ⚠️ Tailwind v4 `@tailwindcss/postcss` silently drops `@import "./styles/xxx.css"` in `globals.css`. Every CSS module MUST be explicitly imported from a root/segment `layout.tsx` or its owning `page.tsx`: global modules stay in the root layout (tokens → base → components → controls → backdrop → animations → responsive last); route modules (`home*`, `search-ui`, `blog-ui`, `article-ui`, `prose`, `archive`, `links`, `project-detail`) stay with their owning route and own their media queries. See `docs/specs/2026-06-29-css-import-fix-design.md`
 - **shadcn Visual Composition**: Keep primitive shadcn-style components in `src/components/ui/` and page/archive composition helpers in `src/components/layout/`. Current shared pieces are `MetaBadge`, `ArchiveCard`, and `PageSection`. See `docs/specs/2026-07-04-shadcn-visual-architecture-design.md`
 - **Background Architecture**: Three-layer separation — `body::before/after` (CSS pseudo-elements) + `<SiteBackdropStage />` (server-rendered decorative DOM) + `<SiteBackdropParallax />` (client component, returns null, only side effects). See `docs/specs/2026-06-29-site-backdrop-architecture-design.md`
 - **Caching**: Use `createCache<T>` from `lib/cache.ts`. Use `resetAllCaches()` for test isolation. See `docs/cache-components-migration.md`

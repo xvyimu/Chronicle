@@ -361,3 +361,51 @@ html:not(.dark) .prose pre {
     transition: none;
   }
 }
+
+/* Route-owned responsive (was global responsive.css) */
+@media (max-width: 767px) {
+  .prose {
+    font-size: 0.9375rem;
+    line-height: 1.82;
+  }
+
+  .prose h2 {
+    margin: 38px 0 16px;
+    font-size: 1.55rem;
+  }
+
+  .prose h3 {
+    margin: 30px 0 12px;
+    font-size: 1.12rem;
+  }
+
+  .prose pre {
+    margin: 0 -8px 18px;
+    border-radius: var(--radius-sm);
+  }
+
+  .prose pre code {
+    padding: 16px;
+    font-size: 0.8rem;
+  }
+
+  .prose blockquote {
+    margin: 0 0 18px;
+    padding: 14px 16px;
+  }
+
+  .prose table {
+    font-size: 0.82rem;
+  }
+
+  .prose th,
+  .prose td {
+    padding: 8px 10px;
+  }
+}
+
+@media (max-width: 374px) {
+  .prose {
+    font-size: 0.875rem;
+  }
+}

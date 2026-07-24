@@ -63,8 +63,9 @@ content/ + data/
 
 ### 样式加载
 
-- **根 layout**：tokens / base / components / controls / backdrop / animations / responsive。
+- **根 layout**：tokens / base / components / controls / backdrop / animations / responsive（仅 chrome + section/cards 全局断点）。
 - **路由下沉**：`home*.css` → `app/page.tsx`；`search-ui.css` + `blog-ui.css` → `app/blog/layout.tsx`；`article-ui.css` + `prose.css` → `app/blog/[slug]/layout.tsx`；`prose.css` → `app/about/layout.tsx`；`blog-ui.css` → `app/tags/layout.tsx`；`archive.css` + `blog-ui.css` → `app/categories/layout.tsx`；`archive.css` → `app/series/layout.tsx`；`links.css` → `app/links/layout.tsx`；`project-detail.css` → `app/projects/[id]/layout.tsx`。
+- **路由断点归属**：archive/blog/article/prose/project-detail 的 `@media` 写在各自模块末尾，不再塞进全局 `responsive.css`。
 
 ### JSON 数据 fail-fast
 

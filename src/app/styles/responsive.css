@@ -1,10 +1,10 @@
 /* ============================================================
-   响应式 · 全站移动端收口
+   响应式 · 全站 chrome / 通用 primitives 收口
+   路由专属断点已下沉：archive / blog-ui / article-ui / prose / project-detail
    ============================================================ */
 
 @media (max-width: 1023px) {
-  .cards--3,
-  .archive-grid--3 {
+  .cards--3 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -74,10 +74,6 @@
     display: inline-flex;
   }
 
-  .hero {
-    padding: 64px 24px 56px;
-  }
-
   .footer__inner {
     grid-template-columns: 1fr;
     align-items: start;
@@ -102,23 +98,8 @@
   }
 
   .cards--2,
-  .cards--3,
-  .archive-grid--2,
-  .archive-grid--3 {
+  .cards--3 {
     grid-template-columns: 1fr;
-  }
-
-  .archive-card {
-    padding: 20px;
-  }
-
-  .archive-list__item--series {
-    grid-template-columns: 1fr;
-    align-items: start;
-  }
-
-  .archive-list__date {
-    white-space: normal;
   }
 
   .section {
@@ -150,131 +131,6 @@
     font-size: 0.94rem;
   }
 
-  .hero {
-    padding: 48px 20px 40px;
-  }
-
-  .hero__title,
-  .hero__name {
-    font-size: clamp(2.2rem, 12vw, 3.6rem);
-  }
-
-  .hero__desc,
-  .hero__tagline {
-    font-size: 0.96rem;
-  }
-
-  .hero__cta,
-  .hero__actions {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .blog__item {
-    padding: 20px;
-  }
-
-  .blog__title {
-    font-size: 1.08rem;
-  }
-
-  .article-layout {
-    display: block;
-  }
-
-  .article-shell {
-    max-width: 100%;
-  }
-
-  .article__header {
-    margin-bottom: 34px;
-  }
-
-  .article__title {
-    font-size: clamp(2.2rem, 12vw, 3.7rem);
-  }
-
-  .article-aside {
-    display: none;
-  }
-
-  .toc--mobile {
-    display: block;
-  }
-
-  .article-panel {
-    margin-top: 48px;
-    padding: 18px;
-  }
-
-  .article-panel__head,
-  .article-nav {
-    grid-template-columns: 1fr;
-  }
-
-  .article-panel__head {
-    display: grid;
-  }
-
-  .article-panel__count {
-    justify-self: start;
-  }
-
-  .article-path__item {
-    align-items: flex-start;
-  }
-
-  .article-path__current {
-    display: none;
-  }
-
-  .article-nav {
-    display: grid;
-  }
-
-  .article-nav__item--next {
-    text-align: left;
-  }
-
-  .prose {
-    font-size: 0.9375rem;
-    line-height: 1.82;
-  }
-
-  .prose h2 {
-    margin: 38px 0 16px;
-    font-size: 1.55rem;
-  }
-
-  .prose h3 {
-    margin: 30px 0 12px;
-    font-size: 1.12rem;
-  }
-
-  .prose pre {
-    margin: 0 -8px 18px;
-    border-radius: var(--radius-sm);
-  }
-
-  .prose pre code {
-    padding: 16px;
-    font-size: 0.8rem;
-  }
-
-  .prose blockquote {
-    margin: 0 0 18px;
-    padding: 14px 16px;
-  }
-
-  .prose table {
-    font-size: 0.82rem;
-  }
-
-  .prose th,
-  .prose td {
-    padding: 8px 10px;
-  }
-
   .footer {
     padding: 32px 20px 24px;
   }
@@ -290,75 +146,14 @@
     height: 36px;
   }
 
-  .reading-prefs {
-    left: 12px;
-    right: auto;
-    bottom: 12px;
-    width: auto;
-    max-width: calc(100vw - 80px);
-    padding: 6px;
-  }
-
-  .reading-prefs__trigger {
-    min-width: 0;
-  }
-
-  .reading-prefs__panel .reading-prefs__head {
-    display: none;
-  }
-
-  .reading-prefs__btn {
-    min-height: 38px;
-    padding: 6px;
-  }
-
-  .reading-prefs__value {
-    white-space: normal;
-  }
-
-  .project-detail {
-    --project-detail-title-size: clamp(2.2rem, 12vw, 3.6rem);
-  }
-
   .not-found__code {
     font-size: 4rem;
-  }
-
-  .pagination__link {
-    min-width: 34px;
-    height: 34px;
-    padding: 0 10px;
-    font-size: 0.82rem;
-  }
-
-  .tag-cloud {
-    gap: 8px;
-    padding: 24px 0;
-  }
-
-  .tag-cloud__item {
-    padding: 6px 14px;
-    font-size: 0.8rem;
   }
 }
 
 @media (max-width: 374px) {
-  .project-detail {
-    --project-detail-title-size: 2.1rem;
-  }
-
-  .section__title,
-  .hero__title,
-  .hero__name {
+  .section__title {
     font-size: 2.1rem;
-  }
-
-  .blog__item {
-    padding: 16px;
-  }
-
-  .prose {
-    font-size: 0.875rem;
   }
 }
 
@@ -369,8 +164,6 @@
   .reading-progress,
   .reading-prefs,
   .toc,
-  .hero__bg,
-  .hero__particles,
   .site-backdrop__stage {
     display: none !important;
   }

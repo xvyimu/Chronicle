@@ -200,3 +200,30 @@
   font-size: 0.86rem;
   white-space: nowrap;
 }
+
+/* Route-owned responsive (was global responsive.css) */
+@media (max-width: 1023px) {
+  .archive-grid--3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .archive-grid--2,
+  .archive-grid--3 {
+    grid-template-columns: 1fr;
+  }
+
+  .archive-card {
+    padding: 20px;
+  }
+
+  .archive-list__item--series {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .archive-list__date {
+    white-space: normal;
+  }
+}

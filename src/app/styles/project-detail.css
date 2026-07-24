@@ -94,3 +94,16 @@
   flex-wrap: wrap;
   gap: 12px;
 }
+
+/* Route-owned responsive (was global responsive.css) */
+@media (max-width: 767px) {
+  .project-detail {
+    --project-detail-title-size: clamp(2.2rem, 12vw, 3.6rem);
+  }
+}
+
+@media (max-width: 374px) {
+  .project-detail {
+    --project-detail-title-size: 2.1rem;
+  }
+}

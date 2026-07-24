@@ -9,20 +9,20 @@ globals.css                   ← Tailwind v4 入口，不承载 @import 链
 src/app/layout.tsx            ← 仅真正全局语义 CSS
 ├── styles/tokens.css         ← 设计令牌、明暗主题变量、滚动条
 ├── styles/base.css           ← 全局基础、skip-link、Header、Footer、not-found
-├── styles/components.css     ← Section / Card 等通用布局组件
-├── styles/controls.css       ← CTA Button / Pagination / TagLink / 项目卡控件
+├── styles/components.css     ← Section / Card / EmptyState / MagneticCard
+├── styles/controls.css       ← 全局 CTA Button + theme-toggle 触控扩展
 ├── styles/backdrop.css       ← Paper Gallery 背景层
 ├── styles/animations.css     ← reveal / fade motion
-└── styles/responsive.css     ← 响应式断点覆盖，最后加载
-src/app/page.tsx              ← home.css / home-hero.css / home-sections.css
-src/app/blog/layout.tsx       ← search-ui.css + blog-ui.css
-src/app/blog/[slug]/layout.tsx ← article-ui.css + prose.css
+└── styles/responsive.css     ← 全局 chrome/section/cards 断点（最后加载）
+src/app/page.tsx              ← home.css / home-hero.css / home-sections.css（自带 home 断点）
+src/app/blog/layout.tsx       ← search-ui.css + blog-ui.css（含 TagLink + blog 断点）
+src/app/blog/[slug]/layout.tsx ← article-ui.css + prose.css（含 article/reading-prefs/prose 断点）
 src/app/about/layout.tsx      ← prose.css
 src/app/tags/layout.tsx       ← blog-ui.css
-src/app/categories/layout.tsx ← archive.css + blog-ui.css
+src/app/categories/layout.tsx ← archive.css + blog-ui.css（含 archive 断点）
 src/app/series/layout.tsx     ← archive.css
 src/app/links/layout.tsx      ← links.css
-src/app/projects/[id]/layout.tsx ← project-detail.css
+src/app/projects/[id]/layout.tsx ← project-detail.css（含 title 断点）
 ```
 
 不要在 `globals.css` 里写 `@import "./styles/xxx.css"`。Tailwind v4 的
@@ -41,10 +41,10 @@ src/app/projects/[id]/layout.tsx ← project-detail.css
 
 ### 使用 BEM 自定义类的场景
 
-- **结构性布局**：`.section`、`.header`、`.hero`、`.cards`
-- **跨页面复用组件**：`.card`、`.blog__item`、`.tag-link`、`.pagination`
+- **结构性布局**：`.section`、`.header`、`.cards`
+- **跨页面复用组件**：`.card`、`.blog__item`、`.tag-link`、`.empty-state`
 - **需要 `:hover`/`:focus`/状态变化的复杂交互**：`.header--scrolled`、`.header__nav.is-open`
-- **全局响应式覆盖**：放入 `responsive.css`；路由专属组件的媒体查询留在所属 route CSS
+- **全局响应式覆盖**：chrome / section / cards 放入 `responsive.css`；路由专属组件的媒体查询留在所属 route CSS
 
 ### 使用 Tailwind 工具类的场景
 
@@ -158,21 +158,21 @@ background: #ffffff;
 | -------------------- | ------------------------------------------- | -------------------------------------------------- |
 | `tokens.css`         | CSS 变量、reset、主题切换、滚动条、选中样式 | `:root`、`.dark`、`::selection`                    |
 | `base.css`           | 页面骨架和全局基础                          | `.header`、`.footer`、`.skip-link`                 |
-| `components.css`     | 可复用布局和基础卡片                        | `.section`、`.card`、`.cards`                      |
-| `archive.css`        | 归档页和 ArchiveCard                        | `.archive-grid`、`.archive-card`                   |
-| `controls.css`       | shadcn Button 外观、分页、标签和轻量控制    | `[data-slot='button']`、`.pagination`、`.tag-link` |
+| `components.css`     | 可复用布局和基础卡片                        | `.section`、`.card`、`.cards`、`.card--project`    |
+| `archive.css`        | 归档页和 ArchiveCard（含归档断点）          | `.archive-grid`、`.archive-card`                   |
+| `controls.css`       | 全局 CTA Button、theme-toggle 触控扩展      | `[data-slot='button'][data-size='cta']`、`.theme-toggle` |
 | `links.css`          | 收藏导航目录                                | `.links-directory`                                 |
-| `blog-ui.css`        | 博客列表、目录和辅助界面                    | `.blog__item`、`.toc`、`.tag-cloud`                |
+| `blog-ui.css`        | 博客列表、TagLink、标签云（含 blog 断点）   | `.blog__item`、`.tag-link`、`.tag-cloud`           |
 | `search-ui.css`      | 搜索输入与结果列表                          | `.search-bar`、`.search-results`                   |
-| `article-ui.css`     | 文章详情布局和阅读面板                      | `.article-layout`、`.article-panel`                |
+| `article-ui.css`     | 文章详情与阅读偏好（含 article 断点）       | `.article-layout`、`.reading-prefs`                |
 | `backdrop.css`       | 背景视觉层                                  | `body::before`、`.site-backdrop__stage`            |
 | `home.css`           | 首页主题覆盖、共享样式和响应式              | `.home-paper`、`body:has(.home-paper)`             |
 | `home-hero.css`      | 首页首屏                                    | `.editorial-hero`                                  |
 | `home-sections.css`  | 首页内容区块                                | `.home-manifesto`、`.home-article-rail`            |
-| `prose.css`          | MDX 渲染的文章排版                          | `.prose h2`、`.prose code`、`.code-toolbar`        |
-| `project-detail.css` | 项目详情页                                  | `.project-detail`                                  |
+| `prose.css`          | MDX 排版（含 prose 断点）                   | `.prose h2`、`.prose code`、`.code-toolbar`        |
+| `project-detail.css` | 项目详情页（含 title 断点）                 | `.project-detail`                                  |
 | `animations.css`     | 动画关键帧和动效类                          | `.reveal-on-scroll`、`.animate-fade-in`            |
-| `responsive.css`     | 媒体查询覆盖                                | `@media (max-width: 768px)`                        |
+| `responsive.css`     | 全局 chrome / section / cards 断点          | header sheet、footer、`.section`、`.cards`         |
 
 **规则**：新组件的 CSS 放入最接近语义归属的模块。跨页面通用组件放入
 `components.css` / `archive.css` / `controls.css`；博客专属放入 `blog-ui.css` /

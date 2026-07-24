@@ -1,4 +1,5 @@
-/* Paper Gallery CTA：对齐原 .btn 触控尺寸，作用于 shadcn Button size="cta" */
+/* Paper Gallery CTA：对齐原 .btn 触控尺寸，作用于 shadcn Button size="cta"
+   （home / not-found / error / project-detail 等多路由共用 → 保持全局） */
 [data-slot='button'][data-size='cta'] {
   min-height: 44px;
   border-radius: var(--radius-full);
@@ -38,115 +39,12 @@
   color: var(--brand-hover);
 }
 
-.pagination {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  margin-top: 44px;
-}
-
-.pagination__link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 38px;
-  height: 38px;
-  border: 1px solid transparent;
-  border-radius: var(--radius-full);
-  color: var(--text-soft);
-  font-size: 0.88rem;
-  font-weight: 700;
-  padding: 0 12px;
-  transition:
-    background var(--transition-fast),
-    border-color var(--transition-fast),
-    color var(--transition-fast);
-}
-
-.pagination__link:hover {
-  border-color: var(--border);
-  background: var(--surface);
-  color: var(--text);
-}
-
-.pagination__link--active {
-  border-color: var(--brand);
-  background: var(--brand);
-  color: var(--primary-foreground);
-}
-
-.pagination__link--disabled {
-  opacity: 0.35;
-  pointer-events: none;
-}
-
-.tag-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  background: transparent;
-  color: var(--text-soft);
-  font-size: 0.8rem;
-  font-weight: 700;
-  padding: 5px 13px;
-  transition:
-    background var(--transition-fast),
-    border-color var(--transition-fast),
-    color var(--transition-fast),
-    transform var(--transition-fast);
-}
-
-.tag-link:hover {
-  border-color: var(--brand);
-  background: var(--brand-soft);
-  color: var(--brand-hover);
-  transform: translateY(-1px);
-}
-
-.card--project {
-  display: flex;
-  flex-direction: column;
-}
-
-.card--project .card__top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.card--project .card__name {
-  flex: 1;
-}
-
-.card--project .card__links {
-  display: flex;
-  flex-shrink: 0;
-  gap: 8px;
-}
-
-.card--project .card__link {
-  color: var(--text-dim);
-  font-size: 0.78rem;
-  transition: color var(--transition-fast);
-}
-
-.card--project .card__link:hover {
-  color: var(--brand);
-}
-
-.theme-toggle,
-.reading-prefs__btn,
-.reading-prefs__trigger {
+/* Header theme toggle hit area (global chrome) */
+.theme-toggle {
   position: relative;
 }
 
-.theme-toggle::before,
-.reading-prefs__btn::before,
-.reading-prefs__trigger::before {
+.theme-toggle::before {
   content: '';
   position: absolute;
   inset: -4px;

@@ -8,10 +8,10 @@ import './globals.css';
 import './styles/tokens.css'; // 设计令牌 (CSS 变量定义)
 import './styles/base.css'; // 全局基础 (skip-link, header, footer, not-found)
 import './styles/components.css'; // 通用布局与基础卡片
-import './styles/controls.css'; // CTA 按钮、分页/标签/项目卡控件
+import './styles/controls.css'; // 全局 CTA + theme-toggle 触控扩展
 import './styles/backdrop.css'; // 背景层 (body::before/after + stage)
 import './styles/animations.css'; // 动画 (reveal, page fade)
-import './styles/responsive.css'; // 响应式断点 (最后,覆盖前面)
+import './styles/responsive.css'; // 全局 chrome/section/cards 断点 (最后)
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SiteBackdropStage from '@/components/layout/SiteBackdropStage';

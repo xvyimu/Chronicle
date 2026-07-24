@@ -684,3 +684,104 @@ a.article__badge:hover {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Expanded hit area for floating reading controls (was global controls.css) */
+.reading-prefs__btn,
+.reading-prefs__trigger {
+  position: relative;
+}
+
+.reading-prefs__btn::before,
+.reading-prefs__trigger::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+}
+
+/* Route-owned responsive (was global responsive.css) */
+@media (max-width: 767px) {
+  .article-layout {
+    display: block;
+  }
+
+  .article-shell {
+    max-width: 100%;
+  }
+
+  .article__header {
+    margin-bottom: 34px;
+  }
+
+  .article__title {
+    font-size: clamp(2.2rem, 12vw, 3.7rem);
+  }
+
+  .article-aside {
+    display: none;
+  }
+
+  .toc--mobile {
+    display: block;
+  }
+
+  .article-panel {
+    margin-top: 48px;
+    padding: 18px;
+  }
+
+  .article-panel__head,
+  .article-nav {
+    grid-template-columns: 1fr;
+  }
+
+  .article-panel__head {
+    display: grid;
+  }
+
+  .article-panel__count {
+    justify-self: start;
+  }
+
+  .article-path__item {
+    align-items: flex-start;
+  }
+
+  .article-path__current {
+    display: none;
+  }
+
+  .article-nav {
+    display: grid;
+  }
+
+  .article-nav__item--next {
+    text-align: left;
+  }
+
+  .reading-prefs {
+    left: 12px;
+    right: auto;
+    bottom: 12px;
+    width: auto;
+    max-width: calc(100vw - 80px);
+    padding: 6px;
+  }
+
+  .reading-prefs__trigger {
+    min-width: 0;
+  }
+
+  .reading-prefs__panel .reading-prefs__head {
+    display: none;
+  }
+
+  .reading-prefs__btn {
+    min-height: 38px;
+    padding: 6px;
+  }
+
+  .reading-prefs__value {
+    white-space: normal;
+  }
+}
