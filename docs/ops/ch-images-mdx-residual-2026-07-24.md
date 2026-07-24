@@ -56,4 +56,4 @@
 - [x] typecheck / test exit 写入 evidence
 - [x] docs/ops + evidence
 - [x] 本地 commit · **不 push master**
-- [ ] orca worktree comment DONE · in-review（交付时写）
+- [x] orca worktree comment DONE · in-review（`5429376`）
