@@ -1,10 +1,13 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
+import { cn } from '@/lib/utils';
 
 export default function ReadingProgress() {
   const barRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
+  const reduced = usePrefersReducedMotion();
 
   useEffect(() => {
     let ticking = false;
@@ -22,7 +25,7 @@ export default function ReadingProgress() {
     };
 
     window.addEventListener('scroll', onScroll, { passive: true });
-    onScroll(); // 初始化
+    onScroll();
     return () => {
       window.removeEventListener('scroll', onScroll);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
@@ -36,7 +39,10 @@ export default function ReadingProgress() {
     >
       <div
         ref={barRef}
-        className="h-full bg-gradient-to-r from-[var(--brand)] to-[var(--brand-2)] transition-all duration-75 linear rounded-r-full"
+        className={cn(
+          'h-full bg-gradient-to-r from-[var(--brand)] to-[var(--brand-2)] rounded-r-full',
+          reduced ? 'transition-none' : 'transition-all duration-75 linear',
+        )}
         style={{ width: '0%' }}
       />
     </div>

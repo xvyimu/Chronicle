@@ -20,7 +20,7 @@ import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { SITE_CONFIG } from '@/lib/site';
 import { shouldRenderVercelInsights } from '@/lib/observability';
-import BackToTop from '@/components/ui/BackToTop';
+import BackToTopGate from '@/components/ui/BackToTopGate';
 import DarkModeScript from '@/components/ui/DarkModeScript';
 import { getCspNonce } from '@/lib/csp';
 
@@ -113,7 +113,7 @@ export default async function RootLayout({
         <main id="main-content" className="flex-1 animate-fade-in">
           {children}
         </main>
-        <BackToTop />
+        <BackToTopGate />
         {renderVercelInsights ? (
           <>
             <Analytics />

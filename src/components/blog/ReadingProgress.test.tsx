@@ -1,10 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
+
+const mockReduced = vi.fn(() => false);
+vi.mock('@/hooks/usePrefersReducedMotion', () => ({
+  usePrefersReducedMotion: () => mockReduced(),
+}));
+
 import ReadingProgress from './ReadingProgress';
 
 describe('ReadingProgress', () => {
   beforeEach(() => {
     cleanup();
+    mockReduced.mockReturnValue(false);
     // Mock window properties
     Object.defineProperty(window, 'scrollY', { value: 0, configurable: true });
     Object.defineProperty(document.documentElement, 'scrollHeight', {
@@ -52,5 +59,14 @@ describe('ReadingProgress', () => {
     const { unmount } = render(<ReadingProgress />);
     unmount();
     expect(cancelSpy).toHaveBeenCalled();
+  });
+
+  it('drops transition classes when reduced motion is preferred', () => {
+    mockReduced.mockReturnValue(true);
+    render(<ReadingProgress />);
+    const bar = document.querySelector(
+      '[data-testid="reading-progress"] > div',
+    ) as HTMLElement;
+    expect(bar.className).toContain('transition-none');
   });
 });

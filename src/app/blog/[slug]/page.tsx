@@ -1,6 +1,6 @@
 import MdxContent from '@/components/blog/MdxContent';
 import TableOfContents from '@/components/blog/TableOfContents';
-import ReadingProgress from '@/components/blog/ReadingProgress';
+import ReadingProgressGate from '@/components/blog/ReadingProgressGate';
 import ReadingPreferences from '@/components/blog/ReadingPreferences';
 import ArticleHeader from '@/components/blog/ArticleHeader';
 import ArticleJsonLd from '@/components/blog/ArticleJsonLd';
@@ -64,7 +64,7 @@ async function BlogPostContent({ post }: { post: PostFull }) {
   return (
     <>
       <ArticleJsonLd post={post} nonce={nonce} />
-      <ReadingProgress />
+      <ReadingProgressGate />
       <ReadingPreferences targetId="article-content" />
       <section className="section">
         <div className="section__inner">

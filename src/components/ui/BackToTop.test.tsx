@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, cleanup, fireEvent } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent, act } from '@testing-library/react';
 
 const mockPrefersReducedMotion = vi.fn(() => false);
 
@@ -9,12 +9,20 @@ vi.mock('@/hooks/usePrefersReducedMotion', () => ({
 
 import BackToTop from './BackToTop';
 
+function setScrollY(value: number) {
+  Object.defineProperty(window, 'scrollY', {
+    value,
+    writable: true,
+    configurable: true,
+  });
+}
+
 describe('BackToTop', () => {
   beforeEach(() => {
     cleanup();
     vi.clearAllMocks();
     mockPrefersReducedMotion.mockReturnValue(false);
-    window.scrollY = 0;
+    setScrollY(0);
   });
 
   afterEach(() => {
@@ -34,7 +42,7 @@ describe('BackToTop', () => {
   });
 
   it('is visible when scrollY > 300', () => {
-    window.scrollY = 400;
+    setScrollY(400);
     render(<BackToTop />);
     const btn = screen.getByLabelText('回到顶部');
     expect(btn.className).toContain('opacity-100');
@@ -48,7 +56,7 @@ describe('BackToTop', () => {
     const scrollTo = vi.fn();
     window.scrollTo = scrollTo;
 
-    window.scrollY = 400;
+    setScrollY(400);
     render(<BackToTop />);
     fireEvent.click(screen.getByLabelText('回到顶部'));
 
@@ -60,7 +68,7 @@ describe('BackToTop', () => {
     const scrollTo = vi.fn();
     window.scrollTo = scrollTo;
 
-    window.scrollY = 400;
+    setScrollY(400);
     render(<BackToTop />);
     fireEvent.click(screen.getByLabelText('回到顶部'));
 
@@ -76,12 +84,56 @@ describe('BackToTop', () => {
     });
   });
 
+  it('coalesces scroll events into one animation frame', () => {
+    const frameCallbacks = new Map<number, FrameRequestCallback>();
+    let nextFrameId = 1;
+    const rafSpy = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
+      const id = nextFrameId++;
+      frameCallbacks.set(id, cb);
+      return id;
+    });
+    const addSpy = vi.spyOn(window, 'addEventListener');
+
+    render(<BackToTop />);
+    const onScroll = addSpy.mock.calls.find(
+      (c) => c[0] === 'scroll',
+    )?.[1] as EventListener;
+    expect(onScroll).toBeTypeOf('function');
+
+    rafSpy.mockClear();
+    frameCallbacks.clear();
+
+    setScrollY(50);
+    onScroll(new Event('scroll'));
+    setScrollY(400);
+    onScroll(new Event('scroll'));
+
+    expect(rafSpy).toHaveBeenCalledTimes(1);
+    const frameId = rafSpy.mock.results[0]?.value as number;
+    const frame = frameCallbacks.get(frameId);
+    expect(frame).toBeTypeOf('function');
+
+    act(() => {
+      frame?.(0);
+    });
+
+    const btn = screen.getByLabelText('回到顶部');
+    expect(btn.className).toContain('opacity-100');
+  });
+
   it('removes scroll event listener on unmount', () => {
     const removeSpy = vi.spyOn(window, 'removeEventListener');
     const { unmount } = render(<BackToTop />);
     unmount();
 
     expect(removeSpy).toHaveBeenCalledWith('scroll', expect.any(Function));
+  });
+
+  it('disables transition classes when reduced motion is preferred', () => {
+    mockPrefersReducedMotion.mockReturnValue(true);
+    render(<BackToTop />);
+    const btn = screen.getByLabelText('回到顶部');
+    expect(btn.className).toContain('transition-none');
   });
 
   it('renders SVG arrow icon', () => {

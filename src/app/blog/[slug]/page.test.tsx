@@ -33,7 +33,7 @@ vi.mock('@/components/blog/TableOfContents', () => ({
   default: () => <nav aria-label="目录" />,
 }));
 
-vi.mock('@/components/blog/ReadingProgress', () => ({
+vi.mock('@/components/blog/ReadingProgressGate', () => ({
   default: () => <div data-testid="reading-progress" />,
 }));
 
