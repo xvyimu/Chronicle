@@ -3,6 +3,7 @@
 **branch:** `xvyimu/ch-rsc-client-boundary`  
 **date:** 2026-07-24  
 **base tip:** `1f52af9`  
+**result tip:** `3dcd42c`  
 **node:** v24.16.0 · **WARN** vs engines `22.x`
 
 ## 扫描表（master 已有 006 之上再增量）

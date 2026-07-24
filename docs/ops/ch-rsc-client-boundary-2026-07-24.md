@@ -36,6 +36,6 @@
 
 ## 回执字段（总控）
 
-- tip：（commit 后填）
+- tip：`3dcd42c`
 - 摘要：W4 residual client gates + reduced/fine parallax skip
 - 风险：ssr:false 首屏无按钮/进度条；未 build/LH
