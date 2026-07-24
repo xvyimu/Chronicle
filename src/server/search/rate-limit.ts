@@ -4,14 +4,16 @@
  * 语义：
  * - 只统计到达本 Node isolate 的请求（缓存未命中/未缓存）
  * - 带 s-maxage 的 CDN 命中不会进入本 Map
- * - 多实例 serverless 不跨 isolate 共享计数
+ * - 多实例 serverless 不跨 isolate 共享计数（无 Redis/KV；勿把本 Map 当全局限额）
  * - 不是全局安全边界；硬配额应放在平台 Firewall/WAF
+ * - 运维边界与勾选表：docs/ops/public-api-rate-limit-boundary.md（CH-CR-001/002）
  *
  * 当前消费者：search / preview / csp-report。共用同一 Map，用 key 前缀隔离配额
  *（`preview:`、`csp-report:`）。模块仍放在 `server/search` 是历史路径；
  * 第四个非搜索消费者出现时再抽到 `server/rate-limit`。
  *
- * IP key 仅信任平台所有的 `x-vercel-forwarded-for`，忽略可伪造的通用转发头。
+ * IP key 仅信任平台所有的 `x-vercel-forwarded-for`，忽略可伪造的通用转发头；
+ * 无有效平台 IP 时回退 `anonymous`（同 isolate 内共享一桶，非安全分区）。
  */
 
 /** 单次限流检查结果：是否放行、剩余配额与窗口重置时间。 */

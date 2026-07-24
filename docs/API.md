@@ -1,8 +1,9 @@
 # 公开 HTTP API
 
-> 状态：当前契约（2026-07-22）。公开 Route Handler：只读的搜索与 wikilink 预览（`GET`，无请求体），以及只写的 CSP 违规上报（`POST`，collect-only）。均不要求登录。  
+> 状态：当前契约（2026-07-22；ops 边界 2026-07-24）。公开 Route Handler：只读的搜索与 wikilink 预览（`GET`，无请求体），以及只写的 CSP 违规上报（`POST`，collect-only）。均不要求登录。  
 > 运行时：Node.js（内容读取基于 fs，不面向 Edge）。  
-> 规范源补充：`docs/architecture-optimization-research-2026-07-21-v4.md` §7。
+> 规范源补充：`docs/architecture-optimization-research-2026-07-21-v4.md` §7。  
+> **限流边界 / 生产 WAF 检查表（CH-CR-001/002）：** [`docs/ops/public-api-rate-limit-boundary.md`](./ops/public-api-rate-limit-boundary.md) — 进程内 Map、多 isolate 不共享、`anonymous` 桶、硬配额在平台 Firewall。
 
 | 路径                      | 用途                         | 限流                                           | 成功缓存                          |
 | ------------------------- | ---------------------------- | ---------------------------------------------- | --------------------------------- |
@@ -90,11 +91,12 @@ curl "http://localhost:3000/api/search?q=Next.js&limit=5"
 
 ## 限流语义
 
-- 固定窗口：同一 key 每 60 秒最多 60 次到达 origin 的请求。
+- 固定窗口：同一 key 每 60 秒最多 60 次到达 origin 的请求（search；preview/csp-report 见上表）。
 - key 只读取平台提供的 `x-vercel-forwarded-for`；无有效 IP 时使用 `anonymous`。
 - 限流在 query 校验之前执行，因此到达 origin 的空查询和非法查询也计数。
 - CDN 命中的缓存响应不会进入进程内 Map；多个 serverless 实例也不共享计数。
 - 这是尽力而为的资源保护，不是全局安全配额；硬限制应放在 Vercel Firewall/WAF。
+- **运维展开（WAF 勾选表、preview 枚举边界、明确不做 Redis 假全局）：** [`docs/ops/public-api-rate-limit-boundary.md`](./ops/public-api-rate-limit-boundary.md)。
 
 ## 客户端行为
 

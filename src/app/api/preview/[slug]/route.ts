@@ -6,6 +6,10 @@ import { checkPreviewRateLimit, clientKeyFromRequest } from '@/server/search';
  * G3 popover preview endpoint.
  * Returns lightweight post metadata for wikilink hover cards.
  * Body MDX is intentionally excluded to keep payload small.
+ *
+ * Public, unauthenticated: published metadata only (drafts filtered in prod).
+ * Process rate-limit is best-effort per isolate — not a global enum shield.
+ * Ops boundary: docs/ops/public-api-rate-limit-boundary.md (CH-CR-002).
  */
 export async function GET(
   request: Request,

@@ -20,6 +20,7 @@ export const runtime = 'nodejs';
  *
  * 服务端用例：参数校验与 HTTP 映射；搜索与限流委托 `@/server/search`。
  * 限流在 query 校验之前执行；内容异常映射为无泄露 500。
+ * 进程内 Map 非跨 isolate 全局；硬配额见 docs/ops/public-api-rate-limit-boundary.md。
  */
 export async function GET(request: Request) {
   const key = clientKeyFromRequest(request);

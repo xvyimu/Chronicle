@@ -29,6 +29,7 @@ const MAX_REPORT_BYTES = 16_384;
  * - `report-to` / Reporting API：`application/reports+json`，数组 `[{ type, body }]`
  *
  * 端点公开、无鉴权、只写日志：不落库、不外发、不回显。以进程限流防日志刷量。
+ * 进程限流非全局安全配额；硬边界见 docs/ops/public-api-rate-limit-boundary.md。
  * 无论解析成败一律返回 204，避免向潜在滥用者暴露解析细节。
  */
 export async function POST(request: Request): Promise<NextResponse> {
