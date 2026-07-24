@@ -31,6 +31,9 @@ describe('BackToTop', () => {
     const btn = screen.getByLabelText('回到顶部');
     expect(btn.className).toContain('opacity-0');
     expect(btn.className).toContain('pointer-events-none');
+    // Off-screen: leave tab order + hide from AT (CH-A11Y-SMOKE)
+    expect(btn).toHaveAttribute('tabIndex', '-1');
+    expect(btn).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('is visible when scrollY > 300', () => {
@@ -42,6 +45,8 @@ describe('BackToTop', () => {
     // disabled:/svg: 前缀变体不计入）
     expect(btn.className).toMatch(/(?:^|\s)opacity-100(?:\s|$)/);
     expect(btn.className).not.toMatch(/(?:^|\s)pointer-events-none(?:\s|$)/);
+    expect(btn).toHaveAttribute('tabIndex', '0');
+    expect(btn).not.toHaveAttribute('aria-hidden');
   });
 
   it('scrolls to top on click', () => {

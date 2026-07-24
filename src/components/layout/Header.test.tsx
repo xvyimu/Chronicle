@@ -25,7 +25,7 @@ vi.mock('next/navigation', () => ({
 
 // Mock ThemeToggle
 vi.mock('@/components/ui/ThemeToggle', () => ({
-  default: () => <button type="button" aria-label="切换主题" />,
+  default: () => <button type="button" aria-label="主题：跟随系统" />,
 }));
 
 // Mock next/headers for async RSC Header
@@ -123,7 +123,16 @@ describe('Header (RSC shell + client islands)', () => {
 
   it('renders ThemeToggle', async () => {
     await renderHeader();
-    expect(screen.getByLabelText('切换主题')).toBeInTheDocument();
+    expect(screen.getByLabelText('主题：跟随系统')).toBeInTheDocument();
+  });
+
+  it('hides decorative brand logo from assistive tech', async () => {
+    await renderHeader();
+    const brand = screen.getByText('西江月').closest('a');
+    expect(brand).toBeTruthy();
+    const logo = brand?.querySelector('.header__logo');
+    expect(logo).toHaveAttribute('aria-hidden', 'true');
+    expect(logo?.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('renders a search shortcut link', async () => {

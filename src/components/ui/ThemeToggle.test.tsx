@@ -37,9 +37,26 @@ describe('ThemeToggle', () => {
     cleanup();
   });
 
-  it('renders a button with aria-label "切换主题"', () => {
+  it('renders a button with a loading-safe aria-label before hydration', () => {
     render(<ThemeToggle />);
-    expect(screen.getByRole('button', { name: '切换主题' })).toBeInTheDocument();
+    // Before usePersistedEnum hydrates, label is explicit "加载中".
+    // After hydration (jsdom sync), it becomes the current theme label.
+    const button = screen.getByRole('button');
+    expect(button.getAttribute('aria-label')).toMatch(/^主题：/);
+  });
+
+  it('exposes current theme state in aria-label after cycle', async () => {
+    localStorage.setItem('theme', 'light');
+    render(<ThemeToggle />);
+
+    await vi.waitFor(() => {
+      expect(screen.getByRole('button', { name: '主题：浅色' })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: '主题：浅色' }));
+    await vi.waitFor(() => {
+      expect(screen.getByRole('button', { name: '主题：深色' })).toBeInTheDocument();
+    });
   });
 
   it('applies dark class when theme is dark', async () => {

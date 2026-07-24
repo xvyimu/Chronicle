@@ -29,6 +29,9 @@ export default function BackToTop() {
     <Button
       onClick={scrollToTop}
       aria-label="回到顶部"
+      // Hidden from keyboard / AT while off-screen (still mounted for scroll listener).
+      tabIndex={visible ? 0 : -1}
+      aria-hidden={visible ? undefined : true}
       size="icon"
       variant="outline"
       className={cn(

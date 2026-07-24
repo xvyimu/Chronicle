@@ -25,7 +25,7 @@ export default async function Header() {
       <HeaderScrollState />
       <div className="header__inner">
         <Link href="/" className="header__brand">
-          <span className="header__logo">
+          <span className="header__logo" aria-hidden="true">
             <svg
               width="20"
               height="20"
@@ -35,6 +35,8 @@ export default async function Header() {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
+              aria-hidden="true"
+              focusable="false"
             >
               <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
             </svg>

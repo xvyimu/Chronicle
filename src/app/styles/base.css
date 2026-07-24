@@ -54,7 +54,8 @@ body {
   transition: top 0.2s var(--ease-out);
 }
 
-.skip-link:focus {
+.skip-link:focus,
+.skip-link:focus-visible {
   top: 0;
   outline: 2px solid var(--brand);
   outline-offset: 2px;

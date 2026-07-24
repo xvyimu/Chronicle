@@ -27,4 +27,12 @@ describe('Footer', () => {
     expect(ghLink).toHaveAttribute('target', '_blank');
     expect(ghLink).toHaveAttribute('rel', 'noopener noreferrer');
   });
+
+  it('hides decorative footer logo and social icon from assistive tech', () => {
+    render(<Footer />);
+    const logo = document.querySelector('.footer__logo');
+    expect(logo).toHaveAttribute('aria-hidden', 'true');
+    const ghIcon = screen.getByLabelText('GitHub').querySelector('svg');
+    expect(ghIcon).toHaveAttribute('aria-hidden', 'true');
+  });
 });
