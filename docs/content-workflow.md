@@ -1,5 +1,21 @@
 # 内容维护与发布流程
 
+> ## ⛔ 必跑门闩（改 MDX / frontmatter 后）
+>
+> **生产默认读 `generated/content-snapshot/`**（`CONTENT_BACKEND=snapshot`），不是直接扫 `content/blog/*.mdx`。
+>
+> ```bash
+> pnpm content:build          # 重建快照
+> git add generated/content-snapshot && git commit   # 与 public/feed.* 同模式，必须提交
+> pnpm content:check          # 本地对齐 CI：build + git diff --exit-code
+> ```
+>
+> **CI 会红：** quality job 执行 `pnpm content:build` 后  
+> `git diff --exit-code -- generated/content-snapshot` —— 忘提交快照 = PR 失败。  
+> 开发默认 `CONTENT_BACKEND=fs`，本地改 MDX 看起来「生效了」，**不等于**生产已更新。
+>
+> 细节见下文「内容快照」；脚本失败会打印醒目 `FAILED` 条幅与修复步骤。
+
 这份文档面向两类协作者：
 
 - 需要新增或修改博客内容的人
@@ -108,6 +124,7 @@ license: MIT
 ```bash
 pnpm content:build
 # 将 generated/content-snapshot/* 的 diff 一并提交（与 public/feed.* 同模式）
+pnpm content:check   # 可选：本地复现 CI 红条（build 后 diff 非空则 exit 1）
 ```
 
 | 环境变量                | 作用                                                                                    |
@@ -116,10 +133,11 @@ pnpm content:build
 | `SOURCE_DATE_EPOCH`     | Unix 秒；冻结 `manifest.builtAt`（可重复时间戳）。hash 未变时仍 **skip write**，不漂 CI |
 
 - **contentHash** 覆盖：slug + date + title + series/seriesSlug/seriesOrder + category + tags + 正文 sha256（IA 元数据变更也会让 CI 要求重提 snapshot）。
-- 开发默认 `CONTENT_BACKEND=fs`：改 MDX 即时生效，无需每次重建快照。
+- 开发默认 `CONTENT_BACKEND=fs`：改 MDX 即时生效，无需每次重建快照——**提交前仍要 content:build**。
 - 快照只含 **published !== false** 的文章；草稿不会进入生产快照。
 - 回滚：`CONTENT_BACKEND=fs` 或非 production `NODE_ENV`。
-- CI：`pnpm content:build` + `git diff --exit-code -- generated/content-snapshot`。
+- **CI 红门闩**（`.github/workflows/ci.yml` quality）：`pnpm content:build` → `git diff --exit-code -- generated/content-snapshot`。
+- 构建失败时 `scripts/build-content-snapshot.ts` 会打印 `FAILED` 条幅 + 修复四步，exit 1。
 
 ### 草稿机制
 
@@ -339,6 +357,7 @@ Feed 先按文件名倒序取最近 20 个 MDX 候选，再过滤 `published: fa
 建议至少运行：
 
 ```bash
+pnpm content:check
 pnpm format:docs:check
 pnpm format:check
 pnpm lint
@@ -349,6 +368,7 @@ pnpm test
 pnpm exec cross-env NEXT_PUBLIC_SITE_URL=https://incca.ccwu.cc pnpm build
 ```
 
+`pnpm content:check` 先重建快照，再对 `generated/content-snapshot` 做 `git diff --exit-code`——与 CI 同语义，非空 diff 即 exit 1。  
 构建会重写 `public/feed.xml` 和 `public/feed.json`。完成后检查这两个文件的 diff，避免把 localhost URL 或无关生成差异提交。涉及页面交互、移动端或路由行为时再运行 `pnpm test:e2e`。
 
 如果 build 通过，通常也能顺便验证：

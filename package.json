@@ -18,6 +18,7 @@
   "scripts": {
     "dev": "next dev",
     "content:build": "tsx scripts/build-content-snapshot.ts",
+    "content:check": "tsx scripts/build-content-snapshot.ts && git diff --exit-code -- generated/content-snapshot",
     "build": "tsx scripts/generate-rss.ts && tsx scripts/build-content-snapshot.ts && next build",
     "start": "next start",
     "lint": "eslint",
