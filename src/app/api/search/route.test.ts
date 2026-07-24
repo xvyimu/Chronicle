@@ -42,6 +42,7 @@ describe('GET /api/search', () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body).toMatchObject({ query: '', results: [], count: 0, source: 'server' });
+    expect(res.headers.get('ETag')).toMatch(/^"[A-Za-z0-9_-]+"$/);
   });
 
   it('returns ranked projected hits for a matching query', async () => {
@@ -57,7 +58,23 @@ describe('GET /api/search', () => {
     expect(cacheControl).toContain('s-maxage=60');
     expect(cacheControl).toContain('max-age=0');
     expect(cacheControl).toContain('stale-while-revalidate=300');
+    expect(res.headers.get('ETag')).toMatch(/^"[A-Za-z0-9_-]+"$/);
     expect(res.headers.get('X-RateLimit-Remaining')).toBeNull();
+  });
+
+  it('returns 304 when If-None-Match matches the success ETag', async () => {
+    const first = await GET(requestFor('/api/search?q=Redis'));
+    expect(first.status).toBe(200);
+    const etag = first.headers.get('ETag');
+    expect(etag).toBeTruthy();
+
+    const revalidated = await GET(
+      requestFor('/api/search?q=Redis', { 'if-none-match': etag! }),
+    );
+    expect(revalidated.status).toBe(304);
+    expect(revalidated.headers.get('ETag')).toBe(etag);
+    expect(revalidated.headers.get('Cache-Control')).toContain('s-maxage=60');
+    expect(await revalidated.text()).toBe('');
   });
 
   it('does not expose hidden index fields in match payloads', async () => {
@@ -77,6 +94,7 @@ describe('GET /api/search', () => {
     expect(res.status).toBe(400);
     const body = await res.json();
     expect(body.code).toBe('QUERY_TOO_LONG');
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
   });
 
   it('clamps limit to SEARCH_MAX_LIMIT', async () => {
@@ -98,6 +116,7 @@ describe('GET /api/search', () => {
     expect(body.code).toBe('RATE_LIMITED');
     expect(Number(blocked.headers.get('Retry-After'))).toBeGreaterThan(0);
     expect(blocked.headers.get('X-RateLimit-Remaining')).toBe('0');
+    expect(blocked.headers.get('Cache-Control')).toBe('no-store');
   });
 
   it('returns a no-store structured 500 without leaking internal details', async () => {

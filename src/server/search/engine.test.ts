@@ -104,6 +104,17 @@ describe('searchPostsCached', () => {
     const b = searchPostsCached(MOCK_POSTS, 'Invalidation');
     expect(b.map((h) => h.item.slug)).toEqual(a.map((h) => h.item.slug));
   });
+
+  it('keeps ranking stable across repeated calls on the same posts reference', () => {
+    const first = searchPostsCached(MOCK_POSTS, 'Redis');
+    const second = searchPostsCached(MOCK_POSTS, 'Redis');
+    const third = searchPostsCached(MOCK_POSTS, 'App Router');
+    expect(second.map((h) => h.item.slug)).toEqual(first.map((h) => h.item.slug));
+    expect(third.length).toBeGreaterThan(0);
+    // 新数组引用会重建索引，但公开投影排序仍一致
+    const rebuilt = searchPostsCached([...MOCK_POSTS], 'Redis');
+    expect(rebuilt.map((h) => h.item.slug)).toEqual(first.map((h) => h.item.slug));
+  });
 });
 
 describe('toSearchResultItem', () => {

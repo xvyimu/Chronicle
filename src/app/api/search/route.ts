@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import {
   SEARCH_MAX_LIMIT,
@@ -20,6 +21,7 @@ export const runtime = 'nodejs';
  *
  * 服务端用例：参数校验与 HTTP 映射；搜索与限流委托 `@/server/search`。
  * 限流在 query 校验之前执行；内容异常映射为无泄露 500。
+ * 成功响应带弱校验 ETag，支持 If-None-Match → 304（浏览器 max-age=0 再验证减 body）。
  */
 export async function GET(request: Request) {
   const key = clientKeyFromRequest(request);
@@ -36,6 +38,7 @@ export async function GET(request: Request) {
           Math.max(1, Math.ceil((limitState.resetMs - Date.now()) / 1000)),
         ),
         'X-RateLimit-Remaining': '0',
+        'Cache-Control': 'no-store',
       },
     });
   }
@@ -49,7 +52,10 @@ export async function GET(request: Request) {
       error: `query exceeds ${SEARCH_MAX_QUERY_LENGTH} characters`,
       code: 'QUERY_TOO_LONG',
     };
-    return NextResponse.json(body, { status: 400 });
+    return NextResponse.json(body, {
+      status: 400,
+      headers: { 'Cache-Control': 'no-store' },
+    });
   }
 
   const rawLimit = Number(searchParams.get('limit') ?? SEARCH_RESULT_LIMIT);
@@ -64,9 +70,7 @@ export async function GET(request: Request) {
       count: 0,
       source: 'server',
     };
-    return NextResponse.json(empty, {
-      headers: cacheHeaders(),
-    });
+    return cachedJsonResponse(request, empty);
   }
 
   try {
@@ -78,9 +82,7 @@ export async function GET(request: Request) {
       source: 'server',
     };
 
-    return NextResponse.json(body, {
-      headers: cacheHeaders(),
-    });
+    return cachedJsonResponse(request, body);
   } catch (error) {
     // 只记录错误类别，绝不向客户端暴露路径或内容。
     console.error(
@@ -104,9 +106,39 @@ export async function GET(request: Request) {
  * - s-maxage=60：边缘短缓存，提高重复查询命中、降低 origin 冷路径
  * - stale-while-revalidate=300：过期后先吐旧再回源
  * CDN 命中不进入进程限流 Map。
+ * ETag + If-None-Match：再验证命中时 304 无 body。
  */
 function cacheHeaders(): Record<string, string> {
   return {
     'Cache-Control': 'public, max-age=0, s-maxage=60, stale-while-revalidate=300',
   };
+}
+
+function etagForPayload(payload: string): string {
+  const digest = createHash('sha1').update(payload).digest('base64url');
+  return `"${digest}"`;
+}
+
+function ifNoneMatchHits(header: string | null, etag: string): boolean {
+  if (!header) return false;
+  return header.split(',').some((part) => {
+    const token = part.trim();
+    return token === etag || token === `W/${etag}`;
+  });
+}
+
+function cachedJsonResponse(request: Request, data: SearchResponse): NextResponse {
+  const payload = JSON.stringify(data);
+  const etag = etagForPayload(payload);
+  const headers: Record<string, string> = {
+    ...cacheHeaders(),
+    ETag: etag,
+    'Content-Type': 'application/json; charset=utf-8',
+  };
+
+  if (ifNoneMatchHits(request.headers.get('if-none-match'), etag)) {
+    return new NextResponse(null, { status: 304, headers });
+  }
+
+  return new NextResponse(payload, { status: 200, headers });
 }

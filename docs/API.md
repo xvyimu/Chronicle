@@ -66,6 +66,7 @@ curl "http://localhost:3000/api/search?q=Next.js&limit=5"
 - `count` 是应用 `limit` 后实际返回的数量，不是未截断总匹配数。
 - 空查询同样返回 `200`，其中 `query=""`、`results=[]`、`count=0`。
 - 成功响应缓存头：`public, max-age=0, s-maxage=60, stale-while-revalidate=300`（浏览器每次校验；CDN 短缓存）。
+- 成功响应另带弱校验 `ETag`（body SHA-1 base64url 强实体标签）；请求 `If-None-Match` 命中时返回 `304` 无 body，缓存头与 ETag 仍下发。
 
 ### 错误响应
 
@@ -78,11 +79,11 @@ curl "http://localhost:3000/api/search?q=Next.js&limit=5"
 }
 ```
 
-| 状态  | `code`           | 触发条件                       | 额外行为                                         |
-| ----- | ---------------- | ------------------------------ | ------------------------------------------------ |
-| `400` | `QUERY_TOO_LONG` | `q` 超过 100 字符              | 不执行搜索                                       |
-| `429` | `RATE_LIMITED`   | 当前 origin 进程窗口超过限制   | 返回 `Retry-After` 和 `X-RateLimit-Remaining: 0` |
-| `500` | `SERVER_ERROR`   | 内容 repository 或搜索引擎异常 | `Cache-Control: no-store`，不暴露路径和 stack    |
+| 状态  | `code`           | 触发条件                       | 额外行为                                                             |
+| ----- | ---------------- | ------------------------------ | -------------------------------------------------------------------- |
+| `400` | `QUERY_TOO_LONG` | `q` 超过 100 字符              | `Cache-Control: no-store`，不执行搜索                                |
+| `429` | `RATE_LIMITED`   | 当前 origin 进程窗口超过限制   | `Retry-After`、`X-RateLimit-Remaining: 0`、`Cache-Control: no-store` |
+| `500` | `SERVER_ERROR`   | 内容 repository 或搜索引擎异常 | `Cache-Control: no-store`，不暴露路径和 stack                        |
 
 `400` 的 `error` 为 `query exceeds 100 characters`，`429` 为 `rate limit exceeded`；调用方应以稳定的 `code` 分支，不依赖 error 文案。
 

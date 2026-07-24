@@ -12,6 +12,9 @@ import { getAllPosts } from '@/server/content';
  * 搜索语料入口：生产 snapshot 路径只读 `search-docs.json`，
  * 避免 `readContentSnapshot` 连带解析 posts-full（~200KB+）的冷路径。
  * fs / dev 仍走 content facade 的 getAllPosts（进程内已有缓存）。
+ *
+ * 进程内缓存按 snapshot root 复用稳定数组引用，供 engine WeakMap 命中 Fuse 索引。
+ * serverless isolate 生命周期内有效；部署/内容重建后新 isolate 自然失效。
  */
 
 let cachedSearchDocs: PostMeta[] | null = null;
