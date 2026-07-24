@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, cleanup, waitFor } from '@testing-library/react';
+import { render, screen, cleanup, act } from '@testing-library/react';
 import { useServerSearch } from './useServerSearch';
+
+/** Must match DEBOUNCE_MS in useServerSearch.ts */
+const DEBOUNCE_MS = 180;
 
 function Probe({ query }: { query: string }) {
   const { ready, results, error, retryAfterSeconds } = useServerSearch(query);
@@ -17,9 +20,23 @@ function Probe({ query }: { query: string }) {
   );
 }
 
+/** Advance debounce timer + flush microtasks (fetch promise resolution). */
+async function flushDebouncedSearch() {
+  await act(async () => {
+    vi.advanceTimersByTime(DEBOUNCE_MS);
+  });
+  // Allow resolved fetch promises to apply state updates.
+  await act(async () => {
+    await Promise.resolve();
+    await Promise.resolve();
+  });
+}
+
 describe('useServerSearch', () => {
   beforeEach(() => {
     cleanup();
+    // Fake timers pin the 180ms debounce — no wall-clock wait, no race.
+    vi.useFakeTimers();
     vi.stubGlobal(
       'fetch',
       vi.fn(async () =>
@@ -53,6 +70,7 @@ describe('useServerSearch', () => {
 
   afterEach(() => {
     cleanup();
+    vi.useRealTimers();
     vi.unstubAllGlobals();
   });
 
@@ -65,12 +83,10 @@ describe('useServerSearch', () => {
 
   it('debounces and loads results from /api/search', async () => {
     render(<Probe query="Redis" />);
-    await waitFor(
-      () => {
-        expect(screen.getByText('Redis Caching Strategies')).toBeInTheDocument();
-      },
-      { timeout: 2000 },
-    );
+    // Before debounce elapses, no request yet.
+    expect(fetch).not.toHaveBeenCalled();
+    await flushDebouncedSearch();
+    expect(screen.getByText('Redis Caching Strategies')).toBeInTheDocument();
     expect(fetch).toHaveBeenCalled();
     const url = String(vi.mocked(fetch).mock.calls[0][0]);
     expect(url).toContain('/api/search');
@@ -92,15 +108,11 @@ describe('useServerSearch', () => {
     );
 
     render(<Probe query="Redis" />);
+    await flushDebouncedSearch();
 
-    await waitFor(
-      () => {
-        expect(screen.getByTestId('ready').textContent).toBe('yes');
-        expect(screen.getByTestId('error').textContent).toBe('rate_limited');
-        expect(screen.getByTestId('retry-after').textContent).toBe('17');
-      },
-      { timeout: 2000 },
-    );
+    expect(screen.getByTestId('ready').textContent).toBe('yes');
+    expect(screen.getByTestId('error').textContent).toBe('rate_limited');
+    expect(screen.getByTestId('retry-after').textContent).toBe('17');
     expect(screen.getByTestId('count').textContent).toBe('0');
   });
 
@@ -111,14 +123,10 @@ describe('useServerSearch', () => {
     );
 
     render(<Probe query="Redis" />);
+    await flushDebouncedSearch();
 
-    await waitFor(
-      () => {
-        expect(screen.getByTestId('ready').textContent).toBe('yes');
-        expect(screen.getByTestId('error').textContent).toBe('server');
-      },
-      { timeout: 2000 },
-    );
+    expect(screen.getByTestId('ready').textContent).toBe('yes');
+    expect(screen.getByTestId('error').textContent).toBe('server');
     expect(screen.getByTestId('count').textContent).toBe('0');
   });
 });

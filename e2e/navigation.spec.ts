@@ -32,8 +32,12 @@ test.describe('主题切换', () => {
 
     await toggle.click();
 
-    // Wait for class change
-    await page.waitForTimeout(500);
+    // Wait for the document class to flip (no fixed sleep — avoids flake under load).
+    await page.waitForFunction(
+      (wasDark) => document.documentElement.classList.contains('dark') !== wasDark,
+      initialDark,
+      { timeout: 10000 },
+    );
 
     const newClass = await page.evaluate(() => document.documentElement.className);
     const newDark = newClass.includes('dark');
@@ -49,8 +53,13 @@ test.describe('主题切换', () => {
 
     const toggle = page.getByRole('button', { name: '切换主题' });
     await expect(toggle).toBeVisible({ timeout: 10000 });
+    const before = await page.evaluate(() => localStorage.getItem('theme'));
     await toggle.click();
-    await page.waitForTimeout(300);
+
+    // Cycle light → dark → system: after one click, storage must change or clear.
+    await page.waitForFunction((prev) => localStorage.getItem('theme') !== prev, before, {
+      timeout: 10000,
+    });
 
     // localStorage should have a theme entry (or be cleared for 'system')
     const theme = await page.evaluate(() => localStorage.getItem('theme'));
