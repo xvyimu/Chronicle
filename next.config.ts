@@ -75,9 +75,16 @@ const nextConfig: NextConfig = {
     ];
   },
   /* Image optimization: all images are local — no remote patterns needed.
-     If remote images are added in the future, add specific hostnames here. */
+     If remote images are added in the future, add specific hostnames here.
+
+     `qualities` MUST enumerate every non-default value used by <Image quality={…}/>.
+     Next 16 defaults to `[75]`; any other value triggers a build-time warn and,
+     more importantly, the /_next/image optimizer rejects the request at runtime
+     (q parameter validation), so the browser falls back to the raw source and
+     LCP collapses. Keep this in sync with grep -rn 'quality={' src/. */
   images: {
     remotePatterns: [],
+    qualities: [65, 70, 75],
   },
 };
 
