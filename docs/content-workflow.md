@@ -119,7 +119,20 @@ pnpm content:build
 - 开发默认 `CONTENT_BACKEND=fs`：改 MDX 即时生效，无需每次重建快照。
 - 快照只含 **published !== false** 的文章；草稿不会进入生产快照。
 - 回滚：`CONTENT_BACKEND=fs` 或非 production `NODE_ENV`。
-- CI：`pnpm content:build` + `git diff --exit-code -- generated/content-snapshot`。
+- CI：`pnpm content:verify` → `pnpm content:build` + `git diff --exit-code -- generated/content-snapshot`。
+
+**校验（不写工作树 · fail-closed）：**
+
+```bash
+pnpm content:verify
+```
+
+`content:verify` 在内存里重建 payload，把 `contentHash` 与磁盘 `manifest.json` 比对，快照缺失 / 过期 / schema 版本不符时 **exit 1**，不改工作树。它是 `git diff` 门闩的前置：`git diff` 只在 `content:build` 改动文件后才能捕获漂移，且依赖干净的 git 树；`content:verify` 不依赖 git，本地与 hook 场景也能 fail-closed。
+
+| 命令                  | 作用                                 | 写工作树？     |
+| --------------------- | ------------------------------------ | -------------- |
+| `pnpm content:build`  | 重建快照（hash 未变则 skip write）   | 是（有漂移时） |
+| `pnpm content:verify` | 只校验 on-disk 快照是否与 MDX 源同步 | 否             |
 
 ### 草稿机制
 

@@ -24,7 +24,7 @@ export {
   resetContentSnapshotCacheForTests,
 } from './read';
 
-export { writeContentSnapshot } from './write';
-export type { WriteContentSnapshotResult } from './write';
+export { writeContentSnapshot, verifyContentSnapshot } from './write';
+export type { WriteContentSnapshotResult, VerifyContentSnapshotResult } from './write';
 
 export { createSnapshotPostRepository } from './snapshot-repository';

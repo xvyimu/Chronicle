@@ -170,6 +170,27 @@ vercel metrics vercel.speed_insights.cls --aggregation p75 --group-by route --si
 If the Vercel project name differs from `blog`, replace `--project blog` with
 the actual project name.
 
+### RUM Backfill Status (CH-PERF-012)
+
+Real-user p75 backfill stays **documentation-only** until a human authorizes
+Vercel Speed Insights access — the agent does not log into Vercel or export
+metrics tokens (see `ops-deferred-work-plan.md` §5 and §10). Until then every
+RUM cell in the tables above and in the log below remains `pending`; do not
+substitute Lighthouse lab values for field p75.
+
+Backfill preconditions (all must hold before writing real numbers):
+
+1. `VERCEL_TOKEN` (or an authorized read-only console session) is available in
+   the operator's own environment — never committed to the repo.
+2. Production has received enough traffic for the p75 count to be meaningful
+   (check `*_count` first, per the Refresh Procedure above).
+3. Each tracked page's LCP/INP/CLS p75 is recorded with the exact query window.
+
+When those hold, follow the Refresh Procedure, then add a dated row to the
+Baseline Log and flip the matching `pending` cells. If field data regresses
+against the Real-User Targets, open a focused performance issue rather than
+editing architecture here.
+
 ## Baseline Log
 
 | Date       | Source                | Device     | Page                      | LCP          | INP     | CLS      | Count   | Notes                                                                    |

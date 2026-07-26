@@ -18,6 +18,7 @@
   "scripts": {
     "dev": "next dev",
     "content:build": "tsx scripts/build-content-snapshot.ts",
+    "content:verify": "tsx scripts/verify-content-snapshot.ts",
     "build": "tsx scripts/generate-rss.ts && tsx scripts/build-content-snapshot.ts && next build",
     "start": "next start",
     "lint": "eslint",

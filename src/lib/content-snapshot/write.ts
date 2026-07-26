@@ -21,6 +21,51 @@ export type WriteContentSnapshotResult =
   | { wrote: false; reason: 'unchanged'; contentHash: string }
   | { wrote: true; contentHash: string; root: string };
 
+export type VerifyContentSnapshotResult =
+  | { ok: true; contentHash: string }
+  | {
+      ok: false;
+      reason: 'missing' | 'version-mismatch' | 'hash-mismatch';
+      expected: string;
+      actual: string | null;
+    };
+
+/**
+ * Verify the committed snapshot matches a freshly built payload **without writing**.
+ * Fail-closed drift detector for CI: exits non-zero when the on-disk manifest is
+ * missing, on a different schema version, or has a stale contentHash. Never mutates
+ * the working tree, so it does not depend on git state the way `git diff` gates do.
+ */
+export function verifyContentSnapshot(
+  payload: ContentSnapshotPayload,
+  options?: { cwd?: string },
+): VerifyContentSnapshotResult {
+  const root = getContentSnapshotRoot(options?.cwd);
+  const existing = readExistingManifest(root);
+  const expected = payload.manifest.contentHash;
+
+  if (!existing) {
+    return { ok: false, reason: 'missing', expected, actual: null };
+  }
+  if (existing.version !== payload.manifest.version) {
+    return {
+      ok: false,
+      reason: 'version-mismatch',
+      expected: String(payload.manifest.version),
+      actual: String(existing.version),
+    };
+  }
+  if (existing.contentHash !== expected) {
+    return {
+      ok: false,
+      reason: 'hash-mismatch',
+      expected,
+      actual: existing.contentHash,
+    };
+  }
+  return { ok: true, contentHash: expected };
+}
+
 /**
  * Write snapshot files under generated/content-snapshot.
  * If contentHash matches the on-disk manifest, skip write (idempotent / quiet CI).

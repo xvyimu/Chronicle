@@ -10,7 +10,7 @@ import {
 } from './build';
 import { resolveContentBackend } from './paths';
 import { readContentSnapshot, resetContentSnapshotCacheForTests } from './read';
-import { writeContentSnapshot } from './write';
+import { verifyContentSnapshot, writeContentSnapshot } from './write';
 import { createSnapshotPostRepository } from './snapshot-repository';
 import { createLinkGraph, createLinkGraphFromSnapshot } from '@/lib/posts/link-graph';
 
@@ -230,6 +230,69 @@ describe('write + read snapshot', () => {
       'utf8',
     );
     expect(() => readContentSnapshot(root)).toThrow(/unsupported version/);
+  });
+});
+
+describe('verifyContentSnapshot', () => {
+  it('passes when the on-disk snapshot matches the freshly built payload', () => {
+    const posts = [
+      post('a', 'body', { date: '2026-06-01' }),
+      post('b', 'see [[a]]', { date: '2026-06-02' }),
+    ];
+    const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'snap-verify-ok-'));
+    tmpDirs.push(cwd);
+
+    const payload = buildContentSnapshotPayload(posts, {
+      builtAt: '2026-07-01T00:00:00.000Z',
+    });
+    writeContentSnapshot(payload, { cwd });
+
+    // Rebuild with a different builtAt — contentHash must still match.
+    const rebuilt = buildContentSnapshotPayload(posts, {
+      builtAt: '2099-01-01T00:00:00.000Z',
+    });
+    const result = verifyContentSnapshot(rebuilt, { cwd });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.contentHash).toBe(payload.manifest.contentHash);
+    }
+  });
+
+  it('fails closed when no snapshot manifest exists', () => {
+    const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'snap-verify-missing-'));
+    tmpDirs.push(cwd);
+    const payload = buildContentSnapshotPayload([post('a', 'body')], {
+      builtAt: '2026-07-01T00:00:00.000Z',
+    });
+    const result = verifyContentSnapshot(payload, { cwd });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.reason).toBe('missing');
+      expect(result.actual).toBeNull();
+    }
+  });
+
+  it('fails closed when the committed snapshot is stale', () => {
+    const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'snap-verify-stale-'));
+    tmpDirs.push(cwd);
+
+    writeContentSnapshot(
+      buildContentSnapshotPayload([post('a', 'old body', { date: '2026-06-01' })], {
+        builtAt: '2026-07-01T00:00:00.000Z',
+      }),
+      { cwd },
+    );
+
+    const drifted = buildContentSnapshotPayload(
+      [post('a', 'new body', { date: '2026-06-01' })],
+      { builtAt: '2026-07-01T00:00:00.000Z' },
+    );
+    const result = verifyContentSnapshot(drifted, { cwd });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.reason).toBe('hash-mismatch');
+      expect(result.expected).toBe(drifted.manifest.contentHash);
+    }
   });
 });
 

@@ -65,7 +65,11 @@ jobs:
       - name: Verify RSS artifacts are committed
         run: git diff --exit-code -- public/feed.xml public/feed.json
 
-      # Content snapshot (T2): rebuild and ensure generated/ is committed
+      # Content snapshot (T2): fail-closed drift check (git-independent),
+      # then rebuild and ensure the committed artifact matches the tree.
+      - name: Verify content snapshot is in sync
+        run: pnpm content:verify
+
       - name: Rebuild content snapshot
         run: pnpm content:build
 

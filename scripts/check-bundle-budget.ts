@@ -9,12 +9,17 @@
  * Exit codes:
  *   0 — all budgets within limits
  *   1 — one or more budgets exceeded
+ *
+ * The size-evaluation logic is pure (`evaluateBudgets`) so CI can assert the
+ * gate without a `.next` build; the filesystem walk is only used by the CLI
+ * entry point.
  */
 
 import { readdirSync, statSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
-interface BudgetConfig {
+export interface BudgetConfig {
   /** Glob-like prefix to match files in .next/static */
   prefix: string;
   /** Max size in KB for a single file matching this prefix */
@@ -23,17 +28,30 @@ interface BudgetConfig {
 }
 
 /** Budget thresholds — adjust as the project grows */
-const BUDGETS: BudgetConfig[] = [
+export const BUDGETS: BudgetConfig[] = [
   { prefix: 'chunks/', maxSingleKB: 300, description: 'JS chunks (per file)' },
   { prefix: 'css', maxSingleKB: 300, description: 'CSS bundles (incl. Shiki themes)' },
 ];
 
 /** Total static output budget in KB (excludes font files, which are loaded on demand) */
-const TOTAL_BUDGET_KB = 2048; // 2 MB total (JS + CSS only)
+export const TOTAL_BUDGET_KB = 2048; // 2 MB total (JS + CSS only)
 
 const STATIC_DIR = join(process.cwd(), '.next', 'static');
 
-function formatKB(kb: number): string {
+/** A single static asset: path relative to `.next/static` + size in KB. */
+export interface StaticAsset {
+  name: string;
+  kb: number;
+}
+
+export interface BudgetResult {
+  passed: boolean;
+  violations: string[];
+  totalKB: number;
+  byPrefix: Map<string, { files: StaticAsset[]; maxKB: number; desc: string }>;
+}
+
+export function formatKB(kb: number): string {
   return kb >= 1024 ? `${(kb / 1024).toFixed(2)} MB` : `${kb.toFixed(1)} KB`;
 }
 
@@ -55,52 +73,49 @@ function getRelativePath(fullPath: string): string {
   return fullPath.slice(staticIdx).replace(/\\/g, '/');
 }
 
-function checkBudgets(): { passed: boolean; violations: string[] } {
-  const files = walkDir(STATIC_DIR);
+/** True for font assets, which next/font subsets and loads on demand. */
+export function isFontAsset(relPath: string): boolean {
+  return (
+    relPath.includes('/media/') || relPath.endsWith('.woff2') || relPath.endsWith('.woff')
+  );
+}
+
+/**
+ * Pure budget evaluation over an already-collected asset list.
+ * Fonts are excluded from the total (subsetted + on-demand).
+ * No filesystem access, so CI/unit tests can assert the gate directly.
+ */
+export function evaluateBudgets(
+  assets: StaticAsset[],
+  budgets: BudgetConfig[] = BUDGETS,
+  totalBudgetKB: number = TOTAL_BUDGET_KB,
+): BudgetResult {
   const violations: string[] = [];
-
-  if (files.length === 0) {
-    violations.push('WARNING: No files found in .next/static — did build run?');
-    return { passed: false, violations };
-  }
-
-  // Check individual file budgets
-  let totalKB = 0;
   const byPrefix = new Map<
     string,
-    { files: { name: string; kb: number }[]; maxKB: number; desc: string }
+    { files: StaticAsset[]; maxKB: number; desc: string }
   >();
 
-  for (const prefix of BUDGETS) {
-    byPrefix.set(prefix.prefix, {
+  for (const budget of budgets) {
+    byPrefix.set(budget.prefix, {
       files: [],
-      maxKB: prefix.maxSingleKB,
-      desc: prefix.description,
+      maxKB: budget.maxSingleKB,
+      desc: budget.description,
     });
   }
 
-  for (const file of files) {
-    const relPath = getRelativePath(file);
-    const sizeBytes = statSync(file).size;
-    const sizeKB = sizeBytes / 1024;
-
-    // Skip font files — they're subsetted by next/font and loaded on demand
-    const isFont =
-      relPath.includes('/media/') ||
-      relPath.endsWith('.woff2') ||
-      relPath.endsWith('.woff');
-    if (!isFont) {
-      totalKB += sizeKB;
+  let totalKB = 0;
+  for (const asset of assets) {
+    if (!isFontAsset(asset.name)) {
+      totalKB += asset.kb;
     }
-
-    for (const budget of BUDGETS) {
-      if (relPath.includes(budget.prefix)) {
-        byPrefix.get(budget.prefix)!.files.push({ name: relPath, kb: sizeKB });
+    for (const budget of budgets) {
+      if (asset.name.includes(budget.prefix)) {
+        byPrefix.get(budget.prefix)!.files.push(asset);
       }
     }
   }
 
-  // Report per-prefix violations
   for (const [, data] of byPrefix) {
     for (const f of data.files) {
       if (f.kb > data.maxKB) {
@@ -111,19 +126,29 @@ function checkBudgets(): { passed: boolean; violations: string[] } {
     }
   }
 
-  // Check total budget
-  if (totalKB > TOTAL_BUDGET_KB) {
+  if (totalKB > totalBudgetKB) {
     violations.push(
-      `[TOTAL EXCEEDED] Static output: ${formatKB(totalKB)} > ${formatKB(TOTAL_BUDGET_KB)}`,
+      `[TOTAL EXCEEDED] Static output: ${formatKB(totalKB)} > ${formatKB(totalBudgetKB)}`,
     );
   }
 
-  // Print summary
+  return { passed: violations.length === 0, violations, totalKB, byPrefix };
+}
+
+/** Collect assets from `.next/static` on disk (CLI-only path). */
+export function collectStaticAssets(staticDir: string = STATIC_DIR): StaticAsset[] {
+  return walkDir(staticDir).map((file) => ({
+    name: getRelativePath(file),
+    kb: statSync(file).size / 1024,
+  }));
+}
+
+function printReport(result: BudgetResult, totalBudgetKB: number): void {
   console.log('\n📦 Bundle Budget Report');
   console.log('─'.repeat(60));
-  for (const [, data] of byPrefix) {
+  for (const [, data] of result.byPrefix) {
     const prefixTotal = data.files.reduce((sum, f) => sum + f.kb, 0);
-    const largest = data.files.sort((a, b) => b.kb - a.kb)[0];
+    const largest = [...data.files].sort((a, b) => b.kb - a.kb)[0];
     if (largest) {
       const status = largest.kb > data.maxKB ? '❌' : '✅';
       console.log(
@@ -132,19 +157,36 @@ function checkBudgets(): { passed: boolean; violations: string[] } {
     }
   }
   console.log('─'.repeat(60));
-  console.log(`Total static output: ${formatKB(totalKB)} / ${formatKB(TOTAL_BUDGET_KB)}`);
+  console.log(
+    `Total static output: ${formatKB(result.totalKB)} / ${formatKB(totalBudgetKB)}`,
+  );
   console.log('─'.repeat(60));
 
-  if (violations.length === 0) {
+  if (result.violations.length === 0) {
     console.log('✅ All bundle budgets within limits.\n');
   } else {
-    console.log(`❌ ${violations.length} budget violation(s):\n`);
-    for (const v of violations) console.log(`  ${v}`);
+    console.log(`❌ ${result.violations.length} budget violation(s):\n`);
+    for (const v of result.violations) console.log(`  ${v}`);
     console.log('');
   }
-
-  return { passed: violations.length === 0, violations };
 }
 
-const result = checkBudgets();
-process.exit(result.passed ? 0 : 1);
+function main(): void {
+  const assets = collectStaticAssets();
+  if (assets.length === 0) {
+    console.log('\n📦 Bundle Budget Report');
+    console.log('─'.repeat(60));
+    console.log('  WARNING: No files found in .next/static — did build run?');
+    console.log('');
+    process.exit(1);
+  }
+
+  const result = evaluateBudgets(assets);
+  printReport(result, TOTAL_BUDGET_KB);
+  process.exit(result.passed ? 0 : 1);
+}
+
+const entryPath = process.argv[1];
+if (entryPath && import.meta.url === pathToFileURL(entryPath).href) {
+  main();
+}
