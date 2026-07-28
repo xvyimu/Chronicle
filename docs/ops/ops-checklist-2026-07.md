@@ -9,16 +9,16 @@
 
 ## 1. 状态总表（W4）
 
-| ID           | 项                                                              | 状态                              | Owner         | 入口                                                          | **W4**        |
-| ------------ | --------------------------------------------------------------- | --------------------------------- | ------------- | ------------------------------------------------------------- | ------------- |
-| OPS-GSC      | Google Search Console：域名 `incca.ccwu.cc` + DNS TXT + sitemap | **`blocked_auth`**（需人账号）    | 用户          | ops-deferred §3                                               | 下半年 B1     |
-| OPS-Bing     | Bing Webmaster 从 GSC 导入                                      | **`blocked_auth`**（接在 GSC 后） | 用户          | ops-deferred §4                                               | 下半年 B1     |
-| OPS-SEO-LIVE | 生产 sitemap/robots/home 公开面                                 | 工程门禁已就绪；发版后跑 live     | CI + 本地     | `pnpm check:ops-readiness -- --live`                          | 维持          |
-| OPS-RUM      | Speed Insights 六页 p75 回填                                    | **`pending`** 样本 / 只读 token   | 用户（可选）  | performance-baseline · ops-deferred §5 · **perf-budget §2.3** | 下半年 B2     |
-| OPS-AUDIT    | `pnpm audit --audit-level=high`                                 | 每波复跑 · 目标 high=0            | CI + 本地     | npmjs registry                                                | **W4 已验证** |
-| OPS-SRI      | SRI 单元 + offline 门闩                                         | 每波复跑                          | CI + 本地     | `test:sri` · `check:sri-smoke`                                | **W4 已验证** |
-| OPS-PROD     | 生产内容 + 安全头冒烟                                           | 有网时                            | 本地 / deploy | `check:production-content`                                    | 维持          |
-| OPS-PERF     | 性能预算表                                                      | **W3 落盘 · W4 复验勾选**         | 文档          | [`perf-budget-2026-07.md`](./perf-budget-2026-07.md)          | **已验证**    |
+| ID           | 项                                                              | 状态                              | Owner         | 入口                                                                                                                       | **W4**                      |
+| ------------ | --------------------------------------------------------------- | --------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| OPS-GSC      | Google Search Console：域名 `incca.ccwu.cc` + DNS TXT + sitemap | **`blocked_auth`**（需人账号）    | 用户          | ops-deferred §3                                                                                                            | 下半年 B1                   |
+| OPS-Bing     | Bing Webmaster 从 GSC 导入                                      | **`blocked_auth`**（接在 GSC 后） | 用户          | ops-deferred §4                                                                                                            | 下半年 B1                   |
+| OPS-SEO-LIVE | 生产 sitemap/robots/home 公开面                                 | 工程门禁已就绪；发版后跑 live     | CI + 本地     | `pnpm check:ops-readiness -- --live`                                                                                       | 维持                        |
+| OPS-RUM      | Speed Insights 六页 p75 回填（**组件已接线**；表体 pending）    | **`pending`** 样本 / 只读 token   | 用户（可选）  | performance-baseline · ops-deferred §5 · **perf-budget §2.3** · [residual board](./ch-rum-ci-residual-board-2026-07-28.md) | 下半年 B2 · **CH-RUM-P0-1** |
+| OPS-AUDIT    | `pnpm audit --audit-level=high`                                 | 每波复跑 · 目标 high=0            | CI + 本地     | npmjs registry                                                                                                             | **W4 已验证**               |
+| OPS-SRI      | SRI 单元 + offline 门闩                                         | 每波复跑                          | CI + 本地     | `test:sri` · `check:sri-smoke`                                                                                             | **W4 已验证**               |
+| OPS-PROD     | 生产内容 + 安全头冒烟                                           | 有网时                            | 本地 / deploy | `check:production-content`                                                                                                 | 维持                        |
+| OPS-PERF     | 性能预算表                                                      | **W3 落盘 · W4 复验勾选**         | 文档          | [`perf-budget-2026-07.md`](./perf-budget-2026-07.md)                                                                       | **已验证**                  |
 
 ## 2. GSC / Bing（仅人）
 
@@ -65,3 +65,4 @@ pnpm check:production-content -- --base-url=https://incca.ccwu.cc
 | ---------- | ----------------------------------------------------------------------------------------- |
 | 2026-07-23 | W3 刷新：状态总表 + GSC 仍人账号；链到 perf-budget（`w3-ch-claude`）                      |
 | 2026-07-23 | **W4 收口**：OPS-SRI/AUDIT/PERF 标已验证；GSC/Bing/RUM → 下半年 backlog（`w4-ch-claude`） |
+| 2026-07-28 | OPS-RUM 链 residual board；注明 SI 组件已接线、p75 仍人闸                                 |

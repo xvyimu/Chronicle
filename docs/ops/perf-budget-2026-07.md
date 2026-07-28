@@ -49,7 +49,7 @@
 | INP  | ≤ 200 ms   | p75 > 300 ms | pending                        | 同上                |
 | CLS  | ≤ 0.1      | p75 > 0.1    | pending（lab 文章页可至 0.15） | 同上                |
 
-回填剧本：`docs/ops-deferred-work-plan.md` §5 · 表体写回 `performance-baseline.md` Baseline Log · 状态见 [`ops-checklist-2026-07.md`](./ops-checklist-2026-07.md) OPS-RUM。
+回填剧本：`docs/ops-deferred-work-plan.md` §5 · 表体写回 `performance-baseline.md` Baseline Log · 状态见 [`ops-checklist-2026-07.md`](./ops-checklist-2026-07.md) OPS-RUM · 下一波卡 [`ch-rum-ci-residual-board-2026-07-28.md`](./ch-rum-ci-residual-board-2026-07-28.md)。
 
 ## 3. 静态资源策略
 

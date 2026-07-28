@@ -40,6 +40,7 @@
     "test:watch": "vitest",
     "test:e2e": "node scripts/run-e2e.mjs",
     "test:e2e:raw": "playwright test",
+    "lh:mobile": "npx --yes @lhci/cli autorun --config=./lighthouse.mobile.config.js",
     "analyze": "cross-env ANALYZE=true next build --webpack",
     "prepare": "husky"
   },

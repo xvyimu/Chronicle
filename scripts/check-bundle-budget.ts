@@ -13,6 +13,11 @@
  * The size-evaluation logic is pure (`evaluateBudgets`) so CI can assert the
  * gate without a `.next` build; the filesystem walk is only used by the CLI
  * entry point.
+ *
+ * Related soft residuals (mobile LH not in CI · RUM p75 pending):
+ *   docs/ops/ch-rum-ci-residual-board-2026-07-28.md
+ * Lab/CWV budgets (desktop CI): lighthouse.config.js
+ * Assertable unit surface: src/lib/check-bundle-budget-script.test.ts (CH-PERF-011)
  */
 
 import { readdirSync, statSync, existsSync } from 'node:fs';

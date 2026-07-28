@@ -51,8 +51,12 @@ Use it after a successful production build, under the project-supported Node 22 
 
 ```bash
 pnpm exec cross-env NEXT_PUBLIC_SITE_URL=https://incca.ccwu.cc pnpm build
-npx @lhci/cli autorun --config=./lighthouse.mobile.config.js
+pnpm lh:mobile
+# equivalent: npx @lhci/cli autorun --config=./lighthouse.mobile.config.js
 ```
+
+Next-wave options (CI probe vs error gate, RUM p75 human gate):
+[`docs/ops/ch-rum-ci-residual-board-2026-07-28.md`](./ops/ch-rum-ci-residual-board-2026-07-28.md).
 
 Manual mobile coverage:
 
