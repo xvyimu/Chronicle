@@ -31,8 +31,16 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # Security: audit dependencies — fail on high/critical vulnerabilities
+      # Security: audit dependencies — fail on high/critical vulnerabilities.
+      # --prod scope: 生产依赖树必须零 high+。dev-only advisory 不阻断，因为
+      # GHSA-mh99-v99m-4gvg 的 brace-expansion 1.x 线上游从未发布所要求的 1.1.17
+      # （npm 最高 1.1.16），且其消费者 minimatch@3 需要默认可调用导出，无法跨大
+      # 版本重映射到 5.x。DEFER 理由详见 pnpm-workspace.yaml overrides 注释。
+      - run: pnpm audit --prod --registry=https://registry.npmjs.org --audit-level=high
+
+      # dev 依赖树 advisory 仅告警，不阻断（见上）。
       - run: pnpm audit --registry=https://registry.npmjs.org --audit-level=high
+        continue-on-error: true
 
       - run: pnpm format:check
 

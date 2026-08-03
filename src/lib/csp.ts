@@ -60,7 +60,9 @@ export function createCspNonce(): string {
  * Apply CSP only outside development. Turbopack HMR needs inline scripts +
  * websockets that a strict production policy would block.
  */
-export function shouldApplyCsp(nodeEnv: string | undefined = process.env.NODE_ENV): boolean {
+export function shouldApplyCsp(
+  nodeEnv: string | undefined = process.env.NODE_ENV,
+): boolean {
   return nodeEnv !== 'development';
 }
 

@@ -159,8 +159,6 @@ describe('nonce chain wiring (source contracts)', () => {
     expect(source).toContain("process.env.ENABLE_SRI === '1'");
     expect(source).toMatch(/sri:\s*\{\s*algorithm:\s*'sha384'/);
     // Must not hard-assign experimental.sri outside the env-gated spread.
-    expect(source).not.toMatch(
-      /experimental:\s*\{[\s\S]*?\bsri:\s*\{\s*algorithm/,
-    );
+    expect(source).not.toMatch(/experimental:\s*\{[\s\S]*?\bsri:\s*\{\s*algorithm/);
   });
 });
