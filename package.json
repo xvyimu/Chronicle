@@ -52,7 +52,7 @@
     "feed": "^5.2.1",
     "fuse.js": "^7.4.2",
     "js-yaml": "4.3.0",
-    "next": "16.2.11",
+    "next": "16.2.12",
     "next-mdx-remote": "^6.0.0",
     "radix-ui": "^1.6.1",
     "react": "19.2.8",
@@ -68,7 +68,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@next/bundle-analyzer": "^16.2.11",
+    "@next/bundle-analyzer": "^16.2.12",
     "@playwright/test": "^1.61.1",
     "@stryker-mutator/core": "^9.6.1",
     "@stryker-mutator/vitest-runner": "^9.6.1",
