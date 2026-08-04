@@ -131,16 +131,26 @@ test.describe('博客文章详情页', () => {
     await expect(tags.first()).toBeVisible({ timeout: 15000 });
   });
 
-  test('代码块显示复制按钮', async ({ page }) => {
+  test('代码块滚入视口后挂载复制按钮', async ({ page }) => {
     // Navigate directly to a post known to contain code blocks
     await page.goto('/blog/cicd-pipeline-design');
     await expect(page.locator('article h1')).toBeVisible({ timeout: 15000 });
 
-    // Code toolbar should exist with copy button
-    const codeBlocks = page.locator('.code-toolbar');
-    await expect(codeBlocks.first()).toBeVisible({ timeout: 15000 });
+    // Code toolbar is server-rendered, so it exists before any scrolling.
+    const toolbar = page.locator('.code-toolbar').first();
+    await expect(toolbar).toBeVisible({ timeout: 15000 });
 
-    const copyBtn = codeBlocks.first().locator('button:has-text("复制")');
+    // CH-PERF-006 client-trim: the copy control is a lazy island gated by
+    // useInView (rootMargin 240px), so it stays unmounted while the block is
+    // below the fold. Assert that contract rather than expecting eager mount.
+    const slot = toolbar.locator('.copy-btn-slot');
+    await expect(slot).toHaveAttribute('data-copy-ready', 'false');
+
+    // Scrolling the block into view must mount the interactive button.
+    await toolbar.scrollIntoViewIfNeeded();
+    await expect(slot).toHaveAttribute('data-copy-ready', 'true');
+
+    const copyBtn = toolbar.locator('button:has-text("复制")');
     await expect(copyBtn).toBeVisible();
   });
 

@@ -93,15 +93,21 @@ test.describe('首页', () => {
     await expect(metrics).toContainText('个项目');
   });
 
-  test('滚动揭示区域在视口后变为可见', async ({ page }) => {
+  test('首页下半部保持 server-only（无 reveal 客户端岛）', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
     await waitForHydration(page);
-    // The first reveal section should become visible after scroll
-    const reveal = page.locator('.reveal-on-scroll').first();
-    await expect(reveal).toBeVisible({ timeout: 10000 });
-    await reveal.scrollIntoViewIfNeeded();
-    await expect(reveal).toHaveClass(/is-visible/);
+
+    // CH-PERF-003 home-lcp: below-fold sections were converted to server-only
+    // rendering and the RevealOnScroll islands were removed from page.tsx.
+    // This guards against reintroducing them (the component still exists and
+    // is unit-tested, so an accidental re-import would otherwise go unnoticed).
+    await expect(page.locator('.reveal-on-scroll')).toHaveCount(0);
+
+    // The sections themselves must still render and be readable server-side.
+    await expect(
+      page.getByRole('heading', { name: '项目样本', exact: true }),
+    ).toBeVisible({ timeout: 10000 });
   });
 
   test('顶部导航栏链接全部存在', async ({ page }) => {
