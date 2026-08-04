@@ -9,7 +9,10 @@ overrides:
   tmp: '>=0.2.6'
   uuid: '>=11.1.1'
   # GHSA-v2hh-gcrm-f6hx fast-uri host confusion (via stryker → ajv)
-  fast-uri: '>=3.1.4'
+  # 2026-08-04: 下界从 3.1.4 提到 4.1.2。原下界只挡住 3.x 线，4.x 线的
+  # >=4.0.0 <4.1.2 仍在漏洞区间内，lock 实际解析到 4.1.1 = 修复空转。
+  # 仍用范围而非精确钉（钉死会 stale，反噬成摁在漏洞版本上）。
+  fast-uri: '>=4.1.2'
   # GHSA-f88m-g3jw-g9cj sharp/libvips CVEs (via next)
   sharp: '>=0.35.0'
   # GHSA-mh99-v99m-4gvg / CVE-2026-14257 brace-expansion DoS。
