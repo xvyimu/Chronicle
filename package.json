@@ -69,7 +69,7 @@
   },
   "devDependencies": {
     "@next/bundle-analyzer": "^16.2.11",
-    "@playwright/test": "^1.61.1",
+    "@playwright/test": "^1.62.1",
     "@stryker-mutator/core": "^9.6.1",
     "@stryker-mutator/vitest-runner": "^9.6.1",
     "@tailwindcss/postcss": "^4",
@@ -91,7 +91,7 @@
     "husky": "^9.1.7",
     "jsdom": "^29.1.1",
     "lint-staged": "^17.0.8",
-    "playwright": "1.61.1",
+    "playwright": "1.62.1",
     "prettier": "^3.9.3",
     "tailwindcss": "^4.3.3",
     "tsx": "^4",
