@@ -158,6 +158,16 @@ export default function ImageZoom({
           ref={dialogRef}
           className="image-zoom-overlay"
           onClick={close}
+          onKeyDown={(e) => {
+            // Escape handled by the document-level listener in useEffect;
+            // this handler satisfies jsx-a11y/click-events-have-key-events for
+            // the overlay background click (direct keyboard path via the
+            // close button is already covered above).
+            if (e.key === 'Escape') {
+              e.preventDefault();
+              close();
+            }
+          }}
           role="dialog"
           aria-modal="true"
           aria-label={alt || '图片预览'}
