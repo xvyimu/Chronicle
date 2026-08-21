@@ -68,6 +68,8 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@commitlint/cli": "19.8.1",
+    "@commitlint/config-conventional": "19.8.1",
     "@next/bundle-analyzer": "^16.2.11",
     "@playwright/test": "^1.61.1",
     "@stryker-mutator/core": "^9.6.1",
