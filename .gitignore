@@ -61,8 +61,12 @@ project-diagnostic-report/
 /progress.md
 
 # stryker mutation testing
+# htmlReporter.fileName 'stryker-report' 产出的是**文件**（无扩展名），不是目录 ——
+# 只写 `/stryker-report/` 带尾斜杠时 git 只忽略目录，那个 1.6MB 的 HTML 文件会被跟踪。
+/stryker-report
 /stryker-report/
 .stryker-tmp/
+/reports/mutation/
 
 # npm lockfile (project uses pnpm)
 package-lock.json

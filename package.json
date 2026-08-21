@@ -38,6 +38,7 @@
     "check:blur": "tsx scripts/check-project-blur-coverage.ts",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:mutation": "stryker run",
     "test:e2e": "node scripts/run-e2e.mjs",
     "test:e2e:raw": "playwright test",
     "lh:mobile": "npx --yes @lhci/cli autorun --config=./lighthouse.mobile.config.js",
