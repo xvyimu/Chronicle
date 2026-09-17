@@ -20,4 +20,4 @@
 - 若引入第三方组件/模板片段，须在 README 或独立 NOTICE/THIRD_PARTY 中致谢并保留其许可证要求。
 - 产品显示名「西江月」与仓库名 **Chronicle** 并存，不改变许可义务。
 
-入口文档：`README.md` · `AGENTS.md` · `docs/overview.md` · `docs/handoff-to-agent.md`。
+入口文档：`README.md` · `AGENTS.md` · `docs/README.md` · `docs/HANDOFF.md`。

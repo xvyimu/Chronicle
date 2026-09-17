@@ -4,7 +4,7 @@
 > **产品标签**：L2 内容遗留（见组合 ADR / portfolio-side-track）  
 > **生产**：https://incca.ccwu.cc · 仓库 [xvyimu/Chronicle](https://github.com/xvyimu/Chronicle)  
 > **本轮约束**：禁止 GardenExplorer 大重构、禁止迁 Vue、不 push、不改计费/生产破坏  
-> **相关手册**：[ops-deferred-work-plan.md](../ops-deferred-work-plan.md) · [launch-baseline.md](../launch-baseline.md) · [handoff-to-agent.md](../handoff-to-agent.md) · [TODO.md](../../TODO.md)
+> **相关手册**：[ops-deferred-work-plan.md](../ops-deferred-work-plan.md) · [launch-baseline.md](../launch-baseline.md) · [HANDOFF.md](../HANDOFF.md) · [TODO.md](../../TODO.md)
 
 本文是 **L2 运维/安全 hygiene 索引**，不是旗舰重写方案。工程侧可自动事项大多已关闭；剩余多为账号授权或条件触发。
 
@@ -296,7 +296,7 @@ pnpm check:ops-readiness -- --live
 | [ops-deferred-work-plan.md](../ops-deferred-work-plan.md) | GSC/Bing/RUM 执行剧本         |
 | [launch-baseline.md](../launch-baseline.md)               | 生产基线与门禁数字            |
 | [performance-baseline.md](../performance-baseline.md)     | 性能/RUM 记录                 |
-| [handoff-to-agent.md](../handoff-to-agent.md)             | Agent 接手与边界              |
+| [HANDOFF.md](../HANDOFF.md)                               | Agent 接手与边界              |
 | [architecture.md](../architecture.md)                     | 分层与安全模型摘要            |
 | [API.md](../API.md)                                       | search / preview / csp-report |
 | 根 [TODO.md](../../TODO.md)                               | 未完成事项 SSOT               |

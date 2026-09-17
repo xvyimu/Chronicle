@@ -3,7 +3,7 @@
 > Date: 2026-07-03
 > Project: `D:\blog`
 > Purpose: make the current repository safe and easy for Claude Code to continue.
-> Status: implemented. This document preserves the original design snapshot; current handoff state lives in `docs/handoff-to-agent.md`.
+> Status: implemented. This document preserves the original design snapshot; current handoff state lives in `docs/HANDOFF.md`.
 
 ## 1. Goal
 
@@ -32,7 +32,7 @@ That historical green state is useful but not sufficient. A later review found d
 Claude Code should start with this order:
 
 1. Read `AGENTS.md`.
-2. Read `docs/handoff-to-agent.md`.
+2. Read `docs/HANDOFF.md`.
 3. Read `docs/salesdex-inspired-redesign.md`.
 4. Read `TODO.md`.
 5. Read this document.
@@ -179,7 +179,7 @@ Claude Code must avoid accidental churn in these areas:
 The handoff is ready when:
 
 - This design is reviewed and accepted.
-- `docs/handoff-to-agent.md` is updated or cross-linked with the known defect list.
+- `docs/HANDOFF.md` is updated or cross-linked with the known defect list.
 - `TODO.md` reflects the new Phase order: handoff readiness, visual direction, stability repair.
 - Stability fixes have tests before push.
 - Full verification passes or any failure is documented with exact command output and next step.

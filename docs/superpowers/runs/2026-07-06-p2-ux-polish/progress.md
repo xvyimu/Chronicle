@@ -13,7 +13,7 @@
 - 已实现根级 404/error 的首页、博客、导航收藏导流。
 - 已补移动端 E2E 路径覆盖 `/links` 筛选和清除。
 - 目标测试已通过：`547 passed / 70 files`。
-- 已更新 `README.md`、`AGENTS.md`、`TODO.md`、`docs/architecture.md`、`docs/handoff-to-agent.md`、`docs/launch-baseline.md`、`docs/optimization-roadmap-2026-07-06.md`。
+- 已更新 `README.md`、`AGENTS.md`、`TODO.md`、`docs/architecture.md`、`docs/HANDOFF.md`、`docs/launch-baseline.md`、`docs/optimization-roadmap-2026-07-06.md`。
 - 已核实上一轮线上基线：`b48d57d` / GitHub Actions run `28787624143` / deploy job success / production content smoke success。
 - 已运行并通过：`pnpm format:check`、`pnpm format:docs:check`、`git diff --check`、`pnpm lint`、`pnpm typecheck`、`pnpm check:seo`、`pnpm build`、`pnpm exec tsx scripts/check-bundle-budget.ts`、`pnpm test`（547 passed / 70 files）、`pnpm test:e2e`（47 passed / 5 files）。
 - 尝试过 `pnpm test:e2e:raw e2e/mobile.spec.ts`，该 raw 路径复用到不正确的本地服务状态，4 条移动端用例均找不到基础页面元素；随后按项目标准命令 `pnpm test:e2e` 重跑全量通过。后续验证仍以 `scripts/run-e2e.mjs` 包装命令为准。

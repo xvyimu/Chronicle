@@ -9,7 +9,7 @@
 ### 阶段 1：观察与范围确认
 
 - [x] 检查工作区状态
-- [x] 读取 `docs/architecture.md`、`docs/handoff-to-agent.md`、`README.md`、`TODO.md`、`docs/overview.md`
+- [x] 读取 `docs/architecture.md`、`docs/HANDOFF.md`、`README.md`、`TODO.md`、`docs/README.md`
 - [x] 确认最高优先级优化点：架构文档状态与当前代码/接手说明不一致
 
 ### 阶段 2：文档更新

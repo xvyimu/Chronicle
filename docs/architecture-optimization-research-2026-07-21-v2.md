@@ -4,7 +4,7 @@
 > **路径**：`D:\blog` · 生产：`https://incca.ccwu.cc`  
 > **本地 tip**：`3fc3632` · 功能基线花园 **`b96b3c3`** · 边密度 **`7202172`** · origin/生产 **`dfc057b`** · **ahead 5 未 push**  
 > **相对 v1**：`architecture-optimization-research-2026-07-21.md` 仍保留为第一/二轮决策与评分史；**本 v2 以落地后事实重扫 + 下一阶段决策为主**，不改写 v1 历史数字。  
-> **待办 SSOT**：根 `TODO.md` · 接手：`docs/handoff-to-agent.md` · 架构：`docs/architecture.md` · 收工：`docs/handoff-2026-07-21-garden.md`
+> **待办 SSOT**：根 `TODO.md` · 接手：`docs/HANDOFF.md` · 架构：`docs/architecture.md` · 收工：`docs/handoff-2026-07-21-garden.md`
 
 ### 文首决议继承（不可推翻，除非用户新表单改写）
 
@@ -1176,16 +1176,16 @@ v1 §28–35 的 UX-1A、V-S1、P-A、R-A、S-A 在 v2 全部保留为已选或�
 
 ## 38. 长附录 · Ship 包到文件落点映射
 
-| 包项         | 主要落点                                   |
-| ------------ | ------------------------------------------ |
-| Q10 正文链   | `content/blog/*.mdx`                       |
-| Q11 404      | `src/app/not-found.tsx` 及样式/测          |
-| Q12 反链上限 | `ArticleBacklinks.tsx` · article-ui · 测   |
-| Q13 搜索空态 | `SearchResultsList.tsx`                    |
-| Q14 CLS/字体 | tokens/layout/font 相关                    |
-| Q15 卫生     | `AGENTS.md` · `docs/overview.md` · handoff |
-| Q16 G2       | 新组件+路由（默认不建）                    |
-| Q18 push     | git 远程（需授权）                         |
+| 包项         | 主要落点                                 |
+| ------------ | ---------------------------------------- |
+| Q10 正文链   | `content/blog/*.mdx`                     |
+| Q11 404      | `src/app/not-found.tsx` 及样式/测        |
+| Q12 反链上限 | `ArticleBacklinks.tsx` · article-ui · 测 |
+| Q13 搜索空态 | `SearchResultsList.tsx`                  |
+| Q14 CLS/字体 | tokens/layout/font 相关                  |
+| Q15 卫生     | `AGENTS.md` · `docs/README.md` · handoff |
+| Q16 G2       | 新组件+路由（默认不建）                  |
+| Q18 push     | git 远程（需授权）                       |
 
 ---
 

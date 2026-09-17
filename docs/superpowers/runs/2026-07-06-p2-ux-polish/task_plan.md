@@ -36,7 +36,7 @@
 - `src/app/styles/blog-ui.css`
 - `docs/optimization-roadmap-2026-07-06.md`
 - `TODO.md`
-- `docs/handoff-to-agent.md`
+- `docs/HANDOFF.md`
 
 ## 风险与回滚
 

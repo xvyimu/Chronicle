@@ -5,7 +5,7 @@
 > 生产：`https://incca.ccwu.cc`  
 > 手册：[ops-deferred-work-plan.md](./docs/ops-deferred-work-plan.md)  
 > 自动检查：`pnpm check:ops-readiness`（可选 `-- --live`）  
-> 基线文档：[docs/launch-baseline.md](./docs/launch-baseline.md) · [docs/handoff-to-agent.md](./docs/handoff-to-agent.md)
+> 基线文档：[docs/launch-baseline.md](./docs/launch-baseline.md) · [docs/HANDOFF.md](./docs/HANDOFF.md)
 
 ## 外部依赖（需真人账号；Agent 已穷尽自动路径）
 

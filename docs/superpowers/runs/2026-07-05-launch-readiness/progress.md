@@ -9,7 +9,7 @@
 - 强化 `parseLinks` 数据校验：拒绝推广/追踪参数，保留 URL 唯一性测试。
 - 新增移动端 E2E：header、搜索、文章阅读、Giscus lazy-load、links 页面和无横向溢出。
 - 为 Giscus 评论区增加稳定测试锚点，提升真实浏览器验证可靠性。
-- 同步 `TODO.md`、`docs/handoff-to-agent.md`、`docs/content-workflow.md`、`README.md`、`AGENTS.md`。
+- 同步 `TODO.md`、`docs/HANDOFF.md`、`docs/content-workflow.md`、`README.md`、`AGENTS.md`。
 - 完成 review 双轴审查：未发现阻断上线的问题。
 - 完成 shipping-and-launch 检查：代码质量、安全、性能、可访问性、基础设施、文档均达到当前静态博客上线条件。
 

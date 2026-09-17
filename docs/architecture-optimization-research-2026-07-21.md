@@ -3,7 +3,7 @@
 > **状态**：当前决策参考稿（2026-07-21）· **用户决议已录入**  
 > **路径**：`D:\blog` · 生产：`https://incca.ccwu.cc` · HEAD：`dfc057b`  
 > **用途**：在现有生产基线上整合历史文档、同类项目经验、技术债、目标/约束/边界、多方案对比与验收标准；**不替代** `TODO.md` 作为待办 SSOT，也不改写已归档 run 中的历史数字。  
-> **阅读入口**：先读本文件结论 → 再按需跳到章节。执行时仍以 `TODO.md`、`docs/handoff-to-agent.md`、`docs/architecture.md` 为准。
+> **阅读入口**：先读本文件结论 → 再按需跳到章节。执行时仍以 `TODO.md`、`docs/HANDOFF.md`、`docs/architecture.md` 为准。
 
 ### 用户决议（2026-07-21 交互表单）
 
@@ -86,19 +86,19 @@
 
 ### 1.2 输入材料（已整合）
 
-| 类别       | 路径/记忆                                                                                                                                                                                                                                     | 角色                   |
-| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| 当前维护   | `TODO.md`、`docs/overview.md`、`architecture.md`、`handoff-to-agent.md`、`launch-baseline.md`、`performance-baseline.md`、`ops-deferred-work-plan.md`、`content-workflow.md`、`API.md`、`cache-components-migration.md`、`css-conventions.md` | 现行操作真值           |
-| ADR        | `docs/adr/0003-csp-nonce-over-ssg.md`、`0002-local-content-repository-factory.md`                                                                                                                                                             | 已接受决策             |
-| 历史报告   | `full-stack-audit-2026-07-17.md`、`optimization-roadmap-2026-07-06.md`、`frontend-ui-optimization-report-2026-07-12.md`、`bem-search-architecture-2026-07-12.md`、`salesdex-inspired-redesign.md`、`codex-review-2026-07-13.md` 等            | 时间点快照，数字不追改 |
-| 实施 run   | `docs/superpowers/runs/2026-07-18-*`                                                                                                                                                                                                          | 分层与运营工程化证据   |
-| Agent 记忆 | `blog-2026-07-18-production-baseline`、`blog-2026-07-19-visual-identity-fix`、`blog-deferred-ops-hard-blocks`、`blog-user-self-drive-ops`                                                                                                     | 跨会话偏好与阻塞       |
-| 同类调研   | Astro Content Collections、Hugo、Quartz、Nextra、Next MDX 实践、Pagefind/Fuse/Algolia、CSP nonce vs SSG                                                                                                                                       | 外部对照               |
+| 类别       | 路径/记忆                                                                                                                                                                                                                          | 角色                   |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| 当前维护   | `TODO.md`、`docs/README.md`、`architecture.md`、`HANDOFF.md`、`launch-baseline.md`、`performance-baseline.md`、`ops-deferred-work-plan.md`、`content-workflow.md`、`API.md`、`cache-components-migration.md`、`css-conventions.md` | 现行操作真值           |
+| ADR        | `docs/adr/0003-csp-nonce-over-ssg.md`、`0002-local-content-repository-factory.md`                                                                                                                                                  | 已接受决策             |
+| 历史报告   | `full-stack-audit-2026-07-17.md`、`optimization-roadmap-2026-07-06.md`、`frontend-ui-optimization-report-2026-07-12.md`、`bem-search-architecture-2026-07-12.md`、`salesdex-inspired-redesign.md`、`codex-review-2026-07-13.md` 等 | 时间点快照，数字不追改 |
+| 实施 run   | `docs/superpowers/runs/2026-07-18-*`                                                                                                                                                                                               | 分层与运营工程化证据   |
+| Agent 记忆 | `blog-2026-07-18-production-baseline`、`blog-2026-07-19-visual-identity-fix`、`blog-deferred-ops-hard-blocks`、`blog-user-self-drive-ops`                                                                                          | 跨会话偏好与阻塞       |
+| 同类调研   | Astro Content Collections、Hugo、Quartz、Nextra、Next MDX 实践、Pagefind/Fuse/Algolia、CSP nonce vs SSG                                                                                                                            | 外部对照               |
 
 ### 1.3 方法
 
 1. **仓库事实优先**：内容计数、HEAD、分层目录、TODO 状态以本机 2026-07-21 扫描为准。
-2. **文档分层**：维护文档 vs 历史快照（见 `docs/overview.md` 规则）。
+2. **文档分层**：维护文档 vs 历史快照（见 `docs/README.md` 规则）。
 3. **多方案矩阵**：每决策点 ≥3 方案，含复杂度/风险/收益/与约束匹配度。
 4. **门槛驱动**：条件触发项未到门槛 = 正确终态，不是欠账。
 5. **冲突标注**：同类项目「静态优先」与本站「nonce 优先」存在张力，下文单独处理。
@@ -1305,8 +1305,8 @@ pnpm check:production-content -- --base-url=https://incca.ccwu.cc
 | ----------------------------------------------------- | ----------------------- |
 | `TODO.md`                                             | 待办 SSOT；工程关闭事实 |
 | `docs/architecture.md`                                | 分层与渲染不变量        |
-| `docs/handoff-to-agent.md`                            | 接手顺序与边界          |
-| `docs/overview.md`                                    | 文档分层规则            |
+| `docs/HANDOFF.md`                                     | 接手顺序与边界          |
+| `docs/README.md`                                      | 文档分层规则            |
 | `docs/launch-baseline.md` / `performance-baseline.md` | 质量与性能证据          |
 | `docs/ops-deferred-work-plan.md`                      | 运营剧本与禁止项        |
 | `docs/full-stack-audit-2026-07-17.md`                 | 技术债来源              |
@@ -1514,7 +1514,7 @@ pnpm check:production-content -- --base-url=https://incca.ccwu.cc
 | 项        | 状态                                    | 说明                                                             |
 | --------- | --------------------------------------- | ---------------------------------------------------------------- |
 | 生产 HEAD | `dfc057b` = origin/master               | 视觉/身份已上线                                                  |
-| 工作树    | `docs/overview.md` 已改；本报告未提交   | 文档增量，未改运行时                                             |
+| 工作树    | `docs/README.md` 已改；本报告未提交     | 文档增量，未改运行时                                             |
 | TODO      | 工程无条件项仍关闭                      | 花园尚未写入 TODO（决议后可选）                                  |
 | 花园代码  | **G0+G1 已实现（2026-07-21）**          | wikilink remark + link-graph cache + ArticleBacklinks；G2 仍延后 |
 | 文章页    | TOC、系列、**反链**、相关、Giscus       | 反链紧接系列路径之后                                             |

@@ -317,7 +317,7 @@
 - L-01：全量运行质量门禁。
 - L-02：检查 sitemap、RSS、metadata、OG image。
 - L-03：生产部署后运行 `check:production-content`。
-- L-04：更新 `docs/handoff-to-agent.md` 和必要文档。
+- L-04：更新 `docs/HANDOFF.md` 和必要文档。
 
 阶段验收：
 

@@ -342,7 +342,7 @@ src/components/*   仅共享 DTO/纯函数 + HTTP（禁止 import @/server）
 | 证据         | 路径 / 命令结果                                                                    |
 | ------------ | ---------------------------------------------------------------------------------- |
 | 栈与脚本     | `package.json`                                                                     |
-| 分层说明     | `docs/architecture.md`、`docs/handoff-to-agent.md`                                 |
+| 分层说明     | `docs/architecture.md`、`docs/HANDOFF.md`                                          |
 | API 契约     | `docs/API.md`                                                                      |
 | 服务端边界   | `src/server/**`、`src/lib/module-boundaries.test.ts`                               |
 | 数据         | `content/blog`（20 mdx）、`data/*`、`generated/content-snapshot/*`                 |
