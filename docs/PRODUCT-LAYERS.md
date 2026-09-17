@@ -1,6 +1,6 @@
 # Chronicle · 产品分层方案（PRODUCT-LAYERS）
 
-> **组合总纲：** `D:\orca\.planning\portfolio-product-docs-program-2026-07-23\PORTFOLIO-PRODUCT-PROGRAM.md`  
+> **组合总纲：** `D:\orca\docs\PORTFOLIO.md`  
 > **形态与栈 SSOT：** [`PROJECT.md`](./PROJECT.md)  
 > **tip：** `4dba004` · 视觉 V1a Atelier 结构对齐 · 保留鼠尾草纸感
 
