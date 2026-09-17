@@ -25,13 +25,6 @@ A personal blog built with Next.js 16.2 (App Router), React 19, and Tailwind CSS
 - 全局门闩：未定形态 / 栈未入档 → 禁业务编码（`~/.claude/CLAUDE.md` §8）
 - 小修沿用本栈；换栈先 ADR + 改 PROJECT.md
 
-## Skill Routing
-
-- Routine project continuation: use `superpower`.
-- Large feature delivery: use `ship`.
-- Pre-production launch preparation: use `shipping-and-launch`.
-- Deep code review: use `review`.
-
 ## Tech Stack
 
 - **Framework**: Next.js 16.2 (App Router; local-content driven, dynamic rendering for CSP nonce)
