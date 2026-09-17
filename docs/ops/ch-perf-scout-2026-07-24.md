@@ -62,15 +62,15 @@
 
 ## 3) CSP / nonce 入口
 
-| 职责                             | 路径                                                                                                                                            |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Per-request CSP + nonce 生成** | `src/proxy.ts`（Next 16 proxy 入口；**无** `middleware.ts`）                                                                                    |
-| Nonce 读取                       | `src/lib/csp.ts` → `headers().get('x-nonce')`                                                                                                   |
-| 根 layout 应用                   | `src/app/layout.tsx` → `DarkModeScript nonce`                                                                                                   |
-| JSON-LD                          | `src/app/page.tsx`、`src/components/blog/ArticleJsonLd.tsx`、`blog/[slug]/page.tsx`                                                             |
-| 静态安全头（非 CSP）             | `next.config.ts` `headers()`：HSTS / XFO / nosniff / Referrer / Permissions-Policy                                                              |
-| 违规收集                         | `src/app/api/csp-report/route.ts`；`report-uri` + `Reporting-Endpoints`                                                                         |
-| ADR                              | `docs/adr/2026-07-17-csp-nonce-over-ssg.md`；SRI 评估 `docs/adr/2026-07-21-sri-over-nonce-evaluation.md`（`ENABLE_SRI=1` 实验，**生产默认关**） |
+| 职责                             | 路径                                                                                                                                |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **Per-request CSP + nonce 生成** | `src/proxy.ts`（Next 16 proxy 入口；**无** `middleware.ts`）                                                                        |
+| Nonce 读取                       | `src/lib/csp.ts` → `headers().get('x-nonce')`                                                                                       |
+| 根 layout 应用                   | `src/app/layout.tsx` → `DarkModeScript nonce`                                                                                       |
+| JSON-LD                          | `src/app/page.tsx`、`src/components/blog/ArticleJsonLd.tsx`、`blog/[slug]/page.tsx`                                                 |
+| 静态安全头（非 CSP）             | `next.config.ts` `headers()`：HSTS / XFO / nosniff / Referrer / Permissions-Policy                                                  |
+| 违规收集                         | `src/app/api/csp-report/route.ts`；`report-uri` + `Reporting-Endpoints`                                                             |
+| ADR                              | `docs/adr/0003-csp-nonce-over-ssg.md`；SRI 评估 `docs/adr/0005-sri-over-nonce-evaluation.md`（`ENABLE_SRI=1` 实验，**生产默认关**） |
 
 **生产 CSP 要点：** `script-src 'self' 'nonce-…' 'strict-dynamic' giscus + va.vercel-scripts.com`；`style-src 'self' 'unsafe-inline'`（Tailwind 内联）；dev 跳过 CSP（HMR）。
 
@@ -118,7 +118,7 @@
 按 **CWV / 架构证据** 排序（lab + 代码，非 RUM p75；RUM 仍 pending）。
 
 1. **HTML 全站 dynamic + CSP nonce（TTFB / LCP 结构债）**  
-   `src/proxy.ts` · `src/lib/csp.ts` · `src/app/layout.tsx` · ADR `docs/adr/2026-07-17-csp-nonce-over-ssg.md`  
+   `src/proxy.ts` · `src/lib/csp.ts` · `src/app/layout.tsx` · ADR `docs/adr/0003-csp-nonce-over-ssg.md`  
    → 边缘难缓存 HTML；Function 调用成本。**不可**用 `unsafe-inline` 换 SSG。后续只可在「资产缓存 / 流式 / 部分预计算」内挖。
 
 2. **移动端 lab FCP/LCP 严重超时（render-blocking CSS）**  

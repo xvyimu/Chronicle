@@ -54,7 +54,7 @@
 | `pnpm check:sri-smoke`                             | offline gate：`ENABLE_SRI` 形状 + 可选 `.next` | 无                 |
 | `pnpm check:sri -- --file <html> --expect on\|off` | 对构建产物 integrity                           | 无（需本地 build） |
 
-**禁止（全年）：** 未授权切换生产 / Vercel `ENABLE_SRI` 策略代码路径；见 ADR `docs/adr/2026-07-21-sri-over-nonce-evaluation.md`。
+**禁止（全年）：** 未授权切换生产 / Vercel `ENABLE_SRI` 策略代码路径；见 ADR `docs/adr/0005-sri-over-nonce-evaluation.md`。
 
 ## 5. 架构主刀对照（半年 · 波次切片 · 终态）
 

@@ -112,11 +112,11 @@ pnpm check:production-content -- --base-url=https://incca.ccwu.cc
 
 ### 2.4 相关 ADR
 
-| ADR                                                | 状态                              |
-| -------------------------------------------------- | --------------------------------- |
-| `docs/adr/2026-07-17-csp-nonce-over-ssg.md`        | 接受动态 HTML + nonce             |
-| `docs/adr/2026-07-21-sri-over-nonce-evaluation.md` | **Accepted**；生产 `ENABLE_SRI=1` |
-| `docs/adr/0001-csp-nonce-vs-ssg.md`                | Superseded                        |
+| ADR                                          | 状态                              |
+| -------------------------------------------- | --------------------------------- |
+| `docs/adr/0003-csp-nonce-over-ssg.md`        | 接受动态 HTML + nonce             |
+| `docs/adr/0005-sri-over-nonce-evaluation.md` | **Accepted**；生产 `ENABLE_SRI=1` |
+| `docs/adr/0001-csp-nonce-vs-ssg.md`          | Superseded                        |
 
 ---
 

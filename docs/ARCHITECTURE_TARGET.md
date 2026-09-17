@@ -114,13 +114,13 @@ src/components/*   UI only — 禁止 import @/server
 
 ## 7. 索引
 
-| 文档                                                                                           | 用途             |
-| ---------------------------------------------------------------------------------------------- | ---------------- |
-| [`ARCHITECTURE_ASIS.md`](./ARCHITECTURE_ASIS.md)                                               | 测绘事实         |
-| [`architecture.md`](./architecture.md)                                                         | 接手用运行时边界 |
-| [`adr/2026-07-21-sri-over-nonce-evaluation.md`](./adr/2026-07-21-sri-over-nonce-evaluation.md) | SRI 决策         |
-| [`ops/L2-P0-action-board-2026-07-22.md`](./ops/L2-P0-action-board-2026-07-22.md)               | P0 看板          |
-| [`THIRD_PARTY.md`](./THIRD_PARTY.md)                                                           | 第三方许可摘要   |
+| 文档                                                                               | 用途             |
+| ---------------------------------------------------------------------------------- | ---------------- |
+| [`ARCHITECTURE_ASIS.md`](./ARCHITECTURE_ASIS.md)                                   | 测绘事实         |
+| [`architecture.md`](./architecture.md)                                             | 接手用运行时边界 |
+| [`adr/0005-sri-over-nonce-evaluation.md`](./adr/0005-sri-over-nonce-evaluation.md) | SRI 决策         |
+| [`ops/L2-P0-action-board-2026-07-22.md`](./ops/L2-P0-action-board-2026-07-22.md)   | P0 看板          |
+| [`THIRD_PARTY.md`](./THIRD_PARTY.md)                                               | 第三方许可摘要   |
 
 ---
 

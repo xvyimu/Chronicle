@@ -3,13 +3,13 @@
 - Status: **Accepted (enabled in production via `ENABLE_SRI=1`)**
 - Date: 2026-07-21
 - Updated: 2026-07-22 (production enable authorized; Vercel Production env `ENABLE_SRI=1`; deploy `dpl_2EcxgkhP84U7jE3BuQAnFipef6DD`; homepage `/_next/static` scripts carry `integrity="sha384-…"` while CSP nonce retained)
-- Related: `docs/adr/2026-07-17-csp-nonce-over-ssg.md`, `next.config.ts`, `src/proxy.ts`, `docs/architecture-optimization-research-2026-07-21-v3.md` R-E, `content/blog/2026-07-csp-nonce-and-sri.mdx`
+- Related: `docs/adr/0003-csp-nonce-over-ssg.md`, `next.config.ts`, `src/proxy.ts`, `docs/architecture-optimization-research-2026-07-21-v3.md` R-E, `content/blog/2026-07-csp-nonce-and-sri.mdx`
 
 ## Context
 
 Next.js 16.2 introduced experimental Subresource Integrity (SRI) support for static assets emitted to `/_next/static/*`. SRI adds an `integrity` attribute (SHA hash) to `<script>` and `<link rel="stylesheet">` tags so browsers refuse to execute resources whose hash mismatches, defending against CDN or build-cache tampering.
 
-The project currently uses a strict per-request CSP nonce model (see `2026-07-17-csp-nonce-over-ssg.md`): document routes render dynamically, `script-src 'nonce-...' 'strict-dynamic'` gates inline hydration scripts, and static assets are independently cacheable at the edge. This model gives a strong XSS baseline but does not verify static asset integrity at the browser level.
+The project currently uses a strict per-request CSP nonce model (see `0003-csp-nonce-over-ssg.md`): document routes render dynamically, `script-src 'nonce-...' 'strict-dynamic'` gates inline hydration scripts, and static assets are independently cacheable at the edge. This model gives a strong XSS baseline but does not verify static asset integrity at the browser level.
 
 ### SRI vs nonce, complementary not substitutive
 
@@ -150,7 +150,7 @@ const sriExperiment =
 ## Alternatives considered
 
 1. **Keep Evaluation forever.** Rejected after user authorization + green production deploy with verified `integrity=` + retained nonce CSP.
-2. **SRI + drop nonce for `unsafe-inline`.** Rejected: would weaken the existing XSS baseline (see `2026-07-17-csp-nonce-over-ssg.md`).
+2. **SRI + drop nonce for `unsafe-inline`.** Rejected: would weaken the existing XSS baseline (see `0003-csp-nonce-over-ssg.md`).
 3. **Do nothing, never evaluate.** Rejected: Next 16.2 SRI is a meaningful new capability worth recording so future maintainers do not re-research from scratch.
 
 ## Consequences

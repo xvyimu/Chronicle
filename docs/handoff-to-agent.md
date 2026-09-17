@@ -59,7 +59,7 @@
 | 修改搜索         | `src/app/api/search/route.ts`、`src/server/search/`、`src/lib/search/`（仅契约） | [API 文档](./API.md)、客户端 hook、`module-boundaries`、限流/service 测试 |
 | 修改 preview     | `src/app/api/preview/[slug]/route.ts`                                            | WikilinkPopover、API.md                                                   |
 | 修改 CSP / 上报  | `src/proxy.ts`、`src/app/api/csp-report/`                                        | layout、`src/lib/csp.ts`、API.md、ADR                                     |
-| 修改 SRI 门控    | `next.config.ts`（`ENABLE_SRI`）                                                 | ADR `2026-07-21-sri-over-nonce-evaluation.md`                             |
+| 修改 SRI 门控    | `next.config.ts`（`ENABLE_SRI`）                                                 | ADR `0005-sri-over-nonce-evaluation.md`                                   |
 | 修改内容读取入口 | `src/server/content`、相关 `src/app/**` 页面                                     | 底层 `src/lib/*` repository、页面测试 mock 路径                           |
 | 修改视觉 token   | `src/app/styles/tokens.css`                                                      | 明暗主题、CSS 规范、移动端与截图检查                                      |
 | 修改 CI/部署     | `.github/workflows/ci.yml`                                                       | Node 22、RSS 一致性、smoke、回滚                                          |
@@ -81,7 +81,7 @@
 
 - GSC/Bing：用户禁止登录，暂停属性验证与 sitemap 提交；授权后按 [ops-deferred-work-plan.md](./ops-deferred-work-plan.md) 执行。
 - Speed Insights：真实 p75 需要授权 token 和足够样本，不能用实验室 Lighthouse 代替。
-- 外部搜索、正文图 LQIP、Cache Components 和 CSS 深度下沉均有明确规模或素材触发条件，见 [TODO](../TODO.md) 与 `pnpm check:ops-readiness`。T4 已 ADR：**维持 Fuse**（`docs/adr/2026-07-22-search-engine-keep-fuse.md`）。
+- 外部搜索、正文图 LQIP、Cache Components 和 CSS 深度下沉均有明确规模或素材触发条件，见 [TODO](../TODO.md) 与 `pnpm check:ops-readiness`。T4 已 ADR：**维持 Fuse**（`docs/adr/0006-search-engine-keep-fuse.md`）。
 - SRI：生产 **已启用**（2026-07-22）；ADR Accepted。回滚=去掉 Production `ENABLE_SRI` 后 redeploy。与 PPR 仍分轨。
 - Giscus：Discussions 开；Vercel Prod/Preview 已是 `xvyimu/Chronicle` + 已核对 ID；生产 JS chunk 含新仓名。
 - 延后事项不得伪装成无条件工程任务；就绪状态以 `check:ops-readiness` 为准。

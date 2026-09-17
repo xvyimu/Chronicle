@@ -69,7 +69,7 @@ Git content/ (SSOT, PR 写作)
 ### T0 · 宪章与护栏（0.5–1 天）· **已收口**
 
 - [x] 本文件落盘
-- [x] ADR：`2026-07-21-radical-upgrade-charter.md`（目标/非目标/回滚）
+- [x] ADR：`0004-radical-upgrade-charter.md`（目标/非目标/回滚）
 - [x] 成功度量方向与回滚矩阵（本文件 §5–§6；RUM p75 仍外部阻塞）
 - [x] 明确：**每列车单独 PR + 可 revert**；生产部署另授权
 
@@ -111,7 +111,7 @@ Git content/ (SSOT, PR 写作)
 1. 现状：snapshot 固化 search docs + Fuse WeakMap（n=20）
 2. Orama / Pagefind 全量 spike **不做**（规模门槛未到）
 3. 中文查询集 / 双跑 **延后** 至 re-open 触发
-4. ADR：**`2026-07-22-search-engine-keep-fuse.md` Accepted**（维持 Fuse）
+4. ADR：**`0006-search-engine-keep-fuse.md` Accepted**（维持 Fuse）
 5. 重开条件：≥200 文或 p95 证据（见 ADR）
 
 ### T5 · libSQL 只读副本（1–2 周）· 高破坏
