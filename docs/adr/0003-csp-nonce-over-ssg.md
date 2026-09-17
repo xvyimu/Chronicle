@@ -1,3 +1,11 @@
+---
+status: accepted
+date: 2026-07-17
+decision-makers: [xvyimu]
+consulted: []
+informed: []
+---
+
 # ADR: Prefer CSP nonce over full-site SSG HTML cache
 
 - Status: Accepted

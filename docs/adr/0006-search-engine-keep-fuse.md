@@ -1,3 +1,11 @@
+---
+status: accepted
+date: 2026-07-22
+decision-makers: [xvyimu]
+consulted: []
+informed: []
+---
+
 # ADR: Keep Fuse for in-site search (T4)
 
 - Status: Accepted

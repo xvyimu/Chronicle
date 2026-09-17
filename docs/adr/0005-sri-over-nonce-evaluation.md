@@ -1,3 +1,11 @@
+---
+status: accepted
+date: 2026-07-21
+decision-makers: [xvyimu]
+consulted: []
+informed: []
+---
+
 # ADR: Evaluate Subresource Integrity (SRI) alongside CSP nonce
 
 - Status: **Accepted (enabled in production via `ENABLE_SRI=1`)**
