@@ -37,16 +37,16 @@
 
 ### 0.2 当前进度快照（2026-07-21 实测）
 
-| 项        | 值                                                                  | 证据                                |
-| --------- | ------------------------------------------------------------------- | ----------------------------------- |
-| 生产域名  | `https://incca.ccwu.cc`                                             | launch-baseline / live smoke        |
-| Git HEAD  | `dfc057b`（真截图 + 专题全量 + GitHub 身份）                        | `git log`                           |
-| 功能基线  | `a91a07d` `src/server` 逻辑分层                                     | run `frontend-backend-boundary`     |
-| 运营工程  | `96e0214` + 硬阻塞 `fa3e579`                                        | run `deferred-ops-readiness`        |
-| 内容规模  | **14** 文 · **6** 项目 · **10** 类 **123** 链                       | `content/blog` + `data/*`           |
-| 质量门禁  | Vitest ~618 · Playwright 48 · Lighthouse desktop CI · SEO/blur/docs | launch-baseline                     |
-| 渲染模型  | HTML **动态**（CSP nonce）· 数据本地缓存 · 资产可边缘缓存           | ADR `2026-07-17-csp-nonce-over-ssg` |
-| 工程 TODO | 仅外部账号 + 条件触发                                               | 根 `TODO.md`                        |
+| 项        | 值                                                                  | 证据                            |
+| --------- | ------------------------------------------------------------------- | ------------------------------- |
+| 生产域名  | `https://incca.ccwu.cc`                                             | launch-baseline / live smoke    |
+| Git HEAD  | `dfc057b`（真截图 + 专题全量 + GitHub 身份）                        | `git log`                       |
+| 功能基线  | `a91a07d` `src/server` 逻辑分层                                     | run `frontend-backend-boundary` |
+| 运营工程  | `96e0214` + 硬阻塞 `fa3e579`                                        | run `deferred-ops-readiness`    |
+| 内容规模  | **14** 文 · **6** 项目 · **10** 类 **123** 链                       | `content/blog` + `data/*`       |
+| 质量门禁  | Vitest ~618 · Playwright 48 · Lighthouse desktop CI · SEO/blur/docs | launch-baseline                 |
+| 渲染模型  | HTML **动态**（CSP nonce）· 数据本地缓存 · 资产可边缘缓存           | ADR `0003-csp-nonce-over-ssg`   |
+| 工程 TODO | 仅外部账号 + 条件触发                                               | 根 `TODO.md`                    |
 
 ### 0.3 本报告核心结论
 
@@ -89,7 +89,7 @@
 | 类别       | 路径/记忆                                                                                                                                                                                                                                     | 角色                   |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
 | 当前维护   | `TODO.md`、`docs/overview.md`、`architecture.md`、`handoff-to-agent.md`、`launch-baseline.md`、`performance-baseline.md`、`ops-deferred-work-plan.md`、`content-workflow.md`、`API.md`、`cache-components-migration.md`、`css-conventions.md` | 现行操作真值           |
-| ADR        | `docs/adr/2026-07-17-csp-nonce-over-ssg.md`、`0002-local-content-repository-factory.md`                                                                                                                                                       | 已接受决策             |
+| ADR        | `docs/adr/0003-csp-nonce-over-ssg.md`、`0002-local-content-repository-factory.md`                                                                                                                                                             | 已接受决策             |
 | 历史报告   | `full-stack-audit-2026-07-17.md`、`optimization-roadmap-2026-07-06.md`、`frontend-ui-optimization-report-2026-07-12.md`、`bem-search-architecture-2026-07-12.md`、`salesdex-inspired-redesign.md`、`codex-review-2026-07-13.md` 等            | 时间点快照，数字不追改 |
 | 实施 run   | `docs/superpowers/runs/2026-07-18-*`                                                                                                                                                                                                          | 分层与运营工程化证据   |
 | Agent 记忆 | `blog-2026-07-18-production-baseline`、`blog-2026-07-19-visual-identity-fix`、`blog-deferred-ops-hard-blocks`、`blog-user-self-drive-ops`                                                                                                     | 跨会话偏好与阻塞       |

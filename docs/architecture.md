@@ -354,4 +354,4 @@ pnpm check:production-content
 - [`docs/specs/2026-06-29-css-import-fix-design.md`](./specs/2026-06-29-css-import-fix-design.md) — Tailwind v4 CSS import 限制
 - [`docs/specs/2026-06-29-site-backdrop-architecture-design.md`](./specs/2026-06-29-site-backdrop-architecture-design.md) — 三层背景架构
 - [`docs/specs/2026-07-04-shadcn-visual-architecture-design.md`](./specs/2026-07-04-shadcn-visual-architecture-design.md) — shadcn-style UI 收口
-- [`docs/adr/2026-07-17-csp-nonce-over-ssg.md`](./adr/2026-07-17-csp-nonce-over-ssg.md) — 当前 CSP nonce 与 SSG 取舍
+- [`docs/adr/0003-csp-nonce-over-ssg.md`](./adr/0003-csp-nonce-over-ssg.md) — 当前 CSP nonce 与 SSG 取舍

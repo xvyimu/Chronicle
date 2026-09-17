@@ -84,7 +84,7 @@ G0/G1 已闭环且边密度从「三角 5 边」跃到 **约 47 条 wikilink**�
 | -------- | ------------------------------------------------------------------------------------------------------------ | ----------------------------- |
 | v1 报告  | `architecture-optimization-research-2026-07-21.md`                                                           | 第一/二轮决议与 §28–35 评分史 |
 | 维护文档 | TODO / overview / architecture / handoff / API / css-conventions / launch-baseline / ops / performance       | 操作真值                      |
-| ADR      | `2026-07-17-csp-nonce-over-ssg` · `0002-local-content-repository-factory`                                    | 已接受决策                    |
+| ADR      | `0003-csp-nonce-over-ssg` · `0002-local-content-repository-factory`                                          | 已接受决策                    |
 | 花园交接 | `handoff-2026-07-21-garden.md` · 记忆 `blog-handoff-2026-07-21`                                              | 本轮 git 真相                 |
 | 代码事实 | `wikilink.ts` · `remark-wikilink.ts` · `link-graph.ts` · `ArticleBacklinks` · `page.tsx` · tokens/article-ui | 实现真值                      |
 | 历史     | full-stack-audit / frontend-ui / salesdex / runs 2026-07-18                                                  | 不改写数字                    |
@@ -849,7 +849,7 @@ pnpm check:docs   # 若改文档
 - 文章页：`src/app/blog/[slug]/page.tsx`
 - 搜索：`SearchBar.tsx` · `SearchResultsList.tsx` · `src/server/search/*`
 - 样式：`tokens.css` · `article-ui.css` · `prose.css`
-- ADR：`docs/adr/2026-07-17-csp-nonce-over-ssg.md`
+- ADR：`docs/adr/0003-csp-nonce-over-ssg.md`
 
 ### 附录 C · Sources
 

@@ -1,9 +1,9 @@
 # ADR 0001 — CSP per-request nonce vs SSG
 
-- **Status**: Superseded by `2026-07-17-csp-nonce-over-ssg.md`
+- **Status**: Superseded by `0003-csp-nonce-over-ssg.md`
 - **Date**: 2026-06-29
 - **Supersedes**: none
-- **Superseded by**: `2026-07-17-csp-nonce-over-ssg.md`
+- **Superseded by**: `0003-csp-nonce-over-ssg.md`
 - **Related**: `src/proxy.ts`, `src/app/layout.tsx`, `next.config.ts`
 
 ## Context

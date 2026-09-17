@@ -113,7 +113,7 @@ v2 §51 表单决议的 R2 + Q11/Q12/Q13/Q14/Q15/Q16 全部已实施并 push 上
 | v1 报告      | `architecture-optimization-research-2026-07-21.md`                                                          | 第一/二轮决议与 §28–35 评分史  |
 | v2 报告      | `architecture-optimization-research-2026-07-21-v2.md`                                                       | 第三轮决议与 Q10–Q20 ship 清单 |
 | 维护文档     | TODO / overview / architecture / handoff / API / css-conventions / launch-baseline / ops                    | 操作真值                       |
-| ADR          | `2026-07-17-csp-nonce-over-ssg` · `0002-local-content-repository-factory`                                   | 已接受决策                     |
+| ADR          | `0003-csp-nonce-over-ssg` · `0002-local-content-repository-factory`                                         | 已接受决策                     |
 | 花园交接     | `handoff-2026-07-21-garden.md` · 记忆 `blog-handoff-2026-07-21`                                             | v2 后 push 真相                |
 | 代码事实     | `GardenExplorer.tsx` · `ArticleBacklinks.tsx` · `not-found.tsx` · `SearchResultsList.tsx` · `link-graph.ts` | v2 落地真值                    |
 | 实测命令     | `git status` · `pnpm test` · `pnpm typecheck` · `git log -n 12`                                             | v3 进度真值                    |
@@ -966,7 +966,7 @@ pnpm check:seo
 - 文章页：`src/app/blog/[slug]/page.tsx`
 - 搜索：`SearchBar.tsx` · `SearchResultsList.tsx` · `src/server/search/*`
 - 样式：`tokens.css` · `article-ui.css` · `prose.css` · `garden.css`
-- ADR：`docs/adr/2026-07-17-csp-nonce-over-ssg.md`（v3 候选新增 SRI ADR）
+- ADR：`docs/adr/0003-csp-nonce-over-ssg.md`（v3 候选新增 SRI ADR）
 
 ### 附录 C · Sources（v3 增项）
 
@@ -1327,7 +1327,7 @@ v1 §28–35 的 UX-1A、V-S1、P-A、R-A、S-A 在 v2 全部保留为已选或�
 | Q22 React Compiler   | `next.config.ts` · 受影响组件测                                                                                                                              |
 | Q23 FS cache         | `next.config.ts` · dev 测                                                                                                                                    |
 | Q24 View Transitions | `next.config.ts` · `<Link transitionTypes>`                                                                                                                  |
-| Q25 SRI ADR          | `docs/adr/2026-07-21-sri-over-nonce-evaluation.md`（新建）                                                                                                   |
+| Q25 SRI ADR          | `docs/adr/0005-sri-over-nonce-evaluation.md`（新建）                                                                                                         |
 | Q26 G3 popover       | `src/components/blog/WikilinkPopover.tsx`（新建）· `src/app/api/preview/[slug]/route.ts`（新建）· 测                                                         |
 | Q27 G2 filter        | `GardenExplorer.tsx` · `force-layout.ts`                                                                                                                     |
 | Q28 正文概念链       | `content/blog/*.mdx`                                                                                                                                         |
