@@ -11,7 +11,7 @@
 
 ## Design Read
 
-> 个人博客 + 作品集 · Paper Gallery（鼠尾草 + 纸感）· redesign **preserve 品牌** · 对齐 Atelier **节奏/半径/壳层 blur/签名习惯**，非 MindSync 侧栏复制。
+> 个人博客 + 作品集 · Paper Gallery（鼠尾草 + 纸感）· redesign **preserve 品牌** · 对齐 Atelier **节奏/半径/壳层 blur/签名习惯**，非堆叠式侧栏克隆。
 
 | Dial     | 值                                    |
 | -------- | ------------------------------------- |
