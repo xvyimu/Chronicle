@@ -2,7 +2,7 @@
 
 **GitHub：** [xvyimu/Chronicle](https://github.com/xvyimu/Chronicle)  
 **产品显示名：** 西江月博客  
-**本地路径 / package 名：** `D:\Chronicle` · npm private name `chronicle`  
+**本地路径 / package 名：** `D:\projects\Chronicle` · npm private name `chronicle`  
 **线上：** https://incca.ccwu.cc  
 **许可：** [MIT](./LICENSE)
 

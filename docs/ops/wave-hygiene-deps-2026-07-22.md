@@ -6,7 +6,7 @@
 | Node      | `/ch/ops/deps`                                                                                                                     |
 | Agent     | QA                                                                                                                                 |
 | Priority  | P0                                                                                                                                 |
-| Repo      | `D:\Chronicle` · branch `master` · base tip `5b75391` (T-CH-001)                                                                   |
+| Repo      | `D:\projects\Chronicle` · branch `master` · base tip `5b75391` (T-CH-001)                                                          |
 | Scope     | Dependency & CI hygiene re-scan only — **no** product source changes, **no** broad dependency upgrades, **no** fabricated GSC/Bing |
 | Prior     | [wave-hygiene-2026-07-22.md](./wave-hygiene-2026-07-22.md) (T-CH-001)                                                              |
 | Board     | [L2-P0-action-board-2026-07-22.md](./L2-P0-action-board-2026-07-22.md)                                                             |

@@ -96,3 +96,7 @@ next-env.d.ts
 
 # Firecrawl CLI scrape/crawl cache — never commit site dumps
 .firecrawl/
+
+# stryker mutation testing output
+reports/
+stryker-report

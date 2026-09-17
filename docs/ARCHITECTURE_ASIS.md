@@ -3,7 +3,7 @@
 > **角色**：架构测绘师（只读）  
 > **日期**：2026-07-22  
 > **工作树**：`C:/Users/yuanjia/orca/workspaces/Chronicle/ch-1` · 分支 `xvyimu/ch-1` @ `479ebd3`  
-> **真路径 / 主仓**：`D:\Chronicle` · GitHub `xvyimu/Chronicle` · 生产 `https://incca.ccwu.cc`  
+> **真路径 / 主仓**：`D:\projects\Chronicle` · GitHub `xvyimu/Chronicle` · 生产 `https://incca.ccwu.cc`  
 > **技术栈主参考**：`D:\orca\docs\architecture-stack-refactor-master-2026-07-22.md`（§0 铁律：主参考非教条；R2 可被证据推翻）  
 > **性质**：个人博客 + 作品集 + 轻量数字花园（**内容站**，非管理面板 / 非网关 / 非 AI 核心）  
 > **本文件**：测绘产物；**不**改变业务行为；**不**要求本仓迁 Vue/Go/Python。
