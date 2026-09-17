@@ -1,3 +1,11 @@
+---
+status: accepted
+date: 2026-07-21
+decision-makers: [xvyimu]
+consulted: []
+informed: []
+---
+
 # ADR: Radical upgrade charter (档 C)
 
 - Status: Accepted

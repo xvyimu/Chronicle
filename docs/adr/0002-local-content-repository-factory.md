@@ -1,3 +1,11 @@
+---
+status: accepted
+date: 2026-07-04
+decision-makers: [xvyimu]
+consulted: []
+informed: []
+---
+
 # ADR 0002 — Local content repository factory
 
 - **Status**: Accepted

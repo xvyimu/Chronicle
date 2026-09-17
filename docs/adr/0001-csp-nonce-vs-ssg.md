@@ -1,3 +1,11 @@
+---
+status: superseded
+date: 2026-06-29
+decision-makers: [xvyimu]
+consulted: []
+informed: []
+---
+
 # ADR 0001 — CSP per-request nonce vs SSG
 
 - **Status**: Superseded by `0003-csp-nonce-over-ssg.md`
