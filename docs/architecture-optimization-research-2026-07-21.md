@@ -91,7 +91,7 @@
 | 当前维护   | `TODO.md`、`docs/README.md`、`architecture.md`、`HANDOFF.md`、`launch-baseline.md`、`performance-baseline.md`、`ops-deferred-work-plan.md`、`content-workflow.md`、`API.md`、`cache-components-migration.md`、`css-conventions.md` | 现行操作真值           |
 | ADR        | `docs/adr/0003-csp-nonce-over-ssg.md`、`0002-local-content-repository-factory.md`                                                                                                                                                  | 已接受决策             |
 | 历史报告   | `full-stack-audit-2026-07-17.md`、`optimization-roadmap-2026-07-06.md`、`frontend-ui-optimization-report-2026-07-12.md`、`bem-search-architecture-2026-07-12.md`、`salesdex-inspired-redesign.md`、`codex-review-2026-07-13.md` 等 | 时间点快照，数字不追改 |
-| 实施 run   | `docs/superpowers/runs/2026-07-18-*`                                                                                                                                                                                               | 分层与运营工程化证据   |
+| 实施 run   | `docs/archive/superpowers-runs/2026-07-18-*`                                                                                                                                                                                       | 分层与运营工程化证据   |
 | Agent 记忆 | `blog-2026-07-18-production-baseline`、`blog-2026-07-19-visual-identity-fix`、`blog-deferred-ops-hard-blocks`、`blog-user-self-drive-ops`                                                                                          | 跨会话偏好与阻塞       |
 | 同类调研   | Astro Content Collections、Hugo、Quartz、Nextra、Next MDX 实践、Pagefind/Fuse/Algolia、CSP nonce vs SSG                                                                                                                            | 外部对照               |
 
@@ -229,7 +229,7 @@ content/ + data/
   docs/specs/* · docs/superpowers/specs/*
 
 历史快照
-  日期型审查报告 · optimization-roadmap · salesdex · superpowers/runs/*
+  日期型审查报告 · optimization-roadmap · salesdex · archive/superpowers-runs/*
 ```
 
 ### 3.2 已知漂移与校正原则
@@ -1314,7 +1314,7 @@ pnpm check:production-content -- --base-url=https://incca.ccwu.cc
 | `docs/bem-search-architecture-2026-07-12.md`          | 搜索演进                |
 | `docs/salesdex-inspired-redesign.md`                  | 首页叙事                |
 | `docs/adr/*`                                          | 已接受决策              |
-| `docs/superpowers/runs/2026-07-18-*`                  | 分层与运营实施证据      |
+| `docs/archive/superpowers-runs/2026-07-18-*`          | 分层与运营实施证据      |
 
 ### 21.5 修订记录
 

@@ -221,7 +221,7 @@ components ─HTTP─► /api/search ─► server/search ─► Fuse
 维护：README AGENTS TODO overview architecture handoff API …
 决策：adr/*
 设计：specs/*（已实施不追改数字）
-历史：日期报告 + superpowers/runs/*
+历史：日期报告 + archive/superpowers-runs/*
 决策报告：v1 + **本 v2**
 ```
 

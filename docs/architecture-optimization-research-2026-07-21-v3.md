@@ -268,7 +268,7 @@ GardenExplorer（client component）
 维护：README AGENTS TODO overview architecture handoff API launch-baseline …
 决策：adr/*
 设计：specs/*
-历史：日期报告 + superpowers/runs/*
+历史：日期报告 + archive/superpowers-runs/*
 决策报告：v1 + v2 + **本 v3**
 ```
 
