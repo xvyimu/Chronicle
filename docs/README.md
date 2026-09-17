@@ -17,16 +17,15 @@
 
 ## 按目录
 
-| 目录           | 放什么                                        | 维护方式                        |
-| -------------- | --------------------------------------------- | ------------------------------- |
-| `adr/`         | 架构决策记录（`NNNN-slug.md` + 索引）         | `new-adr.mjs`                   |
-| `lessons/`     | 经验与教训（`<日期>-<slug>.md` + 索引）       | `new-lesson.mjs`                |
-| `session/`     | 会话三件套（**gitignore，不进版本控制**）     | `new-session.mjs`               |
-| `ops/`         | 运维与排查证据卡，文件名带 `ch-<主题>-<日期>` | 手工                            |
-| `design/`      | 设计矩阵与视觉简报                            | 手工                            |
-| `specs/`       | 已实施的详细设计                              | `spec-driven-development` skill |
-| `superpowers/` | 工作流产物（**历史，不再新增**）              | —                               |
-| `archive/`     | 已归档的历史报告，**不再更新**                | 只增不改                        |
+| 目录       | 放什么                                             | 维护方式                        |
+| ---------- | -------------------------------------------------- | ------------------------------- |
+| `adr/`     | 架构决策记录（`NNNN-slug.md` + 索引）              | `new-adr.mjs`                   |
+| `lessons/` | 经验与教训（`<日期>-<slug>.md` + 索引）            | `new-lesson.mjs`                |
+| `session/` | 会话三件套（**gitignore，不进版本控制**）          | `new-session.mjs`               |
+| `ops/`     | 运维与排查证据卡，文件名带 `ch-<主题>-<日期>`      | 手工                            |
+| `design/`  | 设计矩阵与视觉简报                                 | 手工                            |
+| `specs/`   | 已实施的详细设计                                   | `spec-driven-development` skill |
+| `archive/` | 已归档历史（含 `superpowers-runs/`），**不再更新** | 只增不改                        |
 
 ## 当前维护文档
 
@@ -76,7 +75,7 @@ ADR 和 spec 保留决策当时的事实、测试数和方案对比。状态行�
 
 - [`docs/archive/`](./archive/)：日期型审查、UI/SEO 报告、旧 handoff、孤立的 prompt 草稿等（2026-07-22 收纳）
 - 架构调研 v1–v3：`architecture-optimization-research-2026-07-21.md`（及 `-v2`/`-v3`）
-- [`docs/superpowers/`](./superpowers/)：工作流产物（**不再新增**）
+- [`docs/archive/superpowers-runs/`](./archive/superpowers-runs/)：工作流 runs（**已归档，不再新增**）
 
 历史文件中的未勾选项只表示该次运行在记录结束时的状态。仍有效的工作必须重新出现在根 [TODO](../TODO.md) 中；否则不得据此推断当前项目未完成。
 
@@ -84,7 +83,7 @@ ADR 和 spec 保留决策当时的事实、测试数和方案对比。状态行�
 
 **只有「当前维护文档」描述现行操作。** 判定依据：文件名里带日期 → 先当作历史快照读，再回 `PROJECT.md` / `architecture.md` 确认当前状态。
 
-日期型报告、`specs/` 与 `superpowers/runs/` 里的测试数、提交与待办，都是**当时**的快照。它们不进当前基线，也不为了对齐当前统计而被改写 —— 改写历史记录等于销毁证据。
+日期型报告、`specs/` 与 `archive/superpowers-runs/` 里的测试数、提交与待办，都是**当时**的快照。它们不进当前基线，也不为了对齐当前统计而被改写 —— 改写历史记录等于销毁证据。
 
 ## 文档维护规则
 

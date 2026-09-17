@@ -2,7 +2,7 @@
 
 > 状态：Implemented（2026-07-18 已上线）  
 > 日期：2026-07-18  
-> 生产提交：`a91a07d` · CI：`29631593044` · run 归档：`docs/superpowers/runs/2026-07-18-frontend-backend-boundary/`
+> 生产提交：`a91a07d` · CI：`29631593044` · run 归档：`docs/archive/superpowers-runs/2026-07-18-frontend-backend-boundary/`
 
 ## 1. 背景与决策
 

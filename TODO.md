@@ -42,7 +42,7 @@
 | 逻辑前后端分层    | `src/server` + 边界测试                                    | 历史 run               |
 | 延后运营工程化    | 就绪门禁 + 手册                                            | 历史 run               |
 
-更早 P0–P10 与日期型审查见 `docs/archive/`、`docs/superpowers/runs/`，不在此重复。
+更早 P0–P10 与日期型审查见 `docs/archive/`、`docs/archive/superpowers-runs/`，不在此重复。
 
 ## 接手规则
 
