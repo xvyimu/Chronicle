@@ -1,6 +1,6 @@
 # 收工交接 · 花园已上线 · 2026-07-21
 
-> 日常：`HANDOFF.md` · `TODO.md` · `architecture.md`。
+> 日常：`HANDOFF.md` · `TODO.md` · `ARCHITECTURE.md`。
 
 ## 状态
 

@@ -4,6 +4,20 @@
 >
 > 这份文档是面向接手者的架构摘要：说明内容从哪里来、如何被解析、页面如何渲染、样式和安全边界在哪里，以及新增能力时应该落在哪一层。更细的运行状态与后续方向见 [`docs/HANDOFF.md`](./HANDOFF.md)，具体设计决策见 `docs/specs/` 与 `docs/adr/`。历史全栈审查快照：[`docs/archive/full-stack-audit-2026-07-17.md`](./archive/full-stack-audit-2026-07-17.md)。
 
+## 0. 五问速答
+
+| #            | 答                                                                                                    |
+| ------------ | ----------------------------------------------------------------------------------------------------- |
+| 是什么？     | MDX 驱动的个人博客 / 作品集站点                                                                       |
+| 为谁？       | 读者 · 作者本人                                                                                       |
+| 不做？       | 运行时 DB 内容源 · 第二前端框架 · 桌面壳 · 为 SSG 放宽 CSP                                            |
+| 怎样算过？   | `pnpm typecheck` · `pnpm test` · `pnpm build`（生产构建须提供非 localhost 的 `NEXT_PUBLIC_SITE_URL`） |
+| 扩展点在哪？ | 内容加 `content/blog/*.mdx`；能力加 `src/lib/**` + `src/app/**`；见 §10「新增能力落点」               |
+
+> 本节原在 `architecture-design-structured.md`（2026-09-17 合并入本文，该文件已删除）。
+
+---
+
 ## 1. 项目定位
 
 这是一个本地内容驱动的个人博客与作品集站点，核心目标是：
@@ -355,3 +369,29 @@ pnpm check:production-content
 - [`docs/specs/2026-06-29-site-backdrop-architecture-design.md`](./specs/2026-06-29-site-backdrop-architecture-design.md) — 三层背景架构
 - [`docs/specs/2026-07-04-shadcn-visual-architecture-design.md`](./specs/2026-07-04-shadcn-visual-architecture-design.md) — shadcn-style UI 收口
 - [`docs/adr/0003-csp-nonce-over-ssg.md`](./adr/0003-csp-nonce-over-ssg.md) — 当前 CSP nonce 与 SSG 取舍
+
+## 13. 更新触发条件
+
+出现以下情况时回来改本文件：
+
+- 新增或删除 `src/lib/**` 模块、`src/app/**` 路由、`src/components/**` 分包
+- 改变 `components ↛ @/server` 这条边界（由 `src/lib/module-boundaries.test.ts` 守门）
+- 改变内容读取链路（`ContentSource` / repository / cache 三层任一）
+- 改变 CSP / SRI 策略或渲染模型（动态 HTML ↔ SSG）
+- 改动部署形态（Vercel 配置、缓存头、`CONTENT_BACKEND` 默认值）
+
+## 14. 已知技术债与风险
+
+| 项                                | 影响                         | 现状                                       | 触发条件 / 缓解                                                                        |
+| --------------------------------- | ---------------------------- | ------------------------------------------ | -------------------------------------------------------------------------------------- |
+| HTML 动态渲染换 CSP nonce         | 无法全站 SSG，缓存策略受限   | **有意为之**（安全优先于缓存）             | 见 ADR-0003；不为 SSG 放宽 `unsafe-inline`                                             |
+| 本机 Node 版本与 `engines` 不符   | 仅 warning                   | `package.json` 声明 `node 22.x`，本机跑 24 | 不阻塞；CI 用 22                                                                       |
+| `pnpm build` 重写 `public/feed.*` | 工作区常脏                   | 已知；构建后检查无意外 diff                | 生产构建须提供非 localhost 的 `NEXT_PUBLIC_SITE_URL`（否则会把生产域名写成 localhost） |
+| GSC/Bing/RUM 未接入               | 无真实搜索与真实用户性能数据 | 需账号授权                                 | 见 `docs/ops-deferred-work-plan.md`；禁止用实验室分替代真实 p75                        |
+| 日期型报告与 spec 中的旧测试数    | 易被误当现状                 | 全部带日期，`docs/README.md` 有分层纪律    | 引用前先看 `docs/README.md` 的「一条纪律」                                             |
+
+---
+
+_2026-09-17：合并原 `architecture-design-structured.md` 的「五问速答」，并补
+「更新触发条件」「已知技术债与风险」两节；该文件已删除。同时文件名由 `architecture.md`
+规范为 `ARCHITECTURE.md`（Windows 大小写不敏感掩盖了这个差异，Linux/CI 上会不同）。_

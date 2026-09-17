@@ -2,7 +2,7 @@
 
 > 日期：2026-06-29
 > 范围：SiteBackdrop 性能优化（D）+ globals.css 拆分（A）合并实施
-> 状态：已实施；当前三层背景落点见 `docs/architecture.md`
+> 状态：已实施；当前三层背景落点见 `docs/ARCHITECTURE.md`
 
 ---
 

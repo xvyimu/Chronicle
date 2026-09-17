@@ -141,7 +141,7 @@ NEXT_PUBLIC_GISCUS_CATEGORY_ID=your_category_id
 ## 文档索引
 
 - [docs/README.md](./docs/README.md) — 文档导航
-- [docs/architecture.md](./docs/architecture.md) — 架构
+- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) — 架构
 - [docs/content-workflow.md](./docs/content-workflow.md) — 内容与 snapshot
 - [docs/API.md](./docs/API.md) — search / preview 契约
 - [docs/HANDOFF.md](./docs/HANDOFF.md) — Agent 接手

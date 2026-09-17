@@ -54,7 +54,7 @@
 - 创建/修改的文件：
   - `AGENTS.md`
   - `README.md`
-  - `docs/architecture.md`
+  - `docs/ARCHITECTURE.md`
 
 ### 阶段 6：Local content repository factory
 
@@ -68,7 +68,7 @@
   - 运行目标测试：`json-content-repository.test.ts`、`projects.test.ts`、`links.test.ts` 全部通过。
   - 运行最终验证：`pnpm lint`、`pnpm exec tsc --noEmit`、`pnpm test`、`pnpm build` 全部通过。
   - 清理验证生成的 `html/` 与 `tsconfig.tsbuildinfo` 临时产物。
-  - Standards 轴：对照 `AGENTS.md`、`README.md`、`docs/architecture.md` 与当前 diff 复查，未发现阻断问题。
+  - Standards 轴：对照 `AGENTS.md`、`README.md`、`docs/ARCHITECTURE.md` 与当前 diff 复查，未发现阻断问题。
   - Spec 轴：对照 ADR 0002 与 `task_plan.md` 复查，确认共享 factory 范围限定在 JSON read / parse / cache，domain 查询仍留在 adapters。
 - 创建/修改的文件：
   - `src/lib/json-content-repository.test.ts`

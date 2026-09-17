@@ -21,7 +21,7 @@ A personal blog built with Next.js 16.2 (App Router), React 19, and Tailwind CSS
 ## 形态与栈（先读）
 
 - **SSOT：** [`docs/PROJECT.md`](./docs/PROJECT.md) — 产品形态（个人博客 Web）+ 唯一技术栈 + 防漂移
-- 实现分层：[`docs/architecture.md`](./docs/architecture.md)
+- 实现分层：[`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)
 - 全局门闩：未定形态 / 栈未入档 → 禁业务编码（`~/.claude/CLAUDE.md` §8）
 - 小修沿用本栈；换栈先 ADR + 改 PROJECT.md
 

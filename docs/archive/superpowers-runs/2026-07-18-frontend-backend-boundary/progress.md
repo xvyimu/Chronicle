@@ -14,7 +14,7 @@
 - 迁移搜索 engine/rate-limit 至 `src/server/search`，新增 service + barrel。
 - 收窄 `src/lib/search`；改造 `src/app/api/search/route.ts` 与测试。
 - 新增 `src/lib/module-boundaries.test.ts`。
-- 更新 `docs/architecture.md`、`docs/API.md`、`docs/HANDOFF.md`。
+- 更新 `docs/ARCHITECTURE.md`、`docs/API.md`、`docs/HANDOFF.md`。
 - 交接：`.pipeline/.../changes.md`。
 
 ### 独立验证

@@ -3,7 +3,7 @@
 > **状态**：当前决策参考稿（2026-07-21）· **用户决议已录入**  
 > **路径**：`D:\blog` · 生产：`https://incca.ccwu.cc` · HEAD：`dfc057b`  
 > **用途**：在现有生产基线上整合历史文档、同类项目经验、技术债、目标/约束/边界、多方案对比与验收标准；**不替代** `TODO.md` 作为待办 SSOT，也不改写已归档 run 中的历史数字。  
-> **阅读入口**：先读本文件结论 → 再按需跳到章节。执行时仍以 `TODO.md`、`docs/HANDOFF.md`、`docs/architecture.md` 为准。
+> **阅读入口**：先读本文件结论 → 再按需跳到章节。执行时仍以 `TODO.md`、`docs/HANDOFF.md`、`docs/ARCHITECTURE.md` 为准。
 
 ### 用户决议（2026-07-21 交互表单）
 
@@ -88,7 +88,7 @@
 
 | 类别       | 路径/记忆                                                                                                                                                                                                                          | 角色                   |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| 当前维护   | `TODO.md`、`docs/README.md`、`architecture.md`、`HANDOFF.md`、`launch-baseline.md`、`performance-baseline.md`、`ops-deferred-work-plan.md`、`content-workflow.md`、`API.md`、`cache-components-migration.md`、`css-conventions.md` | 现行操作真值           |
+| 当前维护   | `TODO.md`、`docs/README.md`、`ARCHITECTURE.md`、`HANDOFF.md`、`launch-baseline.md`、`performance-baseline.md`、`ops-deferred-work-plan.md`、`content-workflow.md`、`API.md`、`cache-components-migration.md`、`css-conventions.md` | 现行操作真值           |
 | ADR        | `docs/adr/0003-csp-nonce-over-ssg.md`、`0002-local-content-repository-factory.md`                                                                                                                                                  | 已接受决策             |
 | 历史报告   | `full-stack-audit-2026-07-17.md`、`optimization-roadmap-2026-07-06.md`、`frontend-ui-optimization-report-2026-07-12.md`、`bem-search-architecture-2026-07-12.md`、`salesdex-inspired-redesign.md`、`codex-review-2026-07-13.md` 等 | 时间点快照，数字不追改 |
 | 实施 run   | `docs/archive/superpowers-runs/2026-07-18-*`                                                                                                                                                                                       | 分层与运营工程化证据   |
@@ -1304,7 +1304,7 @@ pnpm check:production-content -- --base-url=https://incca.ccwu.cc
 | 文档                                                  | 本报告使用方式          |
 | ----------------------------------------------------- | ----------------------- |
 | `TODO.md`                                             | 待办 SSOT；工程关闭事实 |
-| `docs/architecture.md`                                | 分层与渲染不变量        |
+| `docs/ARCHITECTURE.md`                                | 分层与渲染不变量        |
 | `docs/HANDOFF.md`                                     | 接手顺序与边界          |
 | `docs/README.md`                                      | 文档分层规则            |
 | `docs/launch-baseline.md` / `performance-baseline.md` | 质量与性能证据          |

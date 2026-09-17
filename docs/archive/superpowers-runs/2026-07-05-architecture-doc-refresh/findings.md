@@ -2,10 +2,10 @@
 
 ## 2026-07-05
 
-- `docs/architecture.md` 顶部标注“部分过时”，但 `README.md` 与 `docs/README.md` 仍把它作为架构入口推荐。
-- `docs/HANDOFF.md` 的 7.3 小节明确写着“不必读 docs/architecture.md”，这会削弱后续接手时的文档导航价值。
+- `docs/ARCHITECTURE.md` 顶部标注“部分过时”，但 `README.md` 与 `docs/README.md` 仍把它作为架构入口推荐。
+- `docs/HANDOFF.md` 的 7.3 小节明确写着“不必读 docs/ARCHITECTURE.md”，这会削弱后续接手时的文档导航价值。
 - `README.md` 和 `docs/README.md` 引用了 `docs/项目审查与改进文档.md`，当前仓库中未发现该文件；实际存在的是 `docs/architecture-review.html`。
-- 当前权威架构事实集中在 `AGENTS.md` 与 `docs/HANDOFF.md`，适合提炼回 `docs/architecture.md`，让 README 的文档索引保持可信。
+- 当前权威架构事实集中在 `AGENTS.md` 与 `docs/HANDOFF.md`，适合提炼回 `docs/ARCHITECTURE.md`，让 README 的文档索引保持可信。
 
 ## 验证关注点
 

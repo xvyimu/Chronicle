@@ -2,22 +2,22 @@
 
 ## 目标
 
-把 `docs/architecture.md` 从历史参考文档升级为当前可接手的架构摘要，并同步 README、文档总览与 handoff 中关于架构文档状态的描述，降低后续 Codex / Claude Code 接手时读到过时信息的风险。
+把 `docs/ARCHITECTURE.md` 从历史参考文档升级为当前可接手的架构摘要，并同步 README、文档总览与 handoff 中关于架构文档状态的描述，降低后续 Codex / Claude Code 接手时读到过时信息的风险。
 
 ## 阶段
 
 ### 阶段 1：观察与范围确认
 
 - [x] 检查工作区状态
-- [x] 读取 `docs/architecture.md`、`docs/HANDOFF.md`、`README.md`、`TODO.md`、`docs/README.md`
+- [x] 读取 `docs/ARCHITECTURE.md`、`docs/HANDOFF.md`、`README.md`、`TODO.md`、`docs/README.md`
 - [x] 确认最高优先级优化点：架构文档状态与当前代码/接手说明不一致
 
 ### 阶段 2：文档更新
 
 - [x] 新增本轮计划、发现与进度文件
-- [x] 重写 `docs/architecture.md` 为当前架构摘要
+- [x] 重写 `docs/ARCHITECTURE.md` 为当前架构摘要
 - [x] 修正 README 与 docs overview 中失效或过时的文档入口
-- [x] 同步 handoff 中对 `docs/architecture.md` 的描述
+- [x] 同步 handoff 中对 `docs/ARCHITECTURE.md` 的描述
 
 ### 阶段 3：验证与审查
 
