@@ -9,9 +9,9 @@
 - 检查工作区状态：干净。
 - 读取当前交付/接手文档，确认架构文档存在过时状态标记与文档入口不一致。
 - 创建本轮 planning 文件。
-- 重写 `docs/architecture.md` 为当前架构说明，覆盖内容流、路由、组件、CSS、背景、安全、缓存、测试和扩展落点。
+- 重写 `docs/ARCHITECTURE.md` 为当前架构说明，覆盖内容流、路由、组件、CSS、背景、安全、缓存、测试和扩展落点。
 - 修正 `README.md` 与 `docs/README.md` 中不存在的 `docs/项目审查与改进文档.md` 链接，改指向现有 `docs/architecture-review.html`。
-- 同步 `docs/HANDOFF.md`，将 `docs/architecture.md` 恢复为接手阅读顺序中的当前架构入口。
+- 同步 `docs/HANDOFF.md`，将 `docs/ARCHITECTURE.md` 恢复为接手阅读顺序中的当前架构入口。
 - 运行本轮 Markdown 格式检查，变更文件全部通过。
 - 运行项目既有 `pnpm format:check`，通过。
 - 扫描旧入口/旧状态描述，除本轮 findings/progress 的历史记录外无残留。

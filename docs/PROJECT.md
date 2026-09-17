@@ -9,12 +9,11 @@
 
 ## 产品方案指针与验收摘要
 
-| 项                       | 链接                                                                                                       |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------- |
-| **产品分层（L0–L6）**    | [`PRODUCT-LAYERS.md`](./PRODUCT-LAYERS.md)                                                                 |
-| **形态与栈 SSOT**        | 本文其余章节                                                                                               |
-| **结构化架构总览（v2）** | [`architecture-design-structured.md`](./architecture-design-structured.md)（C4/五问/验收；**不替代本文**） |
-| **组合总纲**             | 本机 `D:\orca\docs\PORTFOLIO.md`                                                                           |
+| 项                    | 链接                                       |
+| --------------------- | ------------------------------------------ |
+| **产品分层（L0–L6）** | [`PRODUCT-LAYERS.md`](./PRODUCT-LAYERS.md) |
+| **形态与栈 SSOT**     | 本文其余章节                               |
+| **组合总纲**          | 本机 `D:\orca\docs\PORTFOLIO.md`           |
 
 **五问快答：** 身份/用户/边界见 PRODUCT-LAYERS **L0**；栈见本文；验收见 **L4**；许可与协作见 **L5** 与根 `LICENSE` / `CONTRIBUTING.md` / `SECURITY.md`。
 
@@ -54,7 +53,7 @@
 | 部署   | **Vercel** + GitHub Actions                                                     |                                                                |
 | 包管理 | **pnpm**                                                                        | 不用 npm/yarn 当主路径                                         |
 
-实现分层摘要见 [`architecture.md`](./architecture.md)。Agent 短索引：根 [`AGENTS.md`](../AGENTS.md)。
+实现分层摘要见 [`ARCHITECTURE.md`](./ARCHITECTURE.md)。Agent 短索引：根 [`AGENTS.md`](../AGENTS.md)。
 
 ---
 
@@ -72,4 +71,4 @@
 1. 未读本文 + `AGENTS.md` 不写业务代码（全局门闩）。
 2. 不擅自换框架、加第二 CSS-in-JS 体系、引入运行时 DB 作内容源。
 3. 换栈/换形态 → ADR + 改本文件 → 确认后再实现。
-4. 细节契约：`docs/architecture.md` · `docs/API.md` · `docs/css-conventions.md`。
+4. 细节契约：`docs/ARCHITECTURE.md` · `docs/API.md` · `docs/css-conventions.md`。

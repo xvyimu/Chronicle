@@ -1,6 +1,6 @@
 # 西江月博客 · Agent 接手指南
 
-> 状态：当前维护版（2026-07-22）。详细模块说明见 [architecture.md](./architecture.md)，当前未完成事项只以根 [TODO](../TODO.md) 为准。文档导航见 [docs/README.md](./README.md)。
+> 状态：当前维护版（2026-07-22）。详细模块说明见 [ARCHITECTURE.md](./ARCHITECTURE.md)，当前未完成事项只以根 [TODO](../TODO.md) 为准。文档导航见 [docs/README.md](./README.md)。
 
 ## 下一步（直接做，勿重问范围）
 

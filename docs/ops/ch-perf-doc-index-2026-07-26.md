@@ -53,7 +53,7 @@
 
 | 文档             | 路径                                                                | 内容摘要               |
 | ---------------- | ------------------------------------------------------------------- | ---------------------- |
-| **架构**         | `docs/architecture.md`                                              | 系统架构（含渲染路径） |
+| **架构**         | `docs/ARCHITECTURE.md`                                              | 系统架构（含渲染路径） |
 | **缓存组件迁移** | `docs/cache-components-migration.md`                                | 缓存组件迁移记录       |
 | **架构优化研究** | `docs/architecture-optimization-research-2026-07-21.md`（v2/v3/v4） | 架构优化调研           |
 | **激进架构升级** | `docs/architecture-upgrade-radical-c-2026-07-21.md`                 | 激进方案评估           |
@@ -66,7 +66,7 @@
 docs/
 ├── performance-baseline.md          # 历史基线（LH desktop/mobile）
 ├── launch-baseline.md               # 上线前基线
-├── architecture.md                   # 架构（含渲染路径）
+├── ARCHITECTURE.md                   # 架构（含渲染路径）
 ├── ops/
 │   ├── perf-budget-2026-07.md       # ⭐ 性能预算 SSOT（路由预算 + 可跑 check）
 │   ├── ch-a11y-budget-index-2026-07-26.md  # ⭐ a11y / LH / RUM / CI 索引

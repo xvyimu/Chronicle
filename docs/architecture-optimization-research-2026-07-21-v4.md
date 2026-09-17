@@ -5,7 +5,7 @@
 > **本地 tip**：`feat/v3-ship` **`6543a91`** · **ahead 6 未 push** · 工作树 clean  
 > **origin/master / 生产**：仍为 **`ef77986`**（与 tip 分叉）  
 > **相对 v3**：`architecture-optimization-research-2026-07-21-v3.md` 保留为第四轮决议与 Q21–Q30 规划史；**本 v4 以「v3 ship 已本地落地 + Q26/Q27 测试补全 + Q28 六篇概念文 + Q29 本地 SRI 准备」为起点**，重新扫描进度、同类经验、技术债与下一刀最佳路径。  
-> **待办 SSOT**：根 `TODO.md` · 接手记忆：`blog-handoff-2026-07-21` · 架构：`docs/architecture.md` · API：`docs/API.md`（需同步 preview）· SRI ADR：`docs/adr/0005-sri-over-nonce-evaluation.md`
+> **待办 SSOT**：根 `TODO.md` · 接手记忆：`blog-handoff-2026-07-21` · 架构：`docs/ARCHITECTURE.md` · API：`docs/API.md`（需同步 preview）· SRI ADR：`docs/adr/0005-sri-over-nonce-evaluation.md`
 
 ---
 
@@ -859,7 +859,7 @@ Agent 将：
 | 本报告       | `docs/architecture-optimization-research-2026-07-21-v4.md` |
 | v3           | `docs/architecture-optimization-research-2026-07-21-v3.md` |
 | SRI ADR      | `docs/adr/0005-sri-over-nonce-evaluation.md`               |
-| 架构         | `docs/architecture.md`                                     |
+| 架构         | `docs/ARCHITECTURE.md`                                     |
 | API          | `docs/API.md`（待补 preview）                              |
 | CSS          | `docs/css-conventions.md`                                  |
 | 内容流程     | `docs/content-workflow.md`                                 |

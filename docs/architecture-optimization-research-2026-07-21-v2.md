@@ -4,7 +4,7 @@
 > **路径**：`D:\blog` · 生产：`https://incca.ccwu.cc`  
 > **本地 tip**：`3fc3632` · 功能基线花园 **`b96b3c3`** · 边密度 **`7202172`** · origin/生产 **`dfc057b`** · **ahead 5 未 push**  
 > **相对 v1**：`architecture-optimization-research-2026-07-21.md` 仍保留为第一/二轮决策与评分史；**本 v2 以落地后事实重扫 + 下一阶段决策为主**，不改写 v1 历史数字。  
-> **待办 SSOT**：根 `TODO.md` · 接手：`docs/HANDOFF.md` · 架构：`docs/architecture.md` · 收工：`docs/handoff-2026-07-21-garden.md`
+> **待办 SSOT**：根 `TODO.md` · 接手：`docs/HANDOFF.md` · 架构：`docs/ARCHITECTURE.md` · 收工：`docs/handoff-2026-07-21-garden.md`
 
 ### 文首决议继承（不可推翻，除非用户新表单改写）
 
@@ -860,7 +860,7 @@ pnpm check:docs   # 若改文档
 - [Lee Robinson stack](https://leerob.com/stack)
 - [Next.js CSP](https://nextjs.org/docs/app/guides/content-security-policy)
 - [Nextra 4](https://the-guild.dev/blog/nextra-4) · [Pagefind](https://pagefind.app/docs/) · [Fuse performance](https://www.fusejs.io/performance.html)
-- 站内：v1 报告 · architecture.md · TODO.md · handoff-2026-07-21-garden.md · full-stack-audit-2026-07-17.md
+- 站内：v1 报告 · ARCHITECTURE.md · TODO.md · handoff-2026-07-21-garden.md · full-stack-audit-2026-07-17.md
 
 ---
 

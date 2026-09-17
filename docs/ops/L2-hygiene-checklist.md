@@ -297,7 +297,7 @@ pnpm check:ops-readiness -- --live
 | [launch-baseline.md](../launch-baseline.md)               | 生产基线与门禁数字            |
 | [performance-baseline.md](../performance-baseline.md)     | 性能/RUM 记录                 |
 | [HANDOFF.md](../HANDOFF.md)                               | Agent 接手与边界              |
-| [architecture.md](../architecture.md)                     | 分层与安全模型摘要            |
+| [ARCHITECTURE.md](../ARCHITECTURE.md)                     | 分层与安全模型摘要            |
 | [API.md](../API.md)                                       | search / preview / csp-report |
 | 根 [TODO.md](../../TODO.md)                               | 未完成事项 SSOT               |
 

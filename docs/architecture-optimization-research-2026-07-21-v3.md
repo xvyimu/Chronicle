@@ -4,7 +4,7 @@
 > **路径**：`D:\blog` · 生产：`https://incca.ccwu.cc`
 > **本地 tip / origin / 生产**：**`ef77986`**（三处一致，工作树 clean，无 ahead/behind）
 > **相对 v2**：`architecture-optimization-research-2026-07-21-v2.md` 仍保留为第三轮决议与评分史；**本 v3 以「v2 表单已全部落地、生产已同步」为起点**，重新评估下一阶段最佳可执行路径，不改写 v1/v2 历史数字。
-> **待办 SSOT**：根 `TODO.md` · 接手：`docs/HANDOFF.md` · 架构：`docs/architecture.md` · 收工：`docs/handoff-2026-07-21-garden.md`
+> **待办 SSOT**：根 `TODO.md` · 接手：`docs/HANDOFF.md` · 架构：`docs/ARCHITECTURE.md` · 收工：`docs/handoff-2026-07-21-garden.md`
 
 ## 文首决议继承（不可推翻，除非用户新表单改写）
 
@@ -230,7 +230,7 @@ GardenExplorer（client component）
 | `README.md` 写「599 用例 / 77 文件」            | 更新为 672/90                     |
 | `AGENTS.md` 写「618 tests, 81 files」           | 更新为 672/90                     |
 | `TODO.md` 归档 HEAD 写 `61ffd47`                | 更新为 `ef77986` 或新增 G2 上线行 |
-| `architecture.md` 写「599 tests / 77 files」    | 更新为 672/90                     |
+| `ARCHITECTURE.md` 写「599 tests / 77 files」    | 更新为 672/90                     |
 | `docs/README.md` 未挂 v3 报告                   | 挂链 v3                           |
 
 **漂移风险**：3 个月后接手者读 launch-baseline 会以为生产仍停留在 `a91a07d`，导致错误判断「G2 未上线」；读 README 测试数会低估覆盖率。这是真实回归风险，必须修。
@@ -978,7 +978,7 @@ pnpm check:seo
 - [Pagefind 官网](https://pagefind.app/)
 - [remark-wiki-link npm](https://www.npmjs.com/package/remark-wiki-link) · [remark-wiki-link GitHub](https://github.com/landakram/remark-wiki-link)
 - [Vercel Speed Insights](https://vercel.com/docs/speed-insights)
-- 站内：v1 报告 · v2 报告 · architecture.md · TODO.md · handoff-2026-07-21-garden.md · full-stack-audit-2026-07-17.md
+- 站内：v1 报告 · v2 报告 · ARCHITECTURE.md · TODO.md · handoff-2026-07-21-garden.md · full-stack-audit-2026-07-17.md
 
 ---
 
@@ -1079,7 +1079,7 @@ v2 §51 表单已全部落地，但**文档数字漂移**问题在 v3 实测中�
 - `README.md` 写「599 用例 / 77 文件」（实际 672/90）
 - `AGENTS.md` 写「618 tests, 81 files」（实际 672/90）
 - `TODO.md` 归档 HEAD 写 `61ffd47`（实际 `ef77986`）
-- `architecture.md` 写「599 tests / 77 files」（实际 672/90）
+- `ARCHITECTURE.md` 写「599 tests / 77 files」（实际 672/90）
 
 这不是「文档过时」的小问题，而是**真实回归风险**：3 个月后接手者读 launch-baseline 会以为生产仍停留在 `a91a07d`，错误判断「G2 未上线」；读 README 测试数会低估覆盖率；读 TODO 归档 HEAD 会以为还有未 push 的提交。每个误判都会触发不必要的「重新验证」工作，浪费接手时间。
 
@@ -1090,7 +1090,7 @@ v2 §51 表单已全部落地，但**文档数字漂移**问题在 v3 实测中�
 3. `README.md` 测试数 599/77 → 672/90
 4. `AGENTS.md` 测试数 618/81 → 672/90
 5. `TODO.md` 归档 HEAD `61ffd47` → `ef77986` + 新增 G2 上线行
-6. `architecture.md` 测试数 599/77 → 672/90
+6. `ARCHITECTURE.md` 测试数 599/77 → 672/90
 7. `docs/README.md` 挂链 v3 报告
 8. 记忆 `blog-handoff-2026-07-21` tip 同步
 
@@ -1323,7 +1323,7 @@ v1 §28–35 的 UX-1A、V-S1、P-A、R-A、S-A 在 v2 全部保留为已选或�
 
 | 包项                 | 主要落点                                                                                                                                                   |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Q21 卫生             | `docs/launch-baseline.md` · `docs/handoff-2026-07-21-garden.md` · `README.md` · `AGENTS.md` · `TODO.md` · `docs/architecture.md` · `docs/README.md` · 记忆 |
+| Q21 卫生             | `docs/launch-baseline.md` · `docs/handoff-2026-07-21-garden.md` · `README.md` · `AGENTS.md` · `TODO.md` · `docs/ARCHITECTURE.md` · `docs/README.md` · 记忆 |
 | Q22 React Compiler   | `next.config.ts` · 受影响组件测                                                                                                                            |
 | Q23 FS cache         | `next.config.ts` · dev 测                                                                                                                                  |
 | Q24 View Transitions | `next.config.ts` · `<Link transitionTypes>`                                                                                                                |

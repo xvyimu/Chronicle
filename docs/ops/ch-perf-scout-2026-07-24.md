@@ -91,7 +91,7 @@
 | 当前 manifest | `postCount: 20` · `contentHash: ec03c7da…` · `builtAt: 2026-07-22T17:21:36.974Z`                                                |
 | 本 scout 实测 | `pnpm content:build` → **unchanged** · **exit 0**                                                                               |
 
-文档：`docs/content-workflow.md` §「内容快照」；`docs/architecture.md` §3。
+文档：`docs/content-workflow.md` §「内容快照」；`docs/ARCHITECTURE.md` §3。
 
 ---
 

@@ -3,7 +3,7 @@
 > **角色**：L2 Target 一页纸 · Dual-B 文书 · 2026-07-22  
 > **状态**：Active（**不**启动栈迁移；巩固 As-Is 边界）  
 > **As-Is**：[`架构 As-Is 测绘（2026-07）`](./ops/ch-architecture-asis-2026-07.md)  
-> **运行时边界**：[`architecture.md`](./architecture.md) · [`HANDOFF.md`](./HANDOFF.md)  
+> **运行时边界**：[`ARCHITECTURE.md`](./ARCHITECTURE.md) · [`HANDOFF.md`](./HANDOFF.md)  
 > **Master 参考**：~~`D:\orca\docs\architecture-stack-refactor-master-2026-07-22.md`~~ ← **已废止**
 > （那份是六仓口径的重构规划，含已删除的 TransitHub / MindSync / Codexveil；
 > 本仓的形态与栈以 [`PROJECT.md`](./PROJECT.md) 为准，§2 因此只是历史对照）
@@ -124,7 +124,7 @@ src/components/*   UI only — 禁止 import @/server
 | 文档                                                                               | 用途             |
 | ---------------------------------------------------------------------------------- | ---------------- |
 | [`架构 As-Is 测绘（2026-07）`](./ops/ch-architecture-asis-2026-07.md)              | 测绘事实         |
-| [`architecture.md`](./architecture.md)                                             | 接手用运行时边界 |
+| [`ARCHITECTURE.md`](./ARCHITECTURE.md)                                             | 接手用运行时边界 |
 | [`adr/0005-sri-over-nonce-evaluation.md`](./adr/0005-sri-over-nonce-evaluation.md) | SRI 决策         |
 | [`ops/L2-P0-action-board-2026-07-22.md`](./ops/L2-P0-action-board-2026-07-22.md)   | P0 看板          |
 | [`THIRD_PARTY.md`](./THIRD_PARTY.md)                                               | 第三方许可摘要   |

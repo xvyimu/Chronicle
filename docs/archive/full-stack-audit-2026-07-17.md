@@ -310,7 +310,7 @@ route 单测覆盖空查询、超长、limit clamp、429。
 运维排障依赖日志级别与是否看得到 warn；用户侧表现不一致。
 
 **推荐操作步骤**  
-统一“生产 fail-fast / 测试 fallback”策略，写入 `docs/architecture.md` 一小节。
+统一“生产 fail-fast / 测试 fallback”策略，写入 `docs/ARCHITECTURE.md` 一小节。
 
 **预期收益**  
 降低“偶发空数据”类故障的 MTTR。
@@ -348,7 +348,7 @@ nonce CSP → 动态 HTML；MDX/JSON 本地只读；搜索 Node runtime；评论
 
 **推荐操作步骤**
 
-1. 更新 `docs/architecture.md`：标明“文档响应动态 / 数据本地静态”。
+1. 更新 `docs/ARCHITECTURE.md`：标明“文档响应动态 / 数据本地静态”。
 2. 架构决策记录 ADR：为何 nonce 优先于全站静态。
 3. 监控看板：Function 次数、搜索 429、LCP/CLS p75。
 
