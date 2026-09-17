@@ -22,7 +22,7 @@
 | [GITHUB_IDENTITY](../GITHUB_IDENTITY.md)                                                | 仓库/产品/包名/生产域/许可身份卡                                     | 身份字段变化                      |
 | [TODO](../TODO.md)                                                                      | 仅保留当前未完成或条件触发事项                                       | 待办完成、取消或条件变化          |
 | [架构说明](./architecture.md)                                                           | 当前模块和运行时边界                                                 | 模块、数据流、渲染或部署变化      |
-| [架构 As-Is](./ARCHITECTURE_ASIS.md)                                                    | L2 测绘事实（语言/API/偏离清单）                                     | 栈或产品边界变化                  |
+| [架构 As-Is（2026-07 测绘）](./ops/ch-architecture-asis-2026-07.md)                     | L2 测绘事实（语言/API/偏离清单）· **历史快照**                       | —                                 |
 | [架构 Target](./ARCHITECTURE_TARGET.md)                                                 | L2 目标态与允许/禁止维护边界                                         | 策略标签或禁止项变化              |
 | [第三方依赖摘要](./THIRD_PARTY.md)                                                      | 直接依赖 SPDX 摘要；全树以 lockfile 为准                             | 直接依赖或合规口径变化            |
 | [公开 API](./API.md)                                                                    | `/api/search` · `/api/preview` · `/api/csp-report` 契约              | route、DTO、限流或缓存变化        |
