@@ -12,7 +12,7 @@
 - Targeted tests 已通过：`src/lib/links.test.ts`、`src/components/links/LinksDirectory.test.tsx`、`src/app/links/page.test.tsx` 共 32 项通过。
 - 已将链接资产校验接入 `scripts/check-seo.ts`，本地 `pnpm check:seo` 通过。
 - 已为 `data/links.json` 的工程文档、自托管、VPS、博客参考等核心收藏补充运营元信息。本地统计：14 篇文章、10 个收藏分类、123 条收藏链接、32 条已带运营元信息。
-- 已新增 `docs/launch-baseline.md`，并更新 `docs/content-workflow.md`、`docs/overview.md`、README 文档索引。
+- 已新增 `docs/launch-baseline.md`，并更新 `docs/content-workflow.md`、`docs/README.md`、README 文档索引。
 - 线上只读核验：最新 CI run `28781033610` 成功，生产内容 smoke 对 `https://incca.ccwu.cc` 通过；PowerShell `ConvertFrom-Json` 因默认编码读取中文 JSON 出现乱码解析失败，已改用 Node `fs.readFileSync(..., 'utf8')` 完成统计。
 - 验证通过：`pnpm format:check`、`pnpm format:docs:check`、`pnpm lint`、`pnpm typecheck`、`pnpm check:seo`、`pnpm test`（542 项 / 68 文件）、`pnpm build`、`pnpm exec tsx scripts/check-bundle-budget.ts`、`pnpm test:e2e`（47 项 / 5 文件）。
 - `pnpm format:docs:check` 初次发现 4 个 Markdown 文件需要 Prettier，已运行 `pnpm format:docs` 修复并复查通过。

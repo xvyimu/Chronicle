@@ -39,7 +39,7 @@
 
 ### 1.4 文档索引微更新
 
-- `docs/overview.md`：链入 ASIS / TARGET / THIRD_PARTY。
+- `docs/README.md`：链入 ASIS / TARGET / THIRD_PARTY。
 - `docs/ARCHITECTURE_ASIS.md`：§9.2 / §11 去掉「TARGET 未写」表述，指向已建 TARGET。
 
 ---
@@ -94,7 +94,7 @@ NOTICE                                          (new)
 docs/ARCHITECTURE_TARGET.md                     (new)
 docs/THIRD_PARTY.md                             (new)
 docs/ARCHITECTURE_ASIS.md                       (edit)
-docs/overview.md                                (edit)
+docs/README.md                                (edit)
 docs/ops/wave6-dual-b-chronicle-claude.md       (new, this file)
 package.json                                    (add check:sri-smoke)
 scripts/check-sri-smoke.mjs                     (new)

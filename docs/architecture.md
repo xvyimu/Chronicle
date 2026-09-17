@@ -2,7 +2,7 @@
 
 > 状态：当前维护版（2026-07-18）
 >
-> 这份文档是面向接手者的架构摘要：说明内容从哪里来、如何被解析、页面如何渲染、样式和安全边界在哪里，以及新增能力时应该落在哪一层。更细的运行状态与后续方向见 [`docs/handoff-to-agent.md`](./handoff-to-agent.md)，具体设计决策见 `docs/specs/` 与 `docs/adr/`。历史全栈审查快照：[`docs/archive/full-stack-audit-2026-07-17.md`](./archive/full-stack-audit-2026-07-17.md)。
+> 这份文档是面向接手者的架构摘要：说明内容从哪里来、如何被解析、页面如何渲染、样式和安全边界在哪里，以及新增能力时应该落在哪一层。更细的运行状态与后续方向见 [`docs/HANDOFF.md`](./HANDOFF.md)，具体设计决策见 `docs/specs/` 与 `docs/adr/`。历史全栈审查快照：[`docs/archive/full-stack-audit-2026-07-17.md`](./archive/full-stack-audit-2026-07-17.md)。
 
 ## 1. 项目定位
 
@@ -347,7 +347,7 @@ pnpm check:production-content
 
 ## 12. 相关文档
 
-- [`docs/handoff-to-agent.md`](./handoff-to-agent.md) — 当前状态、接手顺序与后续方向
+- [`docs/HANDOFF.md`](./HANDOFF.md) — 当前状态、接手顺序与后续方向
 - [`docs/content-workflow.md`](./content-workflow.md) — 内容维护与发布流程
 - [`docs/css-conventions.md`](./css-conventions.md) — CSS 分层与写法约定
 - [`docs/cache-components-migration.md`](./cache-components-migration.md) — 缓存与未来迁移策略

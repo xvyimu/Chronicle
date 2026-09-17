@@ -1,6 +1,6 @@
 # Codex 全栈代码审查与优化报告 - 2026-07-13
 
-> 历史快照：本报告记录 `ec110f0` 基线上的发现；后续处置见 `docs/full-stack-audit-2026-07-17.md`，当前状态见 `docs/handoff-to-agent.md`。
+> 历史快照：本报告记录 `ec110f0` 基线上的发现；后续处置见 `docs/full-stack-audit-2026-07-17.md`，当前状态见 `docs/HANDOFF.md`。
 
 ## 1. 审查结论
 

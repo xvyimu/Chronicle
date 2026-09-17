@@ -35,7 +35,7 @@
 ### 阶段 4：文档与校验
 
 - [x] 更新 `docs/content-workflow.md`
-- [x] 更新 `docs/overview.md` 和 README 文档索引
+- [x] 更新 `docs/README.md` 和 README 文档索引
 - [x] 运行 targeted tests、format、lint、typecheck、SEO、build
 
 ### 阶段 5：审查与收尾

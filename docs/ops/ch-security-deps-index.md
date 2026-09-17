@@ -102,11 +102,11 @@ pnpm audit --registry=https://registry.npmjs.org
 
 | 去向                        | 路径                                                                                 |
 | --------------------------- | ------------------------------------------------------------------------------------ |
-| 文档总览                    | [../overview.md](../overview.md)                                                     |
+| 文档总览                    | [../README.md](../README.md)                                                         |
 | 第三方依赖 SPDX 摘要        | [../THIRD_PARTY.md](../THIRD_PARTY.md)                                               |
 | 安全策略（漏洞报告）        | [../../SECURITY.md](../../SECURITY.md)                                               |
 | 上线基线                    | [../launch-baseline.md](../launch-baseline.md)                                       |
-| Agent 接手                  | [../handoff-to-agent.md](../handoff-to-agent.md)                                     |
+| Agent 接手                  | [../HANDOFF.md](../HANDOFF.md)                                                       |
 | 延后运营（GSC/Bing 等人账） | [../ops-deferred-work-plan.md](../ops-deferred-work-plan.md)                         |
 | SRI ADR 评估                | [../adr/0005-sri-over-nonce-evaluation.md](../adr/0005-sri-over-nonce-evaluation.md) |
 | CSP nonce ADR               | [../adr/0001-csp-nonce-vs-ssg.md](../adr/0001-csp-nonce-vs-ssg.md)                   |

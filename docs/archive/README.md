@@ -16,4 +16,4 @@
 | `architecture-review.html`                      | 早期架构审查 HTML                               |
 | `handoff-2026-07-21-garden.md`                  | 花园上线交接快照                                |
 
-现行操作：[`../overview.md`](../overview.md) · [`../handoff-to-agent.md`](../handoff-to-agent.md) · 根 `TODO.md`。
+现行操作：[`../README.md`](../README.md) · [`../HANDOFF.md`](../HANDOFF.md) · 根 `TODO.md`。

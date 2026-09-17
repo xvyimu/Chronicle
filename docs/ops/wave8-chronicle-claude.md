@@ -15,7 +15,7 @@
 
 ## 1. 做了什么（一刀）
 
-### 1.1 `docs/overview.md` 链入 SRI 脚本
+### 1.1 `docs/README.md` 链入 SRI 脚本
 
 - 当前维护文档表新增行 → [`docs/ops/sri-smoke.md`](./sri-smoke.md)
 - 新增小节 **「SRI 本地验证命令（不改生产 env）」**：
@@ -93,7 +93,7 @@ SRI_SMOKE_EXIT=0
 ## 4. 变更文件清单（相对 tip `2aea2a4`）
 
 ```text
-docs/overview.md                    (edit · SRI 表项 + 三命令)
+docs/README.md                    (edit · SRI 表项 + 三命令)
 docs/ops/wave8-chronicle-claude.md  (new · 本报告)
 ```
 
