@@ -3,7 +3,7 @@
 > **状态**：规划 SSOT（2026-07-21）· **T1–T3 已合 master** · tip 见 `docs/handoff-to-agent.md`  
 > **表单**：升级野心 = **C**；渲染/安全/内容/体验 **全选**  
 > **生产锚点**：以 handoff / launch-baseline 为准（2026-07-22：`6b4937b`）  
-> **路径**：`D:\Chronicle`（junction `D:\blog`）
+> **路径**：`D:\projects\Chronicle`（junction `D:\blog`）
 
 ---
 

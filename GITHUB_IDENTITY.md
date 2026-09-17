@@ -4,7 +4,7 @@
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Repository**       | https://github.com/xvyimu/Chronicle                                                                                                                    |
 | **Product name**     | 西江月博客                                                                                                                                             |
-| **Local path**       | `D:\Chronicle`（统一入口 `D:\projects\Chronicle`）                                                                                                     |
+| **Local path**       | `D:\projects\Chronicle`（统一入口 `D:\projects\Chronicle`）                                                                                            |
 | **npm package name** | `"chronicle"`（private）                                                                                                                               |
 | **Production**       | https://incca.ccwu.cc                                                                                                                                  |
 | **License**          | MIT · `LICENSE` · Copyright (c) 2026 雨天狂奔                                                                                                          |

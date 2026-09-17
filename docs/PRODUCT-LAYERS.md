@@ -26,12 +26,12 @@
 
 ## L2 · 运行与边界
 
-| 项   | 内容                                               |
-| ---- | -------------------------------------------------- |
-| 路径 | `D:\Chronicle` · 入口 `D:\projects\Chronicle`      |
-| 内容 | 本地 MDX/JSON · 生产 `generated/content-snapshot/` |
-| 生产 | https://incca.ccwu.cc                              |
-| 安全 | CSP nonce · 不放宽 `unsafe-inline` 全站            |
+| 项   | 内容                                                   |
+| ---- | ------------------------------------------------------ |
+| 路径 | `D:\projects\Chronicle` · 入口 `D:\projects\Chronicle` |
+| 内容 | 本地 MDX/JSON · 生产 `generated/content-snapshot/`     |
+| 生产 | https://incca.ccwu.cc                                  |
+| 安全 | CSP nonce · 不放宽 `unsafe-inline` 全站                |
 
 ---
 

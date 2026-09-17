@@ -6,7 +6,7 @@
 | Node      | `/ch/ops/hygiene`                                                                                                                |
 | Agent     | QA                                                                                                                               |
 | Priority  | P0 (Chronicle auto-capable slice)                                                                                                |
-| Repo      | `D:\Chronicle` · branch `master`                                                                                                 |
+| Repo      | `D:\projects\Chronicle` · branch `master`                                                                                        |
 | Scope     | L2 automated hygiene only — **no** product feature changes, **no** broad dependency upgrades, **no** fabricated GSC/Bing metrics |
 | Board     | [L2-P0-action-board-2026-07-22.md](./L2-P0-action-board-2026-07-22.md)                                                           |
 | Checklist | [L2-hygiene-checklist.md](./L2-hygiene-checklist.md)                                                                             |

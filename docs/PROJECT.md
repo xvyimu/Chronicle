@@ -1,8 +1,8 @@
 # Chronicle · 形态与技术栈（SSOT）
 
 > **产品显示名：** 西江月博客 · **GitHub：** [xvyimu/Chronicle](https://github.com/xvyimu/Chronicle)  
-> **本地：** `D:\Chronicle`（入口 `D:\projects\Chronicle`）· **生产：** https://incca.ccwu.cc  
-> 全局门闩：`~/CLAUDE.md` §8 · `~/.claude/specs/principle.md`「形态与技术栈」。  
+> **本地：** `D:\projects\Chronicle`（入口 `D:\projects\Chronicle`）· **生产：** https://incca.ccwu.cc  
+> 全局门闩：`~/.claude/CLAUDE.md` §8 · `~/.claude/specs/principle.md`「形态与技术栈」。  
 > **本文件 = 本产品形态与唯一技术栈权威。** 换形态/换栈：先 ADR / 改本文 → 人确认 → 再改代码。小修沿用本栈。
 
 ---
