@@ -4,7 +4,9 @@
 > **状态**：Active（**不**启动栈迁移；巩固 As-Is 边界）  
 > **As-Is**：[`架构 As-Is 测绘（2026-07）`](./ops/ch-architecture-asis-2026-07.md)  
 > **运行时边界**：[`architecture.md`](./architecture.md) · [`handoff-to-agent.md`](./handoff-to-agent.md)  
-> **Master 参考**：`D:\orca\docs\architecture-stack-refactor-master-2026-07-22.md`（§0 铁律：主参考非教条；R2 可被证据推翻）  
+> **Master 参考**：~~`D:\orca\docs\architecture-stack-refactor-master-2026-07-22.md`~~ ← **已废止**
+> （那份是六仓口径的重构规划，含已删除的 TransitHub / MindSync / Codexveil；
+> 本仓的形态与栈以 [`PROJECT.md`](./PROJECT.md) 为准，§2 因此只是历史对照）
 > **性质**：个人博客 + 作品集 + 轻量数字花园（**内容站**，非管理面板 / 非网关 / 非 AI 核心）
 
 ---
@@ -12,21 +14,26 @@
 ## 1. 一句话目标态
 
 **维持** 100% TypeScript / Next.js 16 内容站：**本地 MDX/JSON → repository + snapshot → App Router 动态 HTML（CSP nonce）+ 可选 SRI（`ENABLE_SRI=1`）+ 三条公开 API**。  
-**不**整站改 Vue3+NaiveUI，**不**引入 Go 网关 / Python AI-Core / SQL 内容权威源，**不**与 TransitHub / MindSync 抢架构重构带宽。
+**不**整站改 Vue3+NaiveUI，**不**引入 Go 网关 / Python AI-Core / SQL 内容权威源。**不与任何仓抢架构重构带宽**（原表述点名的是 TransitHub / MindSync，两仓已于 2026-09-12 删除）。
 
-| 维度       | Target（L2）                                                                           |
-| ---------- | -------------------------------------------------------------------------------------- |
-| 策略标签   | **`L2` 内容遗留**                                                                      |
-| 主栈       | **Next.js 16 App Router + React 19 + TypeScript + MDX + Tailwind/BEM**                 |
-| 面板       | **无**自建管理台；Git + MDX/JSON 即 CMS                                                |
-| 对外面     | 公开阅读 HTML + `GET /api/search` · `GET /api/preview/[slug]` · `POST /api/csp-report` |
-| 存储       | 本地文件 + `generated/content-snapshot`；**无** RDBMS                                  |
-| 安全       | CSP per-request **nonce** + `strict-dynamic`；生产 **SRI sha384**（env 门闩，见 ADR）  |
-| 与旗舰关系 | **正交**；旗舰精力投 TransitHub / MindSync                                             |
+| 维度       | Target（L2）                                                                                               |
+| ---------- | ---------------------------------------------------------------------------------------------------------- |
+| 策略标签   | **`L2` 内容遗留**                                                                                          |
+| 主栈       | **Next.js 16 App Router + React 19 + TypeScript + MDX + Tailwind/BEM**                                     |
+| 面板       | **无**自建管理台；Git + MDX/JSON 即 CMS                                                                    |
+| 对外面     | 公开阅读 HTML + `GET /api/search` · `GET /api/preview/[slug]` · `POST /api/csp-report`                     |
+| 存储       | 本地文件 + `generated/content-snapshot`；**无** RDBMS                                                      |
+| 安全       | CSP per-request **nonce** + `strict-dynamic`；生产 **SRI sha384**（env 门闩，见 ADR）                      |
+| 与旗舰关系 | **无**：本仓是独立内容站，不参与任何多仓旗舰竞争（原「旗舰精力投 TransitHub / MindSync」已随两仓删除失效） |
 
 ---
 
 ## 2. 相对主参考的 Target 决策（巩固 ASIS §7.3）
+
+> ⚠️ **本节是历史对照。** 下表左列出自 `architecture-stack-refactor-master-2026-07-22.md` ——
+> 那份是**六仓口径**的重构规划，已随 TransitHub / MindSync / Codexveil 三仓的删除而废止。
+> 右侧裁定仍然有效（本仓保持 Next + React 阅读站），但左列的「主参考组件」**不再是任何人的目标**。
+> 需要现行形态与栈请看 [`PROJECT.md`](./PROJECT.md) §1–§2。
 
 | 主参考组件          | Chronicle Target             | 裁定                                              |
 | ------------------- | ---------------------------- | ------------------------------------------------- |
