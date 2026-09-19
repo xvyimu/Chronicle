@@ -48,6 +48,8 @@ jobs:
 
       - run: pnpm check:docs
 
+      - run: pnpm test:docs
+
       - run: pnpm lint
 
       - run: pnpm test

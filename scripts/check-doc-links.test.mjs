@@ -90,3 +90,36 @@ test('reports malformed URI encoding without throwing', () => {
   assert.equal(broken.length, 1);
   assert.equal(broken[0].reason, 'invalid URI encoding');
 });
+
+test('checks file:/// absolute targets against the filesystem', () => {
+  const root = createFixture('', ['docs/present.md']);
+  const present = path.join(root, 'docs', 'present.md').replace(/\\/g, '/');
+  writeFileSync(
+    path.join(root, 'README.md'),
+    [
+      `[Ok](file:///${present})`,
+      '[Missing](file:///D:/definitely/not/here-9f2c.md)',
+    ].join('\n'),
+  );
+
+  const targets = findBrokenDocumentLinks(root).broken.map((issue) => issue.target);
+  assert.deepEqual(targets, ['file:///D:/definitely/not/here-9f2c.md']);
+});
+
+test('downgrades dead links inside dated snapshots to historical', () => {
+  const root = createFixture('[Live](docs/missing-live.md)');
+  writeFileSync(
+    path.join(root, 'docs', 'report-2026-07-22.md'),
+    '[Snapshot](docs/missing-snapshot.md)\n',
+  );
+
+  const { broken, historical } = findBrokenDocumentLinks(root);
+  assert.deepEqual(
+    broken.map((issue) => issue.target),
+    ['docs/missing-live.md'],
+  );
+  assert.deepEqual(
+    historical.map((issue) => issue.target),
+    ['docs/missing-snapshot.md'],
+  );
+});

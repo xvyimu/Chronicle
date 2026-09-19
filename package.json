@@ -27,6 +27,7 @@
     "format:docs": "prettier --write \"README.md\" \"AGENTS.md\" \"TODO.md\" \"GITHUB_IDENTITY.md\" \"CONTRIBUTING.md\" \"CODE_OF_CONDUCT.md\" \"SECURITY.md\" \"CHANGELOG.md\" \"docs/**/*.md\"",
     "format:docs:check": "prettier --check \"README.md\" \"AGENTS.md\" \"TODO.md\" \"GITHUB_IDENTITY.md\" \"CONTRIBUTING.md\" \"CODE_OF_CONDUCT.md\" \"SECURITY.md\" \"CHANGELOG.md\" \"docs/**/*.md\"",
     "check:docs": "node scripts/check-doc-links.mjs",
+    "test:docs": "node --test scripts/check-doc-links.test.mjs",
     "typecheck": "tsc --noEmit",
     "check:seo": "tsx scripts/check-seo.ts",
     "check:production-content": "tsx scripts/check-production-content.ts",

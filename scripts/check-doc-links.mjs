@@ -17,6 +17,16 @@ const ROOT_DOCS = [
   'GITHUB_IDENTITY.md',
 ];
 
+// 日期型文件名 = 历史快照。快照记的是**当时**的事实，它引用的文件后来搬走了
+// 属预期，不该被追改（同 audit-docs.mjs 的 D5 降级口径：历史文件里的死链只记 info）。
+// 只按「文件名带日期」和「archive/legacy 目录」判定，与 audit-docs 保持一致。
+const DATED_RE = /\d{4}-\d{2}(-\d{2})?/u;
+function isHistoricalPath(file) {
+  const norm = file.replace(/\\/g, '/');
+  const base = norm.slice(norm.lastIndexOf('/') + 1);
+  return DATED_RE.test(base) || /\/(archive|legacy)\//u.test(norm);
+}
+
 function walkMarkdown(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const entryPath = path.join(directory, entry.name);
@@ -47,6 +57,15 @@ function isExternalOrDocumentAnchor(target) {
     target.startsWith('/') ||
     /^(?:https?:|mailto:|tel:|data:)/iu.test(target)
   );
+}
+
+// file:///D:/x.md —— 绝对路径，按绝对路径校验，别当相对路径解析。
+// 与 audit-docs.mjs 的 D5 同口径（Chronicle 自身现无此写法，LexVoyage 的
+// ARCHITECTURE.md / stack-matrix 用；本仓保留该分支以便三仓共用同一脚本）。
+function resolveFileUrl(target) {
+  let abs = decodeURI(target.replace(/^file:\/\//u, ''));
+  if (/^\/[A-Za-z]:/u.test(abs)) abs = abs.slice(1);
+  return abs;
 }
 
 function stripInlineCode(line) {
@@ -234,42 +253,52 @@ export function findBrokenDocumentLinks(root = process.cwd()) {
     ...(existsSync(docsDirectory) ? walkMarkdown(docsDirectory) : []),
   ];
   const broken = [];
+  const historical = [];
 
   for (const file of files) {
     const markdown = readFileSync(file, 'utf8');
+    // 历史快照里的死链只记入 historical，不让它们把门禁打红 —— 快照记的是当时的事实。
+    const record = (target, reason) =>
+      (isHistoricalPath(file) ? historical : broken).push({ file, target, reason });
+
     for (const label of findMissingReferenceDefinitions(markdown)) {
-      broken.push({
-        file,
-        target: `[${label}]`,
-        reason: 'reference definition does not exist',
-      });
+      record(`[${label}]`, 'reference definition does not exist');
     }
 
     for (const rawTarget of extractMarkdownLinkTargets(markdown)) {
       let target = extractTarget(rawTarget);
       if (isExternalOrDocumentAnchor(target)) continue;
 
+      if (/^file:\/\//u.test(target)) {
+        if (!existsSync(resolveFileUrl(target)))
+          record(rawTarget, 'target does not exist');
+        continue;
+      }
+
       target = target.split('#', 1)[0].split('?', 1)[0];
       try {
         target = decodeURIComponent(target);
       } catch {
-        broken.push({ file, target: rawTarget, reason: 'invalid URI encoding' });
+        record(rawTarget, 'invalid URI encoding');
         continue;
       }
 
       const resolved = path.resolve(path.dirname(file), target);
-      if (!existsSync(resolved)) {
-        broken.push({ file, target: rawTarget, reason: 'target does not exist' });
-      }
+      if (!existsSync(resolved)) record(rawTarget, 'target does not exist');
     }
   }
 
-  return { files, broken };
+  return { files, broken, historical };
 }
 
 const entryPath = process.argv[1];
 if (entryPath && import.meta.url === pathToFileURL(path.resolve(entryPath)).href) {
-  const { files, broken } = findBrokenDocumentLinks();
+  const { files, broken, historical } = findBrokenDocumentLinks();
+  for (const issue of historical) {
+    console.log(
+      `- [historical] ${path.relative(process.cwd(), issue.file)} -> ${issue.target} (${issue.reason})`,
+    );
+  }
   if (broken.length > 0) {
     console.error(`Documentation link check failed with ${broken.length} issue(s):`);
     for (const issue of broken) {
@@ -279,6 +308,9 @@ if (entryPath && import.meta.url === pathToFileURL(path.resolve(entryPath)).href
     }
     process.exitCode = 1;
   } else {
-    console.log(`Documentation link check passed (${files.length} Markdown files).`);
+    const suffix = historical.length ? `; ${historical.length} historical skipped` : '';
+    console.log(
+      `Documentation link check passed (${files.length} Markdown files${suffix}).`,
+    );
   }
 }
