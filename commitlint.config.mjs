@@ -22,6 +22,24 @@
  * so 100 is a deliberately tight ceiling rather than a round guess. Note the
  * leading `@` on 5 historical subjects is legacy noise, intentionally NOT
  * legitimised here — new commits must not carry it.
+ *
+ * Body length: the inherited `body-max-line-length` / `footer-max-line-length`
+ * from config-conventional are [Error, 100] and are left at 100 on purpose —
+ * the repo's current style already satisfies them (0 violations in the 35
+ * commits since 2026-07-25). Replaying the last 200 commits through this exact
+ * config (`pnpm exec commitlint --from 8fa40e5 --to HEAD`) rejects 16 on Error
+ * rules, all of them legacy: 11 on `body-max-line-length` (13 over-length body
+ * lines, longest 265 chars, spanning 2026-07-04…2026-07-24) and 5 on the
+ * `@`-prefixed subjects above. A further 6 are warnings only
+ * (`body-leading-blank` / `footer-leading-blank`) and do not block. Earlier
+ * drafts of this comment claimed the replay rejected only 5 — that count fed
+ * subjects in and never measured bodies; the 16 above is the real figure.
+ *
+ * No CI workflow replays commitlint over history (`.husky/commit-msg` lints the
+ * message being committed, nothing else), so those 16 legacy rejections do not
+ * block anything today. If a `--from/--to` replay is ever added to CI, it must
+ * either start from a cut-off after 2026-07-24 or this rule must be loosened —
+ * do NOT silently widen it now, since 100 is what the repo actually writes.
  */
 const config = {
   extends: ['@commitlint/config-conventional'],
