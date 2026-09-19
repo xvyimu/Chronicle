@@ -74,7 +74,7 @@ ADR 和 spec 保留决策当时的事实、测试数和方案对比。状态行�
 以下目录/文件是时间点快照，**不是**当前操作手册：
 
 - [`docs/archive/`](./archive/)：日期型审查、UI/SEO 报告、旧 handoff、孤立的 prompt 草稿等（2026-07-22 收纳）
-- 架构调研 v1–v3：`architecture-optimization-research-2026-07-21.md`（及 `-v2`/`-v3`）
+- 架构调研 v1–v3：[`docs/archive/`](./archive/) 内 `architecture-optimization-research-2026-07-21.md`（及 `-v2`/`-v3`）
 - [`docs/archive/superpowers-runs/`](./archive/superpowers-runs/)：工作流 runs（**已归档，不再新增**）
 
 历史文件中的未勾选项只表示该次运行在记录结束时的状态。仍有效的工作必须重新出现在根 [TODO](../TODO.md) 中；否则不得据此推断当前项目未完成。

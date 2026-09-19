@@ -11,7 +11,7 @@ informed: []
 - Status: **Accepted (enabled in production via `ENABLE_SRI=1`)**
 - Date: 2026-07-21
 - Updated: 2026-07-22 (production enable authorized; Vercel Production env `ENABLE_SRI=1`; deploy `dpl_2EcxgkhP84U7jE3BuQAnFipef6DD`; homepage `/_next/static` scripts carry `integrity="sha384-…"` while CSP nonce retained)
-- Related: `docs/adr/0003-csp-nonce-over-ssg.md`, `next.config.ts`, `src/proxy.ts`, `docs/architecture-optimization-research-2026-07-21-v3.md` R-E, `content/blog/2026-07-csp-nonce-and-sri.mdx`
+- Related: `docs/adr/0003-csp-nonce-over-ssg.md`, `next.config.ts`, `src/proxy.ts`, `docs/archive/architecture-optimization-research-2026-07-21-v3.md` R-E, `content/blog/2026-07-csp-nonce-and-sri.mdx`
 
 ## Context
 
