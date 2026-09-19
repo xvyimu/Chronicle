@@ -326,7 +326,7 @@ src/components/*   仅共享 DTO/纯函数 + HTTP（禁止 import @/server）
 
 - 安全/依赖/CSP/SRI 补丁
 - 内容与 SEO/ops 门禁维护
-- 文档与 [`ARCHITECTURE_TARGET.md`](./ARCHITECTURE_TARGET.md) 一页纸（Dual-B 已建；巩固 L2 边界）
+- 文档与 [`ARCHITECTURE_TARGET.md`](../ARCHITECTURE_TARGET.md) 一页纸（Dual-B 已建；巩固 L2 边界）
 - **禁止**：无证据杂学；禁止为「对齐 Vue」开大 PR（违反 R2/R5）
 
 ### 9.3 对产品线架构的输入
@@ -356,7 +356,7 @@ src/components/*   仅共享 DTO/纯函数 + HTTP（禁止 import @/server）
 
 - 未跑完整 `pnpm test` / production build（只读文档+结构扫描足够贴标签）
 - 未改业务代码、未 commit、未 push
-- `ARCHITECTURE_TARGET.md` 已由 Dual-B（2026-07-22）补齐；见同目录 TARGET
+- `ARCHITECTURE_TARGET.md` 已由 Dual-B（2026-07-22）补齐；见 `docs/ARCHITECTURE_TARGET.md`（本文件已迁至 `docs/ops/`，不再同目录）
 
 ---
 
