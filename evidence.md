@@ -9,4 +9,4 @@ Root file kept short to avoid merge noise.
 | 001–009   | feature branches                 | branch `evidence.md` / docs/ops        |
 | 007 links | `xvyimu/ch-perf-links` `b875f2d` | branch evidence                        |
 
-Planning SSOT: `D:\orca\.planning\portfolio-stack-policy-2026-07-24\ch-perf-wave\`
+栈/规划口径见 `docs/PROJECT.md`（原 `.planning/portfolio-stack-policy-2026-07-24/` 已随 `.planning/` 于 2026-09-19 删除）。
