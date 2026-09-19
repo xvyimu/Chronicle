@@ -32,7 +32,7 @@ A personal blog built with Next.js 16.2 (App Router), React 19, and Tailwind CSS
 - **Content**: MDX with custom frontmatter parser (`lib/parse-frontmatter.ts`, js-yaml 4.x), next-mdx-remote
 - **Syntax Highlighting**: Shiki via rehype-pretty-code
 - **Search**: fuse.js via production `GET /api/search` (server Fuse + projected DTO); tests may embed client Fuse
-- **Testing**: Vitest (unit/integration, 99 test files), Playwright (E2E, 5 spec files)
+- **Testing**: Vitest (unit/integration, 99 test files), Playwright (E2E, 5 spec files) — 计数以实跑为准（`find src -name '*.test.ts*' | wc -l` · `find e2e -name '*.spec.ts' | wc -l`）；数字会漂，别把本行当基线
 - **CI**: GitHub Actions (lint / test / tsc / build / bundle-budget / e2e)
 - **Deployment**: Vercel
 
