@@ -1,5 +1,7 @@
 # 西江月博客 · 架构优化整合调研报告 v4
 
+> **历史快照（2026-09-21 归档）**：本文件是 2026-07-21 的决策快照，已移入 `docs/archive/`，**不再**是现行 SSOT。v1–v3 与本文同处 `docs/archive/`。现行契约见 [API.md](../API.md) / [ARCHITECTURE.md](../ARCHITECTURE.md)，待办见根 [TODO.md](../../TODO.md)。正文按当时事实保留。
+
 > **状态**：决策与规格 SSOT 第五轮补充稿（2026-07-21 夜 · **v4**）  
 > **路径**：`D:\blog` · 生产：`https://incca.ccwu.cc`  
 > **本地 tip**：`feat/v3-ship` **`6543a91`** · **ahead 6 未 push** · 工作树 clean  
@@ -854,19 +856,21 @@ Agent 将：
 
 ### 附录 B · 关键路径速查
 
-| 用途         | 路径                                                       |
-| ------------ | ---------------------------------------------------------- |
-| 本报告       | `docs/architecture-optimization-research-2026-07-21-v4.md` |
-| v3           | `docs/architecture-optimization-research-2026-07-21-v3.md` |
-| SRI ADR      | `docs/adr/0005-sri-over-nonce-evaluation.md`               |
-| 架构         | `docs/ARCHITECTURE.md`                                     |
-| API          | `docs/API.md`（待补 preview）                              |
-| CSS          | `docs/css-conventions.md`                                  |
-| 内容流程     | `docs/content-workflow.md`                                 |
-| TODO         | `TODO.md`                                                  |
-| 配置         | `next.config.ts`                                           |
-| Preview 路由 | `src/app/api/preview/[slug]/route.ts`                      |
-| Search 路由  | `src/app/api/search/route.ts`                              |
+| 用途     | 路径                                                       |
+| -------- | ---------------------------------------------------------- |
+| 本报告   | `docs/architecture-optimization-research-2026-07-21-v4.md` |
+| v3       | `docs/architecture-optimization-research-2026-07-21-v3.md` |
+| SRI ADR  | `docs/adr/0005-sri-over-nonce-evaluation.md`               |
+| 架构     | `docs/ARCHITECTURE.md`                                     |
+| API      | `docs/API.md`（待补 preview）                              |
+| CSS      | `docs/css-conventions.md`                                  |
+| 内容流程 | `docs/content-workflow.md`                                 |
+| TODO     | `TODO.md`                                                  |
+
+> **2026-09-21 注**：本表路径写于 2026-07-21。v1–v4 调研报告此后已统一移入 `docs/archive/`（见文首横幅），上表路径按当时事实保留、未逐行改写。
+> | 配置 | `next.config.ts` |
+> | Preview 路由 | `src/app/api/preview/[slug]/route.ts` |
+> | Search 路由 | `src/app/api/search/route.ts` |
 
 ### 附录 C · 六篇新文 slug
 

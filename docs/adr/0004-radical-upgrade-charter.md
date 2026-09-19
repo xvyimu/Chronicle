@@ -11,7 +11,7 @@ informed: []
 - Status: Accepted
 - Date: 2026-07-21
 - Updated: 2026-07-22 (T1–T3 merged; T4 keep-Fuse; T7 positions seed)
-- Related: `docs/architecture-upgrade-radical-c-2026-07-21.md`, production `https://incca.ccwu.cc`
+- Related: `docs/archive/architecture-upgrade-radical-c-2026-07-21.md`, production `https://incca.ccwu.cc`
 
 ## Context
 

@@ -10,7 +10,7 @@ informed: []
 
 - Status: Accepted
 - Date: 2026-07-22
-- Related: `docs/architecture-upgrade-radical-c-2026-07-21.md` §T4, `src/server/search/engine.ts`, `src/lib/search/`, `generated/content-snapshot/search-docs.json`
+- Related: `docs/archive/architecture-upgrade-radical-c-2026-07-21.md` §T4, `src/server/search/engine.ts`, `src/lib/search/`, `generated/content-snapshot/search-docs.json`
 
 ## Context
 
