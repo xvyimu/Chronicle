@@ -5,6 +5,17 @@ overrides:
   # GHSA-r28c-9q8g-f849 postcss (via next). 用范围而非精确钉：精确钉会随 advisory
   # 推进而变成「stale pin」，把包反向摁在漏洞版本上（2026-08-03 实测 8.5.15 中招）。
   postcss: '>=8.5.18'
+  # prod 树里 postcss@8.5.25 → nanoid，解析结果 3.3.16 仍低于 GHSA-2v37-7h3g-55p8
+  # 的首个修复版（<3.3.18）。上限取 <4：下一行 js-yaml 的教训——4.x 是 major，
+  # 不属「安全升级」范围，要抬必须单独立项评估。
+  nanoid: '>=3.3.18 <4'
+  # prod 树里 next@16.3.5 → styled-jsx → @babel/helper-compilation-targets → browserslist，
+  # 解析结果 4.28.2 仍低于 GHSA-c83g-rgw3-j3cx / GHSA-73wf-gq98-2v4g 的首个修复版 4.28.7。
+  browserslist: '>=4.28.7 <5'
+  # GHSA-w5vr-8v7q-w6rv（moderate，DoS；vulnerable >=2.0.0 <2.11.0）。next 直接声明
+  # ^2.9.19、browserslist@4.29 声明 ^2.11.23，不抬则 lock 里同时存在两份（2.10.38
+  # 与 2.11.25），其中 2.10.38 就是那条 moderate。抬到 >=2.11.0 让两边并到一份。
+  baseline-browser-mapping: '>=2.11.0'
   qs: '6.15.2'
   tmp: '>=0.2.6'
   uuid: '>=11.1.1'
@@ -16,8 +27,10 @@ overrides:
   # 注意：ajv@8 声明的范围是 ^3.0.1，这条 override 把它抬到 4.x —— 这是既有选择
   # （master 此前已是 >=4.1.2），非本次引入；lock 与测试均按 4.x 通过。
   fast-uri: '>=4.1.3'
-  # GHSA-f88m-g3jw-g9cj sharp/libvips CVEs (via next)
-  sharp: '>=0.35.0'
+  # GHSA-f88m-g3jw-g9cj sharp/libvips CVEs (via next)，外加 GHSA-rgj7-g3m4-5g8c
+  # （vulnerable <0.35.4）。next@16.3.5 的 optionalDependencies 已把诉求抬到 ^0.35.4，
+  # 留 0.35.0 会把解析结果摁在 0.35.3 —— 正好落在 <0.35.4 的漏洞区间里。
+  sharp: '>=0.35.4'
   # GHSA-mh99-v99m-4gvg / CVE-2026-14257 brace-expansion DoS。
   # 每条大版本线的 first patched 各不相同：1.x→1.1.17 · 2.x→2.1.3 · 3.x→3.0.3 · >=4.0.0→5.0.8
   #

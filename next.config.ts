@@ -50,9 +50,16 @@ const nextConfig: NextConfig = {
   /* React Compiler (stable in Next 16): automatic memoization, no manual useMemo needed.
      Requires babel-plugin-react-compiler (installed as devDependency). */
   reactCompiler: true,
-  /* Enable View Transitions API (experimental) */
+  /*
+   * NOTE (Next 16.3.5): `experimental.viewTransition` was removed — App Router now
+   * enables React view transitions with no configuration (bundled docs:
+   * node_modules/next/dist/docs/01-app/02-guides/view-transitions.md — "View
+   * transitions work in the App Router with no configuration"). The old flag made
+   * `tsc --noEmit` fail with TS2322 ("'viewTransition' does not exist in type
+   * 'ExperimentalConfig'"). ThemeToggle's `document.startViewTransition()` is the
+   * browser API and never depended on this flag.
+   */
   experimental: {
-    viewTransition: true,
     // Persist Turbopack's filesystem cache across dev sessions (Next 16.2).
     // Speeds up cold dev starts; no effect on production build.
     turbopackFileSystemCacheForDev: true,
