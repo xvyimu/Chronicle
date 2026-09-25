@@ -2,7 +2,7 @@
 <rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">
     <channel>
         <title>西江月</title>
-        <link>https://incca.ccwu.cc</link>
+        <link>https://example.com</link>
         <description>云原生 · 全栈 · 自动化</description>
         <lastBuildDate>Tue, 21 Jul 2026 00:00:00 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
@@ -47,11 +47,11 @@
         <category>Cloudflare</category>
         <category>Workers</category>
         <category>Serverless</category>
-        <atom:link href="https://incca.ccwu.cc/feed.xml" rel="self" type="application/rss+xml"/>
+        <atom:link href="https://example.com/feed.xml" rel="self" type="application/rss+xml"/>
         <item>
             <title><![CDATA[Turbopack 文件系统缓存与本地 DX]]></title>
-            <link>https://incca.ccwu.cc/blog/turbopack-fs-cache-dx</link>
-            <guid isPermaLink="false">https://incca.ccwu.cc/blog/turbopack-fs-cache-dx</guid>
+            <link>https://example.com/blog/turbopack-fs-cache-dx</link>
+            <guid isPermaLink="false">https://example.com/blog/turbopack-fs-cache-dx</guid>
             <pubDate>Tue, 21 Jul 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[Next 16.2 的 turbopackFileSystemCacheForDev 解决什么、不解决什么，以及如何避免把 dev 缓存问题误判成业务 bug。]]></description>
             <content:encoded><![CDATA[
@@ -156,8 +156,8 @@ Hooks 与远程流水线分工见 [[git-hooks-github-actions|Git Hooks 文]]：�
         </item>
         <item>
             <title><![CDATA[React Compiler 生产笔记：自动 memo 的边界与收益]]></title>
-            <link>https://incca.ccwu.cc/blog/react-compiler-in-practice</link>
-            <guid isPermaLink="false">https://incca.ccwu.cc/blog/react-compiler-in-practice</guid>
+            <link>https://example.com/blog/react-compiler-in-practice</link>
+            <guid isPermaLink="false">https://example.com/blog/react-compiler-in-practice</guid>
             <pubDate>Tue, 21 Jul 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[Next 16 启用 React Compiler 后，何时还能手写 useMemo、哪些反模式会被编译器拒绝，以及如何用实站测量收益。]]></description>
             <content:encoded><![CDATA[
@@ -280,8 +280,8 @@ if (items.length > 100) analytics.track('large-list');
         </item>
         <item>
             <title><![CDATA[Next.js View Transitions 实战：从 Link 到可感知导航]]></title>
-            <link>https://incca.ccwu.cc/blog/nextjs-view-transitions</link>
-            <guid isPermaLink="false">https://incca.ccwu.cc/blog/nextjs-view-transitions</guid>
+            <link>https://example.com/blog/nextjs-view-transitions</link>
+            <guid isPermaLink="false">https://example.com/blog/nextjs-view-transitions</guid>
             <pubDate>Tue, 21 Jul 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[在 App Router 里启用 View Transitions：transitionTypes、减少动效偏好、与性能预算共存的写法。]]></description>
             <content:encoded><![CDATA[
@@ -402,8 +402,8 @@ Compiler（见 [[react-compiler-in-practice|React Compiler 生产笔记]]）降�
         </item>
         <item>
             <title><![CDATA[MDX 渲染管线与 remark 插件：从 frontmatter 到 wikilink]]></title>
-            <link>https://incca.ccwu.cc/blog/mdx-remark-pipeline</link>
-            <guid isPermaLink="false">https://incca.ccwu.cc/blog/mdx-remark-pipeline</guid>
+            <link>https://example.com/blog/mdx-remark-pipeline</link>
+            <guid isPermaLink="false">https://example.com/blog/mdx-remark-pipeline</guid>
             <pubDate>Tue, 21 Jul 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[个人博客 MDX 链路拆解：frontmatter schema、仓库层、next-mdx-remote、remark-wikilink，以及组件映射的边界。]]></description>
             <content:encoded><![CDATA[
@@ -525,8 +525,8 @@ rehype-pretty-code + Shiki 在服务端出 HTML。注意：
         </item>
         <item>
             <title><![CDATA[数字花园：力导向布局与 wikilink 网络]]></title>
-            <link>https://incca.ccwu.cc/blog/digital-garden-force-layout</link>
-            <guid isPermaLink="false">https://incca.ccwu.cc/blog/digital-garden-force-layout</guid>
+            <link>https://example.com/blog/digital-garden-force-layout</link>
+            <guid isPermaLink="false">https://example.com/blog/digital-garden-force-layout</guid>
             <pubDate>Tue, 21 Jul 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[在 Next 内做次级 /garden：无 d3 的力导向、筛选、拖拽存视图、hover 邻居高亮，以及 wikilink popover 的数据契约。]]></description>
             <content:encoded><![CDATA[
@@ -626,8 +626,8 @@ hover/focus wikilink
         </item>
         <item>
             <title><![CDATA[CSP Nonce 与 SRI：互补而不是互相替换]]></title>
-            <link>https://incca.ccwu.cc/blog/csp-nonce-and-sri</link>
-            <guid isPermaLink="false">https://incca.ccwu.cc/blog/csp-nonce-and-sri</guid>
+            <link>https://example.com/blog/csp-nonce-and-sri</link>
+            <guid isPermaLink="false">https://example.com/blog/csp-nonce-and-sri</guid>
             <pubDate>Tue, 21 Jul 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[个人站点如何同时理解 per-request CSP nonce 与 Subresource Integrity：各自守什么、何时评估 SRI、绝不能用 unsafe-inline 换 SSG。]]></description>
             <content:encoded><![CDATA[
@@ -730,8 +730,8 @@ SRI 只保证**你构建时钉死的那份字节**。供应链投毒发生在 `p
         </item>
         <item>
             <title><![CDATA[Web 性能优化实战：从 Core Web Vitals 到首屏加载]]></title>
-            <link>https://incca.ccwu.cc/blog/web-performance-optimization</link>
-            <guid isPermaLink="false">https://incca.ccwu.cc/blog/web-performance-optimization</guid>
+            <link>https://example.com/blog/web-performance-optimization</link>
+            <guid isPermaLink="false">https://example.com/blog/web-performance-optimization</guid>
             <pubDate>Sun, 28 Jun 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[Core Web Vitals 落地：LCP/INP/CLS 优先序、资源优先级、字体与图片、代码分割，以及 Lighthouse 定位瓶颈。]]></description>
             <content:encoded><![CDATA[
@@ -1239,8 +1239,8 @@ export default function RootLayout({ children }) {
         </item>
         <item>
             <title><![CDATA[VPS 初始化安全与运维配置清单]]></title>
-            <link>https://incca.ccwu.cc/blog/vps-initial-setup</link>
-            <guid isPermaLink="false">https://incca.ccwu.cc/blog/vps-initial-setup</guid>
+            <link>https://example.com/blog/vps-initial-setup</link>
+            <guid isPermaLink="false">https://example.com/blog/vps-initial-setup</guid>
             <pubDate>Tue, 23 Jun 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[新 VPS 上线前的安全与运维清单：SSH 加固、UFW、Fail2Ban、自动更新、Docker 与基础监控，照着做即可。]]></description>
             <content:encoded><![CDATA[
@@ -1532,8 +1532,8 @@ echo "5. 调整 limits.conf 和 sysctl.conf（BBR）"
         </item>
         <item>
             <title><![CDATA[TypeScript 高级类型实战：从泛型到条件类型的进阶之路]]></title>
-            <link>https://incca.ccwu.cc/blog/typescript-advanced-types</link>
-            <guid isPermaLink="false">https://incca.ccwu.cc/blog/typescript-advanced-types</guid>
+            <link>https://example.com/blog/typescript-advanced-types</link>
+            <guid isPermaLink="false">https://example.com/blog/typescript-advanced-types</guid>
             <pubDate>Fri, 26 Jun 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[TypeScript 进阶类型：泛型约束、条件类型、映射与模板字面量，用类型把错误挡在编译期。]]></description>
             <content:encoded><![CDATA[
@@ -1900,8 +1900,8 @@ const a: A = b;  // ✓ B 比 A 多属性，结构兼容
         </item>
         <item>
             <title><![CDATA[Supabase 实战：从数据库到实时订阅]]></title>
-            <link>https://incca.ccwu.cc/blog/supabase-practical-guide</link>
-            <guid isPermaLink="false">https://incca.ccwu.cc/blog/supabase-practical-guide</guid>
+            <link>https://example.com/blog/supabase-practical-guide</link>
+            <guid isPermaLink="false">https://example.com/blog/supabase-practical-guide</guid>
             <pubDate>Tue, 23 Jun 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[Supabase 全栈接入：表设计、Row Level Security、Realtime、Storage 与 Edge Functions 的分工边界。]]></description>
             <content:encoded><![CDATA[
@@ -2181,8 +2181,8 @@ Supabase 让我可以专注于前端逻辑，后端的基础设施——数据�
         </item>
         <item>
             <title><![CDATA[Redis 缓存策略：从入门到生产环境实践]]></title>
-            <link>https://incca.ccwu.cc/blog/redis-caching-strategies</link>
-            <guid isPermaLink="false">https://incca.ccwu.cc/blog/redis-caching-strategies</guid>
+            <link>https://example.com/blog/redis-caching-strategies</link>
+            <guid isPermaLink="false">https://example.com/blog/redis-caching-strategies</guid>
             <pubDate>Thu, 25 Jun 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[生产 Redis 用法：穿透/击穿/雪崩、热点 Key、写后删缓存与一致性策略，以及命中率监控。]]></description>
             <content:encoded><![CDATA[
@@ -2421,8 +2421,8 @@ Redis 的核心价值是把"慢"变成"快"。但缓存是双刃剑——引入�
         </item>
         <item>
             <title><![CDATA[PostgreSQL 性能优化实战：慢查询排查与索引策略]]></title>
-            <link>https://incca.ccwu.cc/blog/postgresql-performance</link>
-            <guid isPermaLink="false">https://incca.ccwu.cc/blog/postgresql-performance</guid>
+            <link>https://example.com/blog/postgresql-performance</link>
+            <guid isPermaLink="false">https://example.com/blog/postgresql-performance</guid>
             <pubDate>Sat, 27 Jun 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[PostgreSQL 慢查询实战：EXPLAIN、B-Tree/GIN 索引、连接池、VACUUM 与分区表，先测量再改。]]></description>
             <content:encoded><![CDATA[
@@ -2869,8 +2869,8 @@ PostgreSQL 性能优化的核心思路：
         </item>
         <item>
             <title><![CDATA[Nginx 反向代理与负载均衡实战]]></title>
-            <link>https://incca.ccwu.cc/blog/nginx-reverse-proxy</link>
-            <guid isPermaLink="false">https://incca.ccwu.cc/blog/nginx-reverse-proxy</guid>
+            <link>https://example.com/blog/nginx-reverse-proxy</link>
+            <guid isPermaLink="false">https://example.com/blog/nginx-reverse-proxy</guid>
             <pubDate>Wed, 24 Jun 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[生产前端层 Nginx：反向代理、负载均衡、HTTPS 终端与静态缓存，让后端只关心业务。]]></description>
             <content:encoded><![CDATA[
@@ -3129,8 +3129,8 @@ Nginx 是部署流程里最值得花时间配置好的环节。一个合理的 N
         </item>
         <item>
             <title><![CDATA[Next.js 16 App Router 实战：服务端组件与流式渲染]]></title>
-            <link>https://incca.ccwu.cc/blog/nextjs-app-router</link>
-            <guid isPermaLink="false">https://incca.ccwu.cc/blog/nextjs-app-router</guid>
+            <link>https://example.com/blog/nextjs-app-router</link>
+            <guid isPermaLink="false">https://example.com/blog/nextjs-app-router</guid>
             <pubDate>Tue, 23 Jun 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[Next.js App Router 生产笔记：Server Component 默认、Streaming、Server Actions 与数据获取边界。]]></description>
             <content:encoded><![CDATA[
@@ -3428,8 +3428,8 @@ App Router 的学习曲线比 Pages Router 陡一些——概念更多（服务�
         </item>
         <item>
             <title><![CDATA[Linux 服务器排查手册：CPU、内存、磁盘、网络]]></title>
-            <link>https://incca.ccwu.cc/blog/linux-server-troubleshooting</link>
-            <guid isPermaLink="false">https://incca.ccwu.cc/blog/linux-server-troubleshooting</guid>
+            <link>https://example.com/blog/linux-server-troubleshooting</link>
+            <guid isPermaLink="false">https://example.com/blog/linux-server-troubleshooting</guid>
             <pubDate>Fri, 26 Jun 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[服务异常时按 CPU → 内存 → 磁盘 → 网络四维排查：常用命令、定位顺序与日常预防清单。]]></description>
             <content:encoded><![CDATA[
@@ -3747,8 +3747,8 @@ ps aux --sort=-%mem | head -6
         </item>
         <item>
             <title><![CDATA[Go 语言入门：从零写一个 CLI 工具]]></title>
-            <link>https://incca.ccwu.cc/blog/go-cli-tool</link>
-            <guid isPermaLink="false">https://incca.ccwu.cc/blog/go-cli-tool</guid>
+            <link>https://example.com/blog/go-cli-tool</link>
+            <guid isPermaLink="false">https://example.com/blog/go-cli-tool</guid>
             <pubDate>Thu, 25 Jun 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[用 Go 从零写可分发 CLI：flag、文件 IO、JSON 输出、错误处理与交叉编译成单二进制。]]></description>
             <content:encoded><![CDATA[
@@ -4013,8 +4013,8 @@ Go 写 CLI 工具的体验很舒适——标准库够用、编译产物简单、
         </item>
         <item>
             <title><![CDATA[用 Git Hooks 和 GitHub Actions 打造自动化代码工作流]]></title>
-            <link>https://incca.ccwu.cc/blog/git-hooks-github-actions</link>
-            <guid isPermaLink="false">https://incca.ccwu.cc/blog/git-hooks-github-actions</guid>
+            <link>https://example.com/blog/git-hooks-github-actions</link>
+            <guid isPermaLink="false">https://example.com/blog/git-hooks-github-actions</guid>
             <pubDate>Wed, 24 Jun 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[本地 pre-commit + 远程 GitHub Actions：把检查、构建和部署串成「提交即可上线」的双层自动化。]]></description>
             <content:encoded><![CDATA[
@@ -4252,8 +4252,8 @@ main 分支 push
         </item>
         <item>
             <title><![CDATA[Docker 容器部署实战：从零搭建 Node.js 应用]]></title>
-            <link>https://incca.ccwu.cc/blog/docker-deploy-guide</link>
-            <guid isPermaLink="false">https://incca.ccwu.cc/blog/docker-deploy-guide</guid>
+            <link>https://example.com/blog/docker-deploy-guide</link>
+            <guid isPermaLink="false">https://example.com/blog/docker-deploy-guide</guid>
             <pubDate>Mon, 22 Jun 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[把 Node.js 应用从源码做到生产容器：Dockerfile 多阶段构建、Compose 编排与镜像体积优化。]]></description>
             <content:encoded><![CDATA[
@@ -4507,8 +4507,8 @@ dist
         </item>
         <item>
             <title><![CDATA[Cloudflare Workers 实战：构建无服务器应用]]></title>
-            <link>https://incca.ccwu.cc/blog/cloudflare-workers-guide</link>
-            <guid isPermaLink="false">https://incca.ccwu.cc/blog/cloudflare-workers-guide</guid>
+            <link>https://example.com/blog/cloudflare-workers-guide</link>
+            <guid isPermaLink="false">https://example.com/blog/cloudflare-workers-guide</guid>
             <pubDate>Mon, 22 Jun 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[Cloudflare Workers 从路由到 KV、Cron 与部署：边缘无服务器应用的可运行骨架与适用边界。]]></description>
             <content:encoded><![CDATA[
@@ -4780,8 +4780,8 @@ Cloudflare Workers 是我最推荐的无服务器平台。门槛低（一个文�
         </item>
         <item>
             <title><![CDATA[CI/CD 流水线设计：从单脚本到 GitHub Actions 多阶段流水线]]></title>
-            <link>https://incca.ccwu.cc/blog/cicd-pipeline-design</link>
-            <guid isPermaLink="false">https://incca.ccwu.cc/blog/cicd-pipeline-design</guid>
+            <link>https://example.com/blog/cicd-pipeline-design</link>
+            <guid isPermaLink="false">https://example.com/blog/cicd-pipeline-design</guid>
             <pubDate>Thu, 25 Jun 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[GitHub Actions 多阶段流水线：阶段划分、并行与缓存、制品管理与部署策略，从单脚本演进到可回滚发布。]]></description>
             <content:encoded><![CDATA[
