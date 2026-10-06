@@ -161,18 +161,26 @@ CI Node 对齐（R8 闭环）：`.github/workflows/ci.yml` 4 处 `node-version: 
 
 以上为**升级 next 16.3.8 之后**的全量重跑。
 
-### CI 结果（PR #37，commit `46b8bd8`）
+### CI 结果（PR #37，commit `46b8bd8` → `4753271`）
 
-| Job              | 结果                                                                              |
-| ---------------- | --------------------------------------------------------------------------------- |
-| `quality`        | **pass**（1m55s）——audit 门已过，后续 format/lint/test/typecheck/build 全部实跑   |
-| `bundle-analyze` | pass（1m11s）                                                                     |
-| `Vercel`         | pass                                                                              |
-| `e2e`            | **fail** —— 挂在 `Run Lighthouse CI audit`（非 Playwright；Playwright 45 passed） |
+| Job              | 结果                                                                                                         |
+| ---------------- | ------------------------------------------------------------------------------------------------------------ |
+| `quality`        | **pass**（1m55s / 1m59s）——audit 门已过，后续 format/lint/test/typecheck/build 全部实跑                      |
+| `bundle-analyze` | pass（1m11s / 51s）                                                                                          |
+| `Vercel`         | pass                                                                                                         |
+| `e2e`            | **间歇**：run `37502665937` fail（Lighthouse），run `37505113109` **pass**（4m15s）；Playwright 恒 45 passed |
+| `deploy`         | skipping（仅 push 到 master 时运行）                                                                         |
+
+CI 日志确认 R8 生效：`Found in cache @ /opt/hostedtoolcache/node/24.21.0/x64`；audit 门 `✓ Lockfile passes supply-chain policies (1083 entries)`。
 
 ## 17. 遗留问题
 
-- **R12 · Lighthouse 预算红（未修，既有基线）**：`/blog/nextjs-app-router` 两条断言失败 —— `categories:performance` 0.75（阈值 ≥0.8）、`cumulative-layout-shift` 0.2976（阈值 ≤0.15）。**非本 PR 引入**：master `e178f07`（2026-09-26）同页同样两条失败，数值 0.74 / 0.3322 —— 本 PR 反而略好。`lighthouse.config.js` 第 40 行注释自记「Article MDX 页历史 CLS ~0.13」，实测已超其两倍，注释本身也过期。**未擅自改预算阈值**（那是拿标准迁就实现），待定。
+- **R12 · Lighthouse 间歇失败（未修）**：`/blog/nextjs-app-router` 两条断言 —— `categories:performance` 0.75（阈值 ≥0.8）、`cumulative-layout-shift` 0.2976（阈值 ≤0.15）。CI 中时红时绿，属**间歇性**，非稳定红灯。
+  - **非本 PR 引入**：master `e178f07`（2026-09-26）同页同样两条失败，数值 0.74 / 0.3322 —— 本 PR 反而略好。
+  - **根因实测定位**（本地生产服务器 + CDP 节流 + MutationObserver）：`DOMContentLoaded` 时 `body=940px`、`#main-content=522px`（样式表已加载）；**41ms 后**正文（`.prose` 8880px）才插入 DOM，整页撑到 10120px，页脚由 `y=599` 被推到 `y=10022`。即首帧只有外壳、正文随后到达。
+  - 本地无节流 CLS = 0.0000；加 CDP 节流（150ms 延迟 / 1.6Mbps / 4× CPU）复现 0.0733；CI runner 更慢故放大到 0.29。
+  - **未擅自改预算阈值**（改阈值等于拿标准迁就实现）；`lighthouse.config.js` 第 40 行注释「Article MDX 页历史 CLS ~0.13」已过期。
+  - 修复方向（未实施）：给正文容器预留首屏空间，或查清正文为何晚于外壳到达。
 - **R13 · dev 树 audit 13 条**（dot-prop / brace-expansion / braces）：CI 该步 `continue-on-error`，不阻断；其中 `brace-expansion@1` 是 `pnpm-workspace.yaml` 注释记录的结构性无解（上游从未发布 advisory 要求的 1.1.17）。
 - **`data/links.json` 无消费方**：功能已删，物理文件保留（内容决策）。`content-dirs.ts` 仍列其路径，属残留。
 - **`docs/ARCHITECTURE_TARGET.md` / `docs/03-information-architecture.md` 等**未逐篇复核（本轮只覆盖三份「当前维护文档」）。
