@@ -268,3 +268,16 @@
 - **原因**：`docs/README.md` §「一条纪律」明文规定 —— 日期型报告、specs、archive 是**当时快照**，「不为了对齐当前统计而被改写，改写历史记录等于销毁证据」。B 违反仓库自身纪律。
 - **影响**：三份文档同步实现；`adr/0006` 按 ADR 纪律**保留历史正文**，仅加状态修订注记（原「`/api/search` p95」触发条件随端点删除失效，改为客户端指标口径）。`docs/README.md` 另增 01–15 重构文档索引。
 - **复查**：合并前若实现再变，需再同步一次。
+
+## 2026-10-07 · D-033 · 修 3 条生产依赖漏洞（含 critical RCE）+ CI Node 对齐 24
+
+- **背景**：CI `quality` job 挂在 `pnpm audit --prod --audit-level=high`，此后全部步骤 skip。查实三条 advisory，其中 **critical 命中本站所跑版本**：GHSA-vcvr-r3jv-pc5j「`next/og` ImageResponse RCE」（vulnerable `>=16.2.0 <16.3.6`），本站跑 `next@16.3.5`。另两条：`source-map-js` 事件循环 DoS（原 1.2.1）、`sharp` librsvg（原 0.35.4）。
+- **可选**：A 只把 CI Node 改 24 / B A + 修三条依赖 / C 都不修只记录。**用户选 B**。
+- **选择**：`next` 16.3.5 → **16.3.8**；新增 override `source-map-js: '>=1.2.2'`；`sharp` override 由 `>=0.35.4` **收紧**为 `>=0.35.5`。CI 4 处 `node-version: 22` → `24`（闭环 R8）。
+- **原因**：
+  1. critical 落在本站版本区间内，属**真实可利用面**，非「间接依赖的老问题」。
+  2. 升级路径有独立验证：Dependabot PR #32 正是这条 next 升级，其 CI（quality / e2e / bundle-analyze）实测全 pass。
+  3. `sharp` 原 override `>=0.35.4` 会把解析结果**摁在** `0.35.4` —— 恰落在新 advisory 受影响区间；`next@16.3.8` 的 `optionalDependencies` 仍声明 `^0.35.4` 不会自己抬，故必须显式收紧。
+- **影响**：`pnpm audit --prod` 由 exit 1 → **exit 0**；CI `quality` 由 fail → **pass**，后续 format/lint/test/typecheck/build 首次在本分支实跑。`package.json` / `pnpm-lock.yaml` / `pnpm-workspace.yaml` / `.github/workflows/ci.yml`。
+- **未做**：未改 Lighthouse 阈值（R12，既有基线红灯，改阈值等于拿标准迁就实现）；未修 dev 树 13 条（R13，CI 该步 `continue-on-error`）。
+- **复查**：合并前确认 `pnpm audit --prod` 仍 exit 0（advisory 会推进）。

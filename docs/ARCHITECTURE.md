@@ -307,12 +307,12 @@ push master
 
 当前测试基线：
 
-| 层         | 基线                                                                                                 |
-| ---------- | ---------------------------------------------------------------------------------------------------- |
-| Vitest     | **72 files / 547 tests**（2026-10-07 本机实测 `npx vitest run` exit 0）                              |
-| Playwright | 5 spec files / 46 tests                                                                              |
-| Build      | production build succeeds（107 静态页）；document routes remain dynamic                              |
-| CI         | **master 主 CI 近期 failure**（2026-09-30 起）；CI 钉 Node 22，`engines` 已是 `>=24`（矛盾，见 §14） |
+| 层         | 基线                                                                                                                                       |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Vitest     | **72 files / 547 tests**（2026-10-07 本机实测 `npx vitest run` exit 0）                                                                    |
+| Playwright | 5 spec files / 46 tests                                                                                                                    |
+| Build      | production build succeeds（107 静态页）；document routes remain dynamic                                                                    |
+| CI         | **master 主 CI 近期 failure**（2026-09-30 起，挂在 `pnpm audit --prod`）；CI Node 已对齐 24（R8 闭环）。本分支 PR #37 的 `quality` 已 pass |
 
 新增行为时优先补单元或组件测试；浏览器交互、移动端布局、CSP、搜索和导航路径需要 Playwright 覆盖。
 
@@ -370,14 +370,14 @@ pnpm check:production-content
 
 ## 14. 已知技术债与风险
 
-| 项                                | 影响                         | 现状                                        | 触发条件 / 缓解                                                                        |
-| --------------------------------- | ---------------------------- | ------------------------------------------- | -------------------------------------------------------------------------------------- |
-| HTML 动态渲染换 CSP nonce         | 无法全站 SSG，缓存策略受限   | **有意为之**（安全优先于缓存）              | 见 ADR-0003；不为 SSG 放宽 `unsafe-inline`                                             |
-| CI Node 版本与 `engines` 不符     | CI 出现 engine warning       | `package.json` 声明 `node >=24`，CI 仍钉 22 | **未修**（本轮不动 CI）；见 [HANDOFF §6](./HANDOFF.md) R8                              |
-| `data/links.json` 无消费方        | 残留数据文件                 | 物理保留；功能已删                          | 属内容决策，未删文件                                                                   |
-| `pnpm build` 重写 `public/feed.*` | 工作区常脏                   | 已知；构建后检查无意外 diff                 | 生产构建须提供非 localhost 的 `NEXT_PUBLIC_SITE_URL`（否则会把生产域名写成 localhost） |
-| GSC/Bing/RUM 未接入               | 无真实搜索与真实用户性能数据 | 需账号授权                                  | 见 `docs/ops-deferred-work-plan.md`；禁止用实验室分替代真实 p75                        |
-| 日期型报告与 spec 中的旧测试数    | 易被误当现状                 | 全部带日期，`docs/README.md` 有分层纪律     | 引用前先看 `docs/README.md` 的「一条纪律」                                             |
+| 项                                | 影响                         | 现状                                                 | 触发条件 / 缓解                                                                        |
+| --------------------------------- | ---------------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| HTML 动态渲染换 CSP nonce         | 无法全站 SSG，缓存策略受限   | **有意为之**（安全优先于缓存）                       | 见 ADR-0003；不为 SSG 放宽 `unsafe-inline`                                             |
+| CI Node 版本与 `engines` 不符     | CI 出现 engine warning       | **已修（2026-10-07）**：CI 4 处改 `node-version: 24` | 见 [HANDOFF §6](./HANDOFF.md) R8                                                       |
+| `data/links.json` 无消费方        | 残留数据文件                 | 物理保留；功能已删                                   | 属内容决策，未删文件                                                                   |
+| `pnpm build` 重写 `public/feed.*` | 工作区常脏                   | 已知；构建后检查无意外 diff                          | 生产构建须提供非 localhost 的 `NEXT_PUBLIC_SITE_URL`（否则会把生产域名写成 localhost） |
+| GSC/Bing/RUM 未接入               | 无真实搜索与真实用户性能数据 | 需账号授权                                           | 见 `docs/ops-deferred-work-plan.md`；禁止用实验室分替代真实 p75                        |
+| 日期型报告与 spec 中的旧测试数    | 易被误当现状                 | 全部带日期，`docs/README.md` 有分层纪律              | 引用前先看 `docs/README.md` 的「一条纪律」                                             |
 
 ---
 

@@ -108,8 +108,13 @@
 - [x] `check:seo` / `check:docs` / `format:docs:check` 全绿
 - [x] **e2e 45 passed / 0 failed**
 - [x] Playwright 搜索行为 6/6 实测通过
-- [ ] R8（CI Node 22 vs `engines >=24`）——未修，登记
-- [ ] 提交 / 推送 / PR（须用户授权）
+- [x] **R8 已修**：CI 4 处 `node-version: 22` → `24`
+- [x] **R11 已修**：next 16.3.5 → 16.3.8（critical RCE）+ sharp / source-map-js override；`pnpm audit --prod` exit 0
+- [x] 提交 2 个（`5d29bfc` 代码 + `9def4b5` 文档）+ 推送 + PR [#37](https://github.com/xvyimu/Chronicle/pull/37)
+- [x] 追加提交 `46b8bd8`（R8 + R11）；CI `quality` pass
+- [ ] **R12 · Lighthouse 预算红**（`/blog/nextjs-app-router`：性能 0.75 / CLS 0.2976）——既有基线，未修，待定
+- [ ] R13 · dev 树 audit 13 条——CI 该步 `continue-on-error`，已记录
+- [ ] 合并 master（须人审）
 - [ ] 部署（须人审）
 
 ---

@@ -24,13 +24,16 @@ Iteration 00–07 完成重构主体，但改动全部留在工作区未提交�
 - 修 CSS 归属：`ws-section__*` 在 `/favorites` 无样式。
 - 修视觉遗留：`theme-color` 与 OG 图仍用旧暖纸色。
 - 同步三份过期文档 + ADR-0006 状态修订。
+- **修 CI 红灯**（用户授权后追加）：R8（CI Node 22 → 24）+ R11（3 条生产依赖漏洞，含 critical）。
+- 提交 / 推送 / 开 PR。
 
 ## 6. 非范围
 
 - 不改 `docs/archive/`、`docs/ops/`、`docs/specs/`、`docs/superpowers/` —— 按 `docs/README.md`「一条纪律」，日期型快照不追改。
 - 不改 `data/links.json`（内容决策，文件保留）。
-- 不改 CI（Node 22 与 `engines >=24` 的矛盾登记为 R8，未修）。
-- 不提交 / 不推送 / 不合并 / 不部署。
+- **不改 Lighthouse 预算阈值**（R12）：既有基线红灯，改阈值等于拿标准迁就实现，待定。
+- **不修 dev 树 audit 13 条**（R13）：CI 该步 `continue-on-error`。
+- 不合并 master / 不部署（须人审）。
 
 ## 7. 前置条件
 
@@ -47,12 +50,16 @@ Iteration 07。
 - [x] 同步 `docs/HANDOFF.md` / `docs/ARCHITECTURE.md` / `docs/README.md`
 - [x] `docs/adr/0006` 加状态修订注记（引擎不变，交付形态改客户端）
 - [x] 清调试遗留 `probe-tmp.mjs`（阻塞 lint）
-- [x] 全量回归
+- [x] 修 R11：next 16.3.5 → 16.3.8（critical RCE）+ sharp / source-map-js override
+- [x] 修 R8：CI 4 处 `node-version: 22` → `24`
+- [x] 全量回归（升级后重跑）
+- [x] 提交（2 个）· 推送 · 开 PR #37
 
 ## 9. 涉及文件
 
 **修改（代码）**：`src/components/search/SearchPanel.tsx` · `src/components/home/TopicCloud.tsx` · `src/server/rate-limit.ts` · `src/app/styles/{home,workspace}.css` · `src/app/layout.tsx` · `src/app/opengraph-image.tsx` · `src/app/blog/[slug]/opengraph-image.tsx`
-**修改（文档）**：`docs/HANDOFF.md` · `docs/ARCHITECTURE.md` · `docs/README.md` · `docs/adr/0006-search-engine-keep-fuse.md`
+**修改（文档）**：`docs/HANDOFF.md` · `docs/ARCHITECTURE.md` · `docs/README.md` · `docs/adr/0006-search-engine-keep-fuse.md` · `docs/13-risk-register.md` · 本文件 · `docs/14-decision-log.md` · `docs/15-acceptance-checklist.md` · `README.md`
+**修改（依赖/CI）**：`package.json`（next 16.3.8 · bundle-analyzer ^16.3.8）· `pnpm-lock.yaml` · `pnpm-workspace.yaml`（sharp `>=0.35.5` · 新增 `source-map-js >=1.2.2`）· `.github/workflows/ci.yml`（4 处 node 24）
 **删除**：`probe-tmp.mjs`（本轮调试遗留，非仓库文件）
 
 ## 10. 数据或接口变化
@@ -63,18 +70,20 @@ Iteration 07。
 
 - `ws-section__*`（面板内通用 section 头）提升为全站可用（`workspace.css`），消费者跨首页与 `/favorites`。
 - 站点 `theme-color` 与 OG 分享图统一到中性灰 token。
+- 依赖：`next` 16.3.8 · `sharp` 0.35.5 · `source-map-js` 1.2.2。
 
 ## 12. 测试计划
 
-四门（typecheck / lint / test / build）+ e2e + check:seo + check:docs + format:docs:check + Playwright 搜索行为实测。
+四门（typecheck / lint / test / build）+ e2e + check:seo + check:docs + format:docs:check + `audit --prod` + `content:verify` + Playwright 搜索行为实测。
 
 ## 13. 验收标准
 
-搜索 6 项行为全通过；死代码零残留；四门 + e2e + seo + docs 全绿；三份当前维护文档与实际一致。
+搜索 6 项行为全通过；死代码零残留；四门 + e2e + seo + docs 全绿；`pnpm audit --prod` exit 0；三份当前维护文档与实际一致。
 
 ## 14. 风险
 
 R1（视觉大改回归）——本轮只改配色与 CSS 归属，回归通过。
+R11（依赖升级回归）——升 next 16.3.8 后全量重跑，四门 + e2e 全绿。
 
 ## 15. 回滚方式
 
@@ -112,33 +121,67 @@ R1（视觉大改回归）——本轮只改配色与 CSS 归属，回归通过�
 三份「当前维护文档」此前**一字未改**，描述的还是已删架构。本轮按实现改写：
 
 - **`ARCHITECTURE.md`**：技术栈版本（16.2→16.3.5 / React 19.2→19.3.0）、样式加载表、组件分包、路由表（+`/archive` `/favorites`，−`/api/search` `/links`）、首页组合、§5.1 搜索整节、测试基线（708/95 → 547/72）。删除 `/links` 整节与反链/花园链路。
-- **`HANDOFF.md`**：本地路径去 junction、GitHub Actions 改为如实记「近期 failure」、内容规模、Node 版本、搜索落点、修改落点表、剩余边界（Giscus 已删 + 新增 R8）。
+- **`HANDOFF.md`**：本地路径去 junction、GitHub Actions 改为如实记「近期 failure」、内容规模、Node 版本、搜索落点、修改落点表、剩余边界（Giscus 已删）。
 - **`docs/README.md`**：公开 API 行订正；新增「2026-10 重构文档」索引（01–15 + iterations + ADR-0007）。
 - **`adr/0006`**：按 ADR 纪律**保留历史正文**，仅加状态修订注记（引擎决策不变，交付形态改客户端；原「`/api/search` p95 触发」失效）。
 
+### 依赖与 CI 修复（R8 + R11）
+
+CI 的 `quality` job 挂在第 5 步 `pnpm audit --prod --audit-level=high`，此后 format / lint / test / typecheck / build **全部 skip**。查实根因是三条生产依赖 advisory：
+
+| 严重度       | 包              | advisory                                           | 受影响区间         | 处理                                 |
+| ------------ | --------------- | -------------------------------------------------- | ------------------ | ------------------------------------ |
+| **critical** | `next`          | GHSA-vcvr-r3jv-pc5j（`next/og` ImageResponse RCE） | `>=16.2.0 <16.3.6` | 16.3.5 → **16.3.8**                  |
+| high         | `source-map-js` | GHSA-68fv-2mgg-jv7q（事件循环 DoS）                | `>=1.0.0 <1.2.2`   | 1.2.1 → **1.2.2**（新增 override）   |
+| high         | `sharp`         | CVE-2026-96889（librsvg）                          | `<0.35.5`          | 0.35.4 → **0.35.5**（收紧 override） |
+
+**本站跑的 `next@16.3.5` 正落在 critical 区间内**——不是「间接依赖的老问题」。
+
+路径依据：Dependabot PR #32 正是这条 next 升级，其 CI（quality / e2e / bundle-analyze）实测全 pass，属已验证可行的升级路径。
+
+`sharp` 那条特别说明：原 override 写 `>=0.35.4`，把解析结果摁在 `0.35.4`——**恰落在新 advisory 的受影响区间**。`next@16.3.8` 的 `optionalDependencies` 仍声明 `^0.35.4` 不会自己抬，故必须显式收紧。
+
+CI Node 对齐（R8 闭环）：`.github/workflows/ci.yml` 4 处 `node-version: 22` → `24`。
+
 ### 回归结果
 
-| 命令                               | 结果                   | exit |
-| ---------------------------------- | ---------------------- | ---- |
-| `npx tsc --noEmit`                 | 通过（增量与全量均 0） | 0    |
-| `npx eslint`                       | 通过                   | 0    |
-| `npx vitest run`                   | 72 文件 / 547 测试     | 0    |
-| `pnpm build`                       | 107 静态页             | 0    |
-| `pnpm test:e2e`                    | 45 passed / 0 failed   | 0    |
-| `pnpm check:seo`                   | passed                 | 0    |
-| `pnpm format:docs:check`           | passed                 | 0    |
-| `node scripts/check-doc-links.mjs` | 138 文件 passed        | 0    |
-| Playwright 搜索实测                | 6/6 通过               | —    |
+| 命令                                   | 结果                         | exit |
+| -------------------------------------- | ---------------------------- | ---- |
+| `npx tsc --noEmit`                     | 通过（增量与全量均 0）       | 0    |
+| `npx eslint`                           | 通过                         | 0    |
+| `npx vitest run`                       | 72 文件 / 547 测试           | 0    |
+| `pnpm build`                           | 107 静态页                   | 0    |
+| `pnpm test:e2e`                        | 45 passed / 0 failed         | 0    |
+| `pnpm check:seo`                       | passed                       | 0    |
+| `pnpm format:docs:check`               | passed                       | 0    |
+| `node scripts/check-doc-links.mjs`     | 139 文件 passed              | 0    |
+| `pnpm audit --prod --audit-level=high` | **No known vulnerabilities** | 0    |
+| `content:verify`                       | snapshot in sync (20 篇)     | 0    |
+| Playwright 搜索实测                    | 6/6 通过                     | —    |
+
+以上为**升级 next 16.3.8 之后**的全量重跑。
+
+### CI 结果（PR #37，commit `46b8bd8`）
+
+| Job              | 结果                                                                              |
+| ---------------- | --------------------------------------------------------------------------------- |
+| `quality`        | **pass**（1m55s）——audit 门已过，后续 format/lint/test/typecheck/build 全部实跑   |
+| `bundle-analyze` | pass（1m11s）                                                                     |
+| `Vercel`         | pass                                                                              |
+| `e2e`            | **fail** —— 挂在 `Run Lighthouse CI audit`（非 Playwright；Playwright 45 passed） |
 
 ## 17. 遗留问题
 
-- **R8 未修**：`engines >=24` 与 CI `node-version: 22` 矛盾，CI 会出现 `Unsupported engine` warning。本轮不动 CI，保持记录。
-- **master 主 CI 近期 failure**（2026-09-30 起，Dependabot 依赖升级提交）——非本次重构引入，已如实写入 HANDOFF，未追查。
+- **R12 · Lighthouse 预算红（未修，既有基线）**：`/blog/nextjs-app-router` 两条断言失败 —— `categories:performance` 0.75（阈值 ≥0.8）、`cumulative-layout-shift` 0.2976（阈值 ≤0.15）。**非本 PR 引入**：master `e178f07`（2026-09-26）同页同样两条失败，数值 0.74 / 0.3322 —— 本 PR 反而略好。`lighthouse.config.js` 第 40 行注释自记「Article MDX 页历史 CLS ~0.13」，实测已超其两倍，注释本身也过期。**未擅自改预算阈值**（那是拿标准迁就实现），待定。
+- **R13 · dev 树 audit 13 条**（dot-prop / brace-expansion / braces）：CI 该步 `continue-on-error`，不阻断；其中 `brace-expansion@1` 是 `pnpm-workspace.yaml` 注释记录的结构性无解（上游从未发布 advisory 要求的 1.1.17）。
 - **`data/links.json` 无消费方**：功能已删，物理文件保留（内容决策）。`content-dirs.ts` 仍列其路径，属残留。
 - **`docs/ARCHITECTURE_TARGET.md` / `docs/03-information-architecture.md` 等**未逐篇复核（本轮只覆盖三份「当前维护文档」）。
 - 全站装饰背景层、详情页衬线标题（D-019 / D-022）维持原状。
-- **未提交 / 未推送**：分支 `feature/architecture-rebuild-2026-10-06` 全部改动仍在工作区。
+
+**已完成（本轮后半段，用户授权后）**：提交 2 个（`5d29bfc` 代码 + `9def4b5` 文档）→ 推送 `origin/feature/architecture-rebuild-2026-10-06` → 开 PR [#37](https://github.com/xvyimu/Chronicle/pull/37)。随后追加提交 `46b8bd8`（R8 + R11）。**未合并、未部署。**
 
 ## 18. 下一迭代建议
 
-提交 / 推送 / PR（须用户授权）→ 人工验收 → 合并 master → 部署（须人审）。建议合并前先处置 R8（CI Node 版本）与 master CI 的 failure 状态。
+1. **R12（Lighthouse）**：`/blog/nextjs-app-router` 的 CLS 0.2976 与性能 0.75 需真修（非改阈值）。方向：查该页布局偏移源（字体切换？代码块？TOC？），`lighthouse.config.js` 第 40 行的「历史 CLS ~0.13」注释亦需据实更新。
+2. **人工验收 PR #37** → 合并 master → 部署（均须人审）。
+3. R13（dev 树 audit）按需评估。

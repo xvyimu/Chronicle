@@ -32,17 +32,17 @@
 
 ## 2. 当前生产基线
 
-| 项目           | 当前证据                                                                                                                                                        |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 生产域名       | `https://incca.ccwu.cc`                                                                                                                                         |
-| origin/master  | **`692e7b3`**（`feature/architecture-rebuild-2026-10-06` 尚未合并；重构改动全部在工作区未提交）                                                                 |
-| GitHub Actions | master 主 CI **最近数次为 failure**（2026-09-30 起，Dependabot 依赖升级提交）。接手前需先查 [Actions](https://github.com/xvyimu/Chronicle/actions) 确认当前状态 |
-| 内容规模       | 20 篇文章、6 个项目；`data/links.json` 保留 10 类 123 条但**已无消费方**（收藏导航功能已删）                                                                    |
-| Vitest         | **72 files / 547 tests**（2026-10-07 本机实测 `npx vitest run` exit 0）                                                                                         |
-| Playwright     | 5 spec files / 46 tests                                                                                                                                         |
-| Node / pnpm    | Node **≥24**（`package.json` engines）· 本机 v24.16.0 / pnpm 11.8.0                                                                                             |
-| 延后运营       | GSC/Bing/RUM pending；手册 `docs/ops-deferred-work-plan.md`；`pnpm check:ops-readiness`                                                                         |
-| SRI            | **生产已开**（`ENABLE_SRI=1`）· 静态 chunk `integrity="sha384-…"` · CSP nonce 仍在                                                                              |
+| 项目           | 当前证据                                                                                                                                                                         |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 生产域名       | `https://incca.ccwu.cc`                                                                                                                                                          |
+| origin/master  | **`692e7b3`**（`feature/architecture-rebuild-2026-10-06` 尚未合并；重构改动全部在工作区未提交）                                                                                  |
+| GitHub Actions | master 主 CI **最近数次为 failure**（2026-09-30 起，挂在 `pnpm audit --prod`；本分支已修该门）。接手前需先查 [Actions](https://github.com/xvyimu/Chronicle/actions) 确认当前状态 |
+| 内容规模       | 20 篇文章、6 个项目；`data/links.json` 保留 10 类 123 条但**已无消费方**（收藏导航功能已删）                                                                                     |
+| Vitest         | **72 files / 547 tests**（2026-10-07 本机实测 `npx vitest run` exit 0）                                                                                                          |
+| Playwright     | 5 spec files / 46 tests                                                                                                                                                          |
+| Node / pnpm    | Node **≥24**（`package.json` engines）· 本机 v24.16.0 / pnpm 11.8.0                                                                                                              |
+| 延后运营       | GSC/Bing/RUM pending；手册 `docs/ops-deferred-work-plan.md`；`pnpm check:ops-readiness`                                                                                          |
+| SRI            | **生产已开**（`ENABLE_SRI=1`）· 静态 chunk `integrity="sha384-…"` · CSP nonce 仍在                                                                                               |
 
 生产证据是时间点快照。接手时仍需用当前 `git log`、CI 和命令重新确认，不要把本表当作永久真值。
 
@@ -60,18 +60,18 @@
 
 ## 4. 常用修改落点
 
-| 需求             | 首要文件                                                                                | 必须联查                                                                                     |
-| ---------------- | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| 新增文章         | `content/blog/*.mdx`                                                                    | schema、SEO、RSS、sitemap、内链、`pnpm content:build`                                        |
-| 修改项目         | `data/projects.json`                                                                    | `src/lib/projects.ts`、图片、项目页测试                                                      |
-| 新增路由         | `src/app/**`                                                                            | metadata、导航、sitemap、测试                                                                |
-| 修改搜索         | `src/lib/search/`、`src/components/search/SearchPanel.tsx`                              | 引擎测试、组件测试、导航/`module-boundaries`                                                 |
-| 修改阅读状态     | `src/lib/reading-state.ts`、`src/components/blog/{ReadingActions,LocalReadingList}.tsx` | `/favorites` 页测试、`safeLocalStorage` 容错                                                 |
-| 修改 CSP / 上报  | `src/proxy.ts`、`src/app/api/csp-report/`                                               | layout、`src/lib/csp.ts`、API.md、ADR                                                        |
-| 修改 SRI 门控    | `next.config.ts`（`ENABLE_SRI`）                                                        | ADR `0005-sri-over-nonce-evaluation.md`                                                      |
-| 修改内容读取入口 | `src/server/content`、相关 `src/app/**` 页面                                            | 底层 `src/lib/*` repository、页面测试 mock 路径                                              |
-| 修改视觉 token   | `src/app/styles/tokens.css`                                                             | 明暗主题、CSS 规范、移动端与截图检查                                                         |
-| 修改 CI/部署     | `.github/workflows/ci.yml`                                                              | **CI 仍钉 Node 22，而 `engines` 已是 `>=24`（已知矛盾，见 §6 R8）**、RSS 一致性、smoke、回滚 |
+| 需求             | 首要文件                                                                                | 必须联查                                                              |
+| ---------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| 新增文章         | `content/blog/*.mdx`                                                                    | schema、SEO、RSS、sitemap、内链、`pnpm content:build`                 |
+| 修改项目         | `data/projects.json`                                                                    | `src/lib/projects.ts`、图片、项目页测试                               |
+| 新增路由         | `src/app/**`                                                                            | metadata、导航、sitemap、测试                                         |
+| 修改搜索         | `src/lib/search/`、`src/components/search/SearchPanel.tsx`                              | 引擎测试、组件测试、导航/`module-boundaries`                          |
+| 修改阅读状态     | `src/lib/reading-state.ts`、`src/components/blog/{ReadingActions,LocalReadingList}.tsx` | `/favorites` 页测试、`safeLocalStorage` 容错                          |
+| 修改 CSP / 上报  | `src/proxy.ts`、`src/app/api/csp-report/`                                               | layout、`src/lib/csp.ts`、API.md、ADR                                 |
+| 修改 SRI 门控    | `next.config.ts`（`ENABLE_SRI`）                                                        | ADR `0005-sri-over-nonce-evaluation.md`                               |
+| 修改内容读取入口 | `src/server/content`、相关 `src/app/**` 页面                                            | 底层 `src/lib/*` repository、页面测试 mock 路径                       |
+| 修改视觉 token   | `src/app/styles/tokens.css`                                                             | 明暗主题、CSS 规范、移动端与截图检查                                  |
+| 修改 CI/部署     | `.github/workflows/ci.yml`                                                              | **CI Node 已对齐 24（R8 闭环，2026-10-07）**、RSS 一致性、smoke、回滚 |
 
 ## 5. 验证矩阵
 
@@ -92,7 +92,9 @@
 - Speed Insights：真实 p75 需要授权 token 和足够样本，不能用实验室 Lighthouse 代替。
 - 外部搜索、正文图 LQIP、Cache Components 和 CSS 深度下沉均有明确规模或素材触发条件，见 [TODO](../TODO.md) 与 `pnpm check:ops-readiness`。T4 已 ADR：**维持 Fuse**（`docs/adr/0006-search-engine-keep-fuse.md`）。
 - SRI：生产 **已启用**（2026-07-22）；ADR Accepted。回滚=去掉 Production `ENABLE_SRI` 后 redeploy。与 PPR 仍分轨。
-- **R8（CI Node 版本）**：`package.json` `engines` 已改 `>=24`，但 `.github/workflows/ci.yml` 仍钉 `node-version: 22`。CI 上 `pnpm install` 会出现 `Unsupported engine` warning，与验收「无 engine warning」冲突。**未修**（本轮不动 CI）。
+- **R8（CI Node 版本）已闭环**（2026-10-07）：`.github/workflows/ci.yml` 4 处 `node-version: 22` → `24`，与 `engines: >=24` 对齐。
+- **R11（生产依赖漏洞）已闭环**（2026-10-07）：`pnpm audit --prod` 报 3 条（含 `next/og` critical RCE，命中当时的 next@16.3.5）。已升 next → 16.3.8、sharp → 0.35.5、source-map-js → 1.2.2；audit 现 exit 0。详见 [D-033](./14-decision-log.md)。
+- **R12（Lighthouse 预算红）未修**：`/blog/nextjs-app-router` 性能 0.75（阈值 ≥0.8）、CLS 0.2976（阈值 ≤0.15）。**既有基线**——master `e178f07` 同页同样两条失败（0.74 / 0.3322）。CI `e2e` job 因此 fail（Playwright 本身 45 passed）。
 - **Giscus 已删**：评论功能与 `csp.ts` 的 giscus.app 白名单均已移除（ADR 见迭代 06）。旧文档若提到「Discussions 开 / JS chunk 含仓名」均已失效。
 - 延后事项不得伪装成无条件工程任务；就绪状态以 `check:ops-readiness` 为准。
 

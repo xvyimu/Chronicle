@@ -17,9 +17,9 @@
 
 ## CI（`.github/workflows/ci.yml`）
 
-现状：lint / test / tsc / build / bundle-budget / e2e。
+现状：audit（`--prod` 阻断，全树仅告警）/ format / lint / tsc / test / check:seo / build / bundle-budget / e2e（含 Lighthouse）。
 
-**注意**：CI 钉 Node 22（与 `engines >=24` 的差异待核）。本轮**不修改 CI**（属 Ask-first），如需调整单独评估。
+**注意**：CI Node 已对齐 `engines: >=24`（2026-10-07 由 22 改 24，闭环 R8）。CI 首个阻断步是 `pnpm audit --prod --audit-level=high`——生产依赖树必须零 high+，该步失败会 skip 后续全部步骤。
 
 ## 环境变量
 
