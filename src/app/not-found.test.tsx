@@ -33,13 +33,6 @@ describe('NotFound', () => {
       'href',
       '/tags',
     );
-    expect(screen.getByRole('link', { name: '搜索文章' })).toHaveAttribute(
-      'href',
-      '/blog?focus=search',
-    );
-    expect(screen.getByRole('link', { name: '打开导航收藏' })).toHaveAttribute(
-      'href',
-      '/links',
-    );
+    expect(screen.getByRole('link', { name: '搜索文章' })).toHaveAttribute('href', '/');
   });
 });

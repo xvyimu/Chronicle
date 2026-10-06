@@ -38,9 +38,6 @@ export default function ErrorBoundary({
         <Button asChild size="cta" variant="outline">
           <Link href="/blog">看博客</Link>
         </Button>
-        <Button asChild size="cta" variant="outline">
-          <Link href="/links">打开导航收藏</Link>
-        </Button>
       </div>
     </div>
   );

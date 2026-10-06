@@ -3,8 +3,6 @@ import path from 'node:path';
 import type { parseFrontmatter as parseFrontmatterType } from '../src/lib/parse-frontmatter';
 import type { postFrontmatterSchema as postFrontmatterSchemaType } from '../src/lib/schemas/post-frontmatter';
 import type {
-  buildPostSearchText as buildPostSearchTextType,
-  extractPostHeadings as extractPostHeadingsType,
   filenameToSlug as filenameToSlugType,
   getAllPosts as getAllPostsType,
 } from '../src/lib/posts';
@@ -15,10 +13,6 @@ import type {
 } from '../src/lib/projects';
 import type { getAllSeries as getAllSeriesType } from '../src/lib/series';
 import type { getAllTags as getAllTagsType } from '../src/lib/tags';
-import type {
-  getLinkAssetIssues as getLinkAssetIssuesType,
-  parseLinks as parseLinksType,
-} from '../src/lib/links';
 import type sitemapType from '../src/app/sitemap';
 
 type Issue = {
@@ -27,15 +21,11 @@ type Issue = {
 };
 
 type CheckContext = {
-  contentDir: { blog: string; projects: string; links: string };
+  contentDir: { blog: string; projects: string };
   siteUrl: string;
   parseFrontmatter: typeof parseFrontmatterType;
   postFrontmatterSchema: typeof postFrontmatterSchemaType;
-  parseLinks: typeof parseLinksType;
-  getLinkAssetIssues: typeof getLinkAssetIssuesType;
   filenameToSlug: typeof filenameToSlugType;
-  extractPostHeadings: typeof extractPostHeadingsType;
-  buildPostSearchText: typeof buildPostSearchTextType;
   getAllPosts: typeof getAllPostsType;
   getAllCategories: typeof getAllCategoriesType;
   getAllProjects: typeof getAllProjectsType;
@@ -213,10 +203,12 @@ function checkPostFrontmatter(ctx: CheckContext): void {
       addIssue(`Frontmatter image does not exist: ${fm.image}`, file);
     }
 
-    // 标题 anchor 唯一性
-    const headings = ctx.extractPostHeadings(content);
+    // 标题 anchor 唯一性（直接扫正文标题，不走 search-text 索引）
+    const headingLines = content.matchAll(/^#{2,3}\s+(.+)$/gm);
     const headingIds = new Set<string>();
-    for (const heading of headings) {
+    for (const match of headingLines) {
+      const heading = match[1].replace(/\s+#+$/, '').trim();
+      if (!heading) continue;
       const headingId = slugifyHeading(heading);
       if (!headingId) {
         addIssue(`Heading cannot produce a stable anchor: ${heading}`, file);
@@ -226,21 +218,6 @@ function checkPostFrontmatter(ctx: CheckContext): void {
         addIssue(`Duplicate heading anchor in article: #${headingId}`, file);
       }
       headingIds.add(headingId);
-    }
-
-    // 搜索文本长度
-    const searchText = ctx.buildPostSearchText(
-      {
-        title: fm.title,
-        description: fm.description,
-        tags: fm.tags,
-        category: fm.category,
-        series: fm.series,
-      },
-      content,
-    );
-    if (searchText.length < 80) {
-      addIssue('Generated search text is too short to support useful discovery', file);
     }
 
     checkMdxReferences(content, file);
@@ -296,42 +273,6 @@ function checkProjects(ctx: CheckContext): void {
   }
 }
 
-function checkLinks(ctx: CheckContext): void {
-  const linksPath = path.join(rootDir, ctx.contentDir.links);
-  if (!existsSync(linksPath)) {
-    addIssue(`Links data file does not exist: ${ctx.contentDir.links}`);
-    return;
-  }
-
-  let raw: unknown;
-  try {
-    raw = JSON.parse(readFileSync(linksPath, 'utf-8'));
-  } catch (error) {
-    addIssue(
-      `Links JSON parse failed: ${error instanceof Error ? error.message : String(error)}`,
-      ctx.contentDir.links,
-    );
-    return;
-  }
-
-  let categories;
-  try {
-    categories = ctx.parseLinks(raw);
-  } catch (error) {
-    addIssue(
-      `Links schema validation failed: ${
-        error instanceof Error ? error.message : String(error)
-      }`,
-      ctx.contentDir.links,
-    );
-    return;
-  }
-
-  for (const issue of ctx.getLinkAssetIssues(categories)) {
-    addIssue(`${issue.path}: ${issue.message}`, ctx.contentDir.links);
-  }
-}
-
 function checkSitemapCoverage(ctx: CheckContext): void {
   const siteOrigin = new URL(ctx.siteUrl).origin;
   const entries = ctx.sitemap();
@@ -345,7 +286,6 @@ function checkSitemapCoverage(ctx: CheckContext): void {
     ctx.siteUrl,
     `${ctx.siteUrl}/blog`,
     `${ctx.siteUrl}/categories`,
-    `${ctx.siteUrl}/links`,
     `${ctx.siteUrl}/projects`,
     `${ctx.siteUrl}/tags`,
     `${ctx.siteUrl}/series`,
@@ -385,7 +325,6 @@ async function main(): Promise<void> {
     projectsModule,
     seriesModule,
     tagsModule,
-    linksModule,
     sitemapModule,
   ] = await Promise.all([
     import('../src/lib/parse-frontmatter'),
@@ -397,7 +336,6 @@ async function main(): Promise<void> {
     import('../src/lib/projects'),
     import('../src/lib/series'),
     import('../src/lib/tags'),
-    import('../src/lib/links'),
     import('../src/app/sitemap'),
   ]);
 
@@ -406,11 +344,7 @@ async function main(): Promise<void> {
     siteUrl: siteModule.SITE_CONFIG.url,
     parseFrontmatter: frontmatterModule.parseFrontmatter,
     postFrontmatterSchema: schemaModule.postFrontmatterSchema,
-    parseLinks: linksModule.parseLinks,
-    getLinkAssetIssues: linksModule.getLinkAssetIssues,
     filenameToSlug: postsModule.filenameToSlug,
-    extractPostHeadings: postsModule.extractPostHeadings,
-    buildPostSearchText: postsModule.buildPostSearchText,
     getAllPosts: postsModule.getAllPosts,
     getAllCategories: categoriesModule.getAllCategories,
     getAllProjects: projectsModule.getAllProjects,
@@ -422,7 +356,6 @@ async function main(): Promise<void> {
 
   checkPostFrontmatter(ctx);
   checkProjects(ctx);
-  checkLinks(ctx);
   checkSitemapCoverage(ctx);
 
   if (issues.length === 0) {

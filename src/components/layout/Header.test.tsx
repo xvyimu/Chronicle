@@ -40,12 +40,11 @@ import Header from './Header';
 import HeaderScrollState from './HeaderScrollState';
 import MobileNav from './MobileNav';
 
-async function renderHeader() {
-  const ui = await Header();
-  return render(ui);
+function renderHeader() {
+  return render(<Header />);
 }
 
-describe('Header (RSC shell + client islands)', () => {
+describe('Header (TopBar shell + client islands)', () => {
   beforeEach(() => {
     cleanup();
     vi.clearAllMocks();
@@ -56,94 +55,38 @@ describe('Header (RSC shell + client islands)', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders the site name', async () => {
-    await renderHeader();
+  it('renders the site name', () => {
+    renderHeader();
     expect(screen.getByText('西江月')).toBeInTheDocument();
   });
 
-  it('renders all navigation links', async () => {
-    await renderHeader();
-    expect(screen.getByText('首页')).toBeInTheDocument();
-    expect(screen.getByText('博客')).toBeInTheDocument();
-    expect(screen.getByText('花园')).toBeInTheDocument();
-    expect(screen.getByText('导航')).toBeInTheDocument();
-    expect(screen.getByText('分类')).toBeInTheDocument();
-    expect(screen.getByText('专题')).toBeInTheDocument();
-    expect(screen.getByText('作品')).toBeInTheDocument();
-    expect(screen.getByText('关于')).toBeInTheDocument();
+  it('does not render desktop navigation (moved to Sidebar)', () => {
+    renderHeader();
+    expect(screen.queryByText('文章')).not.toBeInTheDocument();
+    expect(screen.queryByText('花园')).not.toBeInTheDocument();
+    expect(screen.queryByText('导航')).not.toBeInTheDocument();
   });
 
-  it('marks home link as active when on home page', async () => {
-    mockPathname.mockReturnValue('/');
-    await renderHeader();
-    const homeLink = screen.getAllByText('首页')[0];
-    expect(homeLink.className).toContain('header__link--active');
-  });
-
-  it('marks blog link as active when on /blog', async () => {
-    mockPathname.mockReturnValue('/blog');
-    await renderHeader();
-    const blogLink = screen.getAllByText('博客')[0];
-    expect(blogLink.className).toContain('header__link--active');
-    expect(screen.getAllByText('首页')[0].className).not.toContain(
-      'header__link--active',
-    );
-  });
-
-  it('exposes active navigation state to assistive technology', async () => {
-    mockPathname.mockReturnValue('/blog');
-    await renderHeader();
-
-    const blogLinks = screen.getAllByRole('link', { name: '博客' });
-    expect(blogLinks[0]).toHaveAttribute('aria-current', 'page');
-    expect(screen.getAllByRole('link', { name: '首页' })[0]).not.toHaveAttribute(
-      'aria-current',
-    );
-  });
-
-  it('marks blog link as active when on /blog/some-post', async () => {
-    mockPathname.mockReturnValue('/blog/test-post');
-    await renderHeader();
-    expect(screen.getAllByText('博客')[0].className).toContain('header__link--active');
-  });
-
-  it('marks series link as active when on /series/some-series', async () => {
-    mockPathname.mockReturnValue('/series/personal-deploy');
-    await renderHeader();
-    expect(screen.getAllByText('专题')[0].className).toContain('header__link--active');
-  });
-
-  it('does not highlight home for sub-pages', async () => {
-    mockPathname.mockReturnValue('/about');
-    await renderHeader();
-    expect(screen.getAllByText('首页')[0].className).not.toContain(
-      'header__link--active',
-    );
-  });
-
-  it('renders ThemeToggle', async () => {
-    await renderHeader();
+  it('renders ThemeToggle', () => {
+    renderHeader();
     expect(screen.getByLabelText('切换主题')).toBeInTheDocument();
   });
 
-  it('renders a search shortcut link', async () => {
-    await renderHeader();
-    expect(screen.getByLabelText('搜索文章')).toHaveAttribute(
-      'href',
-      '/blog?focus=search',
-    );
+  it('renders a search shortcut link', () => {
+    renderHeader();
+    expect(screen.getByLabelText('前往搜索')).toHaveAttribute('href', '/');
   });
 
-  it('renders mobile menu toggle button', async () => {
-    await renderHeader();
+  it('renders mobile menu toggle button', () => {
+    renderHeader();
     const menuBtn = screen.getByLabelText('打开菜单');
     expect(menuBtn).toBeInTheDocument();
     expect(menuBtn).toHaveAttribute('aria-expanded', 'false');
     expect(menuBtn).toHaveAttribute('aria-controls', 'mobile-nav');
   });
 
-  it('toggles mobile menu on click', async () => {
-    await renderHeader();
+  it('toggles mobile menu on click', () => {
+    renderHeader();
     const menuBtn = screen.getByLabelText('打开菜单');
 
     fireEvent.click(menuBtn);
@@ -154,8 +97,33 @@ describe('Header (RSC shell + client islands)', () => {
     expect(menuBtn).toHaveAttribute('aria-expanded', 'false');
   });
 
+  it('renders navigation links inside the mobile sheet', () => {
+    renderHeader();
+    fireEvent.click(screen.getByLabelText('打开菜单'));
+    const mobileNav = screen.getByLabelText('主导航', { selector: '#mobile-nav' });
+    expect(mobileNav).toBeInTheDocument();
+
+    const hrefs = Array.from(mobileNav.querySelectorAll('a')).map((a) =>
+      a.getAttribute('href'),
+    );
+    expect(hrefs).toEqual([
+      '/',
+      '/blog',
+      '/series',
+      '/categories',
+      '/tags',
+      '/archive',
+      '/favorites',
+      '/projects',
+      '/about',
+    ]);
+    // 不指向已删路由
+    expect(hrefs).not.toContain('/garden');
+    expect(hrefs).not.toContain('/links');
+  });
+
   it('moves focus into the mobile navigation when the menu opens', async () => {
-    await renderHeader();
+    renderHeader();
 
     const trigger = screen.getByLabelText('打开菜单');
     trigger.focus();
@@ -174,23 +142,8 @@ describe('Header (RSC shell + client islands)', () => {
     });
   });
 
-  it('closes mobile menu when pathname changes', async () => {
-    mockPathname.mockReturnValue('/');
-    const { unmount } = await renderHeader();
-    const menuBtn = screen.getByLabelText('打开菜单');
-
-    fireEvent.click(menuBtn);
-    expect(menuBtn).toHaveAttribute('aria-expanded', 'true');
-
-    unmount();
-    mockPathname.mockReturnValue('/blog');
-    await renderHeader();
-    const newMenuBtn = screen.getByLabelText('打开菜单');
-    expect(newMenuBtn).toHaveAttribute('aria-expanded', 'false');
-  });
-
   it('closes mobile menu when backdrop is clicked', async () => {
-    await renderHeader();
+    renderHeader();
     const menuBtn = screen.getByLabelText('打开菜单');
 
     fireEvent.click(menuBtn);
@@ -209,7 +162,7 @@ describe('Header (RSC shell + client islands)', () => {
   });
 
   it('closes mobile menu when Escape is pressed', async () => {
-    await renderHeader();
+    renderHeader();
     const menuBtn = screen.getByLabelText('打开菜单');
 
     fireEvent.click(menuBtn);
@@ -221,16 +174,10 @@ describe('Header (RSC shell + client islands)', () => {
     });
   });
 
-  it('renders brand link pointing to /', async () => {
-    await renderHeader();
+  it('renders brand link pointing to /', () => {
+    renderHeader();
     const brandLink = screen.getByText('西江月').closest('a');
     expect(brandLink).toHaveAttribute('href', '/');
-  });
-
-  it('has proper accessible navigation label', async () => {
-    await renderHeader();
-    const nav = screen.getByLabelText('主导航');
-    expect(nav).toBeInTheDocument();
   });
 });
 

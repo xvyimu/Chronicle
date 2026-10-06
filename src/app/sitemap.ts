@@ -54,7 +54,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     {
-      url: `${baseUrl}/garden`,
+      url: `${baseUrl}/archive`,
       lastModified: latestPostModifiedAt,
       changeFrequency: 'weekly',
       priority: 0.65,
@@ -69,12 +69,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${baseUrl}/projects`,
       lastModified: latestProjectModifiedAt,
       changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/links`,
-      lastModified: latestSiteModifiedAt,
-      changeFrequency: 'weekly',
       priority: 0.7,
     },
     {

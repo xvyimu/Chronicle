@@ -2,10 +2,6 @@ import {
   getAdjacentPosts as readAdjacentPosts,
   getAllPostSlugs as readAllPostSlugs,
   getAllPosts as readAllPosts,
-  getBacklinks as readBacklinks,
-  getGardenGraph as readGardenGraph,
-  getGardenPositions as readGardenPositions,
-  getNeighbors as readNeighbors,
   getPaginatedPosts as readPaginatedPosts,
   getPostBySlug as readPostBySlug,
   getPostsByTag as readPostsByTag,
@@ -18,7 +14,6 @@ import {
   getFeaturedProjects as readFeaturedProjects,
   getProjectById as readProjectById,
 } from '@/lib/projects';
-import { getAllLinkCategories as readAllLinkCategories } from '@/lib/links';
 import { getAboutContent as readAboutContent } from '@/lib/about';
 import {
   getAllTagSlugs as readAllTagSlugs,
@@ -58,18 +53,6 @@ export const getRelatedPosts = readRelatedPosts;
 /** 按文章 slug 读取同系列文章；无系列或未命中时返回空数组。 */
 export const getSeriesPosts = readSeriesPosts;
 
-/** 读取链到指定 slug 的可见文章（反链）；无入边时返回空数组。坏链在构图时抛出。 */
-export const getBacklinks = readBacklinks;
-
-/** 数字花园次级页用：可见笔记节点 + 有向 wikilink 边。 */
-export const getGardenGraph = readGardenGraph;
-
-/** 数字花园力导向预坐标（snapshot positions.json / fs 确定性重算）。 */
-export const getGardenPositions = readGardenPositions;
-
-/** 文章页折叠邻接：出边 + 入边。 */
-export const getNeighbors = readNeighbors;
-
 /** 按页码和页容量读取文章分页；页码钳制语义由底层查询保持。 */
 export const getPaginatedPosts = readPaginatedPosts;
 
@@ -84,9 +67,6 @@ export const getProjectById = readProjectById;
 
 /** 读取全部项目 id，用于动态路由静态参数生成。 */
 export const getAllProjectIds = readAllProjectIds;
-
-/** 读取全部收藏链接分类；JSON 缺失或损坏时沿用环境既有错误策略。 */
-export const getAllLinkCategories = readAllLinkCategories;
 
 /** 读取关于页原始 MDX；文件不存在时返回 null。 */
 export const getAboutContent = readAboutContent;

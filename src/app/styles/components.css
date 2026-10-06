@@ -126,44 +126,6 @@
   margin-top: 4px;
 }
 
-.magnetic-card {
-  position: relative;
-  overflow: hidden;
-  transform-style: preserve-3d;
-  transition:
-    border-color var(--transition),
-    box-shadow var(--transition),
-    transform var(--transition);
-  will-change: transform;
-}
-
-.magnetic-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  opacity: 0;
-  background: radial-gradient(
-    var(--spotlight-size, 320px) circle at var(--spotlight-x, 50%) var(--spotlight-y, 50%),
-    color-mix(in srgb, var(--brand-soft) 80%, transparent) 0%,
-    transparent 72%
-  );
-  transition: opacity var(--transition);
-}
-
-.magnetic-card:hover::after,
-.magnetic-card:focus-within::after {
-  opacity: 1;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .magnetic-card {
-    transform: none;
-    will-change: auto;
-  }
-}
-
 .card {
   display: block;
   border: 1px solid var(--border);

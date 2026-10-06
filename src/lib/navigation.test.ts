@@ -6,13 +6,20 @@ describe('navigation', () => {
     expect(MAIN_NAV_ITEMS.map((item) => item.href)).toEqual([
       '/',
       '/blog',
-      '/garden',
-      '/links',
-      '/categories',
       '/series',
+      '/categories',
+      '/tags',
+      '/archive',
+      '/favorites',
       '/projects',
       '/about',
     ]);
+  });
+
+  it('contains no links to removed routes', () => {
+    const hrefs = MAIN_NAV_ITEMS.map((item) => item.href);
+    expect(hrefs).not.toContain('/garden');
+    expect(hrefs).not.toContain('/links');
   });
 
   it('marks home active only on the root pathname', () => {

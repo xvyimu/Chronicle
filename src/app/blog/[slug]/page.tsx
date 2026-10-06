@@ -7,21 +7,17 @@ import ArticleJsonLd from '@/components/blog/ArticleJsonLd';
 import ArticleNav from '@/components/blog/ArticleNav';
 import ArticleRelated from '@/components/blog/ArticleRelated';
 import ArticleSeriesPath from '@/components/blog/ArticleSeriesPath';
-import ArticleBacklinks from '@/components/blog/ArticleBacklinks';
-import ArticleNeighbors from '@/components/blog/ArticleNeighbors';
+import ReadingActions from '@/components/blog/ReadingActions';
 import {
   getAllPostSlugs,
   getPostBySlug,
   getAdjacentPosts,
   getRelatedPosts,
   getSeriesPosts,
-  getBacklinks,
-  getNeighbors,
 } from '@/server/content';
 import { inferCategory } from '@/lib/category-rules';
 import { buildPageMetadata } from '@/lib/metadata';
 import { createDynamicRoute } from '@/lib/route-adapter';
-import Giscus from '@/components/comments/Giscus';
 import type { PostFull } from '@/types';
 import { getCspNonce } from '@/lib/csp';
 
@@ -56,8 +52,6 @@ async function BlogPostContent({ post }: { post: PostFull }) {
   const { prev, next } = getAdjacentPosts(slug);
   const relatedPosts = getRelatedPosts(slug);
   const seriesPosts = getSeriesPosts(slug);
-  const backlinks = getBacklinks(slug);
-  const neighbors = getNeighbors(slug);
   const category = post.category ?? inferCategory(post.tags);
   const nonce = await getCspNonce();
 
@@ -72,6 +66,7 @@ async function BlogPostContent({ post }: { post: PostFull }) {
             {/* Article */}
             <article className="article-shell">
               <ArticleHeader post={post} category={category ?? undefined} />
+              <ReadingActions slug={slug} />
               <TableOfContents variant="mobile" />
 
               <div id="article-content">
@@ -79,15 +74,6 @@ async function BlogPostContent({ post }: { post: PostFull }) {
               </div>
 
               <ArticleSeriesPath post={post} posts={seriesPosts} />
-
-              <ArticleNeighbors
-                outbound={neighbors.outbound}
-                inbound={neighbors.inbound}
-              />
-
-              <ArticleBacklinks posts={backlinks} />
-
-              <Giscus />
 
               <ArticleRelated posts={relatedPosts} />
 

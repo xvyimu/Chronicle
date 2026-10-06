@@ -32,34 +32,14 @@ describe('production content smoke script', () => {
     expect(article?.mustContain[0]).toBeTruthy();
   });
 
-  it('builds an encoded server-search JSON expectation for that post', () => {
-    const search = buildExpectations(BASE_URL).find(({ label }) => label === 'search');
+  it('derives a home-search expectation pointing at the search entry', () => {
+    const search = buildExpectations(BASE_URL).find(
+      ({ label }) => label === 'home-search',
+    );
 
-    expect(search?.path).toMatch(/^\/api\/search\?q=.+/u);
-    expect(search?.path).not.toContain(' ');
-    expect(search?.contentTypeIncludes).toBe('application/json');
-    expect(search?.json).toEqual({
-      source: 'server',
-      resultSlug: expect.any(String),
-    });
-  });
-
-  it('validates the public SearchHit JSON shape returned by the search route', async () => {
-    const search = buildExpectations(BASE_URL).find(({ label }) => label === 'search');
-    const resultSlug = search?.json?.resultSlug;
-    const failures = await checkPage(BASE_URL, search!, {
-      attempts: 1,
-      fetchImpl: async () =>
-        response(
-          JSON.stringify({
-            source: 'server',
-            results: [{ item: { slug: resultSlug } }],
-          }),
-          { 'content-type': 'application/json; charset=utf-8' },
-        ),
-    });
-
-    expect(failures).toEqual([]);
+    expect(search?.path).toBe('/');
+    expect(search?.contentTypeIncludes).toBe('text/html');
+    expect(search?.mustContain).toContain('搜索文章');
   });
 
   it('requires a nonce strict CSP, HSTS, and nosniff on home', async () => {

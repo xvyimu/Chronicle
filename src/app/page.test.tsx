@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 import { getAllPosts } from '@/lib/posts';
-import { getAllProjects, getFeaturedProjects } from '@/lib/projects';
+import { getAllProjects } from '@/lib/projects';
+import { getAllTags } from '@/lib/tags';
 
 vi.mock('next/link', () => ({
   default: ({
@@ -18,118 +19,74 @@ vi.mock('next/link', () => ({
   ),
 }));
 
-vi.mock('next/image', async () => {
-  const { default: MockNextImage } = await import('@/test/mocks/next-image');
-  return { default: MockNextImage };
-});
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+}));
 
-vi.mock('@vercel/speed-insights/next', () => ({ SpeedInsights: () => null }));
-vi.mock('@vercel/analytics/react', () => ({ Analytics: () => null }));
 vi.mock('next/headers', () => ({
   headers: async () => new Headers([['x-nonce', 'test-nonce']]),
 }));
 
 import HomePage from '@/app/page';
 
-describe('HomePage', () => {
+describe('HomePage (workspace)', () => {
   beforeEach(() => cleanup());
 
   async function renderHomePage() {
     render(await HomePage());
   }
 
-  it('renders the Paper Gallery hero', async () => {
+  it('renders the workspace container', async () => {
     await renderHomePage();
-    expect(screen.getByText('Paper Gallery')).toBeInTheDocument();
-    expect(screen.getByText('Notes')).toBeInTheDocument();
-    expect(screen.getByText('Archive')).toBeInTheDocument();
+    expect(document.querySelector('.workspace-home')).toBeInTheDocument();
   });
 
-  it('renders the homepage paper container', async () => {
+  it('renders the workspace hero with site name and counts', async () => {
     await renderHomePage();
-    expect(document.querySelector('.home-paper')).toBeInTheDocument();
+    const posts = getAllPosts();
+    const projects = getAllProjects();
+    expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
+    const stats = document.querySelector('.ws-hero__stats');
+    expect(stats).toBeInTheDocument();
+    expect(stats!.textContent).toContain(posts.length.toString());
+    expect(stats!.textContent).toContain(projects.length.toString());
+    expect(stats!.textContent).toContain('篇文章');
+    expect(stats!.textContent).toContain('个项目');
   });
 
-  it('renders hero CTA links', async () => {
+  it('renders the search entry as the hero core', async () => {
     await renderHomePage();
-    const heroActions = document.querySelector('.editorial-hero__actions');
-    expect(heroActions!.querySelector('a[href="/blog"]')).toHaveTextContent('进入文章');
-    expect(heroActions!.querySelector('a[href="/links"]')).toHaveTextContent('打开收藏');
+    expect(screen.getByLabelText('搜索文章')).toBeInTheDocument();
   });
 
-  it('renders entry index and reading path sections', async () => {
+  it('renders the topic cloud', async () => {
     await renderHomePage();
-
-    expect(screen.getByText('从这里进入')).toBeInTheDocument();
-    expect(screen.getByText('浏览文章')).toBeInTheDocument();
-    expect(screen.getAllByText('打开导航').length).toBeGreaterThan(0);
-    expect(screen.getByText('查看作品')).toBeInTheDocument();
-    expect(screen.getByText('阅读路径')).toBeInTheDocument();
-    expect(screen.getByText('个人服务部署路线')).toBeInTheDocument();
-    expect(screen.getByText('Web 性能与体验')).toBeInTheDocument();
-    expect(screen.getByText('数据层实践')).toBeInTheDocument();
-    expect(screen.getByText('TypeScript 与全栈')).toBeInTheDocument();
-  });
-
-  it('uses encoded links for non-ASCII reading path routes', async () => {
-    await renderHomePage();
-
-    expect(screen.getByText('Web 性能与体验').closest('a')).toHaveAttribute(
-      'href',
-      `/tags/${encodeURIComponent('性能优化')}`,
-    );
-    expect(screen.getByText('数据层实践').closest('a')).toHaveAttribute(
-      'href',
-      `/categories/${encodeURIComponent('数据库')}`,
-    );
-  });
-
-  it('renders recent posts section with selected posts', async () => {
-    await renderHomePage();
-    const allPosts = getAllPosts();
-
-    expect(screen.getByText('最近整理')).toBeInTheDocument();
-
-    const renderedTitles = [
-      ...allPosts.filter((post) => post.featured),
-      ...allPosts.filter((post) => !post.featured),
-    ]
-      .slice(0, 6)
-      .map((p) => p.title);
-    for (const title of renderedTitles) {
-      expect(screen.getByText(title)).toBeInTheDocument();
+    expect(screen.getByText('热门主题')).toBeInTheDocument();
+    const tags = getAllTags();
+    if (tags.length > 0) {
+      const top = [...tags].sort((a, b) => b.count - a.count)[0];
+      expect(screen.getAllByText(top.tag).length).toBeGreaterThan(0);
     }
   });
 
-  it('renders curated links preview', async () => {
+  it('renders the recent articles list', async () => {
     await renderHomePage();
-
-    expect(screen.getByText('个人收藏入口')).toBeInTheDocument();
-    expect(screen.getByText('AI 工具')).toBeInTheDocument();
-    expect(screen.getByText('技术文档与工程实践')).toBeInTheDocument();
-    expect(screen.getByText('自托管与可观测性')).toBeInTheDocument();
-    expect(screen.getByText('VPS 与主机商')).toBeInTheDocument();
-    expect(screen.getByText('BandwagonHost')).toBeInTheDocument();
-  });
-
-  it('renders featured projects section', async () => {
-    await renderHomePage();
-    const featured = getFeaturedProjects();
-
-    if (featured.length > 0) {
-      expect(screen.getByText('项目样本')).toBeInTheDocument();
-      for (const project of featured) {
-        expect(screen.getByText(project.title)).toBeInTheDocument();
-      }
+    expect(screen.getByText('最近更新')).toBeInTheDocument();
+    const posts = getAllPosts();
+    const recent = [
+      ...posts.filter((p) => p.featured),
+      ...posts.filter((p) => !p.featured),
+    ].slice(0, 6);
+    for (const post of recent) {
+      expect(screen.getByText(post.title)).toBeInTheDocument();
     }
   });
 
-  it('displays post and project totals in hero stats', async () => {
+  it('does not render the legacy Paper Gallery sections', async () => {
     await renderHomePage();
-    const allPosts = getAllPosts();
-    const allProjects = getAllProjects();
-    expect(screen.getByText(allPosts.length.toString())).toBeInTheDocument();
-    expect(screen.getByText(allProjects.length.toString())).toBeInTheDocument();
-    expect(screen.getByText('个项目')).toBeInTheDocument();
+    expect(screen.queryByText('Paper Gallery')).not.toBeInTheDocument();
+    expect(screen.queryByText('从这里进入')).not.toBeInTheDocument();
+    expect(screen.queryByText('阅读路径')).not.toBeInTheDocument();
   });
 });

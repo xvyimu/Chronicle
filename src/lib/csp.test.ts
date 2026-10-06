@@ -60,15 +60,22 @@ describe('buildProductionCsp', () => {
     expect(csp).toContain('upgrade-insecure-requests');
   });
 
-  it('allowlists Giscus + Vercel script hosts without opening the world', () => {
+  it('allowlists the Vercel script host without opening the world', () => {
     const body = scriptSrcBody(buildProductionCsp(SAMPLE_NONCE));
     const tokens = body.split(/\s+/);
-    expect(tokens).toContain('https://giscus.app');
     expect(tokens).toContain('https://va.vercel-scripts.com');
+    // Giscus was removed with the comments feature — its host must not linger.
+    expect(tokens).not.toContain('https://giscus.app');
     // No wildcard host or scheme-only https: token (would open all HTTPS scripts).
     expect(tokens).not.toContain('*');
     expect(tokens).not.toContain('https:');
     expect(tokens).not.toContain('http:');
+  });
+
+  it('does not leave third-party frame/connect hosts after comment removal', () => {
+    const csp = buildProductionCsp(SAMPLE_NONCE);
+    expect(csp).not.toContain('giscus.app');
+    expect(csp).not.toContain('frame-src');
   });
 
   it('rejects an empty nonce so headers cannot ship a broken policy', () => {

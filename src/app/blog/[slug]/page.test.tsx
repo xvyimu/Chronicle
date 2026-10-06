@@ -41,10 +41,6 @@ vi.mock('@/components/blog/ReadingPreferences', () => ({
   default: () => <div data-testid="reading-preferences" />,
 }));
 
-vi.mock('@/components/comments/Giscus', () => ({
-  default: () => <div data-testid="comments" />,
-}));
-
 vi.mock('next/headers', () => ({
   headers: async () => new Headers([['x-nonce', 'test-nonce']]),
 }));
@@ -65,8 +61,6 @@ const emptyTagPost: PostFull = {
   readingTime: '1 min read',
   wordCount: 12,
   excerpt: 'excerpt',
-  headings: [],
-  searchText: 'metadata badges without tags',
   content: '# Body',
 };
 
@@ -127,38 +121,6 @@ describe('BlogPostPage', () => {
     ).toHaveAttribute('href', '/blog/vps-initial-setup');
   });
 
-  it('renders backlinks region for a post with inbound wikilinks', async () => {
-    const jsx = await BlogPostPage({
-      params: Promise.resolve({ slug: 'docker-deploy-guide' }),
-    });
-    render(jsx);
-
-    const section = screen.getByRole('region', { name: '反向链接' });
-    expect(within(section).getByText('Backlinks')).toBeInTheDocument();
-    // Triangle content: vps + nginx link to docker
-    expect(
-      within(section).getByRole('link', { name: /VPS 初始化安全与运维配置清单/ }),
-    ).toHaveAttribute('href', '/blog/vps-initial-setup');
-    expect(
-      within(section).getByRole('link', {
-        name: /Nginx 反向代理与负载均衡实战/,
-      }),
-    ).toHaveAttribute('href', '/blog/nginx-reverse-proxy');
-  });
-
-  it('renders folded neighbors for a post with wikilinks', async () => {
-    const jsx = await BlogPostPage({
-      params: Promise.resolve({ slug: 'docker-deploy-guide' }),
-    });
-    render(jsx);
-
-    expect(screen.getByText('邻接笔记')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /打开全站花园/ })).toHaveAttribute(
-      'href',
-      '/garden',
-    );
-  });
-
   it('renders series and category badges when a post has no tags', async () => {
     vi.resetModules();
     vi.doMock('@/server/content', () => ({
@@ -167,8 +129,6 @@ describe('BlogPostPage', () => {
       getAdjacentPosts: () => ({ prev: null, next: null }),
       getRelatedPosts: () => [],
       getSeriesPosts: () => [],
-      getBacklinks: () => [],
-      getNeighbors: () => ({ outbound: [], inbound: [] }),
     }));
 
     const { default: MockedBlogPostPage } = await import('@/app/blog/[slug]/page');

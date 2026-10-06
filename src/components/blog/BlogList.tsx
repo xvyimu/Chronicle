@@ -16,7 +16,7 @@ export default function BlogList({
   };
 
   return (
-    <div className={`grid gap-5 ${gridCols[columns]}`}>
+    <div className={`grid gap-4 ${gridCols[columns]}`}>
       {posts.length === 0 && (
         <EmptyState
           title="暂无文章"

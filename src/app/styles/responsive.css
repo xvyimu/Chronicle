@@ -16,11 +16,7 @@
     font-size: clamp(2rem, 7vw, 3.5rem);
   }
 
-  /* 8 nav items: switch to sheet earlier so desktop row never crushes */
-  .header__nav--desktop {
-    display: none;
-  }
-
+  /* 桌面导航已移入 Sidebar（Iteration 02），此处只保留移动端 Sheet 样式 */
   .header__nav--sheet {
     inset: 64px 0 auto 0;
     z-index: 101;

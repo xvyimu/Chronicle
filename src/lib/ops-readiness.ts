@@ -194,8 +194,8 @@ export function buildOpsTrackReports(
           id: 'external-search',
           title: '外部搜索引擎评估',
           status: 'not_triggered',
-          summary: `当前 ${local.publishedPostCount} 篇，距门槛 ${EXTERNAL_SEARCH_POST_THRESHOLD} 还差 ${remainingToSearch} 篇；站内 Fuse + /api/search 足够。`,
-          nextAction: '保持 server/search；仅在文章数或搜索 p95 持续超标时重开评估。',
+          summary: `当前 ${local.publishedPostCount} 篇，距门槛 ${EXTERNAL_SEARCH_POST_THRESHOLD} 还差 ${remainingToSearch} 篇；站内客户端 Fuse 足够。`,
+          nextAction: '保持客户端 Fuse；仅在文章数或搜索 p95 持续超标时重开评估。',
           evidence: [
             `publishedPosts=${local.publishedPostCount}`,
             `threshold=${EXTERNAL_SEARCH_POST_THRESHOLD}`,

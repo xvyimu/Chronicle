@@ -9,11 +9,6 @@ import { postFrontmatterSchema } from '@/lib/schemas/post-frontmatter';
 import { createSnapshotPostRepository } from '@/lib/content-snapshot/snapshot-repository';
 import { resolveContentBackend } from '@/lib/content-snapshot/paths';
 import type { PostFull, PostMeta } from '@/types';
-import {
-  extractPostHeadings,
-  extractPostExcerpt,
-  buildPostSearchText,
-} from './search-text';
 
 /**
  * Repository 层 — 缓存 + 读取 + frontmatter 校验 + reading-time 计算.
@@ -50,16 +45,13 @@ function readPostFile(source: ContentSource, filename: string): PostFull {
   };
 
   const stats = readingTime(content);
-  const headings = extractPostHeadings(content);
 
   return {
     ...normalizedFrontmatter,
     slug: filenameToSlug(filename),
     readingTime: stats.text,
     wordCount: stats.words,
-    excerpt: extractPostExcerpt(content),
-    headings,
-    searchText: buildPostSearchText(normalizedFrontmatter, content),
+    excerpt: frontmatter.description,
     content,
   };
 }

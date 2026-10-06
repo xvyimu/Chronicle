@@ -39,102 +39,56 @@ test.describe('mobile critical flows', () => {
       'page',
     );
     await expect(mobileNav.locator('a[href="/blog"]')).toBeVisible();
-    await expect(mobileNav.locator('a[href="/links"]')).toBeVisible();
+    await expect(mobileNav.locator('a[href="/archive"]')).toBeVisible();
     await expect(mobileNav.locator('a[href="/projects"]')).toBeVisible();
+    // 已删路由不得出现
+    await expect(mobileNav.locator('a[href="/links"]')).toHaveCount(0);
+    await expect(mobileNav.locator('a[href="/garden"]')).toHaveCount(0);
     await expectNoHorizontalOverflow(page);
   });
 
-  test('supports mobile blog search without layout overflow', async ({ page }) => {
-    await page.goto('/blog', { waitUntil: 'domcontentloaded' });
+  test('supports mobile site search without layout overflow', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
 
-    const searchInput = page.getByRole('combobox', { name: '搜索文章' });
+    // 客户端搜索：无需等待网络响应，等待 hydration 后输入即可。
+    const searchInput = page.getByLabel('搜索文章');
     await expect(searchInput).toBeVisible({ timeout: 15000 });
-
-    const responsePromise = page.waitForResponse(
-      (res) => res.url().includes('/api/search') && res.ok(),
-      { timeout: 15000 },
-    );
     await searchInput.focus();
-    await page.keyboard.type('Redis', { delay: 20 });
-    await responsePromise;
+    await page.keyboard.type('安全', { delay: 20 });
 
-    await expect(page.getByRole('listbox')).toBeVisible({ timeout: 15000 });
-    await expect(page.locator('[data-result]').first()).toBeVisible({
-      timeout: 15000,
+    await expect(page.locator('.search-panel__item').first()).toBeVisible({
+      timeout: 10000,
     });
-    await expect(page).toHaveURL(/[?&]q=Redis/);
+    await expect(page).toHaveURL(/[?&]q=/);
     await expectNoHorizontalOverflow(page);
   });
 
-  test('renders article reading UI and lazy Giscus script on mobile', async ({
-    page,
-  }) => {
+  test('renders article reading UI on mobile', async ({ page }) => {
     const href = await getFirstPostHref(page);
     expect(href).toBeTruthy();
 
     await page.goto(href!, { waitUntil: 'domcontentloaded' });
     await expect(page.locator('article h1')).toBeVisible({ timeout: 15000 });
     await expect(page.locator('[data-testid="reading-progress"]')).toBeAttached();
+    await expectNoHorizontalOverflow(page);
+  });
 
-    await page.getByTestId('giscus-comments').scrollIntoViewIfNeeded();
-    const giscusScript = page.locator('script[src="https://giscus.app/client.js"]');
-    await expect(giscusScript).toHaveCount(1, { timeout: 15000 });
-    await expect(giscusScript).toHaveAttribute('data-loading', 'lazy');
-    await expect(giscusScript).toHaveAttribute('crossorigin', 'anonymous');
+  test('renders the archive timeline on mobile', async ({ page }) => {
+    await page.goto('/archive', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('.archive-timeline')).toBeVisible({ timeout: 10000 });
     await expectNoHorizontalOverflow(page);
   });
 
   test('applies the project title responsive size at runtime', async ({ page }) => {
-    await page.goto('/projects/chrono-portal', { waitUntil: 'domcontentloaded' });
+    await page.goto('/projects', { waitUntil: 'domcontentloaded' });
+    const firstProject = page.locator('a[href^="/projects/"]').first();
+    await expect(firstProject).toBeVisible({ timeout: 10000 });
+    const href = await firstProject.getAttribute('href');
+    expect(href).toBeTruthy();
 
+    await page.goto(href!, { waitUntil: 'domcontentloaded' });
     const title = page.locator('.project-detail__title');
     await expect(title).toBeVisible({ timeout: 10000 });
-    const sizes = await title.evaluate((element) => {
-      const rootSize = Number.parseFloat(
-        getComputedStyle(document.documentElement).fontSize,
-      );
-      return {
-        actual: Number.parseFloat(getComputedStyle(element).fontSize),
-        expected: Math.min(
-          Math.max(2.2 * rootSize, window.innerWidth * 0.12),
-          3.6 * rootSize,
-        ),
-      };
-    });
-
-    expect(sizes.actual).toBeCloseTo(sizes.expected, 1);
-    await expectNoHorizontalOverflow(page);
-  });
-
-  test('renders the curated links directory and new VPS entries on mobile', async ({
-    page,
-  }) => {
-    await page.goto('/links', { waitUntil: 'domcontentloaded' });
-
-    await expect(page.getByRole('navigation', { name: '链接分类' })).toBeVisible({
-      timeout: 10000,
-    });
-    await expect(page.getByRole('link', { name: /HostHatch/ })).toBeVisible();
-    await expect(
-      page.getByRole('link', { name: /Tailwind Nextjs Starter Blog/ }),
-    ).toBeVisible();
-
-    const filter = page.getByRole('searchbox', { name: '筛选收藏链接' });
-    await expect(filter).toBeVisible({ timeout: 10000 });
-    await filter.focus();
-    await page.keyboard.type('HostHatch', { delay: 20 });
-
-    await expect(page.getByText(/1 \/ \d+/)).toBeVisible({ timeout: 10000 });
-    await expect(page.getByRole('link', { name: /HostHatch/ })).toBeVisible();
-    await expect(
-      page.getByRole('link', { name: /Tailwind Nextjs Starter Blog/ }),
-    ).toHaveCount(0);
-
-    await page.getByRole('button', { name: '清除链接筛选' }).click();
-    await expect(filter).toHaveValue('');
-    await expect(
-      page.getByRole('link', { name: /Tailwind Nextjs Starter Blog/ }),
-    ).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
 });

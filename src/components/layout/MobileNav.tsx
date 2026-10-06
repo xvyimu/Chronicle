@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Sheet,
@@ -11,7 +10,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { MAIN_NAV_ITEMS, isNavItemActive } from '@/lib/navigation';
+import NavLinks from '@/components/layout/NavLinks';
 
 /**
  * Mobile-only nav island (Sheet + pathname close). Desktop nav stays RSC.
@@ -81,21 +80,13 @@ export default function MobileNav() {
       >
         <SheetTitle className="sr-only">站点导航</SheetTitle>
         <SheetDescription className="sr-only">移动端主导航菜单</SheetDescription>
-        {MAIN_NAV_ITEMS.map((item, index) => {
-          const isActive = isNavItemActive(pathname, item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`header__link ${isActive ? 'header__link--active' : ''}`}
-              aria-current={isActive ? 'page' : undefined}
-              onClick={() => setMobileOpen(false)}
-              ref={index === 0 ? mobileFirstLinkRef : undefined}
-            >
-              {item.label}
-            </Link>
-          );
-        })}
+        <NavLinks
+          pathname={pathname}
+          linkClassName="header__link"
+          activeClassName="header__link--active"
+          onNavigate={() => setMobileOpen(false)}
+          firstLinkRef={mobileFirstLinkRef}
+        />
       </SheetContent>
     </Sheet>
   );

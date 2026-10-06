@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import type { PostFull, PostMeta } from '@/types';
+import type { PostFull } from '@/types';
 import {
   buildContentSnapshotPayload,
   computeContentHash,
@@ -12,7 +12,6 @@ import { resolveContentBackend } from './paths';
 import { readContentSnapshot, resetContentSnapshotCacheForTests } from './read';
 import { verifyContentSnapshot, writeContentSnapshot } from './write';
 import { createSnapshotPostRepository } from './snapshot-repository';
-import { createLinkGraph, createLinkGraphFromSnapshot } from '@/lib/posts/link-graph';
 
 function post(
   slug: string,
@@ -30,16 +29,9 @@ function post(
     readingTime: overrides.readingTime ?? '1 min read',
     wordCount: overrides.wordCount ?? 10,
     excerpt: overrides.excerpt ?? 'excerpt',
-    headings: overrides.headings ?? ['H'],
-    searchText: overrides.searchText ?? slug,
     content,
     ...overrides,
   };
-}
-
-function toMeta(p: PostFull): PostMeta {
-  const { content: _c, ...meta } = p;
-  return meta;
 }
 
 const tmpDirs: string[] = [];
@@ -80,55 +72,27 @@ describe('resolveContentBackend', () => {
 });
 
 describe('buildContentSnapshotPayload', () => {
-  it('sorts meta, builds edges, and positions for all nodes', () => {
+  it('sorts meta and builds payload', () => {
     const posts = [
-      post('b', 'see [[a]]', { date: '2026-06-02', title: 'B' }),
+      post('b', 'body', { date: '2026-06-02', title: 'B' }),
       post('a', 'hello', { date: '2026-06-01', title: 'A' }),
     ];
     const payload = buildContentSnapshotPayload(posts, {
       builtAt: '2026-07-01T00:00:00.000Z',
     });
 
-    expect(payload.manifest.version).toBe(1);
+    expect(payload.manifest.version).toBe(2);
     expect(payload.manifest.postCount).toBe(2);
     expect(payload.manifest.builtAt).toBe('2026-07-01T00:00:00.000Z');
     expect(payload.postsMeta.map((p) => p.slug)).toEqual(['b', 'a']);
     expect(payload.postsMeta.every((p) => !('content' in p))).toBe(true);
-    expect(payload.searchDocs).toEqual(payload.postsMeta);
-    expect(payload.gardenGraph.edges).toEqual([{ from: 'b', to: 'a' }]);
-    expect(payload.gardenGraph.nodes.map((n) => n.slug).sort()).toEqual(['a', 'b']);
-    expect(Object.keys(payload.positions).sort()).toEqual(['a', 'b']);
     expect(payload.manifest.contentHash).toBe(computeContentHash(posts));
-  });
-
-  it('throws on broken wikilink (fail closed)', () => {
-    expect(() =>
-      buildContentSnapshotPayload([post('src', 'broken [[missing-xyz]]')]),
-    ).toThrow(/\[wikilink\] broken link: src -> missing-xyz/);
   });
 
   it('handles empty posts', () => {
     const payload = buildContentSnapshotPayload([]);
     expect(payload.manifest.postCount).toBe(0);
     expect(payload.postsFull).toEqual([]);
-    expect(payload.gardenGraph).toEqual({ nodes: [], edges: [] });
-    expect(payload.positions).toEqual({});
-  });
-
-  it('is deterministic for positions given same posts', () => {
-    const posts = [
-      post('a', '[[b]]', { date: '2026-01-01' }),
-      post('b', '[[c]]', { date: '2026-01-02' }),
-      post('c', 'ok', { date: '2026-01-03' }),
-    ];
-    const a = buildContentSnapshotPayload(posts, {
-      builtAt: 'fixed',
-    });
-    const b = buildContentSnapshotPayload(posts, {
-      builtAt: 'fixed',
-    });
-    expect(a.positions).toEqual(b.positions);
-    expect(a.manifest.contentHash).toBe(b.manifest.contentHash);
   });
 
   it('changes contentHash when body is rewritten at the same length', () => {
@@ -304,7 +268,7 @@ describe('createSnapshotPostRepository', () => {
         featured: true,
         title: 'Alpha',
       }),
-      post('beta', 'links [[alpha]]', {
+      post('beta', 'body', {
         date: '2026-06-01',
         title: 'Beta',
       }),
@@ -327,50 +291,5 @@ describe('createSnapshotPostRepository', () => {
     expect(repo.getPostBySlug('missing')).toBeNull();
     expect(repo.getFeaturedPosts().map((p) => p.slug)).toEqual(['alpha']);
     expect(repo.getAllPostSlugs()).toEqual(['alpha', 'beta']);
-  });
-});
-
-describe('link-graph snapshot parity', () => {
-  it('matches fs createLinkGraph edge set and neighbors (golden)', () => {
-    const posts = [
-      post('a', 'see [[b]] and [[c]]', {
-        date: '2026-06-01',
-        title: 'A',
-        tags: ['x'],
-      }),
-      post('b', 'back [[a]]', {
-        date: '2026-06-02',
-        title: 'B',
-        tags: ['y'],
-      }),
-      post('c', 'solo', { date: '2026-06-03', title: 'C', tags: [] }),
-    ];
-
-    const content: Record<string, string> = Object.fromEntries(
-      posts.map((p) => [p.slug, p.content]),
-    );
-    const metas = posts.map(toMeta);
-
-    const fsGraph = createLinkGraph({
-      getVisiblePosts: () => metas,
-      getPostContent: (slug) => content[slug] ?? null,
-    });
-
-    const payload = buildContentSnapshotPayload(posts, {
-      builtAt: '2026-07-01T00:00:00.000Z',
-    });
-    const metaBySlug = new Map(payload.postsMeta.map((m) => [m.slug, m]));
-    const snapGraph = createLinkGraphFromSnapshot({
-      metaBySlug,
-      edges: payload.gardenGraph.edges,
-    });
-
-    expect(snapGraph.getGardenGraph().edges).toEqual(fsGraph.getGardenGraph().edges);
-    expect(snapGraph.getGardenGraph().nodes).toEqual(fsGraph.getGardenGraph().nodes);
-    expect(snapGraph.getBacklinks('a').map((p) => p.slug)).toEqual(
-      fsGraph.getBacklinks('a').map((p) => p.slug),
-    );
-    expect(snapGraph.getNeighbors('a')).toEqual(fsGraph.getNeighbors('a'));
-    expect(() => snapGraph.assertValid()).not.toThrow();
   });
 });

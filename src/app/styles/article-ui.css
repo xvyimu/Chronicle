@@ -518,24 +518,6 @@ a.article__badge:hover {
   color: var(--brand-hover);
 }
 
-/* Reserve comment host space so Giscus iframe cannot inflate CLS on article pages. */
-.giscus-host {
-  min-height: 320px;
-}
-
-.giscus-host__placeholder {
-  min-height: 320px;
-  box-sizing: border-box;
-}
-
-.giscus-host__frame {
-  min-height: 320px;
-}
-
-.giscus-host iframe.giscus-frame {
-  min-height: 320px;
-}
-
 .reading-prefs {
   position: fixed;
   left: 24px;

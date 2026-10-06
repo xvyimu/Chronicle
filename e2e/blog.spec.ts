@@ -1,47 +1,11 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('博客列表页', () => {
-  test('显示博客标题和搜索框', async ({ page }) => {
+test.describe('文章列表页', () => {
+  test('显示文章标题', async ({ page }) => {
     await page.goto('/blog');
     await page.waitForLoadState('domcontentloaded');
     // Use heading role to avoid matching header nav link
-    await expect(page.getByRole('heading', { level: 1, name: '博客' })).toBeVisible();
-    await expect(page.getByPlaceholder(/搜索文章/)).toBeVisible();
-  });
-
-  test('搜索框输入后显示结果', async ({ page }) => {
-    await page.goto('/blog', { waitUntil: 'domcontentloaded' });
-
-    const searchInput = page.getByRole('combobox', { name: '搜索文章' });
-    await expect(searchInput).toBeVisible({ timeout: 15000 });
-
-    const responsePromise = page.waitForResponse(
-      (res) => res.url().includes('/api/search') && res.ok(),
-      { timeout: 15000 },
-    );
-    await searchInput.focus();
-    await page.keyboard.type('Redis', { delay: 20 });
-    await responsePromise;
-
-    await expect(page.getByRole('listbox')).toBeVisible({ timeout: 15000 });
-    const results = page.locator('[data-result]');
-    await expect(results.first()).toBeVisible({ timeout: 15000 });
-  });
-
-  test('清除搜索按钮可清空输入', async ({ page }) => {
-    await page.goto('/blog', { waitUntil: 'domcontentloaded' });
-
-    const searchInput = page.getByRole('combobox', { name: '搜索文章' });
-    await expect(searchInput).toBeVisible({ timeout: 15000 });
-    await searchInput.focus();
-    await page.keyboard.type('test', { delay: 20 });
-
-    // Clear button should appear after input has content
-    const clearBtn = page.getByLabel('清除搜索');
-    await expect(clearBtn).toBeVisible({ timeout: 10000 });
-    await clearBtn.click();
-
-    await expect(searchInput).toHaveValue('');
+    await expect(page.getByRole('heading', { level: 1, name: '文章' })).toBeVisible();
   });
 
   test('分页导航可用', async ({ page }) => {
@@ -152,27 +116,6 @@ test.describe('博客文章详情页', () => {
 
     const copyBtn = toolbar.locator('button:has-text("复制")');
     await expect(copyBtn).toBeVisible();
-  });
-
-  test('wikilink 悬停显示预览卡片 (G3)', async ({ page }) => {
-    // This post contains an inline body wikilink to another article.
-    await page.goto('/blog/nextjs-app-router', { waitUntil: 'domcontentloaded' });
-    await expect(page.locator('article h1')).toBeVisible({ timeout: 15000 });
-
-    const wikilink = page.locator('a.wikilink[data-wikilink]').first();
-    await expect(wikilink).toBeVisible({ timeout: 15000 });
-
-    const previewResponse = page.waitForResponse(
-      (res) => res.url().includes('/api/preview/') && res.ok(),
-      { timeout: 15000 },
-    );
-    await wikilink.hover();
-    await previewResponse;
-
-    // Tooltip appears and carries the accessible relationship.
-    const tooltip = page.getByRole('tooltip');
-    await expect(tooltip).toBeVisible({ timeout: 10000 });
-    await expect(wikilink).toHaveAttribute('aria-describedby', /.+/);
   });
 });
 

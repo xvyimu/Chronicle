@@ -3,7 +3,6 @@ export type {
   ContentBackend,
   ContentSnapshotManifest,
   ContentSnapshotPayload,
-  GardenPosition,
 } from './types';
 
 export {
@@ -19,8 +18,6 @@ export {
   readContentSnapshot,
   getSnapshotPostsMeta,
   getSnapshotPostBySlug,
-  getSnapshotGardenGraph,
-  getSnapshotPositions,
   resetContentSnapshotCacheForTests,
 } from './read';
 

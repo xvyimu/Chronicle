@@ -1,6 +1,10 @@
 /**
  * Pure wikilink helpers — parse / normalize / href / extract.
- * No FS, no cache; used by remark plugin and link-graph.
+ * No FS, no cache; used by the remark plugin.
+ *
+ * 2026-10-06 Iteration 07：随 remark-wikilink 一起恢复。
+ * 正文里的 `[[slug]]` / `[[slug|label]]` 语法需要渲染成指向 /blog/<slug> 的链接，
+ * 否则会以字面量显示给读者（20 篇文章共 131 处）。
  */
 
 export type WikilinkMatch = {

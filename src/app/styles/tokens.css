@@ -1,11 +1,12 @@
 /* ============================================================
-   设计令牌 · Paper Gallery 全站主题
-   低饱和纸张底色 + 鼠尾草蓝灰强调色 + 细线层级
+   设计令牌 · AI Workspace 中性灰主题（2026-10-06 重构）
 
-   V1a · Atelier 对齐（2026-07-23）
-   - 组合 SSOT: portfolio-visual …/atelier-token-ssot.md
-   - 保留 Paper Gallery 身份色；不把 MindSync 冷灰/橙 CTA 设为默认品牌
-   - 半径收到 4/8；header 霜见 base.css；间距合法阶优先 4/8/16/24/32
+   改造：Paper Gallery 暖纸色 → 中性灰工作台。
+   - 保留全部旧变量名（--bg/--text/--surface…）作为兼容别名，
+     避免一次性改 4880 行 CSS（决策 D-005 渐进迁移）。
+   - 新代码优先使用语义层（--background/--foreground/--card…）。
+   - 强调色收敛：只用于少量状态与关键入口（accent）。
+   - 见 docs/04-design-system.md
    ============================================================ */
 
 @theme {
@@ -24,35 +25,52 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
 }
 
 :root {
-  --bg: #f1f0eb;
-  --bg-soft: #e7e7df;
-  --bg-elevated: #fbfaf5;
-  --surface: #f8f7f2;
-  --surface-hover: #f2f1eb;
+  /* ---- 中性灰基底层 ---- */
+  --bg: #fafafa; /* 页面背景（近白） */
+  --bg-soft: #f4f4f5; /* 面板/侧栏底 */
+  --bg-elevated: #ffffff; /* 抬升面 */
+  --surface: #ffffff; /* 主面板 */
+  --surface-hover: #f4f4f5; /* 悬停 */
   --surface-raised: var(--bg-elevated);
   --surface-muted: var(--bg-soft);
-  --bg-rgb: 241, 240, 235;
-  --text: #242827;
-  --text-soft: #4d5652;
-  --text-dim: #737b72;
-  --border: rgba(36, 40, 39, 0.13);
-  --border-strong: rgba(36, 40, 39, 0.24);
-  --brand: #59756d;
-  --brand-2: #78918a;
-  --brand-hover: #425c55;
-  --brand-soft: rgba(89, 117, 109, 0.12);
-  --brand-gradient: linear-gradient(135deg, #425c55, #78918a);
-  --featured: #806c3c;
-  --featured-soft: rgba(128, 108, 60, 0.13);
-  /* Atelier 附加 CTA（稀有强调 · 默认交互仍走 --brand） */
-  --cta: #f97316;
-  --cta-ink: #9a3412;
-  --cta-soft: rgba(249, 115, 22, 0.12);
+  --bg-rgb: 250, 250, 250;
+
+  /* ---- 文字（中性灰阶）---- */
+  --text: #18181b; /* 一级：近黑 */
+  --text-soft: #52525b; /* 二级 */
+  --text-dim: #6f6f77; /* 三级/辅助（≥12px；对比度 4.77:1 达 AA） */
+
+  /* ---- 边框（低对比）---- */
+  --border: rgba(24, 24, 27, 0.08);
+  --border-strong: rgba(24, 24, 27, 0.16);
+
+  /* ---- 强调色（克制蓝，仅关键入口与状态）---- */
+  --brand: #4f6bed;
+  --brand-2: #6b82f0;
+  --brand-hover: #3d56d4;
+  --brand-soft: rgba(79, 107, 237, 0.1);
+  --brand-gradient: #4f6bed; /* 收敛：渐变 → 纯色（禁高饱和渐变） */
+
+  /* ---- 状态色 ---- */
+  --destructive: #dc2626;
+  --success: #16a34a;
+  --warning: #d97706;
+
+  /* ---- 特色/CTA（收敛为中性强调，去掉橙金花哨）---- */
+  --featured: #4f6bed;
+  --featured-soft: rgba(79, 107, 237, 0.1);
+  --cta: #18181b;
+  --cta-ink: #ffffff;
+  --cta-soft: rgba(24, 24, 27, 0.06);
   --atelier-rail: 3px;
   --atelier-panel-blur: 12px;
+
+  /* ---- 语义层（指向基底；新代码优先）---- */
   --background: var(--bg);
   --foreground: var(--text);
   --card: var(--surface);
@@ -60,33 +78,44 @@
   --muted: var(--bg-soft);
   --muted-foreground: var(--text-dim);
   --primary: var(--brand);
-  --primary-foreground: #f8f7f2;
+  --primary-foreground: #ffffff;
   --secondary: var(--bg-soft);
   --secondary-foreground: var(--text-soft);
   --input: var(--border);
   --ring: var(--brand);
-  --destructive: #a2463f;
-  /* Atelier: control 4 · card/modal 8（原 14/10/6 过大 → AI 圆角感） */
+
+  /* ---- 圆角（新增 panel；控件维持 8，渐进）---- */
   --radius: 8px;
   --radius-md: 8px;
   --radius-sm: 8px;
   --radius-xs: 4px;
+  --radius-panel: 18px; /* 主面板大圆角 */
   --radius-full: 9999px;
-  --shadow-xs: 0 1px 2px rgba(43, 48, 46, 0.06);
-  --shadow-sm: 0 8px 28px rgba(43, 48, 46, 0.08);
-  --shadow-md: 0 18px 48px rgba(43, 48, 46, 0.1);
-  --shadow-lg: 0 24px 68px rgba(43, 48, 46, 0.12);
-  --shadow-xl: 0 30px 80px rgba(43, 48, 46, 0.14);
-  --shadow-brand: 0 12px 28px rgba(89, 117, 109, 0.2);
-  --image-overlay-scrim: rgba(15, 17, 16, 0.88);
+
+  /* ---- 阴影（保留；新组件少用，浮层才用）---- */
+  --shadow-xs: 0 1px 2px rgba(24, 24, 27, 0.05);
+  --shadow-sm: 0 4px 16px rgba(24, 24, 27, 0.06);
+  --shadow-md: 0 8px 32px rgba(24, 24, 27, 0.08);
+  --shadow-lg: 0 16px 48px rgba(24, 24, 27, 0.1);
+  --shadow-xl: 0 24px 64px rgba(24, 24, 27, 0.12);
+  --shadow-brand: 0 8px 24px rgba(79, 107, 237, 0.16);
+
+  /* ---- 图片浮层 ---- */
+  --image-overlay-scrim: rgba(9, 9, 11, 0.88);
   --image-overlay-control-bg: rgba(0, 0, 0, 0.6);
   --image-overlay-control-fg: #fff;
   --image-overlay-control-border: rgba(255, 255, 255, 0.2);
-  /*
-   * Spacing · Atelier legal: 4 / 8 / 16 / 24 / 32
-   * Prefer --space-1/2/4/6/8 in new CSS.
-   * --space-3/5/10/12/16 kept as legacy aliases (layout compat) — do not use in new rules.
-   */
+
+  /* ---- 排版（Iteration 01 统一全局排版）---- */
+  --font-size-body: 16px;
+  --line-height-body: 1.75;
+  --font-size-sm: 14px;
+  --font-size-xs: 12px;
+  --font-size-h1: clamp(1.75rem, 1.2rem + 2vw, 2.5rem);
+  --font-size-h2: clamp(1.375rem, 1.1rem + 1.2vw, 1.75rem);
+  --font-size-h3: 1.25rem;
+
+  /* ---- 间距（合法阶 4/8/16/24/32；3/5/10/12/16 为 legacy 别名）---- */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px; /* legacy · prefer 8 or 16 */
@@ -97,42 +126,57 @@
   --space-10: 40px; /* legacy */
   --space-12: 48px; /* legacy */
   --space-16: 64px; /* legacy section gaps */
+
+  /* ---- 动效 ---- */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --transition-fast: 0.15s var(--ease-out);
-  --transition: 0.25s var(--ease-out);
-  --transition-slow: 0.4s var(--ease-out);
+  --transition: 0.2s var(--ease-out);
+  --transition-slow: 0.3s var(--ease-out);
 }
 
 .dark {
-  --bg: #141716;
-  --bg-soft: #1c211f;
-  --bg-elevated: #202522;
-  --surface: #1a1f1d;
-  --surface-hover: #202724;
+  /* ---- 中性灰（深色）——非简单反转，面板层级用明度递进 ---- */
+  --bg: #09090b;
+  --bg-soft: #18181b;
+  --bg-elevated: #1f1f23;
+  --surface: #18181b;
+  --surface-hover: #27272a;
   --surface-raised: var(--bg-elevated);
   --surface-muted: var(--bg-soft);
-  --bg-rgb: 20, 23, 22;
-  --text: #eceee8;
-  --text-soft: #c4cbc3;
-  --text-dim: #8e978f;
-  --border: rgba(236, 238, 232, 0.12);
-  --border-strong: rgba(236, 238, 232, 0.22);
-  --brand: #9db6ad;
-  --brand-2: #c3d2cc;
-  --brand-hover: #c3d2cc;
-  --brand-soft: rgba(157, 182, 173, 0.14);
-  --brand-gradient: linear-gradient(135deg, #8aa69d, #c3d2cc);
-  --featured: #d6bd7a;
-  --featured-soft: rgba(214, 189, 122, 0.14);
-  --primary-foreground: #141716;
-  --destructive: #e08b83;
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.28);
-  --shadow-sm: 0 8px 28px rgba(0, 0, 0, 0.24);
-  --shadow-md: 0 18px 48px rgba(0, 0, 0, 0.28);
-  --shadow-lg: 0 24px 68px rgba(0, 0, 0, 0.32);
-  --shadow-xl: 0 30px 80px rgba(0, 0, 0, 0.38);
-  --shadow-brand: 0 12px 28px rgba(157, 182, 173, 0.14);
+  --bg-rgb: 9, 9, 11;
+
+  --text: #fafafa;
+  --text-soft: #a1a1aa;
+  --text-dim: #7d7d86;
+
+  --border: rgba(250, 250, 250, 0.1);
+  --border-strong: rgba(250, 250, 250, 0.2);
+
+  --brand: #7c93f5;
+  --brand-2: #93a6f7;
+  --brand-hover: #93a6f7;
+  --brand-soft: rgba(124, 147, 245, 0.14);
+  --brand-gradient: #7c93f5;
+
+  --destructive: #f87171;
+  --success: #4ade80;
+  --warning: #fbbf24;
+
+  --featured: #7c93f5;
+  --featured-soft: rgba(124, 147, 245, 0.14);
+  --cta: #fafafa;
+  --cta-ink: #09090b;
+  --cta-soft: rgba(250, 250, 250, 0.08);
+
+  --primary-foreground: #09090b;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.36);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.42);
+  --shadow-xl: 0 24px 64px rgba(0, 0, 0, 0.48);
+  --shadow-brand: 0 8px 24px rgba(124, 147, 245, 0.18);
 }
 
 @view-transition {

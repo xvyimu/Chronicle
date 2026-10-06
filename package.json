@@ -13,7 +13,7 @@
     "url": "https://github.com/xvyimu/Chronicle/issues"
   },
   "engines": {
-    "node": "22.x"
+    "node": ">=24"
   },
   "scripts": {
     "dev": "next dev",

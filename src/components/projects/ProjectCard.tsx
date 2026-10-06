@@ -1,10 +1,12 @@
 import { Project } from '@/types';
 import Image from 'next/image';
 import Link from 'next/link';
-import MagneticCard from '@/components/ui/MagneticCard';
 import MetaBadge from '@/components/ui/MetaBadge';
 import { imageBlurProps } from '@/lib/image-blur-data';
 
+/**
+ * 项目卡片 —— 静态卡片（Iteration 06：去掉 MagneticCard 的 3D 倾斜 / 光斑）。
+ */
 export default function ProjectCard({
   project,
   priority = false,
@@ -13,7 +15,7 @@ export default function ProjectCard({
   priority?: boolean;
 }) {
   return (
-    <MagneticCard as="article" className="card card--project group" strength={3}>
+    <article className="card card--project">
       <Link href={`/projects/${project.id}`} className="block">
         {project.image ? (
           <div className="card__media">
@@ -46,13 +48,13 @@ export default function ProjectCard({
             </MetaBadge>
           ))}
         </div>
-        <div className="flex items-center gap-3 text-xs text-[var(--text-dim)]">
+        <div className="card__links">
           {project.url && (
             <a
               href={project.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-[var(--brand)] transition-colors"
+              className="card__link"
             >
               线上 →
             </a>
@@ -62,13 +64,13 @@ export default function ProjectCard({
               href={project.github}
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-[var(--brand)] transition-colors"
+              className="card__link"
             >
               源码 →
             </a>
           )}
         </div>
       </div>
-    </MagneticCard>
+    </article>
   );
 }

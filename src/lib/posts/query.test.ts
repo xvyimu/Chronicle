@@ -14,8 +14,7 @@ function makePost(overrides: Partial<PostMeta> & { slug: string }): PostMeta {
     readingTime: '5 min read',
     wordCount: 100,
     excerpt: 'excerpt',
-    headings: [],
-    searchText: 'search',
+
     ...overrides,
   };
 }

@@ -12,8 +12,6 @@ export interface PostMeta extends PostFrontmatter {
   readingTime: string; // 由 reading-time 计算，如 "5 min read"
   wordCount: number; // 字数（中文按字符计，英文按单词计）
   excerpt: string;
-  headings: string[];
-  searchText: string;
 }
 
 export interface PostFull extends PostMeta {
@@ -30,24 +28,6 @@ export interface Project {
   image?: string;
   featured: boolean;
   year: number;
-}
-
-export interface LinkItem {
-  title: string;
-  url: string;
-  description: string;
-  tags?: string[];
-  official?: boolean;
-  priority?: 'primary' | 'reference' | 'watchlist';
-  useCase?: string;
-  lastChecked?: string;
-}
-
-export interface LinkCategory {
-  id: string;
-  title: string;
-  description: string;
-  items: LinkItem[];
 }
 
 export interface TagInfo {
