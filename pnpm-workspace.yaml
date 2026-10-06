@@ -28,9 +28,18 @@ overrides:
   # （master 此前已是 >=4.1.2），非本次引入；lock 与测试均按 4.x 通过。
   fast-uri: '>=4.1.3'
   # GHSA-f88m-g3jw-g9cj sharp/libvips CVEs (via next)，外加 GHSA-rgj7-g3m4-5g8c
-  # （vulnerable <0.35.4）。next@16.3.5 的 optionalDependencies 已把诉求抬到 ^0.35.4，
-  # 留 0.35.0 会把解析结果摁在 0.35.3 —— 正好落在 <0.35.4 的漏洞区间里。
-  sharp: '>=0.35.4'
+  # （vulnerable <0.35.4）。
+  #
+  # 2026-10-07 收紧 0.35.4 → 0.35.5：CVE-2026-96889「sharp：librsvg 依赖漏洞」
+  # （vulnerable <0.35.5）。原写 >=0.35.4 会把解析结果摁在 0.35.4 —— 恰好落在
+  # 新 advisory 的受影响区间里。next@16.3.8 的 optionalDependencies 仍声明
+  # ^0.35.4，不会自己抬，故必须显式收紧。
+  sharp: '>=0.35.5'
+  # GHSA-68fv-2mgg-jv7q「source-map-js 经 source-map section offset 触发事件循环
+  # DoS」（vulnerable >=1.0.0 <1.2.2）。链路：next → postcss → source-map-js。
+  # postcss@8.5.28 声明 ^1.2.1，范围允许 1.2.2，故一条 override 即可收敛。
+  # 2026-10-07 新增。
+  source-map-js: '>=1.2.2'
   # GHSA-mh99-v99m-4gvg / CVE-2026-14257 brace-expansion DoS。
   # 每条大版本线的 first patched 各不相同：1.x→1.1.17 · 2.x→2.1.3 · 3.x→3.0.3 · >=4.0.0→5.0.8
   #
