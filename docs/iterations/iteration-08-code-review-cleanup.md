@@ -161,15 +161,15 @@ CI Node 对齐（R8 闭环）：`.github/workflows/ci.yml` 4 处 `node-version: 
 
 以上为**升级 next 16.3.8 之后**的全量重跑。
 
-### CI 结果（PR #37，commit `46b8bd8` → `4753271`）
+### CI 结果（PR #37，commit `46b8bd8` → `eb8abc5`）
 
-| Job              | 结果                                                                                                         |
-| ---------------- | ------------------------------------------------------------------------------------------------------------ |
-| `quality`        | **pass**（1m55s / 1m59s）——audit 门已过，后续 format/lint/test/typecheck/build 全部实跑                      |
-| `bundle-analyze` | pass（1m11s / 51s）                                                                                          |
-| `Vercel`         | pass                                                                                                         |
-| `e2e`            | **间歇**：run `37502665937` fail（Lighthouse），run `37505113109` **pass**（4m15s）；Playwright 恒 45 passed |
-| `deploy`         | skipping（仅 push 到 master 时运行）                                                                         |
+| Job              | 结果                                                                                                                                     |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `quality`        | **pass**（1m55s / 1m59s / 1m41s）——audit 门已过，后续 format/lint/test/typecheck/build 全部实跑                                          |
+| `bundle-analyze` | pass（1m11s / 51s / 1m7s）                                                                                                               |
+| `Vercel`         | pass                                                                                                                                     |
+| `e2e`            | **间歇**：run `37502665937` fail（Lighthouse），run `37505113109`、`37508576820` 连续 **pass**（4m15s / 3m34s）；Playwright 恒 45 passed |
+| `deploy`         | skipping（仅 push 到 master 时运行）                                                                                                     |
 
 CI 日志确认 R8 生效：`Found in cache @ /opt/hostedtoolcache/node/24.21.0/x64`；audit 门 `✓ Lockfile passes supply-chain policies (1083 entries)`。
 
@@ -186,7 +186,7 @@ CI 日志确认 R8 生效：`Found in cache @ /opt/hostedtoolcache/node/24.21.0/
 - **`docs/ARCHITECTURE_TARGET.md` / `docs/03-information-architecture.md` 等**未逐篇复核（本轮只覆盖三份「当前维护文档」）。
 - 全站装饰背景层、详情页衬线标题（D-019 / D-022）维持原状。
 
-**已完成（本轮后半段，用户授权后）**：提交 2 个（`5d29bfc` 代码 + `9def4b5` 文档）→ 推送 `origin/feature/architecture-rebuild-2026-10-06` → 开 PR [#37](https://github.com/xvyimu/Chronicle/pull/37)。随后追加提交 `46b8bd8`（R8 + R11）。**未合并、未部署。**
+**已完成（本轮后半段，用户授权后）**：提交 2 个（`5d29bfc` 代码 + `9def4b5` 文档）→ 推送 `origin/feature/architecture-rebuild-2026-10-06` → 开 PR [#37](https://github.com/xvyimu/Chronicle/pull/37)。随后追加 `46b8bd8`（R8 + R11）、`4753271`（文档同步）、`eb8abc5`（R12 定性修正）。最终提交 `eb8abc5` 的 CI：quality / bundle-analyze / e2e / Vercel 全 pass。**未合并、未部署。**
 
 ## 18. 下一迭代建议
 
