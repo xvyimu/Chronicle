@@ -17,8 +17,9 @@
 | R10 | `check-doc-links-script.test.ts` 并发下 flaky                            | 中   | 低   | 全量测试并发                                     | 迭代 06 加 30s 超时                                                                                                     | —                   | 已闭环     |
 | R11 | 生产依赖 3 条漏洞（含 `next/og` critical RCE）致 CI quality 红           | 高   | 高   | 跑 CI quality                                    | **迭代 08 修：next 16.3.5→16.3.8 + sharp/source-map-js override**；`pnpm audit --prod` exit 0                           | 回退版本            | **已闭环** |
 | R12 | Lighthouse **间歇**失败：`/blog/nextjs-app-router` 性能 0.75 / CLS 0.298 | 高   | 中   | 跑 CI e2e 的 Lighthouse 步（同 commit 时红时绿） | **未修（本轮）**。既有：master `e178f07` 同页同样两条失败（CLS 0.332）。**根因已定位 + 修法已实测**，见下方「R12 跟进」 | —                   | **待跟进** |
-| R13 | dev 树 audit 13 条（dot-prop / brace-expansion / braces）                | 中   | 低   | 跑 audit（全树）                                 | CI 该步 `continue-on-error`；brace-expansion@1 结构性无解                                                               | —                   | 已记录     |
+| R13 | dev 树 audit（初记 13 条 → **2026-10-07 修复后剩 4 条**）                | 中   | 低   | 跑 audit（全树）                                 | 已修 brace-expansion@1/4 与 dot-prop；余 braces（advisory 修复版不存在）、qs、postcss-selector-parser（跨 major）       | —                   | 部分闭环   |
 | R14 | 搜索规格-实现差：PRD 要求正文/范围筛选/词高亮，实现均无                  | 中   | 低   | 用户按 PRD 验收搜索                              | 已在 `02-product-requirements.md` 逐条列明差异；属功能取舍，待定；防抖经复核为「决策变更后合理省略」                    | —                   | **待定**   |
+| R15 | `next/font/google` 构建期联网致 CI/Vercel 间歇构建失败                   | 高   | 高   | 构建时拉不到 Google Fonts                        | **2026-10-07 修（ADR-0008）**：拉丁字体自托管 + 中文走系统字体栈；断网构建实测 exit 0                                   | `git revert` 该提交 | **已闭环** |
 
 ## R12 跟进（根因已定位 + 修法已实测，2026-10-07）
 

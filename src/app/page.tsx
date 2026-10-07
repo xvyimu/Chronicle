@@ -5,6 +5,7 @@ import { SITE_CONFIG } from '@/lib/site';
 import WorkspaceHero from '@/components/home/WorkspaceHero';
 import TopicCloud from '@/components/home/TopicCloud';
 import ArticleList from '@/components/home/ArticleList';
+import JsonLd from '@/components/ui/JsonLd';
 import { getCspNonce } from '@/lib/csp';
 // Route-scoped homepage CSS (FE-1): keep off other routes.
 import './styles/home.css';
@@ -24,16 +25,8 @@ export default async function HomePage() {
 
   return (
     <>
-      <script
-        nonce={nonce}
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: orgLd }}
-      />
-      <script
-        nonce={nonce}
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: siteLd }}
-      />
+      <JsonLd data={orgLd} nonce={nonce} />
+      <JsonLd data={siteLd} nonce={nonce} />
       <div className="workspace-home">
         <WorkspaceHero
           siteName={SITE_CONFIG.name}
