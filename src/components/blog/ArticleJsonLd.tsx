@@ -1,5 +1,6 @@
 import { blogPostingSchema, breadcrumbSchema, toJsonLd } from '@/lib/jsonld';
 import { SITE_CONFIG } from '@/lib/site';
+import JsonLd from '@/components/layout/JsonLd';
 import type { PostFull } from '@/types';
 
 export default function ArticleJsonLd({
@@ -20,16 +21,8 @@ export default function ArticleJsonLd({
 
   return (
     <>
-      <script
-        nonce={nonce}
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: articleLd }}
-      />
-      <script
-        nonce={nonce}
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: breadcrumbLd }}
-      />
+      <JsonLd data={articleLd} nonce={nonce} />
+      <JsonLd data={breadcrumbLd} nonce={nonce} />
     </>
   );
 }
