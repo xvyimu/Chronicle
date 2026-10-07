@@ -9,12 +9,12 @@
 
 当前项目的主要内容源有四类：
 
-| 位置               | 类型 | 用途               |
-| ------------------ | ---- | ------------------ |
-| content/blog/*.mdx | MDX  | 博客文章           |
-| content/about.mdx  | MDX  | 关于页             |
-| data/projects.json | JSON | 作品集结构化数据   |
-| data/links.json    | JSON | 导航收藏结构化数据 |
+| 位置               | 类型 | 用途                                              |
+| ------------------ | ---- | ------------------------------------------------- |
+| content/blog/*.mdx | MDX  | 博客文章                                          |
+| content/about.mdx  | MDX  | 关于页                                            |
+| data/projects.json | JSON | 作品集结构化数据                                  |
+| data/links.json    | JSON | 收藏导航数据（**已无消费方**，仅存底；功能见 §5） |
 
 ## 2. 新增博客文章
 
@@ -211,52 +211,16 @@ GitHub 仓库身份：
 
 如果后续项目介绍越来越长，建议增补 content/projects/ 目录，让 JSON 只保留摘要与索引字段。
 
-## 5. 维护导航收藏
+## 5. 导航收藏（功能已删除）
 
-导航收藏基础数据存放在：
-
-- data/links.json
-
-根据 src/lib/links.ts 当前校验逻辑，每个分类包含：
-
-| 字段        | 类型       | 是否必填 | 说明         |
-| ----------- | ---------- | -------- | ------------ |
-| id          | string     | 是       | 唯一分类标识 |
-| title       | string     | 是       | 分类展示名   |
-| description | string     | 是       | 分类说明     |
-| items       | LinkItem[] | 是       | 链接列表     |
-
-每个链接条目包含：
-
-| 字段        | 类型     | 是否必填 | 说明                                 |
-| ----------- | -------- | -------- | ------------------------------------ |
-| title       | string   | 是       | 链接名称                             |
-| url         | string   | 是       | 官网或原始页面 URL                   |
-| description | string   | 是       | 收藏理由或用途说明                   |
-| tags        | string[] | 否       | 1-6 个短标签，用于卡片 metadata 展示 |
-| official    | boolean  | 否       | 是否为官网或原始权威入口             |
-| priority    | string   | 否       | `primary`、`reference`、`watchlist`  |
-| useCase     | string   | 否       | 使用场景或收藏理由，建议一句话       |
-| lastChecked | string   | 否       | 最近人工核对日期，格式 YYYY-MM-DD    |
-
-维护规则：
-
-- VPS、云服务、工具类收藏优先放官网链接
-- 不写 aff、ref、utm、coupon、partner 等追踪参数
-- 同一个 URL 不重复收录
-- `tags` 只写稳定语义，例如 `vps`、`open-source`、`template`，不要写临时营销词
-- `priority` 用于运营优先级：`primary` 表示重点入口，`reference` 表示长期参考，`watchlist` 表示观察清单
-- `useCase` 写给未来的自己看，说明“为什么收藏”和“什么时候打开”
-- `lastChecked` 只在人工确认官网、入口和用途仍然有效后更新
-- 新增分类后同步检查首页预览是否需要调整
-
-`pnpm check:seo` 会额外检查：
-
-- `data/links.json` 是否能解析并通过 schema
-- 分类 id 是否重复
-- 分类是否为空
-- URL 是否重复（忽略末尾 `/`）
-- URL 是否包含 aff、ref、utm、coupon、partner 等追踪或推广参数
+> **2026-10-07 重构后，收藏导航功能整体移除**：`/links` 路由、`src/lib/links.ts`、
+> `LinksDirectory`、`CuratedLinksPreview` 与 `links.css` 均已删除。
+>
+> `data/links.json` **物理文件保留**（10 类 123 条，属内容存底），但**已无任何消费方**——
+> `pnpm check:seo` 不再校验它（实测 `grep links scripts/check-seo.ts` 为 0 命中）。
+> 本节原「如何维护收藏」的说明随之失效，保留标题仅为让旧链接不落空。
+>
+> 若将来恢复该功能，需重新引入校验逻辑与路由；届时本节应重写，而不是直接复用旧内容。
 
 ## 6. 图片与静态资源
 
@@ -297,16 +261,6 @@ GitHub 仓库身份：
 3. url 和 github 是否可访问
 4. featured 是否符合首页展示预期
 5. year 是否正确
-
-### 导航收藏发布前
-
-建议至少检查：
-
-1. links.json 是否满足 zod 结构要求
-2. URL 是否为官网或原始页面
-3. 是否没有 aff、ref、utm、coupon、partner 等追踪参数
-4. 是否没有重复 URL
-5. 首页 4 个预览分类是否仍然存在
 
 ## 8. RSS 与内容发布关系
 
@@ -376,7 +330,6 @@ pnpm exec cross-env NEXT_PUBLIC_SITE_URL=https://incca.ccwu.cc pnpm build
 
 - frontmatter 字段新增或删减
 - projects.json 结构调整
-- links.json 结构调整
 - 新增内容目录，例如 content/projects
 - 新增搜索索引、文章摘要生成、图片处理等构建流程
 - 内容发布流程从纯本地文件改为接 CMS

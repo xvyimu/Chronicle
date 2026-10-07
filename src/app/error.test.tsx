@@ -25,9 +25,5 @@ describe('ErrorBoundary', () => {
     expect(screen.getByRole('button', { name: '重试' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: '回到首页' })).toHaveAttribute('href', '/');
     expect(screen.getByRole('link', { name: '看博客' })).toHaveAttribute('href', '/blog');
-    expect(screen.getByRole('link', { name: '打开导航收藏' })).toHaveAttribute(
-      'href',
-      '/links',
-    );
   });
 });

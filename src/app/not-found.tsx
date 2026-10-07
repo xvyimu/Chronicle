@@ -23,10 +23,7 @@ export default function NotFound() {
           <Link href="/tags">浏览标签</Link>
         </Button>
         <Button asChild size="cta" variant="outline">
-          <Link href="/blog?focus=search">搜索文章</Link>
-        </Button>
-        <Button asChild size="cta" variant="outline">
-          <Link href="/links">打开导航收藏</Link>
+          <Link href="/">搜索文章</Link>
         </Button>
       </div>
     </div>

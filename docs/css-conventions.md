@@ -11,17 +11,19 @@ src/app/layout.tsx            ← 仅真正全局语义 CSS
 ├── styles/base.css           ← 全局基础、skip-link、Header、Footer、not-found
 ├── styles/components.css     ← Section / Card 等通用布局组件
 ├── styles/controls.css       ← CTA Button / Pagination / TagLink / 项目卡控件
-├── styles/backdrop.css       ← Paper Gallery 背景层
+├── styles/backdrop.css       ← 全站装饰背景层
 ├── styles/animations.css     ← reveal / fade motion
 └── styles/responsive.css     ← 响应式断点覆盖，最后加载
-src/app/page.tsx              ← home.css / home-hero.css / home-sections.css
-src/app/blog/layout.tsx       ← search-ui.css + blog-ui.css
-src/app/blog/[slug]/layout.tsx ← article-ui.css + prose.css
+├── styles/workspace.css      ← 工作台外壳 (TopBar + Sidebar + MainPanel)
+src/app/page.tsx              ← home.css
+src/app/blog/layout.tsx       ← blog-ui.css
+src/app/blog/[slug]/layout.tsx ← article-ui.css + prose.css + reading.css
 src/app/about/layout.tsx      ← prose.css
 src/app/tags/layout.tsx       ← blog-ui.css
 src/app/categories/layout.tsx ← archive.css + blog-ui.css
+src/app/archive/layout.tsx    ← archive.css
 src/app/series/layout.tsx     ← archive.css
-src/app/links/layout.tsx      ← links.css
+src/app/favorites/layout.tsx  ← reading.css
 src/app/projects/[id]/layout.tsx ← project-detail.css
 ```
 
@@ -161,14 +163,12 @@ background: #ffffff;
 | `components.css`     | 可复用布局和基础卡片                        | `.section`、`.card`、`.cards`                      |
 | `archive.css`        | 归档页和 ArchiveCard                        | `.archive-grid`、`.archive-card`                   |
 | `controls.css`       | shadcn Button 外观、分页、标签和轻量控制    | `[data-slot='button']`、`.pagination`、`.tag-link` |
-| `links.css`          | 收藏导航目录                                | `.links-directory`                                 |
 | `blog-ui.css`        | 博客列表、目录和辅助界面                    | `.blog__item`、`.toc`、`.tag-cloud`                |
-| `search-ui.css`      | 搜索输入与结果列表                          | `.search-bar`、`.search-results`                   |
 | `article-ui.css`     | 文章详情布局和阅读面板                      | `.article-layout`、`.article-panel`                |
+| `reading.css`        | 阅读偏好、收藏按钮、收藏/最近阅读列表       | `.reading-actions`、`.local-reading__list`         |
+| `workspace.css`      | 工作台外壳与面板内通用 section 头           | `.workspace`、`.sidebar`、`.ws-section__title`     |
 | `backdrop.css`       | 背景视觉层                                  | `body::before`、`.site-backdrop__stage`            |
-| `home.css`           | 首页主题覆盖、共享样式和响应式              | `.home-paper`、`body:has(.home-paper)`             |
-| `home-hero.css`      | 首页首屏                                    | `.editorial-hero`                                  |
-| `home-sections.css`  | 首页内容区块                                | `.home-manifesto`、`.home-article-rail`            |
+| `home.css`           | 工作台首页（欢迎区/主题云/列表/搜索）       | `.workspace-home`、`.ws-topics`                    |
 | `prose.css`          | MDX 渲染的文章排版                          | `.prose h2`、`.prose code`、`.code-toolbar`        |
 | `project-detail.css` | 项目详情页                                  | `.project-detail`                                  |
 | `animations.css`     | 动画关键帧和动效类                          | `.reveal-on-scroll`、`.animate-fade-in`            |
@@ -176,14 +176,13 @@ background: #ffffff;
 
 **规则**：新组件的 CSS 放入最接近语义归属的模块。跨页面通用组件放入
 `components.css` / `archive.css` / `controls.css`；博客专属放入 `blog-ui.css` /
-`search-ui.css` / `article-ui.css`；首页专属放入 `home.css` / `home-hero.css` /
-`home-sections.css`；
+`article-ui.css` / `reading.css`；首页专属放入 `home.css`；
 由最近的根/segment `layout.tsx` 或所属页面显式导入新 CSS 文件；全局模块仍由根 layout 管理顺序。
 
 ## shadcn 与本地 BEM 的分工
 
 - shadcn 组件负责可访问性、语义 slot、基础 variant。
-- BEM 类负责本站 Paper Gallery 视觉语言。
+- BEM 类负责本站中性灰工作台视觉语言（2026-10-07 重构后）。
 - 小型元信息 chip 使用 `src/components/ui/MetaBadge.tsx`，不要再手写裸
   `span` 加边框圆角。
 - 分类/专题归档卡片使用 `src/components/layout/ArchiveCard.tsx`。

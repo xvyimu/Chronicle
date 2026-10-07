@@ -114,10 +114,9 @@ describe('ProjectCard', () => {
     expect(container.querySelector('article')).toBeInTheDocument();
   });
 
-  it('uses the shared magnetic card surface', () => {
+  it('renders as a static project card (no magnetic wrapper)', () => {
     const { container } = render(<ProjectCard project={baseProject} />);
-    expect(
-      container.querySelector('article.magnetic-card.card--project'),
-    ).toBeInTheDocument();
+    expect(container.querySelector('article.card--project')).toBeInTheDocument();
+    expect(container.querySelector('.magnetic-card')).toBeNull();
   });
 });

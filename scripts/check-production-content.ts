@@ -1,7 +1,5 @@
-import { getAllLinkCategories } from '../src/lib/links';
-import { selectHomeLinkPreviewCategories } from '../src/lib/link-preview';
 import { getAllPosts } from '../src/lib/posts';
-import { getAllProjects, getFeaturedProjects } from '../src/lib/projects';
+import { getAllProjects } from '../src/lib/projects';
 import { getAboutContent } from '../src/lib/about';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -17,10 +15,6 @@ export type PageExpectation = {
   contentTypeIncludes: string;
   mustContain: string[];
   requiredHeaders?: HeaderExpectation[];
-  json?: {
-    source: string;
-    resultSlug: string;
-  };
 };
 
 type CheckFailure = {
@@ -123,16 +117,11 @@ const HOME_SECURITY_HEADERS: HeaderExpectation[] = [
 export function buildExpectations(baseUrl: string): PageExpectation[] {
   const posts = getAllPosts();
   const projects = getAllProjects();
-  const featuredProjects = getFeaturedProjects();
-  const linkCategories = getAllLinkCategories();
 
   const homePosts = [
     ...posts.filter((post) => post.featured),
     ...posts.filter((post) => !post.featured),
   ].slice(0, 6);
-  const homeLinkCategory = selectHomeLinkPreviewCategories(linkCategories)[0];
-  const firstLinkItem = linkCategories.find((category) => category.items.length > 0)
-    ?.items[0];
   const aboutContent = requireText(getAboutContent() ?? undefined, 'About content');
 
   const firstPost = requireText(posts[0]?.title, 'blog post title');
@@ -143,19 +132,15 @@ export function buildExpectations(baseUrl: string): PageExpectation[] {
   );
   const homePost = requireText(homePosts[0]?.title, 'home article title');
   const firstProject = requireText(projects[0]?.title, 'project title');
-  const homeProject = requireText(
-    (featuredProjects[0] ?? projects[0])?.title,
-    'home project title',
-  );
-  const linkCategory = requireText(homeLinkCategory?.title, 'link category title');
-  const linkItem = requireText(firstLinkItem?.title, 'link item title');
 
   return [
     {
       label: 'home',
       path: '/',
       contentTypeIncludes: 'text/html',
-      mustContain: [homePost, homeProject, linkCategory],
+      // 工作台首页只呈现文章列表与搜索入口（Iteration 03 设计）；
+      // 项目内容由下方 `projects` 用例覆盖。
+      mustContain: [homePost],
       requiredHeaders: HOME_SECURITY_HEADERS,
     },
     {
@@ -177,14 +162,10 @@ export function buildExpectations(baseUrl: string): PageExpectation[] {
       mustContain: [firstPost],
     },
     {
-      label: 'search',
-      path: `/api/search?q=${encodeURIComponent(firstPost)}`,
-      contentTypeIncludes: 'application/json',
-      mustContain: [],
-      json: {
-        source: 'server',
-        resultSlug: firstPostSlug,
-      },
+      label: 'home-search',
+      path: '/',
+      contentTypeIncludes: 'text/html',
+      mustContain: ['搜索文章'],
     },
     {
       label: 'projects',
@@ -193,16 +174,10 @@ export function buildExpectations(baseUrl: string): PageExpectation[] {
       mustContain: [firstProject],
     },
     {
-      label: 'links',
-      path: '/links',
-      contentTypeIncludes: 'text/html',
-      mustContain: [linkCategory, linkItem],
-    },
-    {
       label: 'sitemap',
       path: '/sitemap.xml',
       contentTypeIncludes: 'xml',
-      mustContain: [`${baseUrl}/blog`, `${baseUrl}/projects`, `${baseUrl}/links`],
+      mustContain: [`${baseUrl}/blog`, `${baseUrl}/projects`],
     },
     {
       label: 'feed',
@@ -318,36 +293,6 @@ export async function checkPage(
         failures.push({
           label: expectation.label,
           message: `Response header "${header.name}" ${validationError} at ${url}.`,
-        });
-      }
-    }
-
-    if (expectation.json) {
-      try {
-        const payload = JSON.parse(response.body) as {
-          source?: unknown;
-          results?: Array<{ item?: { slug?: unknown } }>;
-        };
-        if (payload.source !== expectation.json.source) {
-          failures.push({
-            label: expectation.label,
-            message: `Expected JSON source "${expectation.json.source}" at ${url}.`,
-          });
-        }
-        if (
-          !payload.results?.some(
-            ({ item }) => item?.slug === expectation.json?.resultSlug,
-          )
-        ) {
-          failures.push({
-            label: expectation.label,
-            message: `Expected search result slug "${expectation.json.resultSlug}" at ${url}.`,
-          });
-        }
-      } catch {
-        failures.push({
-          label: expectation.label,
-          message: `Expected valid JSON at ${url}.`,
         });
       }
     }

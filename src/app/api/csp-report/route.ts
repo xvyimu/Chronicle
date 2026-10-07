@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server';
-// Direct rate-limit import — avoid the search barrel so this collect-only
-// handler does not cold-start Fuse / content pipeline on the telemetry isolate.
-import {
-  checkCspReportRateLimit,
-  clientKeyFromRequest,
-} from '@/server/search/rate-limit';
+// Direct rate-limit import — avoid any heavy barrel so this collect-only
+// handler does not cold-start content pipeline on the telemetry isolate.
+import { checkCspReportRateLimit, clientKeyFromRequest } from '@/server/rate-limit';
 
 /** 显式 Node runtime：与其余 Route Handler 一致，便于日志与限流共享进程状态。 */
 export const runtime = 'nodejs';

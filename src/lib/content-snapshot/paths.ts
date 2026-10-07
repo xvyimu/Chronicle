@@ -8,9 +8,6 @@ export const CONTENT_SNAPSHOT_FILES = {
   manifest: 'manifest.json',
   postsMeta: 'posts-meta.json',
   postsFull: 'posts-full.json',
-  searchDocs: 'search-docs.json',
-  gardenGraph: 'garden-graph.json',
-  positions: 'positions.json',
 } as const;
 
 export function getContentSnapshotRoot(cwd: string = process.cwd()): string {

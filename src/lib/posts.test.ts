@@ -38,8 +38,6 @@ describe('posts (integration with real fs)', () => {
         expect(typeof p.slug).toBe('string');
         expect(typeof p.readingTime).toBe('string');
         expect(typeof p.excerpt).toBe('string');
-        expect(Array.isArray(p.headings)).toBe(true);
-        expect(typeof p.searchText).toBe('string');
       }
     });
 

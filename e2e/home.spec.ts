@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('首页', () => {
+test.describe('首页（工作台）', () => {
   async function waitForHydration(page: import('@playwright/test').Page) {
     await page.waitForFunction(
       () =>
@@ -9,116 +9,96 @@ test.describe('首页', () => {
     );
   }
 
-  test('显示英雄区域和站点名称', async ({ page }) => {
+  test('显示工作台欢迎区与站点名称', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
-    // Hero section should be visible
-    await expect(page.locator('body')).toBeVisible();
-    // Site name should appear in header
+    await expect(page.locator('.workspace-home')).toBeVisible();
+    await expect(page.locator('header')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  });
+
+  test('显示热门主题', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+    await expect(page.getByRole('heading', { name: '热门主题' })).toBeVisible({
+      timeout: 10000,
+    });
+    await expect(page.locator('.ws-topics__item').first()).toBeVisible();
+  });
+
+  test('显示最近更新文章列表', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+    await expect(page.getByRole('heading', { name: '最近更新' })).toBeVisible({
+      timeout: 10000,
+    });
+    await expect(page.locator('a[href*="/blog/"]').first()).toBeVisible({
+      timeout: 10000,
+    });
+  });
+
+  test('顶部栏显示品牌与搜索入口', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
     const header = page.locator('header');
-    await expect(header).toBeVisible({ timeout: 10000 });
+    await expect(header.locator('a[href="/"]').first()).toBeVisible();
+    await expect(header.getByLabel('前往搜索')).toBeVisible();
   });
 
-  test('显示最新文章列表', async ({ page }) => {
+  test('左侧栏导航链接存在（桌面）', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
-    // Paper Gallery recent notes section title
-    await expect(page.getByText('最近整理')).toBeVisible({ timeout: 10000 });
-    // At least one blog card should be present
-    const blogLinks = page.locator('a[href*="/blog/"]');
-    await expect(blogLinks.first()).toBeVisible({ timeout: 10000 });
-  });
-
-  test('显示精选作品', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
-    // Featured projects section heading
-    const projectsSection = page.getByRole('heading', { name: '项目样本' });
-    await expect(projectsSection).toBeVisible({ timeout: 10000 });
-  });
-
-  test('导航栏链接可跳转', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
-    // Verify the blog link exists in header
-    const blogLink = page.locator('header a[href="/blog"]').first();
-    await expect(blogLink).toBeVisible({ timeout: 10000 });
-    await blogLink.click();
-    await expect(page).toHaveURL(/\/blog/, { timeout: 15000 });
+    const sidebar = page.locator('.sidebar');
+    await expect(sidebar.locator('a[href="/blog"]')).toBeAttached();
+    await expect(sidebar.locator('a[href="/archive"]')).toBeAttached();
+    await expect(sidebar.locator('a[href="/favorites"]')).toBeAttached();
+    // 已删路由不得出现
+    await expect(sidebar.locator('a[href="/garden"]')).toHaveCount(0);
+    await expect(sidebar.locator('a[href="/links"]')).toHaveCount(0);
   });
 
   test('页脚显示版权信息', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
-    const footer = page.locator('footer');
-    await expect(footer).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('footer')).toHaveCount(1);
+    await expect(page.locator('footer')).toBeVisible({ timeout: 10000 });
   });
 
-  test('英雄区域CTA链接—精选文章', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
-    const cta = page.locator('.editorial-hero__actions a[href="/blog"]').first();
-    await expect(cta).toBeVisible({ timeout: 10000 });
-    await cta.click();
-    await expect(page).toHaveURL(/\/blog/, { timeout: 15000 });
-  });
-
-  test('英雄区域CTA链接—导航收藏', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
-    const cta = page.locator('.editorial-hero__actions a[href="/links"]').first();
-    await expect(cta).toBeVisible({ timeout: 10000 });
-    await cta.click();
-    await expect(page).toHaveURL(/\/links/, { timeout: 15000 });
-  });
-
-  test('首页入口索引可见', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
-    const index = page.locator('.home-manifesto__list');
-    await expect(index).toBeVisible({ timeout: 10000 });
-    const entries = index.locator('.home-manifesto__item');
-    await expect(entries).toHaveCount(3);
-    await expect(entries.nth(0)).toContainText('Articles');
-    await expect(entries.nth(1)).toContainText('Links');
-    await expect(entries.nth(2)).toContainText('Projects');
-  });
-
-  test('英雄区域统计指标可见', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
-    const metrics = page.locator('.editorial-hero__metrics');
-    await expect(metrics).toBeVisible({ timeout: 10000 });
-    await expect(metrics).toContainText('篇文章');
-    await expect(metrics).toContainText('个项目');
-  });
-
-  test('首页下半部保持 server-only（无 reveal 客户端岛）', async ({ page }) => {
+  test('站内搜索：输入后显示结果（客户端）', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
     await waitForHydration(page);
 
-    // CH-PERF-003 home-lcp: below-fold sections were converted to server-only
-    // rendering and the RevealOnScroll islands were removed from page.tsx.
-    // This guards against reintroducing them (the component still exists and
-    // is unit-tested, so an accidental re-import would otherwise go unnoticed).
-    await expect(page.locator('.reveal-on-scroll')).toHaveCount(0);
+    const input = page.getByLabel('搜索文章');
+    await expect(input).toBeVisible({ timeout: 15000 });
+    await input.focus();
+    await page.keyboard.type('安全', { delay: 20 });
 
-    // The sections themselves must still render and be readable server-side.
-    await expect(
-      page.getByRole('heading', { name: '项目样本', exact: true }),
-    ).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('.search-panel__item').first()).toBeVisible({
+      timeout: 10000,
+    });
   });
 
-  test('顶部导航栏链接全部存在', async ({ page }) => {
+  test('站内搜索：无结果显示空态', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
-    const header = page.locator('header');
-    await expect(header.locator('a[href="/"]').first()).toBeVisible();
-    await expect(header.locator('a[href="/blog"]')).toBeVisible();
-    await expect(header.locator('a[href="/series"]')).toBeVisible();
-    await expect(header.locator('a[href="/projects"]')).toBeVisible();
-    await expect(header.locator('a[href="/about"]')).toBeVisible();
+    await waitForHydration(page);
+
+    const input = page.getByLabel('搜索文章');
+    await input.focus();
+    await page.keyboard.type('zzz不存在的关键词zzz', { delay: 5 });
+    await expect(page.getByText(/没有找到匹配/)).toBeVisible({ timeout: 10000 });
+  });
+
+  test('站内搜索：查询写入 URL', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
+
+    const input = page.getByLabel('搜索文章');
+    await input.focus();
+    await page.keyboard.type('安全', { delay: 20 });
+    await expect(page).toHaveURL(/[?&]q=/, { timeout: 10000 });
   });
 
   test('全站背景 stage 容器在 SSG HTML 中已渲染', async ({ page }) => {
@@ -129,89 +109,22 @@ test.describe('首页', () => {
     await expect(stage).toHaveAttribute('aria-hidden', 'true');
   });
 
-  test('背景装饰元素数量正确 (2 飞机条 + CSS 网格圈 + 2 代码块)', async ({ page }) => {
+  test('首页隐藏装饰背景层（工作台干净阅读面）', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
-    await expect(page.locator('.site-backdrop__plane')).toHaveCount(2);
-    await expect(page.locator('.site-backdrop__plane--back')).toHaveCount(1);
-    await expect(page.locator('.site-backdrop__plane--front')).toHaveCount(1);
-    await expect(page.locator('.site-backdrop__mesh')).toHaveCount(0);
-    await expect(page.locator('.site-backdrop__stage')).toHaveCSS('position', 'fixed');
-    await expect
-      .poll(async () =>
-        page.locator('.site-backdrop__stage').evaluate((element) => {
-          const meshStyle = getComputedStyle(element, '::before');
-          return {
-            content: meshStyle.content,
-            position: meshStyle.position,
-          };
-        }),
-      )
-      .toEqual({ content: '""', position: 'absolute' });
-    await expect(page.locator('.site-backdrop__code')).toHaveCount(2);
-    await expect(page.locator('.site-backdrop__code--one')).toContainText('pnpm test');
-    await expect(page.locator('.site-backdrop__code--two')).toContainText(
-      'deploy --quiet',
-    );
-  });
-
-  test('鼠标移动时背景 stage 的 transform 受 --parallax-x/y 驱动', async ({ page }) => {
-    await page.goto('/');
-    // 等待 stage 节点存在 (SSG 静态 DOM, hydration 前即可见)
-    await page.waitForFunction(
-      () => {
-        return !!document.querySelector('.site-backdrop__stage');
-      },
-      { timeout: 5000 },
-    );
-    // pointermove 监听器在 SiteBackdropParallax 的 useEffect (hydration 后) 才挂载,
-    // 仅等 stage 存在不足以保证监听就绪。反复 dispatch 并轮询, 直到 CSS 变量被写入,
-    // 避免在监听器挂载前触发事件的竞态 (见 handoff §7.4)。
-    // 与组件一致：只响应 pointermove（不再监听 mousemove）。
-    await page.waitForFunction(
-      () => {
-        window.dispatchEvent(
-          new PointerEvent('pointermove', {
-            clientX: 1000,
-            clientY: 500,
-            pointerType: 'mouse',
-          }),
-        );
-        const stage = document.querySelector<HTMLElement>('.site-backdrop__stage');
-        return !!stage && stage.style.getPropertyValue('--parallax-x') !== '';
-      },
-      { timeout: 5000 },
-    );
-    // 读取 stage 上由 client component 写入的 CSS 变量
-    const vars = await page.locator('.site-backdrop__stage').evaluate((el) => {
-      const style = el as HTMLElement;
-      return {
-        x: style.style.getPropertyValue('--parallax-x'),
-        y: style.style.getPropertyValue('--parallax-y'),
-      };
-    });
-    // 移动后应有非零 parallax-x/y 值 (8px 幅度)
-    expect(vars.x).not.toBe('');
-    expect(vars.y).not.toBe('');
-    expect(vars.x).toContain('px');
-    expect(vars.y).toContain('px');
+    // D-016：首页 `body:has(.workspace-home) .site-backdrop__stage { display: none }`
+    await expect(page.locator('.site-backdrop__stage')).toBeHidden();
   });
 
   test('prefers-reduced-motion 下不挂载视差监听', async ({ browser }) => {
-    // 用模拟 reduced motion 的 context 启动新页面
-    const context = await browser.newContext({
-      reducedMotion: 'reduce',
-    });
+    const context = await browser.newContext({ reducedMotion: 'reduce' });
     const page = await context.newPage();
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
     const stage = page.locator('.site-backdrop__stage');
     await expect(stage).toBeAttached();
-    // 模拟鼠标移动; 在 reduced-motion 下不应写入 CSS 变量
     const vp = page.viewportSize();
-    if (vp) {
-      await page.mouse.move(vp.width, vp.height);
-    }
+    if (vp) await page.mouse.move(vp.width, vp.height);
     const vars = await stage.evaluate((el) => {
       const style = el as HTMLElement;
       return {

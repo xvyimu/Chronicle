@@ -96,9 +96,6 @@ export function writeContentSnapshot(
     [CONTENT_SNAPSHOT_FILES.manifest]: stableStringify(payload.manifest),
     [CONTENT_SNAPSHOT_FILES.postsMeta]: stableStringify(payload.postsMeta),
     [CONTENT_SNAPSHOT_FILES.postsFull]: stableStringify(payload.postsFull),
-    [CONTENT_SNAPSHOT_FILES.searchDocs]: stableStringify(payload.searchDocs),
-    [CONTENT_SNAPSHOT_FILES.gardenGraph]: stableStringify(payload.gardenGraph),
-    [CONTENT_SNAPSHOT_FILES.positions]: stableStringify(payload.positions),
   };
 
   fs.mkdirSync(root, { recursive: true });

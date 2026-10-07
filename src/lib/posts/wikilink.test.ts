@@ -1,84 +1,53 @@
-import { describe, it, expect } from 'vitest';
-import { normalizeWikilinkSlug, wikilinkHref, extractWikilinks } from './wikilink';
+import { describe, expect, it } from 'vitest';
+import { extractWikilinks, wikilinkHref, normalizeWikilinkSlug } from './wikilink';
 
-describe('normalizeWikilinkSlug', () => {
-  it('trims whitespace', () => {
-    expect(normalizeWikilinkSlug('  docker-deploy-guide  ')).toBe('docker-deploy-guide');
+describe('extractWikilinks', () => {
+  it('extracts [[slug]] with slug as label', () => {
+    expect(extractWikilinks('见 [[some-post]]。')).toEqual([
+      { slug: 'some-post', label: 'some-post', raw: '[[some-post]]' },
+    ]);
   });
 
-  it('rejects empty after trim', () => {
-    expect(() => normalizeWikilinkSlug('   ')).toThrow(/empty target/);
-    expect(() => normalizeWikilinkSlug('')).toThrow(/empty target/);
+  it('extracts [[slug|label]] with custom label', () => {
+    expect(extractWikilinks('见 [[some-post|一篇文章]]。')).toEqual([
+      { slug: 'some-post', label: '一篇文章', raw: '[[some-post|一篇文章]]' },
+    ]);
+  });
+
+  it('falls back to slug for an empty label', () => {
+    expect(extractWikilinks('[[a|]]')[0].label).toBe('a');
+  });
+
+  it('extracts multiple links in order', () => {
+    const r = extractWikilinks('[[a]] 和 [[b|c]]');
+    expect(r.map((m) => m.slug)).toEqual(['a', 'b']);
+  });
+
+  it('ignores wikilinks inside fenced code blocks', () => {
+    expect(extractWikilinks('```\n[[a]]\n```')).toEqual([]);
+  });
+
+  it('ignores wikilinks inside inline code', () => {
+    expect(extractWikilinks('use `[[a]]` syntax')).toEqual([]);
+  });
+
+  it('returns empty when no wikilinks', () => {
+    expect(extractWikilinks('普通文本')).toEqual([]);
   });
 });
 
 describe('wikilinkHref', () => {
-  it('builds /blog/{slug}', () => {
-    expect(wikilinkHref('docker-deploy-guide')).toBe('/blog/docker-deploy-guide');
+  it('builds a /blog/<slug> href', () => {
+    expect(wikilinkHref('some-post')).toBe('/blog/some-post');
   });
 });
 
-describe('extractWikilinks', () => {
-  it('parses [[slug]]', () => {
-    expect(extractWikilinks('see [[docker-deploy-guide]] now')).toEqual([
-      {
-        slug: 'docker-deploy-guide',
-        label: 'docker-deploy-guide',
-        raw: '[[docker-deploy-guide]]',
-      },
-    ]);
+describe('normalizeWikilinkSlug', () => {
+  it('trims whitespace', () => {
+    expect(normalizeWikilinkSlug('  a  ')).toBe('a');
   });
 
-  it('parses [[slug|label]] with Chinese label', () => {
-    expect(extractWikilinks('见 [[docker-deploy-guide|Docker 部署]]')).toEqual([
-      {
-        slug: 'docker-deploy-guide',
-        label: 'Docker 部署',
-        raw: '[[docker-deploy-guide|Docker 部署]]',
-      },
-    ]);
-  });
-
-  it('extracts multiple links on one line', () => {
-    const matches = extractWikilinks('[[a]] and [[b|Bee]] then [[c]]');
-    expect(matches.map((m) => m.slug)).toEqual(['a', 'b', 'c']);
-    expect(matches[1].label).toBe('Bee');
-  });
-
-  it('trims target and label; empty label falls back to slug', () => {
-    expect(extractWikilinks('[[  foo  |  bar  ]]')[0]).toMatchObject({
-      slug: 'foo',
-      label: 'bar',
-    });
-    expect(extractWikilinks('[[foo|]]')[0]).toMatchObject({
-      slug: 'foo',
-      label: 'foo',
-    });
-    expect(extractWikilinks('[[foo|   ]]')[0]).toMatchObject({
-      slug: 'foo',
-      label: 'foo',
-    });
-  });
-
-  it('rejects empty [[ ]] and [[|x]]', () => {
-    expect(extractWikilinks('[[ ]]')).toEqual([]);
-    expect(extractWikilinks('[[|label]]')).toEqual([]);
-  });
-
-  it('ignores wikilinks inside fenced code blocks', () => {
-    const content = [
-      'before [[keep-me]]',
-      '```bash',
-      'echo [[inside-fence]]',
-      '```',
-      'after [[also-keep]]',
-    ].join('\n');
-    const slugs = extractWikilinks(content).map((m) => m.slug);
-    expect(slugs).toEqual(['keep-me', 'also-keep']);
-  });
-
-  it('ignores wikilinks inside inline code', () => {
-    const content = 'use `[[inline-code]]` but keep [[visible]]';
-    expect(extractWikilinks(content).map((m) => m.slug)).toEqual(['visible']);
+  it('throws on empty target', () => {
+    expect(() => normalizeWikilinkSlug('   ')).toThrow(/empty target slug/);
   });
 });

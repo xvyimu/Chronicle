@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import {
   CSP_REPORT_RATE_LIMIT_MAX,
   resetSearchRateLimitForTests,
-} from '@/server/search/rate-limit';
+} from '@/server/rate-limit';
 import { POST } from './route';
 
 function reportUriRequest(body: unknown, headers?: HeadersInit) {

@@ -4,9 +4,12 @@ import { visit } from 'unist-util-visit';
 import { extractWikilinks, wikilinkHref } from './wikilink';
 
 /**
- * remark plugin: turn [[slug]] / [[slug|label]] in text nodes into mdast link nodes.
- * Does not resolve existence (fail-closed is graph/validator responsibility).
- * code / inlineCode hold values, not text children — visit('text') never sees them.
+ * remark plugin: turn `[[slug]]` / `[[slug|label]]` in text nodes into link nodes.
+ *
+ * 2026-10-06 Iteration 07：恢复。文章正文大量使用该语法（20 篇 / 131 处），
+ * 无插件时会以字面量 `[[...]]` 显示给读者。
+ * 仅做「语法 → 链接」转换，不做存在性校验（原 fail-closed 校验属已删的 link-graph）。
+ * code / inlineCode 持有 value 而非 text 子节点 —— visit('text') 不会误入。
  *
  * Shape must be factory → (tree) => void (one level). Double nesting is ignored by unified.
  */
@@ -33,11 +36,6 @@ export const remarkWikilink: Plugin<[], Root> = function remarkWikilink() {
         children.push({
           type: 'link',
           url: wikilinkHref(match.slug),
-          data: {
-            hProperties: {
-              'data-wikilink': match.slug,
-            },
-          },
           children: [{ type: 'text', value: match.label }],
         });
         cursor = start + match.raw.length;

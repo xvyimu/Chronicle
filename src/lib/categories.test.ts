@@ -28,8 +28,7 @@ function makePost(overrides: Partial<PostMeta> & { slug: string }): PostMeta {
     readingTime: '5 min read',
     wordCount: 100,
     excerpt: 'excerpt',
-    headings: [],
-    searchText: 'search',
+
     ...overrides,
   };
 }
@@ -61,7 +60,6 @@ function clonePosts(posts: PostMeta[]): PostMeta[] {
   return posts.map((post) => ({
     ...post,
     tags: [...post.tags],
-    headings: [...post.headings],
   }));
 }
 

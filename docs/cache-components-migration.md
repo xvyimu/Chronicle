@@ -38,7 +38,7 @@ ContentSource
 
 1. 写 ADR：列出数据源、缓存一致性要求、失效入口、错误策略和回滚方案。
 2. 在独立分支启用 `cacheComponents: true`，先构建不改业务的兼容性基线。
-3. 选择一个外部、只读、低风险数据切片试点；不要先改 posts/projects/links 全部 repository。
+3. 选择一个外部、只读、低风险数据切片试点；不要先改 posts/projects 全部 repository。
 4. 根据当前安装的 Next.js 版本核对 `use cache`、`cacheLife`、`cacheTag`、`revalidateTag` 和 Suspense 约束。
 5. 为动态数据提供明确的 Suspense fallback、超时和错误降级。
 6. 证明新缓存覆盖旧职责后，再逐个 repository 移除对应 `createCache<T>`；迁移期间避免双缓存。
@@ -49,7 +49,7 @@ ContentSource
 - 缓存命中、失效和陈旧窗口有可观察证据，不依赖主观判断。
 - 本地内容编辑在开发环境仍能及时反映。
 - 生产缺失/损坏内容继续 fail-fast，不因缓存返回空页面。
-- CSP nonce、Giscus、Analytics、搜索 API 和动态路由没有行为回归。
+- CSP nonce、Analytics、客户端搜索和动态路由没有行为回归。
 - `pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm build`、`pnpm test:e2e` 全绿。
 - 迁移前后 TTFB、函数调用或外部 API 调用量有同口径对比。
 

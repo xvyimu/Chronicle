@@ -26,16 +26,16 @@ export function buildProductionCsp(nonce: string): string {
 
   return [
     "default-src 'self'",
-    // strict-dynamic trusts nonce-tagged scripts; allow Vercel + Giscus hosts for their loaders
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://giscus.app https://va.vercel-scripts.com`,
+    // strict-dynamic trusts nonce-tagged scripts; allow the Vercel vitals loader.
+    // (Giscus was removed with the comments feature — no third-party frame/script host.)
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://va.vercel-scripts.com`,
     // style-src keeps 'unsafe-inline' — Tailwind v4 injects inline styles
     // that are harder to nonce. Styles are lower risk than scripts for XSS.
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data:",
     "font-src 'self' data:",
-    // Analytics/vitals POST to same-origin /_vercel/*; Giscus API as needed
-    "connect-src 'self' https://giscus.app",
-    'frame-src https://giscus.app',
+    // Analytics/vitals POST to same-origin /_vercel/*.
+    "connect-src 'self'",
     "frame-ancestors 'self'",
     "base-uri 'self'",
     "form-action 'self'",

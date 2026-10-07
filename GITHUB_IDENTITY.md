@@ -1,15 +1,15 @@
 # GitHub identity · Chronicle
 
-| 项                   | 值                                                                                                                                                     |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Repository**       | https://github.com/xvyimu/Chronicle                                                                                                                    |
-| **Product name**     | 西江月博客                                                                                                                                             |
-| **Local path**       | `D:\projects\Chronicle`（统一入口 `D:\projects\Chronicle`）                                                                                            |
-| **npm package name** | `"chronicle"`（private）                                                                                                                               |
-| **Production**       | https://incca.ccwu.cc                                                                                                                                  |
-| **License**          | MIT · `LICENSE` · Copyright (c) 2026 雨天狂奔                                                                                                          |
-| **Giscus default**   | repo `xvyimu/Chronicle` · repoId `R_kgDOTBAmxA` · category Announcements `DIC_kwDOTBAmxM4C_mwW`（`src/lib/site.ts`；可用 `NEXT_PUBLIC_GISCUS_*` 覆盖） |
-| **Remote**           | `git@github.com-obsidian:xvyimu/Chronicle.git`                                                                                                         |
+| 项                   | 值                                                                                                   |
+| -------------------- | ---------------------------------------------------------------------------------------------------- |
+| **Repository**       | https://github.com/xvyimu/Chronicle                                                                  |
+| **Product name**     | 西江月博客                                                                                           |
+| **Local path**       | `D:\projects\Chronicle`（统一入口 `D:\projects\Chronicle`）                                          |
+| **npm package name** | `"chronicle"`（private）                                                                             |
+| **Production**       | https://incca.ccwu.cc                                                                                |
+| **License**          | MIT · `LICENSE` · Copyright (c) 2026 雨天狂奔                                                        |
+| **Giscus default**   | **已移除**（2026-10-07 重构删除评论功能：组件、`site.ts` 配置、CSP 白名单、`.env.example` 三项全清） |
+| **Remote**           | `git@github.com-obsidian:xvyimu/Chronicle.git`                                                       |
 
 作品集交叉链接见 `data/projects.json`（ChronoPortal / Chronicle / ChronoRelay 等）。
 

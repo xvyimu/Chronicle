@@ -86,11 +86,10 @@ describe('createPostRepository', () => {
       expect(post?.wordCount).toBeGreaterThan(0);
     });
 
-    it('computes excerpt and headings', () => {
+    it('uses frontmatter description as excerpt', () => {
       const repo = createPostRepository(createInMemorySource(makeFixture()));
       const post = repo.getPostBySlug('first-post');
-      expect(post?.headings).toEqual(['第一节']);
-      expect(post?.excerpt).toContain('正文内容');
+      expect(post?.excerpt).toBe('测试描述一');
     });
 
     it('returns empty array when blog dir is empty', () => {

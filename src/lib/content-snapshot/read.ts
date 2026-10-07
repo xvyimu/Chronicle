@@ -1,13 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type { PostFull, PostMeta } from '@/types';
-import type { GardenGraph } from '@/lib/posts/link-graph';
 import { CONTENT_SNAPSHOT_FILES, getContentSnapshotRoot } from './paths';
 import {
   CONTENT_SNAPSHOT_VERSION,
   type ContentSnapshotManifest,
   type ContentSnapshotPayload,
-  type GardenPosition,
 } from './types';
 
 let cached: ContentSnapshotPayload | null = null;
@@ -66,15 +64,6 @@ export function readContentSnapshot(rootDir?: string): ContentSnapshotPayload {
   const postsFull = readJsonFile<PostFull[]>(
     path.join(root, CONTENT_SNAPSHOT_FILES.postsFull),
   );
-  const searchDocs = readJsonFile<PostMeta[]>(
-    path.join(root, CONTENT_SNAPSHOT_FILES.searchDocs),
-  );
-  const gardenGraph = readJsonFile<GardenGraph>(
-    path.join(root, CONTENT_SNAPSHOT_FILES.gardenGraph),
-  );
-  const positions = readJsonFile<Record<string, GardenPosition>>(
-    path.join(root, CONTENT_SNAPSHOT_FILES.positions),
-  );
 
   if (postsMeta.length !== manifest.postCount) {
     throw new Error(
@@ -86,9 +75,6 @@ export function readContentSnapshot(rootDir?: string): ContentSnapshotPayload {
     manifest,
     postsMeta,
     postsFull,
-    searchDocs,
-    gardenGraph,
-    positions,
   };
   cachedRoot = root;
   return cached;
@@ -101,14 +87,6 @@ export function getSnapshotPostsMeta(rootDir?: string): PostMeta[] {
 export function getSnapshotPostBySlug(slug: string, rootDir?: string): PostFull | null {
   const { postsFull } = readContentSnapshot(rootDir);
   return postsFull.find((p) => p.slug === slug) ?? null;
-}
-
-export function getSnapshotGardenGraph(rootDir?: string): GardenGraph {
-  return readContentSnapshot(rootDir).gardenGraph;
-}
-
-export function getSnapshotPositions(rootDir?: string): Record<string, GardenPosition> {
-  return readContentSnapshot(rootDir).positions;
 }
 
 /** Test-only: clear module-level snapshot cache. */

@@ -19,8 +19,6 @@ const mockPost: PostMeta = {
   readingTime: '5 min read',
   wordCount: 1000,
   excerpt: '用于测试的摘要',
-  headings: ['测试章节'],
-  searchText: '测试文章 测试章节',
 };
 
 describe('toJsonLd', () => {

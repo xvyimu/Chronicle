@@ -3,7 +3,7 @@ import { Cormorant_Garamond, Noto_Sans_SC, JetBrains_Mono } from 'next/font/goog
 import './globals.css';
 // CSS 语义模块按顺序显式 import (Tailwind v4 下 postcss-import 失效,
 // 详见 docs/specs/2026-06-29-css-import-fix-design.md)
-// 路由专属：archive / blog-ui / article-ui / prose / search-ui / home* / links / project-detail
+// 路由专属：archive / blog-ui / article-ui / prose / home / reading / project-detail
 // → 对应 segment layout 或 page（见 docs/css-conventions.md）。
 import './styles/tokens.css'; // 设计令牌 (CSS 变量定义)
 import './styles/base.css'; // 全局基础 (skip-link, header, footer, not-found)
@@ -11,8 +11,10 @@ import './styles/components.css'; // 通用布局与基础卡片
 import './styles/controls.css'; // CTA 按钮、分页/标签/项目卡控件
 import './styles/backdrop.css'; // 背景层 (body::before/after + stage)
 import './styles/animations.css'; // 动画 (reveal, page fade)
+import './styles/workspace.css'; // 工作台外壳 (TopBar + Sidebar + MainPanel)
 import './styles/responsive.css'; // 响应式断点 (最后,覆盖前面)
 import Header from '@/components/layout/Header';
+import Sidebar from '@/components/layout/Sidebar';
 import Footer from '@/components/layout/Footer';
 import SiteBackdropStage from '@/components/layout/SiteBackdropStage';
 import SiteBackdropParallaxGate from '@/components/layout/SiteBackdropParallaxGate';
@@ -94,10 +96,10 @@ export default async function RootLayout({
       <head>
         <meta
           name="theme-color"
-          content="#f1f0eb"
+          content="#fafafa"
           media="(prefers-color-scheme: light)"
         />
-        <meta name="theme-color" content="#141716" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)" />
         <DarkModeScript nonce={nonce} />
       </head>
       <body
@@ -110,9 +112,15 @@ export default async function RootLayout({
           跳到主要内容
         </a>
         <Header />
-        <main id="main-content" className="flex-1 animate-fade-in">
-          {children}
-        </main>
+        <div className="workspace">
+          <Sidebar />
+          <div className="workspace__main">
+            <main id="main-content" className="workspace__panel animate-fade-in">
+              {children}
+            </main>
+            <Footer />
+          </div>
+        </div>
         <BackToTop />
         {renderVercelInsights ? (
           <>
@@ -120,7 +128,6 @@ export default async function RootLayout({
             <SpeedInsights />
           </>
         ) : null}
-        <Footer />
       </body>
     </html>
   );

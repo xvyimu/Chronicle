@@ -1,0 +1,142 @@
+/* ============================================================
+   工作台外壳 · App Shell（2026-10-06 Iteration 02）
+   TopBar（.header，见 base.css）+ Sidebar + MainPanel
+   目标：AI 工作台气质——中性灰、大圆角主面板、大留白、低对比边界
+   ============================================================ */
+
+.workspace {
+  display: flex;
+  flex: 1;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  gap: 12px;
+  padding: 12px;
+  align-items: flex-start;
+}
+
+/* ---------- 左侧栏（桌面） ---------- */
+.sidebar {
+  position: sticky;
+  /* TopBar 高 64px（base.css .header__inner）+ 12px 外壳间距。
+     改 TopBar 高度时须同步此值。 */
+  top: 76px;
+  flex: 0 0 232px;
+  width: 232px;
+  padding: 8px;
+}
+
+.sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar__link {
+  display: flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.sidebar__link:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.sidebar__link--active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-xs);
+}
+
+/* ---------- 主内容面板 ---------- */
+.workspace__main {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.workspace__panel {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  background: var(--surface);
+}
+
+/* 面板内页脚：去掉全局 footer 的顶边与背景，融进面板 */
+.workspace__main > .footer {
+  margin-top: 0;
+  border-top: none;
+  background: transparent;
+  padding: 28px 24px 20px;
+}
+
+.workspace__main > .footer .footer__inner {
+  max-width: none;
+}
+
+/* ---------- 面板内通用 section 头 ----------
+   消费者跨多个路由（首页 ArticleList/TopicCloud、/favorites LocalReadingList），
+   故放全站加载的 workspace.css，而非首页专属的 home.css。 */
+.ws-section__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.ws-section__title {
+  margin: 0;
+  color: var(--text);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.ws-section__link {
+  color: var(--text-soft);
+  font-size: 0.85rem;
+  transition: color var(--transition-fast);
+}
+
+.ws-section__link:hover {
+  color: var(--text);
+}
+
+/* ---------- 响应式：<1024 收起侧栏 ---------- */
+@media (max-width: 1023px) {
+  .workspace {
+    gap: 0;
+    padding: 8px;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .workspace__panel {
+    border-radius: var(--radius);
+  }
+}
+
+@media (max-width: 767px) {
+  .workspace {
+    padding: 0;
+  }
+
+  .workspace__panel {
+    border: none;
+    border-radius: 0;
+    background: transparent;
+  }
+}

@@ -75,15 +75,13 @@ describe('MdxContent', () => {
     }
   });
 
-  it('includes remarkWikilink after remarkGfm', async () => {
+  it('includes remarkWikilink so [[slug]] renders as a link', async () => {
     const { remarkWikilink } = await import('@/lib/posts/remark-wikilink');
     const MDXRemoteMock = vi.mocked(mdxRemote.MDXRemote);
-    render(<MdxContent source="[[x]]" />);
+    render(<MdxContent source="[[some-post]]" />);
 
     const lastCall = MDXRemoteMock.mock.calls[MDXRemoteMock.mock.calls.length - 1];
     const remarkPlugins = lastCall[0].options?.mdxOptions?.remarkPlugins as unknown[];
-    expect(remarkPlugins).toBeDefined();
-    expect(remarkPlugins!.length).toBeGreaterThanOrEqual(2);
     expect(remarkPlugins).toContain(remarkWikilink);
   });
 

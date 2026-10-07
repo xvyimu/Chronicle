@@ -40,12 +40,7 @@ describe('BlogPage', () => {
 
   it('renders the blog page title', async () => {
     await renderBlogPage();
-    expect(screen.getByRole('heading', { level: 1, name: '博客' })).toBeInTheDocument();
-  });
-
-  it('renders search bar with all posts', async () => {
-    await renderBlogPage();
-    expect(screen.getByPlaceholderText(/搜索文章/)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: '文章' })).toBeInTheDocument();
   });
 
   it('links to category and series discovery pages', async () => {

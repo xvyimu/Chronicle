@@ -16,15 +16,15 @@
 **维持** 100% TypeScript / Next.js 16 内容站：**本地 MDX/JSON → repository + snapshot → App Router 动态 HTML（CSP nonce）+ 可选 SRI（`ENABLE_SRI=1`）+ 三条公开 API**。  
 **不**整站改 Vue3+NaiveUI，**不**引入 Go 网关 / Python AI-Core / SQL 内容权威源。**不与任何仓抢架构重构带宽**（原表述点名的是 TransitHub / MindSync，两仓已于 2026-09-12 删除）。
 
-| 维度       | Target（L2）                                                                                               |
-| ---------- | ---------------------------------------------------------------------------------------------------------- |
-| 策略标签   | **`L2` 内容遗留**                                                                                          |
-| 主栈       | **Next.js 16 App Router + React 19 + TypeScript + MDX + Tailwind/BEM**                                     |
-| 面板       | **无**自建管理台；Git + MDX/JSON 即 CMS                                                                    |
-| 对外面     | 公开阅读 HTML + `GET /api/search` · `GET /api/preview/[slug]` · `POST /api/csp-report`                     |
-| 存储       | 本地文件 + `generated/content-snapshot`；**无** RDBMS                                                      |
-| 安全       | CSP per-request **nonce** + `strict-dynamic`；生产 **SRI sha384**（env 门闩，见 ADR）                      |
-| 与旗舰关系 | **无**：本仓是独立内容站，不参与任何多仓旗舰竞争（原「旗舰精力投 TransitHub / MindSync」已随两仓删除失效） |
+| 维度       | Target（L2）                                                                                                              |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------- |
+| 策略标签   | **`L2` 内容遗留**                                                                                                         |
+| 主栈       | **Next.js 16 App Router + React 19 + TypeScript + MDX + Tailwind/BEM**                                                    |
+| 面板       | **无**自建管理台；Git + MDX/JSON 即 CMS                                                                                   |
+| 对外面     | 公开阅读 HTML + `POST /api/csp-report`（`/api/search` 与 `/api/preview` 已于 2026-10-07 重构删除，搜索改为纯客户端 Fuse） |
+| 存储       | 本地文件 + `generated/content-snapshot`；**无** RDBMS                                                                     |
+| 安全       | CSP per-request **nonce** + `strict-dynamic`；生产 **SRI sha384**（env 门闩，见 ADR）                                     |
+| 与旗舰关系 | **无**：本仓是独立内容站，不参与任何多仓旗舰竞争（原「旗舰精力投 TransitHub / MindSync」已随两仓删除失效）                |
 
 ---
 

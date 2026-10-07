@@ -66,7 +66,6 @@ License IDs below are **as commonly declared by the package** at the version ran
 | Service | Use                                  | License / terms       |
 | ------- | ------------------------------------ | --------------------- |
 | Vercel  | Hosting + Analytics / Speed Insights | Vercel customer terms |
-| Giscus  | Comments (GitHub Discussions)        | giscus + GitHub terms |
 | GitHub  | Source hosting, Actions, Discussions | GitHub terms          |
 
 ---

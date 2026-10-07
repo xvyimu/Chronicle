@@ -8,9 +8,19 @@ informed: []
 
 # ADR: Keep Fuse for in-site search (T4)
 
-- Status: Accepted
+- Status: **Accepted（2026-10-07 修订：引擎不变，交付形态改为纯客户端）**
 - Date: 2026-07-22
-- Related: `docs/archive/architecture-upgrade-radical-c-2026-07-21.md` §T4, `src/server/search/engine.ts`, `src/lib/search/`, `generated/content-snapshot/search-docs.json`
+- Related: `docs/archive/architecture-upgrade-radical-c-2026-07-21.md` §T4, `src/lib/search/`, `src/components/search/SearchPanel.tsx`
+
+> **2026-10-07 修订说明（正文按 ADR 纪律保留当时事实，不追改）：**
+> 本站 2026-10-07 重构后，搜索**仍是 Fuse**（本 ADR 的决策不变且被沿用），但交付形态由
+> 「服务端 `GET /api/search` + 进程限流」改为**纯客户端 Fuse**：`src/lib/search/`（类型 + 引擎）
+>
+> - `src/components/search/SearchPanel.tsx`（客户端岛），无服务端往返。
+>
+> 因此正文中以下引用的文件已删除：`src/server/search/engine.ts`、`generated/content-snapshot/search-docs.json`、
+> `/api/search` 路由。原「Re-open triggers」第 2 条（`/api/search` p95 回归）随该端点删除而**失效**——
+> 改为以客户端索引构建耗时与首屏 JS 增量为观测口径。规模触发（≥200 篇）保持不变。
 
 ## Context
 

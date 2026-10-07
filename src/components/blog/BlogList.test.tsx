@@ -22,8 +22,6 @@ const makePost = (slug: string, title?: string): PostMeta => ({
   readingTime: '5 min read',
   wordCount: 100,
   excerpt: 'excerpt',
-  headings: [],
-  searchText: 'search',
 });
 
 describe('BlogList', () => {
