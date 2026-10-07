@@ -12,18 +12,19 @@ const RECENT_KEY = 'chronicle:recent';
 /** 最近阅读最多保留条数。 */
 export const RECENT_LIMIT = 12;
 
-/** 收藏项：slug + 收藏时间（ms）。 */
-export type FavoriteEntry = { slug: string; at: number };
-/** 最近阅读项：slug + 访问时间（ms）。 */
-export type RecentEntry = { slug: string; at: number };
+/**
+ * 条目结构：收藏与最近阅读共用（都是 slug + 时间戳）。
+ * 读取时按 `at` 倒序，故两者同一类型。
+ */
+export type ReadingEntry = { slug: string; at: number };
 
-function parseEntries(raw: string | null): Array<{ slug: string; at: number }> {
+function parseEntries(raw: string | null): ReadingEntry[] {
   if (!raw) return [];
   try {
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
     return parsed.filter(
-      (e): e is { slug: string; at: number } =>
+      (e): e is ReadingEntry =>
         typeof e === 'object' &&
         e !== null &&
         typeof (e as { slug?: unknown }).slug === 'string' &&
@@ -35,13 +36,13 @@ function parseEntries(raw: string | null): Array<{ slug: string; at: number }> {
 }
 
 /** 读取指定 key 的条目，按时间倒序，可选截断。 */
-function readSorted(key: string, limit?: number): Array<{ slug: string; at: number }> {
+function readSorted(key: string, limit?: number): ReadingEntry[] {
   const sorted = parseEntries(safeLocalStorage.getItem(key)).sort((a, b) => b.at - a.at);
   return typeof limit === 'number' ? sorted.slice(0, limit) : sorted;
 }
 
 /** 读取收藏列表（按收藏时间倒序）。 */
-export function getFavorites(): FavoriteEntry[] {
+export function getFavorites(): ReadingEntry[] {
   return readSorted(FAVORITES_KEY);
 }
 
@@ -62,7 +63,7 @@ export function toggleFavorite(slug: string): boolean {
 }
 
 /** 读取最近阅读（按访问时间倒序，上限 RECENT_LIMIT）。 */
-export function getRecent(): RecentEntry[] {
+export function getRecent(): ReadingEntry[] {
   return readSorted(RECENT_KEY, RECENT_LIMIT);
 }
 
