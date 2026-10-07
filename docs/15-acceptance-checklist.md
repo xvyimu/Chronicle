@@ -9,6 +9,7 @@
 
 - [x] 项目可在当前环境运行（`pnpm dev` 200）
 - [x] 记录构建/测试/lint 基线（typecheck 0 / lint 0 / test 574 / build 0）
+      <!-- 574 为 Iteration 00 当时记录，与任何时点的实跑值都不吻合；当前基线见 docs/HANDOFF.md（2026-10-07 实测 73 files / 551 tests）。按 docs/README.md 纪律，历史记录不改写，仅加注。 -->
 - [x] 创建审计文档（`docs/01-project-audit.md`）
 - [x] 建立风险登记（`docs/13-risk-register.md`）与决策日志（`docs/14-decision-log.md`）
 - [x] 未修改核心业务功能（仅修 3 个因删功能失效的测试断言 + 格式化）
@@ -113,7 +114,7 @@
 - [x] 提交 2 个（`5d29bfc` 代码 + `9def4b5` 文档）+ 推送 + PR [#37](https://github.com/xvyimu/Chronicle/pull/37)
 - [x] 追加提交 `46b8bd8`（R8 + R11）；CI `quality` pass
 - [ ] **R12 · Lighthouse 间歇失败**（`/blog/nextjs-app-router`：性能 0.75 / CLS 0.2976；同 commit 时红时绿）——既有基线，**根因已定位 + 修法已实测**（骨架屏高度下限，CLS 0.0745→0.0012），本轮不修，另开跟进
-- [ ] R13 · dev 树 audit 13 条——CI 该步 `continue-on-error`，已记录
+- [ ] R13 · dev 树 audit（初记 13 条 → 2026-10-07 修复后剩 4 条）——CI 该步 `continue-on-error`，已记录。权威计数见 [13-risk-register.md](./13-risk-register.md) R13 行
 - [ ] 合并 master（须人审）
 - [ ] 部署（须人审）
 

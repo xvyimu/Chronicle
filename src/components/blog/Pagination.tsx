@@ -15,9 +15,12 @@ export default function Pagination({
   if (totalPages <= 1) return null;
 
   return (
-    <nav className="mt-10 flex items-center justify-center gap-2" aria-label="分页导航">
+    <nav
+      className="mt-10 flex flex-wrap items-center justify-center gap-2"
+      aria-label="分页导航"
+    >
       {currentPage > 1 && (
-        <Button asChild variant="ghost" size="sm" className="px-3">
+        <Button asChild variant="ghost" size="sm" className="min-h-10 px-3">
           <Link
             href={currentPage === 2 ? basePath : `${basePath}?page=${currentPage - 1}`}
           >
@@ -34,7 +37,7 @@ export default function Pagination({
             asChild
             variant={isCurrent ? 'default' : 'ghost'}
             size="icon"
-            className="size-9"
+            className="size-10"
           >
             <Link href={href} aria-current={isCurrent ? 'page' : undefined}>
               {p}
@@ -43,7 +46,7 @@ export default function Pagination({
         );
       })}
       {currentPage < totalPages && (
-        <Button asChild variant="ghost" size="sm" className="px-3">
+        <Button asChild variant="ghost" size="sm" className="min-h-10 px-3">
           <Link href={`${basePath}?page=${currentPage + 1}`}>下一页 →</Link>
         </Button>
       )}

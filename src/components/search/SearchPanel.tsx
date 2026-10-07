@@ -29,6 +29,9 @@ export default function SearchPanel({ docs }: SearchPanelProps) {
 
   const results = useMemo(() => searchDocs(docs, query), [docs, query]);
   const trimmed = query.trim();
+  const isOpen = trimmed !== '' && results.length > 0;
+  /** 结果项的稳定 DOM id，供 aria-activedescendant 指向当前高亮项。 */
+  const optionId = (index: number) => `search-option-${index}`;
 
   // 全局快捷键：`/` 或 Ctrl/Cmd+K 聚焦输入框。
   useEffect(() => {
@@ -110,7 +113,13 @@ export default function SearchPanel({ docs }: SearchPanelProps) {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={onKeyDownInput}
           autoComplete="off"
+          role="combobox"
+          aria-expanded={isOpen}
           aria-controls="search-results"
+          aria-activedescendant={
+            activeIndex >= 0 && results[activeIndex] ? optionId(activeIndex) : undefined
+          }
+          aria-autocomplete="list"
           aria-label="搜索文章"
         />
         <kbd className="search-panel__kbd" aria-hidden="true">
@@ -126,11 +135,14 @@ export default function SearchPanel({ docs }: SearchPanelProps) {
         ) : results.length === 0 ? (
           <p className="search-panel__empty">没有找到匹配「{trimmed}」的文章。</p>
         ) : (
-          <ul className="search-panel__list">
+          <ul className="search-panel__list" role="listbox" aria-label="搜索结果">
             {results.map((doc, index) => (
-              <li key={doc.slug}>
+              <li key={doc.slug} role="presentation">
                 <Link
+                  id={optionId(index)}
                   href={`/blog/${doc.slug}`}
+                  role="option"
+                  aria-selected={index === activeIndex}
                   className={`search-panel__item ${
                     index === activeIndex ? 'search-panel__item--active' : ''
                   }`}

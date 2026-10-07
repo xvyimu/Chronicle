@@ -30,28 +30,27 @@
 
 **做 / 不做（形态级）**
 
-| 做                                           | 不做                                                  |
-| -------------------------------------------- | ----------------------------------------------------- |
-| 博客、专题、作品集、搜索 API、严格 CSP nonce | 运行时数据库驱动内容                                  |
-| 数字花园式信息架构、SEO/RSS/OG/PWA           | 为 HTML 全站 SSG 放宽 `script-src` 到 `unsafe-inline` |
-| Vitest + Playwright + SEO/内容门闩           | 另起第二前端框架平行实现                              |
+| 做                                             | 不做                                                  |
+| ---------------------------------------------- | ----------------------------------------------------- |
+| 博客、专题、作品集、客户端搜索、严格 CSP nonce | 运行时数据库驱动内容                                  |
+| 数字花园式信息架构、SEO/RSS/OG/PWA             | 为 HTML 全站 SSG 放宽 `script-src` 到 `unsafe-inline` |
+| Vitest + Playwright + SEO/内容门闩             | 另起第二前端框架平行实现                              |
 
 ---
 
 ## 2. 唯一技术栈
 
-| 层     | 技术                                                                            | 约束                                                           |
-| ------ | ------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| 框架   | **Next.js 16** App Router                                                       | 文档以本仓 `node_modules/next` 为准；HTML 动态渲染保 CSP nonce |
-| UI     | **React 19** · **Tailwind CSS v4** · BEM 语义 CSS modules（`src/app/styles/*`） | 不引入第二 UI 框架平行栈                                       |
-| 语言   | **TypeScript** strict · **Node 22** · **pnpm**                                  |                                                                |
-| 内容   | MDX · `next-mdx-remote` · `js-yaml` · local JSON                                | 改 MDX 后 `pnpm content:build` 并提交快照                      |
-| 校验   | Zod + frontmatter 解析                                                          |                                                                |
-| 搜索   | **fuse.js**（生产 `GET /api/search`）                                           |                                                                |
-| 评论   | Giscus（env 可覆）                                                              |                                                                |
-| 测试   | Vitest · Playwright                                                             |                                                                |
-| 部署   | **Vercel** + GitHub Actions                                                     |                                                                |
-| 包管理 | **pnpm**                                                                        | 不用 npm/yarn 当主路径                                         |
+| 层     | 技术                                                                             | 约束                                                           |
+| ------ | -------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| 框架   | **Next.js 16** App Router                                                        | 文档以本仓 `node_modules/next` 为准；HTML 动态渲染保 CSP nonce |
+| UI     | **React 19** · **Tailwind CSS v4** · BEM 语义 CSS modules（`src/app/styles/*`）  | 不引入第二 UI 框架平行栈                                       |
+| 语言   | **TypeScript** strict · **Node ≥24** · **pnpm**                                  |                                                                |
+| 内容   | MDX · `next-mdx-remote` · `js-yaml` · local JSON                                 | 改 MDX 后 `pnpm content:build` 并提交快照                      |
+| 校验   | Zod + frontmatter 解析                                                           |                                                                |
+| 搜索   | **fuse.js**（纯客户端：`src/lib/search/` + `SearchPanel`；**无** `/api/search`） | 20 篇规模不起服务端引擎（ADR-0006）                            |
+| 测试   | Vitest · Playwright                                                              |                                                                |
+| 部署   | **Vercel** + GitHub Actions                                                      |                                                                |
+| 包管理 | **pnpm**                                                                         | 不用 npm/yarn 当主路径                                         |
 
 实现分层摘要见 [`ARCHITECTURE.md`](./ARCHITECTURE.md)。Agent 短索引：根 [`AGENTS.md`](../AGENTS.md)。
 

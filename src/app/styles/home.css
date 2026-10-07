@@ -344,3 +344,13 @@ body:has(.workspace-home) .site-backdrop__stage {
     transform: none;
   }
 }
+
+/* 移动端点击区 ≥40px（docs/11-accessibility.md）。
+   必须放在 home.css 而非 responsive.css：路由 CSS 的 chunk 加载顺序在
+   responsive.css 之后，否则 base 规则（32px）会压过 responsive 里的媒体查询。 */
+@media (max-width: 767px) {
+  .ws-topics__item {
+    min-height: 40px;
+    padding: 9px 14px;
+  }
+}

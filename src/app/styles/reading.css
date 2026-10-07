@@ -106,4 +106,10 @@
     grid-template-columns: 1fr;
     gap: 28px;
   }
+
+  /* 移动端点击区 ≥40px（docs/11-accessibility.md）。路由 CSS chunk 在
+     responsive.css 之后加载，base 规则（36px）会覆盖 responsive 的媒体查询。 */
+  .reading-actions__btn {
+    min-height: 40px;
+  }
 }

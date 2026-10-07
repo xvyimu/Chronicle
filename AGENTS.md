@@ -31,13 +31,13 @@ A personal blog built with Next.js 16.3.8 (App Router), React 19.3, and Tailwind
 - **Content**: MDX with custom frontmatter parser (`lib/parse-frontmatter.ts`, js-yaml 4.x), next-mdx-remote
 - **Syntax Highlighting**: Shiki via rehype-pretty-code
 - **Search**: fuse.js, **client-side only** (`src/lib/search/` + `src/components/search/SearchPanel.tsx`); no `/api/search` since the 2026-10-07 rebuild
-- **Testing**: Vitest (unit/integration, 72 test files), Playwright (E2E, 5 spec files) — 计数以实跑为准（`find src -name '*.test.ts*' | wc -l` · `find e2e -name '*.spec.ts' | wc -l`）；数字会漂，别把本行当基线
+- **Testing**: Vitest (unit/integration), Playwright (E2E, 5 spec files) — 计数以实跑为准（`find src -name '*.test.ts*' | wc -l` · `find e2e -name '*.spec.ts' | wc -l`）；数字会漂，本行不写死
 - **CI**: GitHub Actions (audit / format / lint / tsc / test / seo / build / bundle-budget / e2e); Node 24
 - **Deployment**: Vercel
 
 ## Key APIs
 
-- Use `next/font/google` for fonts (not CSS @font-face)
+- Use `next/font/local` for fonts (self-hosted; not CSS @font-face, not `next/font/google`) — see ADR-0008
 - Use `next/og` `ImageResponse` for dynamic OG images
 - Use `next/link` for navigation (supports `transitionTypes` prop)
 - Use `Metadata` type for SEO metadata
@@ -53,7 +53,7 @@ src/
 │   ├── tags/[tag]/         # Tag archive
 │   ├── series/[series]/    # Series archive
 │   ├── about/              # About page
-│   ├── styles/             # Semantic CSS modules (15 files, each ≤500 lines)
+│   ├── styles/             # Semantic CSS modules (15 files; longest article-ui.css 668 lines)
 │   │   ├── tokens.css      # Design tokens (light/dark theme vars, spacing, shadows)
 │   │   ├── base.css        # Global base (skip-link, header, footer, not-found)
 │   │   ├── components.css   # Generic layout and card components
@@ -75,8 +75,8 @@ src/
 │   ├── page.tsx            # Home page
 │   ├── sitemap.ts          # Dynamic sitemap
 │   ├── robots.ts           # Robots.txt
-│   ├── proxy.ts            # CSP headers (per-request)
 │   └── error.tsx           # Error boundary (production-safe)
+├── proxy.ts                # CSP headers (per-request)
 ├── components/
 │   ├── blog/               # Blog-specific (BlogCard, CodeBlock, TOC, MdxContent, ReadingActions…)
 │   ├── home/               # Home-only (WorkspaceHero, TopicCloud, ArticleList)
@@ -98,7 +98,6 @@ src/
 │   ├── category-rules.ts   # Category inference helper
 │   ├── category-rules-data.ts # TAG_TO_CATEGORY mapping
 │   ├── about.ts            # About page content
-│   ├── links.ts            # Curated links repository (reads data/links.json)
 │   ├── content-source.ts   # ContentSource interface (fs abstraction) + createPostRepository factory
 │   ├── json-content-repository.ts # Shared JSON read/parse/cache repository factory
 │   ├── parse-frontmatter.ts # MDX frontmatter parser (js-yaml 4.x, gray-matter parity)
@@ -123,7 +122,7 @@ src/
 - **Caching**: Use `createCache<T>` from `lib/cache.ts`. Use `resetAllCaches()` for test isolation. See `docs/cache-components-migration.md`
 - **Testing**: Unit tests in `*.test.tsx` alongside components. E2E in `e2e/` directory
 - **Security**: CSP headers via `src/proxy.ts` (per-request nonce). `layout.tsx` and JSON-LD scripts read `x-nonce` via `src/lib/csp.ts`, so routes render dynamically on demand. Security headers also live in `next.config.ts`. No remote images (`remotePatterns: []`)
-- **Fonts**: `next/font/google` only. CSS variables: `--font-noto-sans-sc`, `--font-jetbrains-mono`
+- **Fonts**: `next/font/local` only (self-hosted; ADR-0008). CSS variables: `--font-noto-sans-sc`, `--font-jetbrains-mono`
 - **SEO**: JSON-LD via `lib/jsonld.ts`. OG images via `opengraph-image.tsx` file convention
 - **Site Config**: `SITE_CONFIG` lives in `src/lib/site.ts`; content paths, Vercel tracing includes, and `PAGE_SIZE` live in `src/lib/content-dirs.ts`
 
@@ -132,7 +131,7 @@ src/
 ```bash
 pnpm dev          # Start dev server (port 3000; Turbopack)
 pnpm build        # Generate RSS + production build; document routes are dynamic due CSP nonce
-pnpm test         # Run unit/integration tests (72 test files; 测试数以实跑为准，不写死)
+pnpm test         # Run unit/integration tests (测试数以实跑为准，不写死)
 pnpm test:e2e     # Run E2E tests (5 spec files; auto-starts server on port 3001)
 pnpm test:e2e:raw # Playwright raw (pass-through flags, e.g. --ui)
 pnpm lint         # ESLint

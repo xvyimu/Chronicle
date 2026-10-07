@@ -201,8 +201,18 @@ html:not(.dark) .prose pre {
   display: flex;
   align-items: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.04);
+  /* 必须自带不透明深底：header 是 <pre> 的兄弟节点（见 CodeBlock.tsx），
+     不在其深色背景之上。仅用半透明白时，浅色模式下合成结果是页面白底，
+     白色 52% 的语言标签会糊掉（实测对比度 1.02）。底色与 .prose pre 一致，
+     再叠 4% 白保留「比代码体略亮」的原设计。 */
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.04)), #121613;
   padding: 8px 16px;
+}
+
+html:not(.dark) .code-block-header {
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.04)), #18201c;
 }
 
 .code-block-lang {

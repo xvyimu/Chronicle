@@ -261,6 +261,15 @@
   cursor: zoom-in;
 }
 
+/* 移动端点击区 ≥40px（docs/11-accessibility.md）。
+   放在 blog-ui.css 而非 responsive.css：路由 CSS chunk 在 responsive.css 之后
+   加载，base 规则会覆盖 responsive 里的同名媒体查询。 */
+@media (max-width: 767px) {
+  .tag-cloud__item {
+    min-height: 40px;
+  }
+}
+
 .image-zoom-overlay {
   position: fixed;
   inset: 0;

@@ -96,4 +96,50 @@ describe('SearchPanel', () => {
     fireEvent.keyDown(input, { key: 'Enter' });
     expect(mockPush).toHaveBeenCalledWith('/blog/postgres-tuning');
   });
+
+  it('exposes combobox semantics on the input', () => {
+    render(<SearchPanel docs={docs} />);
+    const input = screen.getByLabelText('搜索文章');
+    expect(input).toHaveAttribute('role', 'combobox');
+    expect(input).toHaveAttribute('aria-controls', 'search-results');
+    expect(input).toHaveAttribute('aria-autocomplete', 'list');
+  });
+
+  it('reports collapsed when there is no query and expanded when results exist', () => {
+    render(<SearchPanel docs={docs} />);
+    const input = screen.getByLabelText('搜索文章');
+
+    expect(input).toHaveAttribute('aria-expanded', 'false');
+
+    fireEvent.change(input, { target: { value: 'PostgreSQL' } });
+    expect(input).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('exposes results as a listbox of options', () => {
+    render(<SearchPanel docs={docs} />);
+    fireEvent.change(screen.getByLabelText('搜索文章'), {
+      target: { value: 'PostgreSQL' },
+    });
+
+    const listbox = screen.getByRole('listbox', { name: '搜索结果' });
+    expect(listbox).toBeInTheDocument();
+    expect(screen.getAllByRole('option')).toHaveLength(1);
+  });
+
+  it('marks the keyboard-highlighted option as selected via aria-activedescendant', () => {
+    render(<SearchPanel docs={docs} />);
+    const input = screen.getByLabelText('搜索文章');
+    fireEvent.change(input, { target: { value: 'PostgreSQL' } });
+
+    // 未按方向键前不高亮
+    expect(input).not.toHaveAttribute('aria-activedescendant');
+
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    const activeId = input.getAttribute('aria-activedescendant');
+    expect(activeId).toBe('search-option-0');
+
+    const activeOption = document.getElementById(activeId!);
+    expect(activeOption).toHaveAttribute('aria-selected', 'true');
+    expect(activeOption).toHaveClass('search-panel__item--active');
+  });
 });
