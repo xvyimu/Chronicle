@@ -2,7 +2,7 @@
 
 > 状态：当前维护版（2026-10-07，Iteration 07 后）。详细模块说明见 [ARCHITECTURE.md](./ARCHITECTURE.md)，当前未完成事项只以根 [TODO](../TODO.md) 为准。文档导航见 [docs/README.md](./README.md)。
 >
-> **2026-10-07 大版本重构**：站点视觉改为 AI 工作台气质（中性灰 + 大留白），删除评论（Giscus）/ 数字花园 `garden` / 收藏导航 `links` / 服务端搜索 `/api/search` 与 `/api/preview`，搜索改为客户端 Fuse，新增归档 `/archive` 与我的阅读 `/favorites`。改动在分支 `feature/architecture-rebuild-2026-10-06`（未合并）。详见 [迭代记录](./iterations/) 与 [ADR-0007](./adr/0007-workspace-rebuild-baseline.md)。
+> **2026-10-07 大版本重构**：站点视觉改为 AI 工作台气质（中性灰 + 大留白），删除评论（Giscus）/ 数字花园 `garden` / 收藏导航 `links` / 服务端搜索 `/api/search` 与 `/api/preview`，搜索改为客户端 Fuse，新增归档 `/archive` 与我的阅读 `/favorites`。改动已并入 `master`（PR #37 `913c8cf` / PR #38 `6326724`）。详见 [迭代记录](./iterations/) 与 [ADR-0007](./adr/0007-workspace-rebuild-baseline.md)。
 
 ## 下一步（直接做，勿重问范围）
 
@@ -32,17 +32,17 @@
 
 ## 2. 当前生产基线
 
-| 项目           | 当前证据                                                                                                                                                                         |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 生产域名       | `https://incca.ccwu.cc`                                                                                                                                                          |
-| origin/master  | **`692e7b3`**（`feature/architecture-rebuild-2026-10-06` 尚未合并；重构改动全部在工作区未提交）                                                                                  |
-| GitHub Actions | master 主 CI **最近数次为 failure**（2026-09-30 起，挂在 `pnpm audit --prod`；本分支已修该门）。接手前需先查 [Actions](https://github.com/xvyimu/Chronicle/actions) 确认当前状态 |
-| 内容规模       | 20 篇文章、6 个项目；`data/links.json` 保留 10 类 123 条但**已无消费方**（收藏导航功能已删）                                                                                     |
-| Vitest         | **72 files / 547 tests**（2026-10-07 本机实测 `npx vitest run` exit 0）                                                                                                          |
-| Playwright     | 5 spec files / 46 tests                                                                                                                                                          |
-| Node / pnpm    | Node **≥24**（`package.json` engines）· 本机 v24.16.0 / pnpm 11.8.0                                                                                                              |
-| 延后运营       | GSC/Bing/RUM pending；手册 `docs/ops-deferred-work-plan.md`；`pnpm check:ops-readiness`                                                                                          |
-| SRI            | **生产已开**（`ENABLE_SRI=1`）· 静态 chunk `integrity="sha384-…"` · CSP nonce 仍在                                                                                               |
+| 项目           | 当前证据                                                                                                                                                                                                                                                         |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 生产域名       | `https://incca.ccwu.cc`                                                                                                                                                                                                                                          |
+| origin/master  | **`6326724`**（PR #37 / #38 已并入 master，工作区干净；本地与 `origin/master` 同 SHA）                                                                                                                                                                           |
+| GitHub Actions | master 主 CI **`deploy` job 为 failure**（`VERCEL_TOKEN` 无效：`The token provided via --token argument is not valid`）；`quality` / `e2e` / `bundle-analyze` 三个 job 均 pass。接手前需先查 [Actions](https://github.com/xvyimu/Chronicle/actions) 确认当前状态 |
+| 内容规模       | 20 篇文章、6 个项目；`data/links.json` 保留 10 类 123 条但**已无消费方**（收藏导航功能已删）                                                                                                                                                                     |
+| Vitest         | **73 files / 551 tests**（2026-10-07 本机实测 `pnpm test` exit 0）                                                                                                                                                                                               |
+| Playwright     | 5 spec files / 46 tests                                                                                                                                                                                                                                          |
+| Node / pnpm    | Node **≥24**（`package.json` engines）· 本机 v24.16.0 / pnpm 11.8.0                                                                                                                                                                                              |
+| 延后运营       | GSC/Bing/RUM pending；手册 `docs/ops-deferred-work-plan.md`；`pnpm check:ops-readiness`                                                                                                                                                                          |
+| SRI            | **生产已开**（`ENABLE_SRI=1`）· 静态 chunk `integrity="sha384-…"` · CSP nonce 仍在                                                                                                                                                                               |
 
 生产证据是时间点快照。接手时仍需用当前 `git log`、CI 和命令重新确认，不要把本表当作永久真值。
 

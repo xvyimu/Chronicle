@@ -43,18 +43,20 @@
   /* ---- 文字（中性灰阶）---- */
   --text: #18181b; /* 一级：近黑 */
   --text-soft: #52525b; /* 二级 */
-  --text-dim: #6f6f77; /* 三级/辅助（≥12px；对比度 4.77:1 达 AA） */
+  --text-dim: #6f6f77; /* 三级/辅助（≥12px）；对 #fafafa 4.77:1、对 #f4f4f5 4.53:1 达 AA */
 
   /* ---- 边框（低对比）---- */
   --border: rgba(24, 24, 27, 0.08);
   --border-strong: rgba(24, 24, 27, 0.16);
 
   /* ---- 强调色（克制蓝，仅关键入口与状态）---- */
-  --brand: #4f6bed;
+  /* 文字用途须 ≥4.5:1：对 #fafafa 5.51、对 #f4f4f5 5.23、对 --brand-soft 5.13；
+     作背景时白字 5.75。2026-10-07 由 #4f6bed 收深（原值对 #fafafa 仅 4.32，不达 AA）。 */
+  --brand: #3f58dd;
   --brand-2: #6b82f0;
-  --brand-hover: #3d56d4;
-  --brand-soft: rgba(79, 107, 237, 0.1);
-  --brand-gradient: #4f6bed; /* 收敛：渐变 → 纯色（禁高饱和渐变） */
+  --brand-hover: #3348c7;
+  --brand-soft: rgba(63, 88, 221, 0.1);
+  --brand-gradient: #3f58dd; /* 收敛：渐变 → 纯色（禁高饱和渐变） */
 
   /* ---- 状态色 ---- */
   --destructive: #dc2626;
@@ -62,8 +64,8 @@
   --warning: #d97706;
 
   /* ---- 特色/CTA（收敛为中性强调，去掉橙金花哨）---- */
-  --featured: #4f6bed;
-  --featured-soft: rgba(79, 107, 237, 0.1);
+  --featured: #3f58dd;
+  --featured-soft: rgba(63, 88, 221, 0.1);
   --cta: #18181b;
   --cta-ink: #ffffff;
   --cta-soft: rgba(24, 24, 27, 0.06);
@@ -98,7 +100,7 @@
   --shadow-md: 0 8px 32px rgba(24, 24, 27, 0.08);
   --shadow-lg: 0 16px 48px rgba(24, 24, 27, 0.1);
   --shadow-xl: 0 24px 64px rgba(24, 24, 27, 0.12);
-  --shadow-brand: 0 8px 24px rgba(79, 107, 237, 0.16);
+  --shadow-brand: 0 8px 24px rgba(63, 88, 221, 0.16);
 
   /* ---- 图片浮层 ---- */
   --image-overlay-scrim: rgba(9, 9, 11, 0.88);
@@ -148,7 +150,9 @@
 
   --text: #fafafa;
   --text-soft: #a1a1aa;
-  --text-dim: #7d7d86;
+  /* 三级/辅助文字：须同时覆盖 --surface / --bg-elevated / --surface-hover 三档背景。
+     2026-10-07 由 #7d7d86 提亮（原值 4.35 / 4.03 / 3.65，三档全不达 AA）。 */
+  --text-dim: #90909a; /* 5.60 / 5.20 / 4.71 */
 
   --border: rgba(250, 250, 250, 0.1);
   --border-strong: rgba(250, 250, 250, 0.2);

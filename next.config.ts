@@ -13,7 +13,7 @@ const isDev = process.env.NODE_ENV === 'development';
  *
  * Gated behind ENABLE_SRI so merging to master never turns it on in production.
  * Flip ENABLE_SRI=1 only on a preview branch/deploy to run the ADR verification
- * checklist (docs/adr/2026-07-21-sri-over-nonce-evaluation.md). Production enable
+ * checklist (docs/adr/0005-sri-over-nonce-evaluation.md). Production enable
  * is a separate, explicitly-authorized change — not a side effect of this flag.
  *
  * Next 16.2.11 type: experimental.sri is `{ algorithm?: 'sha256'|'sha384'|'sha512' }`,

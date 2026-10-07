@@ -1,7 +1,7 @@
 # 西江月博客 · 当前待办
 
 > 状态：**工程侧可无条件推进的事项已关闭**；仅剩外部账号或条件触发。
-> 更新：2026-10-07（分支 `feature/architecture-rebuild-2026-10-06` 重构后 · PR #37 待合并 · package `chronicle`）
+> 更新：2026-10-07（重构已并入 master：PR #37 `913c8cf` / PR #38 `6326724` · package `chronicle`）
 > 生产：`https://incca.ccwu.cc`
 > 手册：[ops-deferred-work-plan.md](./docs/ops-deferred-work-plan.md)
 > 自动检查：`pnpm check:ops-readiness`（可选 `-- --live`）
@@ -36,7 +36,7 @@
 
 | 范围              | 结果                                                                 | 证据                   |
 | ----------------- | -------------------------------------------------------------------- | ---------------------- |
-| 工作台重构        | 中性灰视觉 + 客户端搜索 + `/archive` `/favorites`；删评论/花园/links | PR#37（待合并）        |
+| 工作台重构        | 中性灰视觉 + 客户端搜索 + `/archive` `/favorites`；删评论/花园/links | PR#37 · `913c8cf`      |
 | T1 preview 契约   | a11y popover + `error`+`code` + 120/60s 限流（**功能已删**）         | PR#14                  |
 | T2 content 快照   | `generated/content-snapshot/` · `CONTENT_BACKEND=snapshot`           | PR#14                  |
 | 软脱离身份        | npm `chronicle` · 无 former-name 叙事                                | PR#16 · `5c629e7`      |

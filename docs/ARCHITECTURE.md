@@ -4,7 +4,7 @@
 >
 > 这份文档是面向接手者的架构摘要：说明内容从哪里来、如何被解析、页面如何渲染、样式和安全边界在哪里，以及新增能力时应该落在哪一层。更细的运行状态与后续方向见 [`docs/HANDOFF.md`](./HANDOFF.md)，具体设计决策见 `docs/specs/` 与 `docs/adr/`。历史全栈审查快照：[`docs/archive/full-stack-audit-2026-07-17.md`](./archive/full-stack-audit-2026-07-17.md)。
 >
-> **2026-10-07 重构（分支 `feature/architecture-rebuild-2026-10-06`，未合并）**：本文已同步删除项 —— 移除 `/api/search`、`/api/preview`、`/garden`、`/links`、Giscus 评论、`server/search`、`search-text.ts`、`link-graph.ts`、`force-layout.ts`；搜索改为客户端 Fuse；新增 `/archive`、`/favorites` 与工作台外壳。
+> **2026-10-07 重构（已并入 `master`：PR #37 `913c8cf` / PR #38 `6326724`）**：本文已同步删除项 —— 移除 `/api/search`、`/api/preview`、`/garden`、`/links`、Giscus 评论、`server/search`、`search-text.ts`、`link-graph.ts`、`force-layout.ts`；搜索改为客户端 Fuse；新增 `/archive`、`/favorites` 与工作台外壳。
 
 ## 0. 五问速答
 
@@ -307,12 +307,12 @@ push master
 
 当前测试基线：
 
-| 层         | 基线                                                                                                                                       |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| Vitest     | **72 files / 547 tests**（2026-10-07 本机实测 `npx vitest run` exit 0）                                                                    |
-| Playwright | 5 spec files / 46 tests                                                                                                                    |
-| Build      | production build succeeds（107 静态页）；document routes remain dynamic                                                                    |
-| CI         | **master 主 CI 近期 failure**（2026-09-30 起，挂在 `pnpm audit --prod`）；CI Node 已对齐 24（R8 闭环）。本分支 PR #37 的 `quality` 已 pass |
+| 层         | 基线                                                                                                                                           |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Vitest     | **73 files / 551 tests**（2026-10-07 本机实测 `pnpm test` exit 0）                                                                             |
+| Playwright | 5 spec files / 46 tests                                                                                                                        |
+| Build      | production build succeeds（107 静态页）；document routes remain dynamic                                                                        |
+| CI         | **master 主 CI 的 `quality` / `e2e` / `bundle-analyze` 均 pass；仅 `deploy` job failure（`VERCEL_TOKEN` 无效）**。CI Node 已对齐 24（R8 闭环） |
 
 新增行为时优先补单元或组件测试；浏览器交互、移动端布局、CSP、搜索和导航路径需要 Playwright 覆盖。
 
