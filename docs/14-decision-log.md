@@ -281,3 +281,21 @@
 - **影响**：`pnpm audit --prod` 由 exit 1 → **exit 0**；CI `quality` 由 fail → **pass**，后续 format/lint/test/typecheck/build 首次在本分支实跑。`package.json` / `pnpm-lock.yaml` / `pnpm-workspace.yaml` / `.github/workflows/ci.yml`。
 - **未做**：未改 Lighthouse 阈值（R12，既有基线红灯，改阈值等于拿标准迁就实现）；未修 dev 树 13 条（R13，CI 该步 `continue-on-error`）。
 - **复查**：合并前确认 `pnpm audit --prod` 仍 exit 0（advisory 会推进）。
+
+## 2026-10-07 · D-034 · 合并前全量审查：修 8 项漂移 + 冒烟脚本错误归属
+
+- **背景**：PR #37 提交后做合并前审查（双轴 review + 本机实跑生产冒烟）。审查发现两类问题：① 冒烟脚本 `check-production-content` 的 `home` 期望仍要求首页含项目标题，而重构后首页不再展示项目列表；② 多处文档/注释与实现漂移（含我自己这几轮新引入的）。
+- **关键发现（`home` 期望，最重）**：该脚本**只在 `deploy` job 运行，而 deploy 只在合并到 master 后触发** —— CI 四道门全绿也查不到它，等于合并即部署失败。本机起生产服实跑复现：`home: Missing expected content "公益API导航站"`。
+- **可选**：A 改脚本期望（项目内容由 `/projects` 用例覆盖，不丢覆盖） / B 往首页加回项目展示 / C 删该条断言。
+- **选择**：**A**。删 `homeProject` 期望与 `getFeaturedProjects` 导入，`home` 只留文章标题；项目内容仍由 `projects` 用例覆盖。
+- **原因**：迭代 03 白纸黑字把首页定义为「欢迎区 + 主题云 + 文章列表 + 搜索入口」，**有意不含项目列表**（旧 `ProjectsSection` 是明确删除项）。是**断言放错了页面**，不是标准该降 —— B 会把已删的设计加回来，C 会丢覆盖。
+- **一并修的漂移**（审查发现）：
+  - `AGENTS.md`：`16.2`→`16.3.8`、React `19.2`→`19.3`、搜索「`/api/search` 服务端」→「客户端 Fuse」、测试 `99 files`→`72`、CSS `17 files`→`15` 并重列（去 links/search-ui/home-hero/home-sections，加 reading/workspace）、组件树去 `comments/`+`MagneticCard`+`SearchBar`、作品集名单（去已删的 ChronoPortal/ChronoRelay）。
+  - `docs/ARCHITECTURE.md`：`16.3.5`→`16.3.8`；smoke 覆盖描述订正（去「收藏链接」，并注明该脚本只在 deploy 跑）。
+  - `src/app/globals.css`：头部注释的 CSS 加载链（仍列 4 个已删文件）按实际重写。
+  - `src/components/layout/Sidebar.tsx`：注释「归档待 Iteration 05 加入」——已在 `navigation.ts` 里，删该句。
+  - `src/components/search/SearchPanel.tsx`：注释称写 `?sel=<slug>`——代码从不写 sel，删该句。
+  - `docs/specs/2026-10-06-...md`：按 spec 惯例**保留正文**，头部加「实施后订正」说明 §4.2 的 `src/lib/search/` 未删（改客户端 Fuse，D-004/D-014）。
+- **新登记 R14**：PRD 要求搜索「正文 / 范围筛选 / 词高亮」，实现均无。**未擅自扩功能**；已在 `02-product-requirements.md` 逐条列明差异，待定。其中「防抖」经复核判为**决策变更后的合理省略**（原为 HTTP 每键请求设计，客户端 Fuse 后 <1ms，防抖只会让输入变钝），非缩水。
+- **影响**：`scripts/check-production-content.ts` + 6 份文档 + 2 处源码注释。冒烟本机实跑由 `home` 失败 → 通过（余两条 sitemap 为本地 base-url 与构建域名不一致的假阳性）。
+- **复查**：合并后 deploy job 的 `check:production-content` 是最终验证；若仍红，须查真实生产内容。

@@ -3,6 +3,15 @@
 > **状态**：DRAFT — 待人工审阅确认。未获批前不写业务代码。
 > **性质**：本仓 `docs/specs/` 惯例（带日期设计文档）。
 > **范围**：个人博客/作品集（西江月 · `xvyimu/Chronicle`）· Windows 原生 `D:\projects\Chronicle`。
+>
+> **实施后订正（2026-10-07，正文按 spec 惯例保留当时设计，不改写）：**
+> 本 spec 假设「搜索整体删除」，故 §4.2 把 `src/lib/search/` 列入删除项。实施中改为
+> **保留并重写为客户端 Fuse**（决策 D-004 / D-014），`src/lib/search/` 因此**未删**，
+> 现为 `types.ts` / `engine.ts` / `index.ts` 三文件；`src/server/search/`、`/api/search`、
+> `/api/preview` 均按本 spec 删除。`src/lib/posts/wikilink.ts` 同理**保留**（决策 D-027，
+> 20 篇文章正文 131 处 `[[..]]` 渲染需要）；`link-graph.ts` / `force-layout.ts` /
+> `garden-view-storage.ts` / `search-text.ts` 按 spec 删除。§9 Open Questions 1–5 已全部落地
+> （fuse.js 保留、preview 删除、Giscus env 删除、links.json 物理保留、lint warning 已清）。
 
 ---
 

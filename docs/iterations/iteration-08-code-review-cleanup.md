@@ -145,19 +145,19 @@ CI Node 对齐（R8 闭环）：`.github/workflows/ci.yml` 4 处 `node-version: 
 
 ### 回归结果
 
-| 命令                                   | 结果                         | exit |
-| -------------------------------------- | ---------------------------- | ---- |
-| `npx tsc --noEmit`                     | 通过（增量与全量均 0）       | 0    |
-| `npx eslint`                           | 通过                         | 0    |
-| `npx vitest run`                       | 72 文件 / 547 测试           | 0    |
-| `pnpm build`                           | 107 静态页                   | 0    |
-| `pnpm test:e2e`                        | 45 passed / 0 failed         | 0    |
-| `pnpm check:seo`                       | passed                       | 0    |
-| `pnpm format:docs:check`               | passed                       | 0    |
-| `node scripts/check-doc-links.mjs`     | 139 文件 passed              | 0    |
-| `pnpm audit --prod --audit-level=high` | **No known vulnerabilities** | 0    |
-| `content:verify`                       | snapshot in sync (20 篇)     | 0    |
-| Playwright 搜索实测                    | 6/6 通过                     | —    |
+| 命令                                          | 结果                         | exit |
+| --------------------------------------------- | ---------------------------- | ---- |
+| `npx tsc --noEmit`                            | 通过（增量与全量均 0）       | 0    |
+| `npx eslint`                                  | 通过                         | 0    |
+| `npx vitest run`                              | 72 文件 / 547 测试           | 0    |
+| `pnpm build`                                  | 107 静态页                   | 0    |
+| `pnpm test:e2e`                               | 45 passed / 0 failed         | 0    |
+| `pnpm check:seo`                              | passed                       | 0    |
+| `pnpm format:docs:check`                      | passed                       | 0    |
+| `node scripts/check-doc-links.mjs`            | 139 文件 passed              | 0    |
+| `pnpm audit --prod --audit-level=high`        | **No known vulnerabilities** | 0    |
+| `content:verify`                              | snapshot in sync (20 篇)     | 0    |
+| Playwright 搜索实测（一次性脚本，非仓内 e2e） | 6/6 通过                     | —    |
 
 以上为**升级 next 16.3.8 之后**的全量重跑。
 

@@ -15,7 +15,7 @@ type SearchPanelProps = {
  *
  * - 客户端 Fuse 索引（20 篇规模），无服务端往返。
  * - 键盘：`/` 或 Ctrl/Cmd+K 聚焦；↑↓ 选择；Enter 打开；Esc 清空。
- * - URL 可分享：查询写入 `?q=`，选中项为 `?q=...&sel=<slug>`。
+ * - URL 可分享：查询写入当前路径的 `?q=`（跨路径会卸载本组件，故不跳页）。
  * - 状态：空查询提示 / 无结果 / 结果列表。
  */
 export default function SearchPanel({ docs }: SearchPanelProps) {

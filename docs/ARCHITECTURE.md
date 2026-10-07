@@ -45,7 +45,7 @@
 
 | 层         | 选型                                                    |
 | ---------- | ------------------------------------------------------- |
-| Framework  | Next.js 16.3.5 App Router                               |
+| Framework  | Next.js 16.3.8 App Router                               |
 | UI         | React 19.3.0, Tailwind CSS 4, BEM CSS                   |
 | Content    | MDX, `next-mdx-remote`, `js-yaml`, local JSON           |
 | Validation | Zod schemas + custom frontmatter parser                 |
@@ -299,7 +299,7 @@ push master
   -> check-production-content against NEXT_PUBLIC_SITE_URL
 ```
 
-生产内容 smoke 覆盖首页、博客、作品、收藏链接、RSS 和 sitemap。
+生产内容 smoke 覆盖首页（文章标题 + 搜索入口）、博客、文章详情、关于、作品、RSS 与 sitemap。该脚本只在 `deploy` job 运行（合并到 master 后），改首页或内容结构时须本地对照跑一次，CI 四道门查不到它。
 
 ## 9. 缓存与测试
 

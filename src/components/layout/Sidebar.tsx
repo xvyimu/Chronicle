@@ -6,7 +6,7 @@ import NavLinks from '@/components/layout/NavLinks';
  *
  * 路径高亮复用 `x-pathname`（proxy.ts 每请求写入），与 Header 同源。
  * 移动端由 CSS 隐藏，导航改走 MobileNav（Sheet）。
- * 归档（/archive）待 Iteration 05 新增后加入 MAIN_NAV_ITEMS。
+ * 导航项单一来源见 `src/lib/navigation.ts`。
  */
 export default async function Sidebar() {
   const headerList = await headers();

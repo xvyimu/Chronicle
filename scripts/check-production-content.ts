@@ -1,5 +1,5 @@
 import { getAllPosts } from '../src/lib/posts';
-import { getAllProjects, getFeaturedProjects } from '../src/lib/projects';
+import { getAllProjects } from '../src/lib/projects';
 import { getAboutContent } from '../src/lib/about';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -117,7 +117,6 @@ const HOME_SECURITY_HEADERS: HeaderExpectation[] = [
 export function buildExpectations(baseUrl: string): PageExpectation[] {
   const posts = getAllPosts();
   const projects = getAllProjects();
-  const featuredProjects = getFeaturedProjects();
 
   const homePosts = [
     ...posts.filter((post) => post.featured),
@@ -133,17 +132,15 @@ export function buildExpectations(baseUrl: string): PageExpectation[] {
   );
   const homePost = requireText(homePosts[0]?.title, 'home article title');
   const firstProject = requireText(projects[0]?.title, 'project title');
-  const homeProject = requireText(
-    (featuredProjects[0] ?? projects[0])?.title,
-    'home project title',
-  );
 
   return [
     {
       label: 'home',
       path: '/',
       contentTypeIncludes: 'text/html',
-      mustContain: [homePost, homeProject],
+      // 工作台首页只呈现文章列表与搜索入口（Iteration 03 设计）；
+      // 项目内容由下方 `projects` 用例覆盖。
+      mustContain: [homePost],
       requiredHeaders: HOME_SECURITY_HEADERS,
     },
     {
