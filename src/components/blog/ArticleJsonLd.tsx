@@ -1,6 +1,6 @@
 import { blogPostingSchema, breadcrumbSchema, toJsonLd } from '@/lib/jsonld';
 import { SITE_CONFIG } from '@/lib/site';
-import JsonLd from '@/components/layout/JsonLd';
+import JsonLd from '@/components/ui/JsonLd';
 import type { PostFull } from '@/types';
 
 export default function ArticleJsonLd({

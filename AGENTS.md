@@ -83,7 +83,7 @@ src/
 │   ├── search/             # SearchPanel (client Fuse island)
 │   ├── layout/             # Header, Sidebar, NavLinks, Footer, PageSection, SiteBackdropStage/Parallax
 │   ├── projects/           # ProjectCard
-│   └── ui/                 # Reusable UI (ThemeToggle, MetaBadge, Card, BackToTop)
+│   └── ui/                 # Reusable UI (ThemeToggle, MetaBadge, Card, BackToTop, DarkModeScript, JsonLd)
 ├── hooks/                  # React hooks (useInView, usePersistedEnum, usePrefersFinePointer, usePrefersReducedMotion)
 ├── lib/                    # Business logic
 │   ├── posts/              # Post modules (schema, repository, query, wikilink + remark plugin)

@@ -6,7 +6,7 @@ import { headers } from 'next/headers';
  * Production policy lives here so vitest can lock invariants without spinning
  * NextRequest. The proxy still owns request/response header wiring.
  *
- * ADR: docs/adr/2026-07-17-csp-nonce-over-ssg.md
+ * ADR: docs/adr/0003-csp-nonce-over-ssg.md
  *   - Keep per-request nonce + strict-dynamic
  *   - Never relax script-src to unsafe-inline for SSG
  */

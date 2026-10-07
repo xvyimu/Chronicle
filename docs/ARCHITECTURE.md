@@ -185,7 +185,7 @@ ArticleList（最近更新）
 | `components/layout/`   | Header（TopBar）、Sidebar、NavLinks、Footer、PageSection、ArchiveCard、EmptyState、SiteBackdropStage、SiteBackdropParallax(+Gate) |
 | `components/search/`   | SearchPanel（客户端 Fuse 搜索岛）                                                                                                 |
 | `components/projects/` | ProjectCard                                                                                                                       |
-| `components/ui/`       | ThemeToggle、MetaBadge、Card/Button/Badge primitive、BackToTop、popover、sheet、skeleton                                          |
+| `components/ui/`       | ThemeToggle、MetaBadge、Card/Button/Badge primitive、BackToTop、popover、sheet、skeleton、DarkModeScript、JsonLd                  |
 
 约定：
 

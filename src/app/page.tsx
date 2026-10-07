@@ -5,7 +5,7 @@ import { SITE_CONFIG } from '@/lib/site';
 import WorkspaceHero from '@/components/home/WorkspaceHero';
 import TopicCloud from '@/components/home/TopicCloud';
 import ArticleList from '@/components/home/ArticleList';
-import JsonLd from '@/components/layout/JsonLd';
+import JsonLd from '@/components/ui/JsonLd';
 import { getCspNonce } from '@/lib/csp';
 // Route-scoped homepage CSS (FE-1): keep off other routes.
 import './styles/home.css';
