@@ -309,3 +309,13 @@
 - **选择 C 的理由**：① 非本次重构引入（`loading.tsx` 与 `next.config.ts` 本 PR 均未改，master 同页更差 0.332）；② R12 间歇失败，不阻塞；③ 取 `100vh` 会有「一屏骨架 → 整页重排」的观感，最终取值（如 `60vh`）是设计判断，且需合并后在真机看。
 - **影响**：`docs/13-risk-register.md`（新增「R12 跟进」节，含实测数据表与 diff）、`docs/iterations/iteration-08-...md` §17/§18、`docs/HANDOFF.md` §6、`docs/15-acceptance-checklist.md`。**源码未动**。
 - **复查**：合并后按 R12 跟进节改 `loading.tsx`，复测 CLS 应落 0.002 内；同时订正 `lighthouse.config.js` 第 40 行过期的「历史 CLS ~0.13」注释。
+
+## 2026-10-07 · D-036 · 拉丁字体自托管、中文走系统字体栈
+
+- **背景**：合并 PR #37（`913c8cf`）时 Vercel Production 部署失败，实测生产站点仍跑重构前版本（首页含 `home-paper` / `Paper Gallery`）。根因是 `next/font/google` 在**构建期**从 Google 下载字体，拉不到时 Next 生成的虚拟模块 `@vercel/turbopack-next/internal/font/google/font` 解析失败 → build 挂。同 commit 一挂一过（CI 07:54 fail / Vercel 07:07、07:08 success），属间歇性。
+- **可选**：A 全自托管（112 个 woff2，4.43 MB） / B 拉丁自托管 + 中文系统字体（3 个 TTF，192 KB） / C 只加字体缓存（仍依赖网络）。
+- **选择**：**B**。详见 [ADR-0008](./adr/0008-self-hosted-latin-fonts.md)。
+- **原因**：实测 `Noto Sans SC` 被切成 101 个 woff2 分片共 4.29 MB，全自托管不划算；且中文那条 `font-family` 原本就有 `system-ui` 兜底，去掉 webfont 不需改任何 CSS。拉丁字体仅 3 个文件，一次到位。选 TTF 而非 woff2 分片：文件少（3 vs 11）、代码简洁，仅多 52 KB（本机无 woff2 压缩工具）。
+- **影响**：`src/app/fonts/` 新增 3 个 TTF；`layout.tsx` 改 `next/font/local` 并改 `body` 字体栈；`docs/adr/0008`、`docs/13-risk-register.md` R15。**构建不再依赖外网**——断网构建（无效代理强制失败）实测 exit 0。
+- **取舍**：中文渲染随访客 OS 变化（Windows 微软雅黑 / macOS 苹方 / Android 思源），属有意选择。
+- **复查**：若要求各平台字形完全一致 → 回到方案 A；中文系统字体在某平台出现明显缺陷 → 评估自托管中文子集。

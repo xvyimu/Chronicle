@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Cormorant_Garamond, Noto_Sans_SC, JetBrains_Mono } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 // CSS 语义模块按顺序显式 import (Tailwind v4 下 postcss-import 失效,
 // 详见 docs/specs/2026-06-29-css-import-fix-design.md)
@@ -26,42 +26,35 @@ import BackToTop from '@/components/ui/BackToTop';
 import DarkModeScript from '@/components/ui/DarkModeScript';
 import { getCspNonce } from '@/lib/csp';
 
-// Font preload matrix (CH-PERF-002):
-// - Noto 400/700 preload=true  → body + chrome emphasis (700 used sitewide; 800 synthesizes)
-// - Cormorant 500 preload=true → home hero / section titles are LCP candidates; keep dual preload
-// - JetBrains 400/700 preload=false → code/labels; swap on demand, never compete with LCP
-// Dual preload is intentional for `/` LCP (display hero + body). Do not drop Cormorant preload.
-const notoSansSC = Noto_Sans_SC({
-  subsets: ['latin'],
-  // 400 body + 700 emphasis; 500 unused; 800 UI weights synthesize from 700
-  weight: ['400', '700'],
-  variable: '--font-noto-sans-sc',
-  display: 'swap',
-  preload: true,
-  adjustFontFallback: true,
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ['latin'],
-  // Labels use 700; inline code may request 600 → nearest face
-  weight: ['400', '700'],
+// Font strategy (2026-10-07, 见 docs/adr/0008-self-hosted-latin-fonts.md):
+// - 拉丁字体自托管（next/font/local），构建期不再联网拉 Google Fonts。
+//   此前 next/font/google 在 CI/Vercel 拉不到字体时会 build 失败（间歇性）。
+// - 中文正文改走系统字体栈（见下方 body fontFamily），不再下载 webfont：
+//   Noto Sans SC 会被切成 101 个 woff2（4.29MB），自托管不划算。
+// Preload 矩阵 (CH-PERF-002)：
+// - JetBrains 400/700 preload=false → 代码/标签；按需加载，不与 LCP 竞争
+// - Cormorant 500 preload=true → 首页 hero / section 标题是 LCP 候选，保留
+const jetbrainsMono = localFont({
+  src: [
+    { path: './fonts/jetbrains-mono-400.ttf', weight: '400', style: 'normal' },
+    { path: './fonts/jetbrains-mono-700.ttf', weight: '700', style: 'normal' },
+  ],
   variable: '--font-jetbrains-mono',
   display: 'swap',
   preload: false,
   // Code blocks and mono UI share the same face; keep metric fallback tight for CLS.
-  adjustFontFallback: true,
+  adjustFontFallback: 'Arial',
 });
 
-const cormorantGaramond = Cormorant_Garamond({
-  subsets: ['latin'],
-  // All --font-display rules use 500; drop unused 600 face
-  weight: ['500'],
+const cormorantGaramond = localFont({
+  src: './fonts/cormorant-garamond-500.ttf',
+  weight: '500',
   variable: '--font-display',
   display: 'swap',
   preload: true,
-  // Article titles use clamp(2.7rem, 6vw, 5.2rem); unadjusted Georgia fallback
+  // Article titles use clamp(2.7rem, 6vw, 5.2rem); unadjusted fallback
   // was a primary CLS driver on /blog/nextjs-app-router in Lighthouse CI.
-  adjustFontFallback: true,
+  adjustFontFallback: 'Times New Roman',
 });
 
 export const metadata: Metadata = {
@@ -90,7 +83,7 @@ export default async function RootLayout({
   return (
     <html
       lang="zh-CN"
-      className={`h-full antialiased ${notoSansSC.variable} ${jetbrainsMono.variable} ${cormorantGaramond.variable}`}
+      className={`h-full antialiased ${jetbrainsMono.variable} ${cormorantGaramond.variable}`}
       suppressHydrationWarning
     >
       <head>
@@ -104,7 +97,11 @@ export default async function RootLayout({
       </head>
       <body
         className="flex min-h-full flex-col text-[var(--text)]"
-        style={{ fontFamily: 'var(--font-noto-sans-sc), system-ui, sans-serif' }}
+        style={{
+          // 中文走系统字体栈（不下载 webfont）；拉丁字体由 next/font/local 提供。
+          fontFamily:
+            'system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif',
+        }}
       >
         <SiteBackdropStage />
         <SiteBackdropParallaxGate />
