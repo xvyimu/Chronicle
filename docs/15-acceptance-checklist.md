@@ -112,7 +112,7 @@
 - [x] **R11 已修**：next 16.3.5 → 16.3.8（critical RCE）+ sharp / source-map-js override；`pnpm audit --prod` exit 0
 - [x] 提交 2 个（`5d29bfc` 代码 + `9def4b5` 文档）+ 推送 + PR [#37](https://github.com/xvyimu/Chronicle/pull/37)
 - [x] 追加提交 `46b8bd8`（R8 + R11）；CI `quality` pass
-- [ ] **R12 · Lighthouse 间歇失败**（`/blog/nextjs-app-router`：性能 0.75 / CLS 0.2976；同 commit 时红时绿）——既有基线，根因已定位，未修，待定
+- [ ] **R12 · Lighthouse 间歇失败**（`/blog/nextjs-app-router`：性能 0.75 / CLS 0.2976；同 commit 时红时绿）——既有基线，**根因已定位 + 修法已实测**（骨架屏高度下限，CLS 0.0745→0.0012），本轮不修，另开跟进
 - [ ] R13 · dev 树 audit 13 条——CI 该步 `continue-on-error`，已记录
 - [ ] 合并 master（须人审）
 - [ ] 部署（须人审）

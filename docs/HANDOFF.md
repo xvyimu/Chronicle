@@ -94,7 +94,7 @@
 - SRI：生产 **已启用**（2026-07-22）；ADR Accepted。回滚=去掉 Production `ENABLE_SRI` 后 redeploy。与 PPR 仍分轨。
 - **R8（CI Node 版本）已闭环**（2026-10-07）：`.github/workflows/ci.yml` 4 处 `node-version: 22` → `24`，与 `engines: >=24` 对齐。
 - **R11（生产依赖漏洞）已闭环**（2026-10-07）：`pnpm audit --prod` 报 3 条（含 `next/og` critical RCE，命中当时的 next@16.3.5）。已升 next → 16.3.8、sharp → 0.35.5、source-map-js → 1.2.2；audit 现 exit 0。详见 [D-033](./14-decision-log.md)。
-- **R12（Lighthouse 间歇失败）未修**：`/blog/nextjs-app-router` 性能 0.75（阈值 ≥0.8）、CLS 0.2976（阈值 ≤0.15）。CI 同一 commit 时红时绿（run `37502665937` fail / `37505113109` pass；Playwright 本身恒 45 passed）。**非本 PR 引入**——master `e178f07` 同页同样两条失败（0.74 / 0.3322）。根因已实测：首帧只有外壳（body 940px），正文 41ms 后才入 DOM，页脚被推位。修复方向见 iteration-08 §17，未擅自改阈值。
+- **R12（Lighthouse 间歇失败）本轮未修，根因与修法已备好**：`/blog/nextjs-app-router` 性能 0.75（阈值 ≥0.8）、CLS 0.2976（阈值 ≤0.15）。CI 同一 commit 时红时绿（run `37502665937` fail / `37505113109`、`37508576820` pass；Playwright 本身恒 45 passed）。**非本 PR 引入**——master `e178f07` 同页同样两条失败（0.74 / 0.3322）。**根因**：文章页流式，骨架屏（约 520px）首帧让页脚落在 `top=599px`（首屏内），正文（8880px）到达后页脚被推到 10022，这次「顶走」即 CLS。**修法已实测**：给 `src/app/blog/[slug]/loading.tsx` 加高度下限（`minHeight: '100vh'` 实测 CLS 0.0745 → 0.0012），完整数据见 [13-risk-register · R12 跟进](./13-risk-register.md)。未提交，属视觉决策。
 - **Giscus 已删**：评论功能与 `csp.ts` 的 giscus.app 白名单均已移除（ADR 见迭代 06）。旧文档若提到「Discussions 开 / JS chunk 含仓名」均已失效。
 - 延后事项不得伪装成无条件工程任务；就绪状态以 `check:ops-readiness` 为准。
 

@@ -175,21 +175,21 @@ CI 日志确认 R8 生效：`Found in cache @ /opt/hostedtoolcache/node/24.21.0/
 
 ## 17. 遗留问题
 
-- **R12 · Lighthouse 间歇失败（未修）**：`/blog/nextjs-app-router` 两条断言 —— `categories:performance` 0.75（阈值 ≥0.8）、`cumulative-layout-shift` 0.2976（阈值 ≤0.15）。CI 中时红时绿，属**间歇性**，非稳定红灯。
-  - **非本 PR 引入**：master `e178f07`（2026-09-26）同页同样两条失败，数值 0.74 / 0.3322 —— 本 PR 反而略好。
-  - **根因实测定位**（本地生产服务器 + CDP 节流 + MutationObserver）：`DOMContentLoaded` 时 `body=940px`、`#main-content=522px`（样式表已加载）；**41ms 后**正文（`.prose` 8880px）才插入 DOM，整页撑到 10120px，页脚由 `y=599` 被推到 `y=10022`。即首帧只有外壳、正文随后到达。
-  - 本地无节流 CLS = 0.0000；加 CDP 节流（150ms 延迟 / 1.6Mbps / 4× CPU）复现 0.0733；CI runner 更慢故放大到 0.29。
-  - **未擅自改预算阈值**（改阈值等于拿标准迁就实现）；`lighthouse.config.js` 第 40 行注释「Article MDX 页历史 CLS ~0.13」已过期。
-  - 修复方向（未实施）：给正文容器预留首屏空间，或查清正文为何晚于外壳到达。
+- **R12 · Lighthouse 间歇失败（本轮未修，根因已定位 + 修法已实测 → 另开跟进）**：`/blog/nextjs-app-router` 两条断言 —— `categories:performance` 0.75（阈值 ≥0.8）、`cumulative-layout-shift` 0.2976（阈值 ≤0.15）。CI 中时红时绿，属**间歇性**，非稳定红灯。
+  - **非本 PR 引入**：master `e178f07`（2026-09-26）同页同样两条失败，数值 0.74 / 0.3322 —— 本 PR 反而略好。`loading.tsx` / `next.config.ts` 本 PR 均未改。
+  - **根因**：文章页流式渲染，先发 `src/app/blog/[slug]/loading.tsx` 骨架屏（约 520px），真实正文（8880px）随后到。首帧 `body=940px`、**页脚 `.footer` 落在 `top=599px`——就在首屏内**；正文到达后页脚被推到 `y=10022`，这一次「顶走」即 0.0733 的位移。本地无节流 CLS=0.0000；CDP 节流（150ms / 1.6Mbps / 4× CPU）复现 0.0745；CI runner 更慢故放大到 0.29。
+  - **修法已实测**：给骨架屏外层加 `minHeight: '100vh'` → 首帧 `body=1117px`、页脚 `top=1019px`（移出首屏），**CLS 0.0745 → 0.0012**。实验文件已还原（`git status` 干净），完整数据见 [13-risk-register · R12 跟进](../13-risk-register.md)。
+  - **未修理由**：属文章页加载观感的设计判断；取 `100vh` 会有「一屏骨架 → 整页重排」的观感，建议合并后按视觉实测定中间值（如 `60vh`）。
+  - **未擅自改预算阈值**；`lighthouse.config.js` 第 40 行注释「Article MDX 页历史 CLS ~0.13」已过期。
 - **R13 · dev 树 audit 13 条**（dot-prop / brace-expansion / braces）：CI 该步 `continue-on-error`，不阻断；其中 `brace-expansion@1` 是 `pnpm-workspace.yaml` 注释记录的结构性无解（上游从未发布 advisory 要求的 1.1.17）。
 - **`data/links.json` 无消费方**：功能已删，物理文件保留（内容决策）。`content-dirs.ts` 仍列其路径，属残留。
 - **`docs/ARCHITECTURE_TARGET.md` / `docs/03-information-architecture.md` 等**未逐篇复核（本轮只覆盖三份「当前维护文档」）。
 - 全站装饰背景层、详情页衬线标题（D-019 / D-022）维持原状。
 
-**已完成（本轮后半段，用户授权后）**：提交 2 个（`5d29bfc` 代码 + `9def4b5` 文档）→ 推送 `origin/feature/architecture-rebuild-2026-10-06` → 开 PR [#37](https://github.com/xvyimu/Chronicle/pull/37)。随后追加 `46b8bd8`（R8 + R11）、`4753271`（文档同步）、`eb8abc5`（R12 定性修正）。最终提交 `eb8abc5` 的 CI：quality / bundle-analyze / e2e / Vercel 全 pass。**未合并、未部署。**
+**已完成（本轮后半段，用户授权后）**：提交 `5d29bfc`（代码）→ `9def4b5`（文档）→ `46b8bd8`（R8 + R11）→ `4753271` → `eb8abc5`（R12 定性修正）→ `e58c56e`（CI 记录）→ `6cc78aa`（合并前审查修复）。分支已推送，PR [#37](https://github.com/xvyimu/Chronicle/pull/37) 开着，`6cc78aa` 的 CI（quality / bundle-analyze / e2e / Vercel）全 pass。**未合并、未部署。**
 
 ## 18. 下一迭代建议
 
-1. **R12（Lighthouse）**：`/blog/nextjs-app-router` 的 CLS 0.2976 与性能 0.75 需真修（非改阈值）。方向：查该页布局偏移源（字体切换？代码块？TOC？），`lighthouse.config.js` 第 40 行的「历史 CLS ~0.13」注释亦需据实更新。
-2. **人工验收 PR #37** → 合并 master → 部署（均须人审）。
-3. R13（dev 树 audit）按需评估。
+1. **R12（Lighthouse）——根因与修法已备好，只需一次视觉决策**：按 [13-risk-register · R12 跟进](../13-risk-register.md) 改 `src/app/blog/[slug]/loading.tsx`（给骨架屏加高度下限），按实测定 `60vh` 之类的中间值，复测后 CLS 应落在 0.002 内。`lighthouse.config.js` 第 40 行「历史 CLS ~0.13」注释亦需据实更新。
+2. **人工验收 PR #37** → 合并 master → 部署（均须人审）。合并后 `deploy` job 会跑 `check:production-content` —— 那是本轮修过的 `home` 期望的最终验证。
+3. **R14（搜索三项功能差）** 与 **R13（dev 树 audit）** 按需评估。

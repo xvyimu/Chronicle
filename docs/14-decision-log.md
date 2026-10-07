@@ -299,3 +299,13 @@
 - **新登记 R14**：PRD 要求搜索「正文 / 范围筛选 / 词高亮」，实现均无。**未擅自扩功能**；已在 `02-product-requirements.md` 逐条列明差异，待定。其中「防抖」经复核判为**决策变更后的合理省略**（原为 HTTP 每键请求设计，客户端 Fuse 后 <1ms，防抖只会让输入变钝），非缩水。
 - **影响**：`scripts/check-production-content.ts` + 6 份文档 + 2 处源码注释。冒烟本机实跑由 `home` 失败 → 通过（余两条 sitemap 为本地 base-url 与构建域名不一致的假阳性）。
 - **复查**：合并后 deploy job 的 `check:production-content` 是最终验证；若仍红，须查真实生产内容。
+
+## 2026-10-07 · D-035 · R12 根因定位与修法实测；本轮不修、另开跟进
+
+- **背景**：合并前审查要求把 R12（Lighthouse 间歇失败）的既有记录（「正文在 DOMContentLoaded 后入 DOM」）验实到可操作粒度。
+- **可选**：A 我按实测值改骨架屏高度 / B 只把根因与修法落文档，视觉取值留待合并后定 / C 先合并，R12 另开跟进。**用户选 C**。
+- **根因**：文章页流式渲染，先发 `src/app/blog/[slug]/loading.tsx` 骨架屏（约 520px，10 个占位块），真实正文（8880px）随后到。首帧 `body=940px`、**页脚 `.footer` 落在 `top=599px`——就在首屏内**；正文到达后页脚被推到 `y=10022`，这一次「顶走」即 0.0733 的位移。**并非字体切换**（先前文档的猜测方向对但归因不准）。
+- **修法已实测**：给骨架屏外层加 `minHeight: '100vh'`，页脚首帧即 `top=1019px`（移出首屏），**CLS 0.0745 → 0.0012**；`next build` exit 0。实验文件已还原。
+- **选择 C 的理由**：① 非本次重构引入（`loading.tsx` 与 `next.config.ts` 本 PR 均未改，master 同页更差 0.332）；② R12 间歇失败，不阻塞；③ 取 `100vh` 会有「一屏骨架 → 整页重排」的观感，最终取值（如 `60vh`）是设计判断，且需合并后在真机看。
+- **影响**：`docs/13-risk-register.md`（新增「R12 跟进」节，含实测数据表与 diff）、`docs/iterations/iteration-08-...md` §17/§18、`docs/HANDOFF.md` §6、`docs/15-acceptance-checklist.md`。**源码未动**。
+- **复查**：合并后按 R12 跟进节改 `loading.tsx`，复测 CLS 应落 0.002 内；同时订正 `lighthouse.config.js` 第 40 行过期的「历史 CLS ~0.13」注释。
