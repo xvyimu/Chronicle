@@ -189,41 +189,41 @@ describe('模块依赖边界', () => {
     const fixtures: SourceModule[] = [
       {
         filePath: path.join(SRC_ROOT, 'components', 'alias-client.tsx'),
-        source: "'use client'; import { searchPosts } from '@/server/search';",
+        source: "'use client'; import { getAllPosts } from '@/server/content';",
       },
       {
         filePath: path.join(SRC_ROOT, 'components', 'relative-client.tsx'),
-        source: "'use client'; const search = import('../server/search');",
+        source: "'use client'; const content = import('../server/content');",
       },
       {
         filePath: path.join(SRC_ROOT, 'lib', 'alias-export.ts'),
-        source: "export { searchPosts } from '@/server/search';",
+        source: "export { getAllPosts } from '@/server/content';",
       },
       {
         filePath: path.join(SRC_ROOT, 'lib', 'relative-import.ts'),
-        source: "import { searchPosts } from '../server/search';",
+        source: "import { getAllPosts } from '../server/content';",
       },
     ];
 
     expect(findBoundaryViolations(fixtures)).toEqual([
       {
         source: 'src/components/alias-client.tsx',
-        specifier: '@/server/search',
+        specifier: '@/server/content',
         rule: 'client-to-server',
       },
       {
         source: 'src/components/relative-client.tsx',
-        specifier: '../server/search',
+        specifier: '../server/content',
         rule: 'client-to-server',
       },
       {
         source: 'src/lib/alias-export.ts',
-        specifier: '@/server/search',
+        specifier: '@/server/content',
         rule: 'lib-to-server',
       },
       {
         source: 'src/lib/relative-import.ts',
-        specifier: '../server/search',
+        specifier: '../server/content',
         rule: 'lib-to-server',
       },
     ]);

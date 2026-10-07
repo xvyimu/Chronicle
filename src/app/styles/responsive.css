@@ -282,8 +282,8 @@
   .back-to-top {
     right: 16px;
     bottom: 16px;
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
   }
 
   .reading-prefs {
@@ -303,11 +303,6 @@
     display: none;
   }
 
-  .reading-prefs__btn {
-    min-height: 38px;
-    padding: 6px;
-  }
-
   .reading-prefs__value {
     white-space: normal;
   }
@@ -318,13 +313,6 @@
 
   .not-found__code {
     font-size: 4rem;
-  }
-
-  .pagination__link {
-    min-width: 34px;
-    height: 34px;
-    padding: 0 10px;
-    font-size: 0.82rem;
   }
 
   .tag-cloud {
