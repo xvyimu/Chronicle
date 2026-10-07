@@ -58,7 +58,7 @@ src/
 │   │   ├── base.css        # Global base (skip-link, header, footer, not-found)
 │   │   ├── components.css   # Generic layout and card components
 │   │   ├── archive.css      # Archive grids/cards/lists (archive + categories + series layouts)
-│   │   ├── controls.css     # CTA buttons, pagination, tag links, project card controls
+│   │   ├── controls.css     # CTA buttons, tag links, project card controls
 │   │   ├── blog-ui.css     # Blog list, TOC, tag cloud, image zoom (blog/tags/categories)
 │   │   ├── article-ui.css  # Article detail (blog/[slug]/layout)
 │   │   ├── reading.css     # Reading prefs/actions + favorites list (blog/[slug] + favorites layouts)

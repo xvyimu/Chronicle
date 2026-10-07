@@ -10,7 +10,7 @@ src/app/layout.tsx            ← 仅真正全局语义 CSS
 ├── styles/tokens.css         ← 设计令牌、明暗主题变量、滚动条
 ├── styles/base.css           ← 全局基础、skip-link、Header、Footer、not-found
 ├── styles/components.css     ← Section / Card 等通用布局组件
-├── styles/controls.css       ← CTA Button / Pagination / TagLink / 项目卡控件
+├── styles/controls.css       ← CTA Button / TagLink / 项目卡控件
 ├── styles/backdrop.css       ← 全站装饰背景层
 ├── styles/animations.css     ← reveal / fade motion
 └── styles/responsive.css     ← 响应式断点覆盖，最后加载
@@ -43,8 +43,8 @@ src/app/projects/[id]/layout.tsx ← project-detail.css
 
 ### 使用 BEM 自定义类的场景
 
-- **结构性布局**：`.section`、`.header`、`.hero`、`.cards`
-- **跨页面复用组件**：`.card`、`.blog__item`、`.tag-link`、`.pagination`
+- **结构性布局**：`.section`、`.header`、`.cards`
+- **跨页面复用组件**：`.card`、`.blog__item`、`.tag-link`
 - **需要 `:hover`/`:focus`/状态变化的复杂交互**：`.header--scrolled`、`.header__nav.is-open`
 - **全局响应式覆盖**：放入 `responsive.css`；路由专属组件的媒体查询留在所属 route CSS
 
@@ -156,23 +156,23 @@ background: #ffffff;
 
 ## 文件归属规则
 
-| 文件                 | 内容                                        | 示例                                               |
-| -------------------- | ------------------------------------------- | -------------------------------------------------- |
-| `tokens.css`         | CSS 变量、reset、主题切换、滚动条、选中样式 | `:root`、`.dark`、`::selection`                    |
-| `base.css`           | 页面骨架和全局基础                          | `.header`、`.footer`、`.skip-link`                 |
-| `components.css`     | 可复用布局和基础卡片                        | `.section`、`.card`、`.cards`                      |
-| `archive.css`        | 归档页和 ArchiveCard                        | `.archive-grid`、`.archive-card`                   |
-| `controls.css`       | shadcn Button 外观、分页、标签和轻量控制    | `[data-slot='button']`、`.pagination`、`.tag-link` |
-| `blog-ui.css`        | 博客列表、目录和辅助界面                    | `.blog__item`、`.toc`、`.tag-cloud`                |
-| `article-ui.css`     | 文章详情布局和阅读面板                      | `.article-layout`、`.article-panel`                |
-| `reading.css`        | 阅读偏好、收藏按钮、收藏/最近阅读列表       | `.reading-actions`、`.local-reading__list`         |
-| `workspace.css`      | 工作台外壳与面板内通用 section 头           | `.workspace`、`.sidebar`、`.ws-section__title`     |
-| `backdrop.css`       | 背景视觉层                                  | `body::before`、`.site-backdrop__stage`            |
-| `home.css`           | 工作台首页（欢迎区/主题云/列表/搜索）       | `.workspace-home`、`.ws-topics`                    |
-| `prose.css`          | MDX 渲染的文章排版                          | `.prose h2`、`.prose code`、`.code-toolbar`        |
-| `project-detail.css` | 项目详情页                                  | `.project-detail`                                  |
-| `animations.css`     | 动画关键帧和动效类                          | `.reveal-on-scroll`、`.animate-fade-in`            |
-| `responsive.css`     | 媒体查询覆盖                                | `@media (max-width: 768px)`                        |
+| 文件                 | 内容                                        | 示例                                           |
+| -------------------- | ------------------------------------------- | ---------------------------------------------- |
+| `tokens.css`         | CSS 变量、reset、主题切换、滚动条、选中样式 | `:root`、`.dark`、`::selection`                |
+| `base.css`           | 页面骨架和全局基础                          | `.header`、`.footer`、`.skip-link`             |
+| `components.css`     | 可复用布局和基础卡片                        | `.section`、`.card`、`.cards`                  |
+| `archive.css`        | 归档页和 ArchiveCard                        | `.archive-grid`、`.archive-card`               |
+| `controls.css`       | shadcn Button 外观、标签和轻量控制          | `[data-slot='button']`、`.tag-link`            |
+| `blog-ui.css`        | 博客列表、目录和辅助界面                    | `.blog__item`、`.toc`、`.tag-cloud`            |
+| `article-ui.css`     | 文章详情布局和阅读面板                      | `.article-layout`、`.article-panel`            |
+| `reading.css`        | 阅读偏好、收藏按钮、收藏/最近阅读列表       | `.reading-actions`、`.local-reading__list`     |
+| `workspace.css`      | 工作台外壳与面板内通用 section 头           | `.workspace`、`.sidebar`、`.ws-section__title` |
+| `backdrop.css`       | 背景视觉层                                  | `body::before`、`.site-backdrop__stage`        |
+| `home.css`           | 工作台首页（欢迎区/主题云/列表/搜索）       | `.workspace-home`、`.ws-topics`                |
+| `prose.css`          | MDX 渲染的文章排版                          | `.prose h2`、`.prose code`、`.code-toolbar`    |
+| `project-detail.css` | 项目详情页                                  | `.project-detail`                              |
+| `animations.css`     | 动画关键帧和动效类                          | `.animate-fade-in`                             |
+| `responsive.css`     | 媒体查询覆盖                                | `@media (max-width: 768px)`                    |
 
 **规则**：新组件的 CSS 放入最接近语义归属的模块。跨页面通用组件放入
 `components.css` / `archive.css` / `controls.css`；博客专属放入 `blog-ui.css` /
@@ -212,7 +212,6 @@ background: #ffffff;
   .section {
     padding: 40px 16px;
   }
-  .cards--2,
   .cards--3 {
     grid-template-columns: 1fr;
   }

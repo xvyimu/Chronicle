@@ -109,7 +109,7 @@ Error: browserType.launch: Executable doesn't exist at
 
 结论：**入度为 0 的文件全部是框架约定文件或 CLI 入口**——`page/layout/route/loading/error/not-found/sitemap/robots/manifest/opengraph-image`、`*.test.*`、`src/proxy.ts`、`scripts/*`、`e2e/*`。**没有任何未被引用的生产模块或组件**。
 
-- 唯一非约定的零引用脚本：`scripts/_apply-content-seo-p9.mjs`（2026-07-13 一次性内容补丁脚本，下划线前缀，未挂在任何 `pnpm` script 上；`git log` 显示最后改动为 `ec110f0`）。
+- 唯一非约定的零引用脚本 `scripts/_apply-content-seo-p9.mjs`（2026-07-13 一次性内容补丁脚本）已于 2026-10-08 精简代码时删除（git 历史 `ec110f0` 仍可回溯）。
 - 数据文件侧：`data/links.json` 在 `src/**` 内的唯一引用是 `src/lib/content-dirs.ts:11`（用于派生 Vercel 文件追踪配置），无消费方——与 `docs/ARCHITECTURE.md:150` 的注记一致。
 - 密钥核对：`src/**` 中匹配 `(api_key|secret|token|password)\s*[:=]\s*'…'` 仅命中一处测试 fixture（`src/app/api/csp-report/route.test.ts:75`，用于断言「不回显原始 body」）；`.env.example` 只声明 `NEXT_PUBLIC_SITE_URL`；`vercel.json` 无密钥字段；CI 中 `VERCEL_TOKEN` 走 `${{ secrets.VERCEL_TOKEN }}`。**未发现硬编码凭据。**
 
@@ -428,13 +428,13 @@ WCAG 2.1 AA 1.4.3 要求正文（含 12–13px 辅助文字）≥ 4.5:1。深色
 
 ### P3 · 可做可不做
 
-| 项                          | 说明                                                                                                                        | 现状判据                                  |
-| --------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| `searchDocs` 复用 Fuse 实例 | `src/lib/search/engine.ts:39` 每次调用 `new Fuse(docs, …)`；20 篇规模下开销可忽略，超过 ~200 篇再优化                       | 代码位置 + `docs/adr/0006` 的规模触发条件 |
-| 项目图源文件瘦身            | `public/images/projects/domain-check.png` 782,976 B 等 6 张；`next/image` 会在服务端转制，但入库体积已计入仓库              | `Get-ChildItem public -Recurse` 实测      |
-| `feed.xml` 体积             | 实测 173,650 B（20 篇全量）；若读者量增长可裁剪为摘要                                                                       | 文件实测                                  |
-| 搜索结果数上限说明          | `engine.ts:22` `SEARCH_RESULT_LIMIT = 8` 无 UI 文案提示（片段少于总数时）                                                   | 代码位置                                  |
-| 一次性脚本归档              | `scripts/_apply-content-seo-p9.mjs`（2026-07-13 内容补丁，未挂任何 `pnpm` script）；移入 `docs/archive/` 或删除都不影响门禁 | 1.7 节零引用扫描                          |
+| 项                          | 说明                                                                                                           | 现状判据                                  |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| `searchDocs` 复用 Fuse 实例 | `src/lib/search/engine.ts:39` 每次调用 `new Fuse(docs, …)`；20 篇规模下开销可忽略，超过 ~200 篇再优化          | 代码位置 + `docs/adr/0006` 的规模触发条件 |
+| 项目图源文件瘦身            | `public/images/projects/domain-check.png` 782,976 B 等 6 张；`next/image` 会在服务端转制，但入库体积已计入仓库 | `Get-ChildItem public -Recurse` 实测      |
+| `feed.xml` 体积             | 实测 173,650 B（20 篇全量）；若读者量增长可裁剪为摘要                                                          | 文件实测                                  |
+| 搜索结果数上限说明          | `engine.ts:22` `SEARCH_RESULT_LIMIT = 8` 无 UI 文案提示（片段少于总数时）                                      | 代码位置                                  |
+| 一次性脚本归档              | `scripts/_apply-content-seo-p9.mjs`（2026-07-13 内容补丁，未挂任何 `pnpm` script）已于 2026-10-08 删除         | 1.7 节零引用扫描                          |
 
 ---
 
