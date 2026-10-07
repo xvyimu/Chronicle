@@ -16,10 +16,9 @@ Track synthetic Lighthouse data and real-user Vercel Speed Insights data for:
 | -------------- | ------------------------- | ---------- | ------------- | ------------- | -------------------------------------------------- |
 | Home           | `/`                       | yes        | yes           | yes           | Landing page, hero image/background, content rails |
 | Blog index     | `/blog`                   | yes        | yes           | yes           | Search entry and article discovery                 |
-| Article detail | `/blog/nextjs-app-router` | yes        | yes           | yes           | MDX, code blocks, table of contents, comments      |
+| Article detail | `/blog/nextjs-app-router` | yes        | yes           | yes           | MDX, code blocks, table of contents                |
 | Projects       | `/projects`               | yes        | yes           | yes           | Project images and card grid                       |
 | About          | `/about`                  | yes        | yes           | yes           | Static MDX content                                 |
-| Links          | `/links`                  | no         | yes           | yes           | Curated directory with 10 categories and 123 links |
 
 ## Current CI Budgets
 
@@ -65,7 +64,6 @@ Manual mobile coverage:
 - `/blog/nextjs-app-router`
 - `/projects`
 - `/about`
-- `/links`
 
 Results are written to `.lighthouse-mobile/`. Record stable findings in the
 baseline log below. Treat repeated warnings as investigation signals, not as

@@ -14,15 +14,15 @@ pnpm check:ops-readiness -- --live --json
 
 ## 1. 决策总表
 
-| 轨道             | 当前最优动作                          | 依赖                       | 禁止                       |
-| ---------------- | ------------------------------------- | -------------------------- | -------------------------- |
-| GSC              | 授权后 15 分钟域名验证 + 提交 sitemap | 用户 Google 账号           | 禁止代登录、禁止假“已提交” |
-| Bing             | GSC 成功后导入                        | 同一授权窗口               | 禁止单独再走一遍 DNS       |
-| Speed Insights   | 代码已接入；授权后回填六页 p75        | Vercel 只读权限 + 足够样本 | 禁止用 Lighthouse 代填 p75 |
-| 外部搜索         | 保持 `src/server/search` Fuse         | ≥200 文或搜索 p95 证据     | 禁止未评估上 Meili/ES      |
-| 正文图 LQIP      | 目录预埋；有图再 gen:blur             | `public/images/blog/**`    | 禁止对文字做 blur          |
-| prose 下沉       | 保持根导入                            | Coverage + 层叠方案        | 禁止无证据搬迁             |
-| Cache Components | 保持关闭                              | 外部数据/ISR/失效需求      | 禁止“为了新 API”开启       |
+| 轨道             | 当前最优动作                             | 依赖                       | 禁止                       |
+| ---------------- | ---------------------------------------- | -------------------------- | -------------------------- |
+| GSC              | 授权后 15 分钟域名验证 + 提交 sitemap    | 用户 Google 账号           | 禁止代登录、禁止假“已提交” |
+| Bing             | GSC 成功后导入                           | 同一授权窗口               | 禁止单独再走一遍 DNS       |
+| Speed Insights   | 代码已接入；授权后回填六页 p75           | Vercel 只读权限 + 足够样本 | 禁止用 Lighthouse 代填 p75 |
+| 外部搜索         | 保持**客户端** Fuse（`src/lib/search/`） | ≥200 文或搜索 p95 证据     | 禁止未评估上 Meili/ES      |
+| 正文图 LQIP      | 目录预埋；有图再 gen:blur                | `public/images/blog/**`    | 禁止对文字做 blur          |
+| prose 下沉       | 保持根导入                               | Coverage + 层叠方案        | 禁止无证据搬迁             |
+| Cache Components | 保持关闭                                 | 外部数据/ISR/失效需求      | 禁止“为了新 API”开启       |
 
 ## 2. 执行优先级（有授权时）
 
@@ -84,7 +84,6 @@ P4 条件触发项：仅当门槛命中再开 ADR
 | Article  | `/blog/nextjs-app-router`（或当前代表文） |
 | Projects | `/projects`                               |
 | About    | `/about`                                  |
-| Links    | `/links`                                  |
 
 字段目标：LCP ≤ 2.5s、INP ≤ 200ms、CLS ≤ 0.1（p75）。
 
@@ -98,7 +97,7 @@ P4 条件触发项：仅当门槛命中再开 ADR
 
 ### 6.1 外部搜索（≥200 文或 p95）
 
-当前：14 篇，`src/server/search` + `GET /api/search`。
+当前：20 篇，客户端 Fuse（`src/lib/search/` + `components/search/SearchPanel.tsx`）；`/api/search` 已于 2026-10-07 删除。
 
 触发后最小评估清单：
 
