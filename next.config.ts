@@ -88,10 +88,13 @@ const nextConfig: NextConfig = {
      Next 16 defaults to `[75]`; any other value triggers a build-time warn and,
      more importantly, the /_next/image optimizer rejects the request at runtime
      (q parameter validation), so the browser falls back to the raw source and
-     LCP collapses. Keep this in sync with grep -rn 'quality={' src/. */
+     LCP collapses. Keep this in sync with grep -rn 'quality={' src/.
+
+     当前全仓没有 `<Image quality={...}>`（唯一命中是测试替身），故只列默认值 75。
+     原先还列了 65/70，但没有任何调用方请求它们——留着会让人以为某处在用。 */
   images: {
     remotePatterns: [],
-    qualities: [65, 70, 75],
+    qualities: [75],
   },
 };
 

@@ -182,7 +182,6 @@ html:not(.dark) .prose pre {
   background: linear-gradient(90deg, transparent, var(--border-strong), transparent);
 }
 
-.code-block-wrapper,
 .code-toolbar {
   position: relative;
   overflow: hidden;

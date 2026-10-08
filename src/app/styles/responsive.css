@@ -254,13 +254,6 @@
     text-align: left;
   }
 
-  .back-to-top {
-    right: 16px;
-    bottom: 16px;
-    width: 40px;
-    height: 40px;
-  }
-
   .reading-prefs {
     left: 12px;
     right: auto;
@@ -320,10 +313,13 @@
 }
 
 @media print {
+  /* 这两个元素已改由 Tailwind 工具类实现，没有 `back-to-top` / `reading-progress`
+     这样的类名可选中；原选择器自那次改动起就失效了，打印时本该隐藏却一直没隐藏。
+     改用它们真实的锚点：BackToTop 的 aria-label、ReadingProgress 的 data-testid。 */
   .header,
   .footer,
-  .back-to-top,
-  .reading-progress,
+  button[aria-label='回到顶部'],
+  [data-testid='reading-progress'],
   .reading-prefs,
   .toc,
   .site-backdrop__stage {

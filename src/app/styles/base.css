@@ -274,59 +274,6 @@ body {
   transform: translateY(-1px);
 }
 
-/* ---------- Reading Progress ---------- */
-.reading-progress {
-  position: fixed;
-  left: 0;
-  top: 0;
-  z-index: 200;
-  height: 3px;
-  background: var(--brand-gradient);
-  box-shadow: 0 1px 8px var(--brand-soft);
-  transition: width 0.1s linear;
-}
-
-/* ---------- Back to Top ---------- */
-.back-to-top {
-  position: fixed;
-  right: 24px;
-  bottom: 24px;
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  background: var(--surface);
-  box-shadow: var(--shadow-md);
-  color: var(--text-soft);
-  cursor: pointer;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(8px) scale(0.96);
-  transition:
-    opacity var(--transition),
-    transform var(--transition),
-    color var(--transition-fast),
-    background var(--transition-fast),
-    border-color var(--transition-fast);
-}
-
-.back-to-top.is-visible {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateY(0) scale(1);
-}
-
-.back-to-top:hover {
-  border-color: var(--brand);
-  background: var(--brand-soft);
-  color: var(--brand-hover);
-  transform: translateY(-2px) scale(1.02);
-}
-
 .icon-btn::before,
 .header__mobile-toggle::before,
 .footer__icon::before {

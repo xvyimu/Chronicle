@@ -95,13 +95,11 @@
   color: var(--brand);
 }
 
-.theme-toggle,
 .reading-prefs__btn,
 .reading-prefs__trigger {
   position: relative;
 }
 
-.theme-toggle::before,
 .reading-prefs__btn::before,
 .reading-prefs__trigger::before {
   content: '';
