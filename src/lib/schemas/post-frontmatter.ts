@@ -10,7 +10,7 @@ function isIsoDateString(value: string): boolean {
  * Zod schema for post frontmatter — single source of truth.
  *
  * Consumed by:
- * - `lib/posts.ts` — validates parsed frontmatter before constructing PostFull
+ * - `lib/posts/repository.ts` — validates parsed frontmatter before constructing PostFull
  * - Future: content-lint CLI scripts, type-safe MDX tooling
  *
  * Keep this module dependency-free (only `zod`) so it can be imported by
@@ -55,9 +55,6 @@ export const postFrontmatterSchema = z
     license: z.string().min(1).optional(),
   })
   .strict();
-
-/** Input shape of the schema (what authors write in MDX frontmatter). */
-export type PostFrontmatterInput = z.input<typeof postFrontmatterSchema>;
 
 /** Parsed/normalized shape (after defaults applied). */
 export type PostFrontmatterParsed = z.output<typeof postFrontmatterSchema>;

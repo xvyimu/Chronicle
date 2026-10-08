@@ -57,19 +57,20 @@
   --brand-2: #6b82f0;
   --brand-hover: #3348c7;
   --brand-soft: rgba(63, 88, 221, 0.1);
-  --brand-gradient: #3f58dd; /* 收敛：渐变 → 纯色（禁高饱和渐变） */
 
   /* ---- 状态色 ---- */
   --destructive: #dc2626;
   --success: #16a34a;
   --warning: #d97706;
 
-  /* ---- 特色/CTA（收敛为中性强调，去掉橙金花哨）---- */
+  /* ---- 特色/CTA（收敛为中性强调，去掉橙金花哨）----
+     只留 `--cta`：docs/css-conventions.md 与 docs/design/atelier-v1a-matrix.md
+     把它登记为「Atelier 附加强调」的预留位。配套的 `--cta-ink` / `--cta-soft`
+     与 `--featured-soft` 一样全仓零 `var()` 消费、无文档登记，已删——真要启用
+     这个预留位时按当时的配色重新定前景/浅底更合适，留空壳只会让人以为有人在用。
+     `--featured` 保留：base.css 顶栏轨道的渐变在用。 */
   --featured: #3f58dd;
-  --featured-soft: rgba(63, 88, 221, 0.1);
   --cta: #18181b;
-  --cta-ink: #ffffff;
-  --cta-soft: rgba(24, 24, 27, 0.06);
   --atelier-rail: 3px;
   --atelier-panel-blur: 12px;
 
@@ -109,14 +110,12 @@
   --image-overlay-control-fg: #fff;
   --image-overlay-control-border: rgba(255, 255, 255, 0.2);
 
-  /* ---- 排版（Iteration 01 统一全局排版）---- */
-  --font-size-body: 16px;
-  --line-height-body: 1.75;
-  --font-size-sm: 14px;
-  --font-size-xs: 12px;
+  /* ---- 排版 ----
+     只保留 `--font-size-h1`：它是唯一有消费方的字号 token（`home.css` 的
+     `font-size: var(--font-size-h1)`）。其余 body/sm/xs/h2/h3 与
+     `--line-height-body` 全仓零 `var()` 消费，尺寸规范改由各组件直接写或在
+     `docs/04-design-system.md` 的排版表里查——留空壳变量只会让人以为有统一控制点。 */
   --font-size-h1: clamp(1.75rem, 1.2rem + 2vw, 2.5rem);
-  --font-size-h2: clamp(1.375rem, 1.1rem + 1.2vw, 1.75rem);
-  --font-size-h3: 1.25rem;
 
   /* ---- 间距（合法阶 4/8/16/24/32；3/5/10/12/16 为 legacy 别名）---- */
   --space-1: 4px;
@@ -132,10 +131,8 @@
 
   /* ---- 动效 ---- */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --transition-fast: 0.15s var(--ease-out);
   --transition: 0.2s var(--ease-out);
-  --transition-slow: 0.3s var(--ease-out);
 }
 
 .dark {
@@ -162,17 +159,13 @@
   --brand-2: #93a6f7;
   --brand-hover: #93a6f7;
   --brand-soft: rgba(124, 147, 245, 0.14);
-  --brand-gradient: #7c93f5;
 
   --destructive: #f87171;
   --success: #4ade80;
   --warning: #fbbf24;
 
   --featured: #7c93f5;
-  --featured-soft: rgba(124, 147, 245, 0.14);
   --cta: #fafafa;
-  --cta-ink: #09090b;
-  --cta-soft: rgba(250, 250, 250, 0.08);
 
   --primary-foreground: #09090b;
 

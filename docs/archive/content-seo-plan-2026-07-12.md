@@ -108,4 +108,4 @@ pnpm check:seo
 # Select-String -Path content\blog\*.mdx -Pattern '延伸阅读' | Measure-Object
 ```
 
-脚本（一次性，可删）：`scripts/_apply-content-seo-p9.mjs`
+脚本（一次性，已于 2026-10-08 删除）：`scripts/_apply-content-seo-p9.mjs`

@@ -58,7 +58,7 @@ src/
 │   │   ├── base.css        # Global base (skip-link, header, footer, not-found)
 │   │   ├── components.css   # Generic layout and card components
 │   │   ├── archive.css      # Archive grids/cards/lists (archive + categories + series layouts)
-│   │   ├── controls.css     # CTA buttons, pagination, tag links, project card controls
+│   │   ├── controls.css     # CTA buttons, tag links, project card controls
 │   │   ├── blog-ui.css     # Blog list, TOC, tag cloud, image zoom (blog/tags/categories)
 │   │   ├── article-ui.css  # Article detail (blog/[slug]/layout)
 │   │   ├── reading.css     # Reading prefs/actions + favorites list (blog/[slug] + favorites layouts)
@@ -67,7 +67,7 @@ src/
 │   │   ├── home.css        # Workspace home (page.tsx only)
 │   │   ├── prose.css      # MDX typography (blog/[slug] + about layouts)
 │   │   ├── project-detail.css # Project detail (projects/[id]/layout)
-│   │   ├── animations.css # Animations (reveal, fade-in-up)
+│   │   ├── animations.css # Animations (page fade)
 │   │   └── responsive.css  # Responsive breakpoints (loaded last, overrides above)
 │   ├── globals.css         # CSS entry (Tailwind v4 only, ~12 lines, NO @import chain)
 │   ├── layout.tsx          # Root layout (global CSS only; route CSS in segment layouts)

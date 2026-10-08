@@ -10,7 +10,7 @@ import './styles/base.css'; // 全局基础 (skip-link, header, footer, not-foun
 import './styles/components.css'; // 通用布局与基础卡片
 import './styles/controls.css'; // CTA 按钮、分页/标签/项目卡控件
 import './styles/backdrop.css'; // 背景层 (body::before/after + stage)
-import './styles/animations.css'; // 动画 (reveal, page fade)
+import './styles/animations.css'; // 动画 (page fade)
 import './styles/workspace.css'; // 工作台外壳 (TopBar + Sidebar + MainPanel)
 import './styles/responsive.css'; // 响应式断点 (最后,覆盖前面)
 import Header from '@/components/layout/Header';

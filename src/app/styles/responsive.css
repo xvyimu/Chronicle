@@ -70,10 +70,6 @@
     display: inline-flex;
   }
 
-  .hero {
-    padding: 64px 24px 56px;
-  }
-
   .footer__inner {
     grid-template-columns: 1fr;
     align-items: start;
@@ -97,7 +93,6 @@
     inset: 60px 0 0;
   }
 
-  .cards--2,
   .cards--3,
   .archive-grid--2,
   .archive-grid--3 {
@@ -144,26 +139,6 @@
 
   .section__subtitle {
     font-size: 0.94rem;
-  }
-
-  .hero {
-    padding: 48px 20px 40px;
-  }
-
-  .hero__title,
-  .hero__name {
-    font-size: clamp(2.2rem, 12vw, 3.6rem);
-  }
-
-  .hero__desc,
-  .hero__tagline {
-    font-size: 0.96rem;
-  }
-
-  .hero__cta,
-  .hero__actions {
-    align-items: stretch;
-    flex-direction: column;
   }
 
   .blog__item {
@@ -279,13 +254,6 @@
     text-align: left;
   }
 
-  .back-to-top {
-    right: 16px;
-    bottom: 16px;
-    width: 40px;
-    height: 40px;
-  }
-
   .reading-prefs {
     left: 12px;
     right: auto;
@@ -331,9 +299,7 @@
     --project-detail-title-size: 2.1rem;
   }
 
-  .section__title,
-  .hero__title,
-  .hero__name {
+  .section__title {
     font-size: 2.1rem;
   }
 
@@ -347,14 +313,15 @@
 }
 
 @media print {
+  /* 这两个元素已改由 Tailwind 工具类实现，没有 `back-to-top` / `reading-progress`
+     这样的类名可选中；原选择器自那次改动起就失效了，打印时本该隐藏却一直没隐藏。
+     改用它们真实的锚点：BackToTop 的 aria-label、ReadingProgress 的 data-testid。 */
   .header,
   .footer,
-  .back-to-top,
-  .reading-progress,
+  button[aria-label='回到顶部'],
+  [data-testid='reading-progress'],
   .reading-prefs,
   .toc,
-  .hero__bg,
-  .hero__particles,
   .site-backdrop__stage {
     display: none !important;
   }
