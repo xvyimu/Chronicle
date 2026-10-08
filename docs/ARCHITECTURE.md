@@ -254,7 +254,7 @@ responsive.css
 - `home.css`：工作台首页（欢迎区、主题云、文章列表、搜索）；
 - `backdrop.css`：全站背景层；
 - `project-detail.css`：项目详情；
-- `animations.css`：reveal、fade motion；
+- `animations.css`：page fade motion；
 - `responsive.css`：移动端覆盖，最后加载。
 
 颜色应通过 CSS 变量引用，避免硬编码；结构类使用 BEM，自定义状态或布局可配合少量 Tailwind utility。

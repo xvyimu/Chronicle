@@ -15,10 +15,11 @@ test.describe('文章列表页', () => {
       .locator('main .blog__item a[href^="/blog/"]')
       .first()
       .getAttribute('href');
-    // Check if pagination exists
-    const pagination = page.locator(
-      'nav[aria-label*="分页"], .pagination, [class*="pagination"]',
-    );
+    // 分页导航：Pagination.tsx 用 Tailwind 工具类，没有 `pagination` 这样的字面类名，
+    // 唯一可靠的锚点是它声明在 <nav> 上的 aria-label。原先还串了 `.pagination` /
+    // `[class*="pagination"]` 两个选择器——既然类名早已不存在，那两个是死选择器，
+    // 留着只会让人误以为 CSS 里还有这套类。
+    const pagination = page.locator('nav[aria-label*="分页"]');
     await expect(pagination).toBeVisible();
     const nextBtn = page.getByRole('link', { name: /下一页/ });
     await expect(nextBtn).toBeVisible();

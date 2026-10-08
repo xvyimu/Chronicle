@@ -67,7 +67,7 @@ src/
 │   │   ├── home.css        # Workspace home (page.tsx only)
 │   │   ├── prose.css      # MDX typography (blog/[slug] + about layouts)
 │   │   ├── project-detail.css # Project detail (projects/[id]/layout)
-│   │   ├── animations.css # Animations (reveal, fade-in-up)
+│   │   ├── animations.css # Animations (page fade)
 │   │   └── responsive.css  # Responsive breakpoints (loaded last, overrides above)
 │   ├── globals.css         # CSS entry (Tailwind v4 only, ~12 lines, NO @import chain)
 │   ├── layout.tsx          # Root layout (global CSS only; route CSS in segment layouts)

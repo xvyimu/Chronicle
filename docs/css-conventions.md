@@ -12,7 +12,7 @@ src/app/layout.tsx            ← 仅真正全局语义 CSS
 ├── styles/components.css     ← Section / Card 等通用布局组件
 ├── styles/controls.css       ← CTA Button / TagLink / 项目卡控件
 ├── styles/backdrop.css       ← 全站装饰背景层
-├── styles/animations.css     ← reveal / fade motion
+├── styles/animations.css     ← page fade motion
 └── styles/responsive.css     ← 响应式断点覆盖，最后加载
 ├── styles/workspace.css      ← 工作台外壳 (TopBar + Sidebar + MainPanel)
 src/app/page.tsx              ← home.css

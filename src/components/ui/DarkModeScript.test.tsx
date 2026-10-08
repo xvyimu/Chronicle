@@ -38,10 +38,13 @@ describe('DarkModeScript', () => {
     expect(script?.innerHTML).toContain('--reading-width');
   });
 
-  it('marks the document as JavaScript-enabled before reveal content is parsed', () => {
+  // 原断言「脚本含 classList.add('js')」。该标记配合 `.js .reveal-on-scroll{...}`
+  // 做渐进增强；reveal 系列已随 2026-10-08 死 CSS 清理移除，`.js` 无任何消费方，
+  // 故一并删除，断言反转为「不得再出现」——防止有人按旧注释把死标记加回来。
+  it('no longer marks the document with the retired js class', () => {
     render(<DarkModeScript />);
     const script = document.querySelector('script');
-    expect(script?.innerHTML).toContain("classList.add('js')");
+    expect(script?.innerHTML).not.toContain("classList.add('js')");
   });
 
   it('is wrapped in try-catch', () => {
