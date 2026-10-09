@@ -17,7 +17,7 @@ export type PageExpectation = {
   requiredHeaders?: HeaderExpectation[];
 };
 
-type CheckFailure = {
+export type CheckFailure = {
   label: string;
   message: string;
 };
@@ -290,7 +290,7 @@ export async function checkPage(
     // Its body is a challenge page, not our HTML, so every content/header
     // assertion below would fail with a misleading "Missing expected content".
     // Short-circuit so the report points at the real cause instead of listing
-    // 13 phantom content regressions.
+    // a phantom content regression for every page.
     if (response.status === 403) {
       return [
         {
@@ -351,6 +351,29 @@ export async function checkExpectations(
   ).flat();
 }
 
+/**
+ * Whether a run should be treated as "the whole site was blocked by WAF"
+ * rather than "the content regressed".
+ *
+ * Exported and pure so the distinction actually holds — the difference between
+ * "every failure is a 403" and "every *expectation* was blocked" is invisible
+ * in a green run and only matters on the day it is wrong.
+ *
+ * A blocked page short-circuits to exactly one failure, so a fully-blocked run
+ * has exactly one failure per expectation, all 403, with no repeated labels.
+ * A partial block (say the home page loads and the rest are challenged) has
+ * fewer failures and must NOT degrade — that is a real regression to report.
+ */
+export function isEveryPageBlocked(
+  expectations: PageExpectation[],
+  failures: CheckFailure[],
+): boolean {
+  if (expectations.length === 0) return false;
+  if (failures.length !== expectations.length) return false;
+  if (new Set(failures.map((f) => f.label)).size !== expectations.length) return false;
+  return failures.every((f) => f.message.includes('HTTP 403'));
+}
+
 async function main(): Promise<void> {
   const baseUrl = readBaseUrl();
   const expectations = buildExpectations(baseUrl);
@@ -372,12 +395,10 @@ async function main(): Promise<void> {
   // does not cover "is the content right". Restoring real verification needs
   // either an allowlisted probe identity or a check that runs from inside the
   // Cloudflare zone — see docs/ops-deferred-work-plan.md.
-  const everyPageBlocked =
-    failures.length > 0 && failures.every((f) => f.message.includes('HTTP 403'));
-  if (everyPageBlocked) {
+  if (isEveryPageBlocked(expectations, failures)) {
     console.warn(
       [
-        `[production-content] all ${failures.length} checks returned HTTP 403 for ${baseUrl}.`,
+        `[production-content] all ${expectations.length} checks returned HTTP 403 for ${baseUrl}.`,
         '  Cloudflare WAF/bot-protection blocked the CI runner IP before content could be read.',
         '  Content CORRECTNESS was NOT verified this run (reachability only). Exiting 0.',
       ].join('\n'),
