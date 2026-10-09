@@ -1,8 +1,15 @@
 name: Uptime
 
-# 每 10 分钟探活生产站点。失败时开 issue（复用已有 open issue 防刷屏），
-# 恢复后自动关闭。GitHub Actions cron 最短 5 分钟，实际可能延迟 5-15 分钟，
-# 对个人博客足够——不替代真实 RUM，只覆盖「站点完全不可达」。
+# 每 10 分钟探活生产站点。
+#
+# 为什么探两个 URL、判定表怎么定的：见 scripts/probe-health.ts 头部与
+# docs/14-decision-log.md 的 D-039。两处写全在 YAML 里会与脚本漂移。
+#
+# 这里只留操作面：
+#   - 结论由主探针（CF 域名）决定：连不上/5xx → down
+#   - 辅探针（Vercel 别名）失败不改结论，只把原始结果写进 issue
+#   - 403 挑战 / 429 限流 / 3xx 重定向都算 up
+#   - down → 开 issue（已有 open issue 则追加评论，评论节流 1 小时）· up → 关 issue
 on:
   schedule:
     - cron: '*/10 * * * *'
@@ -14,7 +21,7 @@ permissions:
 
 concurrency:
   group: uptime
-  cancel-in-progress: false # 不取消：如果上一次还在跑，说明站点慢，不该打断
+  cancel-in-progress: false # 不取消：上一次还在跑说明站点慢，不该打断
 
 jobs:
   probe:
@@ -22,27 +29,32 @@ jobs:
     timeout-minutes: 5
     env:
       SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL || 'https://incca.ccwu.cc' }}
+      # Vercel 项目生产别名，绕过 Cloudflare 直连 origin。换域名/项目时改这里
+      # 或设 repo variable。不要用 <project>-<hash>.vercel.app——每次部署都变。
+      VERCEL_ORIGIN_URL: ${{ vars.VERCEL_ORIGIN_URL || 'https://blog-aijiai520.vercel.app' }}
     steps:
       - uses: actions/checkout@v7
 
-      - name: Probe production site
-        id: probe
-        run: |
-          set +e
-          RESPONSE=$(curl -sS -o /dev/null -w '%{http_code}' \
-            --max-time 15 --retry 2 --retry-delay 5 \
-            -H 'accept: text/html' \
-            -H 'user-agent: chronicle-uptime-probe/1.0' \
-            "$SITE_URL")
-          echo "status=$RESPONSE" >> "$GITHUB_OUTPUT"
-          echo "HTTP status: $RESPONSE"
+      # Node 24 原生跑 .ts（type stripping），所以这个 job 不装 pnpm、不装依赖
+      # ——每 10 分钟拉一次全量依赖不值得，探活脚本只用到 node: 内置模块。
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
 
-      - name: Open issue if site is down
-        if: steps.probe.outputs.status != '200'
+      - name: Probe production health
+        id: probe
+        run: node scripts/probe-health.ts
+
+      - name: Open issue if the site is down
+        if: steps.probe.outputs.state == 'down'
         uses: actions/github-script@v7
         with:
           script: |
             const label = 'uptime';
+            // 故障持续期间不要每 10 分钟追加一条评论（一天 144 条会埋掉真的更新）。
+            // 同一 issue 上两条评论至少隔 1 小时。
+            const COMMENT_THROTTLE_MS = 60 * 60 * 1000;
+
             const existing = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -51,18 +63,38 @@ jobs:
               per_page: 1,
             });
 
-            const url = process.env.SITE_URL;
-            const status = '${{ steps.probe.outputs.status }}';
             const time = new Date().toISOString();
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const report = process.env.PROBE_REPORT || '(no report)';
 
             if (existing.data.length > 0) {
-              // 已有 open issue：追加一条时间戳，不重复开
               const issue = existing.data[0];
+
+              // sort/direction are explicit on purpose: the endpoint defaults to
+              // created_at ASCENDING, so per_page=1 with no direction would
+              // return the *oldest* comment and the throttle would never trip.
+              const comments = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                sort: 'created',
+                direction: 'desc',
+                per_page: 1,
+              });
+              const last = comments.data[0];
+              const lastAt = last ? new Date(last.created_at).getTime() : 0;
+              if (Date.now() - lastAt < COMMENT_THROTTLE_MS) {
+                core.info(
+                  `Issue #${issue.number} already commented within the last hour — skipping.`,
+                );
+                return;
+              }
+
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: issue.number,
-                body: `⚠️ 仍然不可达 — HTTP ${status} at ${time}`,
+                body: `⚠️ 仍然不可达 — ${time}\n\n\`\`\`\n${report}\n\`\`\``,
               });
               core.info(`Commented on existing issue #${issue.number}`);
               return;
@@ -71,22 +103,27 @@ jobs:
             const { data: issue } = await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `🔴 站点不可达 (HTTP ${status})`,
+              title: `🔴 站点探活失败 (${time.slice(0, 16)}Z)`,
               body: [
-                `生产站点 **${url}** 探活失败。`,
+                '生产站点探活失败。各探针的原始结果：',
                 '',
-                `- 时间：${time}`,
-                `- HTTP 状态：${status}`,
-                `- Run：${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+                '```',
+                report,
+                '```',
                 '',
-                '请检查 [Vercel 部署状态](https://vercel.com/) 和 [GitHub Actions](https://github.com/${context.repo.owner}/${context.repo.repo}/actions)。',
+                `- Run：${runUrl}`,
+                '',
+                '排查顺序：Vercel 部署状态 → Cloudflare 边缘 → DNS。',
+                '',
+                '> 判据：只有连接失败（`000`）或 5xx 才算故障。',
+                '> `403` 是 Cloudflare 挑战、`429` 是限流、`3xx` 是重定向，都不算。',
               ].join('\n'),
               labels: [label],
             });
             core.info(`Created issue #${issue.number}`);
 
-      - name: Close issue if site recovered
-        if: steps.probe.outputs.status == '200'
+      - name: Close issue if the site has recovered
+        if: steps.probe.outputs.state == 'up'
         uses: actions/github-script@v7
         with:
           script: |
@@ -106,11 +143,12 @@ jobs:
 
             const issue = existing.data[0];
             const time = new Date().toISOString();
+            const report = process.env.PROBE_REPORT || '(no report)';
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: issue.number,
-              body: `✅ 站点已恢复 — HTTP 200 at ${time}`,
+              body: `✅ 站点已恢复 — ${time}\n\n\`\`\`\n${report}\n\`\`\``,
             });
             await github.rest.issues.update({
               owner: context.repo.owner,

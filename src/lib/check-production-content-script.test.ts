@@ -5,6 +5,8 @@ import {
   checkExpectations,
   checkPage,
   fetchResponseWithRetry,
+  isEveryPageBlocked,
+  type CheckFailure,
   type PageExpectation,
 } from '../../scripts/check-production-content';
 
@@ -154,5 +156,68 @@ describe('production content smoke script', () => {
     expect(result.status).toBe(403);
     // 403 short-circuits — no retries, no wasted CI time.
     expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it('reports only the WAF block, not phantom content failures, on a 403 page', async () => {
+    const expectation: PageExpectation = {
+      label: 'home',
+      path: '/',
+      contentTypeIncludes: 'text/html',
+      mustContain: ['some article title'],
+    };
+
+    const failures = await checkPage(BASE_URL, expectation, {
+      attempts: 1,
+      fetchImpl: async () => new Response('challenge page', { status: 403 }),
+    });
+
+    // One failure naming the real cause, rather than a "Missing expected
+    // content" for every assertion in the expectation.
+    expect(failures).toHaveLength(1);
+    expect(failures[0]?.message).toContain('HTTP 403');
+  });
+});
+
+describe('isEveryPageBlocked', () => {
+  const expectations: PageExpectation[] = [
+    { label: 'home', path: '/', contentTypeIncludes: 'text/html', mustContain: [] },
+    { label: 'blog', path: '/blog', contentTypeIncludes: 'text/html', mustContain: [] },
+  ];
+  const blocked = (label: string): CheckFailure => ({
+    label,
+    message: `HTTP 403 at ${BASE_URL}/ — blocked before content could be read.`,
+  });
+
+  it('is true only when every expectation was blocked', () => {
+    expect(isEveryPageBlocked(expectations, [blocked('home'), blocked('blog')])).toBe(
+      true,
+    );
+  });
+
+  it('is false when only some pages were blocked', () => {
+    // blog loaded fine and produced no failure; home was challenged. Degrading
+    // here would swallow a genuine regression on the one page that did load.
+    expect(isEveryPageBlocked(expectations, [blocked('home')])).toBe(false);
+  });
+
+  it('is false when a blocked page is mixed with a real content failure', () => {
+    expect(
+      isEveryPageBlocked(expectations, [
+        blocked('home'),
+        { label: 'blog', message: 'Missing expected content "x" at /blog.' },
+      ]),
+    ).toBe(false);
+  });
+
+  it('is false when one label produced several failures', () => {
+    // A blocked page short-circuits to exactly one failure; two failures under
+    // the same label means something else went wrong alongside it.
+    expect(isEveryPageBlocked(expectations, [blocked('home'), blocked('home')])).toBe(
+      false,
+    );
+  });
+
+  it('is false for an empty expectation list', () => {
+    expect(isEveryPageBlocked([], [])).toBe(false);
   });
 });
