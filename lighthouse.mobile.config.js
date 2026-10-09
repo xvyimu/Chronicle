@@ -20,7 +20,8 @@ module.exports = {
         `${MOBILE_BASE_URL}/blog/nextjs-app-router`,
         `${MOBILE_BASE_URL}/projects`,
         `${MOBILE_BASE_URL}/about`,
-        `${MOBILE_BASE_URL}/links`,
+        // /links was removed in the 2026-10 workspace rebuild; /favorites replaced it.
+        `${MOBILE_BASE_URL}/favorites`,
       ],
       startServerCommand: 'pnpm exec next start -p 3101',
       startServerReadyPattern: 'ready',
