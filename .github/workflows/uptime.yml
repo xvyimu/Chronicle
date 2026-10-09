@@ -1,0 +1,121 @@
+name: Uptime
+
+# 每 10 分钟探活生产站点。失败时开 issue（复用已有 open issue 防刷屏），
+# 恢复后自动关闭。GitHub Actions cron 最短 5 分钟，实际可能延迟 5-15 分钟，
+# 对个人博客足够——不替代真实 RUM，只覆盖「站点完全不可达」。
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # 手动触发，用于测试
+
+permissions:
+  contents: read
+  issues: write # 探活失败时开 issue 需要
+
+concurrency:
+  group: uptime
+  cancel-in-progress: false # 不取消：如果上一次还在跑，说明站点慢，不该打断
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL || 'https://incca.ccwu.cc' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Probe production site
+        id: probe
+        run: |
+          set +e
+          RESPONSE=$(curl -sS -o /dev/null -w '%{http_code}' \
+            --max-time 15 --retry 2 --retry-delay 5 \
+            -H 'accept: text/html' \
+            -H 'user-agent: chronicle-uptime-probe/1.0' \
+            "$SITE_URL")
+          echo "status=$RESPONSE" >> "$GITHUB_OUTPUT"
+          echo "HTTP status: $RESPONSE"
+
+      - name: Open issue if site is down
+        if: steps.probe.outputs.status != '200'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const label = 'uptime';
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: [label],
+              per_page: 1,
+            });
+
+            const url = process.env.SITE_URL;
+            const status = '${{ steps.probe.outputs.status }}';
+            const time = new Date().toISOString();
+
+            if (existing.data.length > 0) {
+              // 已有 open issue：追加一条时间戳，不重复开
+              const issue = existing.data[0];
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `⚠️ 仍然不可达 — HTTP ${status} at ${time}`,
+              });
+              core.info(`Commented on existing issue #${issue.number}`);
+              return;
+            }
+
+            const { data: issue } = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🔴 站点不可达 (HTTP ${status})`,
+              body: [
+                `生产站点 **${url}** 探活失败。`,
+                '',
+                `- 时间：${time}`,
+                `- HTTP 状态：${status}`,
+                `- Run：${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+                '',
+                '请检查 [Vercel 部署状态](https://vercel.com/) 和 [GitHub Actions](https://github.com/${context.repo.owner}/${context.repo.repo}/actions)。',
+              ].join('\n'),
+              labels: [label],
+            });
+            core.info(`Created issue #${issue.number}`);
+
+      - name: Close issue if site recovered
+        if: steps.probe.outputs.status == '200'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const label = 'uptime';
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: [label],
+              per_page: 1,
+            });
+
+            if (existing.data.length === 0) {
+              core.info('Site is up and no open issue — nothing to do.');
+              return;
+            }
+
+            const issue = existing.data[0];
+            const time = new Date().toISOString();
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body: `✅ 站点已恢复 — HTTP 200 at ${time}`,
+            });
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              state: 'closed',
+            });
+            core.info(`Closed issue #${issue.number}`);

@@ -140,4 +140,19 @@ describe('production content smoke script', () => {
 
     expect(failures.map(({ label }) => label)).toEqual(['first', 'second']);
   });
+
+  it('returns 403 immediately without retrying (WAF block is not transient)', async () => {
+    const fetchImpl = vi.fn(async () => new Response('forbidden', { status: 403 }));
+
+    const result = await fetchResponseWithRetry(`${BASE_URL}/blocked`, {
+      attempts: 5,
+      fetchImpl,
+      retryDelayMs: 0,
+      timeoutMs: 50,
+    });
+
+    expect(result.status).toBe(403);
+    // 403 short-circuits — no retries, no wasted CI time.
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
 });
