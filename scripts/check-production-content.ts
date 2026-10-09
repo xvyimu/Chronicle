@@ -390,11 +390,11 @@ async function main(): Promise<void> {
   // policy change does not red-light every master push forever.
   //
   // This is a known blind spot and is stated as one: while it holds, content
-  // correctness after a deploy is NOT verified. The uptime workflow
-  // (.github/workflows/uptime.yml) covers "is the site reachable at all"; it
-  // does not cover "is the content right". Restoring real verification needs
-  // either an allowlisted probe identity or a check that runs from inside the
-  // Cloudflare zone — see docs/ops-deferred-work-plan.md.
+  // correctness after a deploy is NOT verified by this script. Leaving it
+  // unverified is a deliberate trade-off — the alternative is a red CI every
+  // push. Restoring real verification needs either an allowlisted probe
+  // identity or a check that runs from inside the Cloudflare zone — see
+  // docs/ops-deferred-work-plan.md.
   if (isEveryPageBlocked(expectations, failures)) {
     console.warn(
       [

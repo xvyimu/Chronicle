@@ -30,10 +30,6 @@ const eslintConfig = defineConfig([
     '.stryker-tmp/**',
     'tmp/**',
     'project-diagnostic-report/**',
-    // Cloudflare Workers live outside the Next.js app; separate deployment,
-    // different runtime types. Linted by its own tsconfig, not by Next's
-    // eslint config (which assumes React/DOM).
-    'workers/**',
   ]),
   // Allow setState in effects for legitimate use cases:
   // - localStorage init (ThemeToggle), DOM measurement (TableOfContents)

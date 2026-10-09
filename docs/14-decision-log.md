@@ -370,7 +370,7 @@
 - **复查**：master push 后确认 `post-deploy` 变绿且 `Check production content` 步出现 `all 8 checks returned HTTP 403` 的 warn（而非每条 `Missing expected content`）。
   - **后续实测（2026-10-09，合入 master `81bd1b0` 之后）**：`post-deploy` 已转绿，日志原文 `all 8 checks returned HTTP 403 ... Content CORRECTNESS was NOT verified this run (reachability only). Exiting 0.`——降级路径按预期生效。手动 `workflow_dispatch` 跑 `uptime` 两次（run `37918706738` / `37925731718`）均得到 `state: up` 且不开 issue。
   - **仍未闭环**：`uptime` 的 **`schedule` 事件从未触发过**。合入后等了两小时以上（12:49、13:21 UTC 均查），`event=schedule` 的全仓 run 数始终为 **0**；只有两次 `workflow_dispatch`。仓库无 fork、未归档、Actions enabled、workflow `state=active`、YAML 解析出的 `on.schedule` 正确、默认分支 `master` 上文件确实有 `*/10 * * * *`。**根因未定位**；社区有大量同类报告（`schedule` 注册可能因平台侧同步问题失效，官方建议推一个动到该 workflow 文件的 commit 触发 resync）。Cron 本身又是尽力而为（高峰可延迟甚至丢弃），不能当作精确计时器。推过 resync commit（PR #46）后仍不触发——**GitHub 的 schedule 路线判定为不可靠**，改用 Cloudflare Worker Cron Trigger（D-041）。
-  - **已闭环（2026-10-09，D-041）**：探活改由 Cloudflare Worker 的 Cron Trigger 执行（`workers/uptime/`），不再依赖 GitHub Actions 的 `schedule`。详见 D-041。
+  - **已退役（2026-10-09，D-042）**：曾改用 Cloudflare Worker Cron Trigger（D-041）绕过 GitHub schedule 不可靠的问题；同日按用户指示「不用探活」全部删除。**本条只保留「WAF 403 导致 CI 误报 → 降级处理」这一段仍然有效**（那是修 CI 红灯，与探活无关）。
 
 ## 2026-10-09 · D-040 · 客户端错误边界上报（补上运行时盲区）
 
@@ -398,3 +398,13 @@
 - **影响**：新增 `workers/uptime/`（5 个文件），改 `eslint.config.mjs`（`workers/**` 排除出 Next.js lint）、`docs/14-decision-log.md`（D-039 复查行订正 + 本条 D-041）。Vitest / typecheck / lint / format 不变（Worker 不在 vitest include 内，独立 tsconfig 类型检查通过）。
 - **诚实记账**：(1) Worker 部署本身**未在本回合执行**——需要 Cloudflare `wrangler deploy` + 建 PAT，属 L3，本 PR 只落地代码。(2) 同 zone 子请求绕过 BFM 是**默认行为**，但社区有偶发路由抖动报告（CF 回复建议 `cf.worker.upstream_zone` + Skip 规则兜底，Free 上 Skip 对 BFM 无效）——若 Worker 探活也拿到 403，说明该路由抖动发生了，需评估 DNS-only 灰云域名替代。(3) Free plan Worker 配额 100,000 请求/天、5 个 cron/账户、CPU 10ms/次——10 分钟一次绰绰有余。
 - **复查**：部署后查 `wrangler tail` 确认 cron 触发（Worker 的 `console.log` 在 CF dashboard 可见），并确认 10 分钟后 GitHub 不新增 uptime issue（站点 up 时）。若 Worker 的 `fetch()` 也拿到 403，同 zone 路由抖动发生，需改用跨 zone fetch 或 DNS-only 域名。
+
+## 2026-10-09 · D-042 · 探活整体退役（D-039/D-041 的探活部分删除）
+
+- **背景**：用户明确指示「不用探活」。D-039 引入的 GitHub Actions 探活 workflow 与 D-041 引入的 Cloudflare Worker 探活都属探活范畴。
+- **选择**：**全部删除**。删 `.github/workflows/uptime.yml`、`scripts/probe-health.ts`、`src/lib/probe-health-script.test.ts`、`workers/uptime/`（5 个文件）；`eslint.config.mjs` 去掉 `workers/**` 忽略；`docs/HANDOFF.md` 三处引用订正。
+- **保留什么**：`check:production-content` 的 **WAF 403 降级处理保留**——它不是探活，是修 CI 误报（CI runner 被 Cloudflare BFM 拦会误报「13 条内容回归」，实际站点正常）。同样保留 D-037 的 `post-deploy` 改造（修 `vercel deploy` 无效 token 导致的必红）。
+- **原因**：用户判定探活对这个规模的站不值得维护——GitHub `schedule` 不可靠（D-039 实测 0 触发）、Cloudflare Worker 需额外部署 + 建 PAT + 维护一套告警逻辑。站点是静态内容站，Vercel 侧的健康由每次部署的 `post-deploy` 覆盖；持续探活属超出需求的运维投入。
+- **诚实记账**：删除后**没有任何自动化在监控站点持续可用性**——站点若在两次部署之间挂掉，不会被自动发现。这是有意接受的取舍，不是遗漏。
+- **影响**：删 8 个文件，改 `eslint.config.mjs`、`scripts/check-production-content.ts`（注释去掉对 uptime workflow 的引用）、`docs/HANDOFF.md`（§2 / §4 / §6）、本文件。Vitest 79 files / 629 tests → **78 files / 616 tests**（本机实测 exit 0）。
+- **复查**：—
