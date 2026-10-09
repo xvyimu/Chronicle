@@ -53,7 +53,7 @@ src/
 │   ├── tags/[tag]/         # Tag archive
 │   ├── series/[series]/    # Series archive
 │   ├── about/              # About page
-│   ├── styles/             # Semantic CSS modules (15 files; longest article-ui.css 668 lines)
+│   ├── styles/             # Semantic CSS modules (15 files; longest article-ui.css 426 lines)
 │   │   ├── tokens.css      # Design tokens (light/dark theme vars, spacing, shadows)
 │   │   ├── base.css        # Global base (skip-link, header, footer, not-found)
 │   │   ├── components.css   # Generic layout and card components
@@ -158,7 +158,7 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on push/PR to master:
 1. **quality** — pnpm audit → format → check:docs → lint → test → tsc → generate-rss → build → bundle-budget
 2. **bundle-analyze** — builds with analyzer, uploads report as artifact
 3. **e2e** — installs Chromium, builds production once, then sequentially runs Playwright and Lighthouse CI (`lighthouse.config.js`)
-4. **deploy** — Vercel production deploy + production content smoke test (needs quality + e2e; master push only)
+4. **post-deploy** — waits until this commit's Production deployment reports `state=success` (GitHub Deployments API; Vercel's Git integration does the actual deploy), then runs the production content smoke test (needs quality + e2e; master push only)
 
 <!-- BEGIN:nextjs-agent-rules -->
 

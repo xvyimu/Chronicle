@@ -17,31 +17,39 @@
 
 生产证据是时间点快照。新 master 部署成功后更新本节，不要把历史报告中的提交号复制为当前状态。
 
+> **2026-10-08 注**：上表 CI 结论中的 `deploy`（当时确实成功）已不复存在——`deploy` job 的显式 `vercel deploy` 后来因 token 失效连续失败，2026-10-08 移除并改为 `post-deploy` 烟测（见 [D-037](./14-decision-log.md)）。部署一直由 Vercel Git 集成完成。
+
 ## 2. 流水线与发布顺序
 
 ```text
 quality → e2e（production build + Playwright + Lighthouse）
-        → deploy（master push only）→ production content smoke
+        → post-deploy（master push only）→ production content smoke
 
-bundle-analyze（并行、独立，不是 deploy 依赖）
+bundle-analyze（并行、独立，不是 post-deploy 依赖）
 ```
 
 - `quality`：依赖审计、代码/文档格式、lint、Vitest、类型、SEO、blur、build、RSS diff、bundle budget。
 - `bundle-analyze`：独立构建并上传 `.next/analyze/` artifact，不阻塞 e2e。
-- `e2e`：依赖 quality；一次 production build 同时供 48 项 Playwright 和 Lighthouse 使用。
-- `deploy`：依赖 quality + e2e；固定 Vercel CLI 56.2.1 上传源码并远端构建，随后检查生产内容。
+- `e2e`：依赖 quality；一次 production build 同时供 46 项 Playwright 和 Lighthouse 使用。
+- `post-deploy`：依赖 quality + e2e；生产部署由 Vercel Git 集成完成（非 CI），本 job 先确认本 commit 的 Production 部署 `state=success`（GitHub Deployments API），再检查生产内容。原 `deploy` job 的 `npx vercel deploy` 因 token 无效从未成功，2026-10-08 移除（D-037）。
 
 ## 3. 当前质量基线
 
-| 门禁                | 当前证据                                                           |
-| ------------------- | ------------------------------------------------------------------ |
-| Vitest              | 95 files / 709 tests（含 garden seed + T3 csp-report；2026-07-22） |
-| Playwright          | 5 files / 49+ tests（含 CSP 上报冒烟），最新 CI 通过               |
-| TypeScript / ESLint | 最新 CI 通过                                                       |
-| SEO / blur          | 最新 CI 通过                                                       |
-| Production build    | 93 个生成条目，document routes 因 nonce 按需动态渲染               |
-| Lighthouse          | desktop preset，5 页 × 2 次，最新 CI 通过                          |
-| Production smoke    | 首页、博客、项目、收藏、RSS、sitemap、search 检查通过              |
+> **2026-10-08 注**：本节数字是 2026-07-22（Vitest/Playwright）与 2026-07-17（bundle）的快照，
+> **未随之后的迭代刷新**。当前真值见 [HANDOFF.md](./HANDOFF.md) §2 与 [performance-baseline.md](./performance-baseline.md)；
+> 2026-10-08 实测：Vitest 76 files / 588 tests、Playwright 46 tests（5 spec files）、
+> JS chunks 882.8 KB / CSS 115.2 KB / 总 883.7 KB、最重路由 `/blog/[slug]` 248.0 KB gz。
+> 按 [docs/README.md](./README.md) 的纪律，本表不改写为当前值——它记录的是上线那一刻的证据。
+
+| 门禁                | 2026-07-22 快照                                                     |
+| ------------------- | ------------------------------------------------------------------- |
+| Vitest              | 95 files / 709 tests（含 garden seed + T3 csp-report；2026-07-22）  |
+| Playwright          | 5 files / 49+ tests（含 CSP 上报冒烟），最新 CI 通过                |
+| TypeScript / ESLint | 最新 CI 通过                                                        |
+| SEO / blur          | 最新 CI 通过                                                        |
+| Production build    | 93 个生成条目，document routes 因 nonce 按需动态渲染                |
+| Lighthouse          | desktop preset，5 页 × 2 次，最新 CI 通过                           |
+| Production smoke    | 首页、博客、项目、RSS、sitemap、search 检查通过（收藏页随功能删除） |
 
 2026-07-17 Node 22 CI production build 的 bundle 快照：
 
