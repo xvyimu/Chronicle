@@ -10,6 +10,10 @@ name: Uptime
 #   - 辅探针（Vercel 别名）失败不改结论，只把原始结果写进 issue
 #   - 403 挑战 / 429 限流 / 3xx 重定向都算 up
 #   - down → 开 issue（已有 open issue 则追加评论，评论节流 1 小时）· up → 关 issue
+#
+# schedule 注册：GitHub 的 schedule 事件有时对「新合入 master 的 workflow」
+# 注册延迟或失效（社区大量同类报告，官方建议推一个动到该文件的 commit 触发
+# resync）。本注释行就是为此而存在——改动它即触发重新注册，不改逻辑。
 on:
   schedule:
     - cron: '*/10 * * * *'
