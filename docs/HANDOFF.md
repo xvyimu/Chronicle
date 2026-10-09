@@ -54,7 +54,7 @@
 - 缓存统一使用 `createCache<T>`；测试替换 ContentSource 后调用 `resetAllCaches()`。
 - `globals.css` 不承载本地 CSS `@import` 链。全局语义 CSS 由根 layout 显式导入（`tokens` / `base` / `components` / `controls` / `backdrop` / `animations` / `workspace` / `responsive`），路由专属样式（`home` / `archive` / `blog-ui` / `article-ui` / `prose` / `reading` / `project-detail`）由最近路由入口导入。
 - 搜索为**纯客户端**：`src/lib/search/`（类型 + Fuse 引擎）+ `src/components/search/SearchPanel.tsx`（客户端岛）。无 `/api/search`、无服务端搜索引擎、无往返；索引来源为文章元信息。规模触发评估见 [ADR-0006](./adr/0006-search-engine-keep-fuse.md)。
-- CSP 违规仅 collect-only：`POST /api/csp-report` + `proxy.ts` 的 `report-to`/`report-uri`；不落库、不回显、不放宽指令。该端点是**唯一**的 Route Handler。
+- CSP 违规与客户端错误均 collect-only：`POST /api/csp-report` + `POST /api/client-error` + `proxy.ts` 的 `report-to`/`report-uri`；不落库、不外发、不回显、不放宽 CSP 指令。两个 Route Handler 共用 `src/server/rate-limit.ts` 的固定窗口限流（key 前缀隔离配额）。
 - 客户端与 `src/lib` 不得导入 `@/server`；由 `src/lib/module-boundaries.test.ts` 守门。
 - 图片默认只允许本地资源，`next.config.ts` 的 `remotePatterns` 保持为空，除非明确审核远程主机。
 
@@ -67,7 +67,7 @@
 | 新增路由         | `src/app/**`                                                                            | metadata、导航、sitemap、测试                                                                                                                                                |
 | 修改搜索         | `src/lib/search/`、`src/components/search/SearchPanel.tsx`                              | 引擎测试、组件测试、导航/`module-boundaries`                                                                                                                                 |
 | 修改阅读状态     | `src/lib/reading-state.ts`、`src/components/blog/{ReadingActions,LocalReadingList}.tsx` | `/favorites` 页测试、`safeLocalStorage` 容错                                                                                                                                 |
-| 修改 CSP / 上报  | `src/proxy.ts`、`src/app/api/csp-report/`                                               | layout、`src/lib/csp.ts`、API.md、ADR                                                                                                                                        |
+| 修改 CSP / 上报  | `src/proxy.ts`、`src/app/api/csp-report/`、`src/app/api/client-error/`                  | layout、`src/lib/csp.ts`、`src/lib/error-report.ts`、API.md、ADR、`rate-limit.ts`                                                                                            |
 | 修改 SRI 门控    | `next.config.ts`（`ENABLE_SRI`）                                                        | ADR `0005-sri-over-nonce-evaluation.md`                                                                                                                                      |
 | 修改内容读取入口 | `src/server/content`、相关 `src/app/**` 页面                                            | 底层 `src/lib/*` repository、页面测试 mock 路径                                                                                                                              |
 | 修改视觉 token   | `src/app/styles/tokens.css`                                                             | 明暗主题、CSS 规范、移动端与截图检查                                                                                                                                         |
