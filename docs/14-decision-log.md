@@ -250,7 +250,7 @@
 - **选择**：整块删除 + 订正注释为「当前唯一消费者：`/api/csp-report`」。
 - **原因**：无消费者的导出是死代码；过期注释会误导后续读者。
 - **影响**：`rate-limit.ts` 少 13 行；`checkCspReportRateLimit` 保留（仍在用）。
-- **复查**：—
+- **复查**：后续追加（2026-10-09，D-040）新增第二个消费者 `/api/client-error`，注释已再次更新。
 
 ## 2026-10-07 · D-031 · 站点配色遗留在 OG 图与 theme-color
 
@@ -367,4 +367,19 @@
   - **可复现的证据**：上面几条命令都在仓里，谁都能重跑。`src/lib/probe-health-script.test.ts` 的 13 例锁定判定表与主/辅探针划分；`check-production-content-script.test.ts` 新增的 `isEveryPageBlocked` 5 例锁定「全部被拦才降级、部分被拦仍报错」。
   - **一次性的证据（未落盘，如实标明）**：三组本地假服务器端到端验证跑过并通过——probe-health 7 例（`cf403+vercel200→up`、`cf200+vercel-dead→up`、`cf522+vercel200→down`、`cf301→up`、`cf404→down`、`cf-dead→down`、`cf200+vercel500→up`）；`check:production-content` 全 403 → exit 0 + 降级告警；部分 403（首页 200）→ **exit 1 不降级**。脚本写在 `/tmp` 未进仓，**下一人无法重跑**。其中判定表那 7 例已由单测等价覆盖，`isEveryPageBlocked` 的区分度现也进了单测。
   - **未验**：Vercel 别名在 GitHub Actions runner 网络上是否可达（本机 DNS 污染，无法验证），属 UNVERIFIED。
-- **复查**：master push 后确认 `post-deploy` 变绿且 `Check production content` 步出现 `all 8 checks returned HTTP 403` 的 warn（而非每条 `Missing expected content`）；`uptime` workflow 首跑应报 `state: up` 且不开 issue。若 `VERCEL_ORIGIN_URL` 在 runner 上不可达，报告会照实显示该行为 `000`，主探针仍决定结论，不会误报。
+- **复查**：master push 后确认 `post-deploy` 变绿且 `Check production content` 步出现 `all 8 checks returned HTTP 403` 的 warn（而非每条 `Missing expected content`）。
+  - **后续实测（2026-10-09，合入 master `81bd1b0` 之后）**：`post-deploy` 已转绿，日志原文 `all 8 checks returned HTTP 403 ... Content CORRECTNESS was NOT verified this run (reachability only). Exiting 0.`——降级路径按预期生效。手动 `workflow_dispatch` 跑 `uptime` 两次（run `37918706738` / `37925731718`）均得到 `state: up` 且不开 issue。
+  - **仍未闭环**：`uptime` 的 **`schedule` 事件从未触发过**。合入后等了两小时以上（12:49、13:21 UTC 均查），`event=schedule` 的全仓 run 数始终为 **0**；只有两次 `workflow_dispatch`。仓库无 fork、未归档、Actions enabled、workflow `state=active`、YAML 解析出的 `on.schedule` 正确、默认分支 `master` 上文件确实有 `*/10 * * * *`。**根因未定位**；社区有大量同类报告（`schedule` 注册可能因平台侧同步问题失效，官方建议推一个动到该 workflow 文件的 commit 触发 resync）。Cron 本身又是尽力而为（高峰可延迟甚至丢弃），不能当作精确计时器。**因此「站点持续探活」这条目前实际是不生效的**——文件在，但没人按点叫它。要真闭环，下一步要么推一个 resync commit 看是否恢复，要么把探活挪出 GitHub 的 cron（如 CF Worker 定时 / 外部 uptime 服务）。
+
+## 2026-10-09 · D-040 · 客户端错误边界上报（补上运行时盲区）
+
+- **背景**：只读审计指出「运行时可观测性」是本仓最大的工程盲区——`src/app/error.tsx` 捕获到异常后只做 `console.error`，然后给用户看一个错误码。**生产环境用户撞到错误，站点维护者完全不知道**。同批还有 CSP 上报只 `console.log` 不聚合、无 RUM、无 uptime 探活（后者已在 D-039 补）。
+- **可选**：A 接 Sentry 等第三方 SDK / B 自建同源收集端点 + 客户端组装 / C 只改前端 UI 提示，不做上报。**选 B**。
+- **原因**：A 的免费额度够用，但会把用户错误消息与堆栈发给第三方、需要加 CSP 白名单、并引入一个常驻依赖；对一个无后端、20 篇文章的静态内容站，代价与收益不成比例。C 等于什么都没解决。B 完全落在既有模式里——与 `/api/csp-report` 一样 collect-only、同样限流、同样白名单投影，**CSP 的 `connect-src 'self'` 已经允许这条路径，不需要放宽任何指令**。
+- **实现**：`src/app/api/client-error/route.ts`（新增端点，Node runtime、8 KiB 上限、字段白名单 + 512 截断、204/429、不落库）；`src/lib/error-report.ts`（客户端组装与发送：`shouldReport` / `buildReport` / `sendErrorReport` / `reportError`）；`src/app/error.tsx` 的 `useEffect` 加一行 `reportError(error)`；`src/server/rate-limit.ts` 加 `checkClientErrorRateLimit`（`client-error:` 前缀，与 CSP 配额互不挤占，模块头注释同步更新）。
+- **删除隐私的取舍**：只发 `pathname`，**查询串被丢弃**（可能含用户输入或 token）；不发 cookie、不发 referrer。字段白名单之外的东西（哪怕上报体里有 `email` / `cookie`）一律不进日志——有测试锁定这一点。
+- **传输选择**：优先 `navigator.sendBeacon`（页面卸载也能送达），退回 `fetch({keepalive:true})`，两条路径都包在 try/catch 里。**上报失败绝不影响错误页渲染**——在 `useEffect` 里二次抛错会比丢掉一条遥测严重得多。
+- **仅生产**：`NODE_ENV !== 'production'` 直接返回 false，本地开发的错误看终端即可。
+- **诚实记账（这不是完整的可观测性）**：本方案只覆盖**客户端**错误边界。服务端渲染错误、Route Handler 异常、构建期问题都不经这里；也没有错误聚合与告警——日志留在 Vercel 函数日志里，要看还得人去翻。它是「从零到有痕迹」，不是「有监控」。真要闭环仍需 Sentry 一类或 Vercel 的日志产品。
+- **影响**：新增 4 个文件（端点 + 端点测试 + 客户端模块 + 客户端测试），改 `error.tsx`、`rate-limit.ts`、`docs/API.md`、`docs/ARCHITECTURE.md`、本文件（含 D-030 复查行订正）。Vitest 79 files / 629 tests（本机实测 exit 0）。
+- **复查**：生产环境制造一次错误（如访问一个会抛的页面）确认 Vercel 函数日志出现 `[client-error] {...}`。若要升级为真正的监控，评估 Sentry 或 Vercel 日志导出，并同步改本文件的安全面描述。

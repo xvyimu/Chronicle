@@ -7,8 +7,9 @@
  * - 多实例 serverless 不跨 isolate 共享计数
  * - 不是全局安全边界；硬配额应放在平台 Firewall/WAF
  *
- * 当前唯一消费者：`/api/csp-report`。共用同一 Map，用 key 前缀隔离配额。
- * 端点公开无鉴权，限流是防日志刷量的尽力而为措施，不是安全边界。
+ * 当前消费者：`/api/csp-report` 与 `/api/client-error`。共用同一 Map，用 key
+ * 前缀隔离配额。两个端点都公开无鉴权，限流是防日志刷量的尽力而为措施，
+ * 不是安全边界。
  *
  * IP key 仅信任平台所有的 `x-vercel-forwarded-for`，忽略可伪造的通用转发头。
  */
@@ -32,6 +33,12 @@ export const SEARCH_RATE_LIMIT_MAX = 60;
  * 防止被伪造上报刷爆日志（report 端点无鉴权、公开可 POST）。
  */
 export const CSP_REPORT_RATE_LIMIT_MAX = 30;
+/**
+ * 客户端错误上报窗口内最大请求数。
+ * 一次页面崩溃通常只发一条；给 20 的配额留了「同一用户连续踩坑」的余量，
+ * 又不足以让公开端点被刷爆日志。
+ */
+export const CLIENT_ERROR_RATE_LIMIT_MAX = 20;
 /** 限流窗口长度（毫秒）。 */
 export const SEARCH_RATE_LIMIT_WINDOW_MS = 60_000;
 
@@ -115,6 +122,19 @@ export function checkCspReportRateLimit(
   windowMs = SEARCH_RATE_LIMIT_WINDOW_MS,
 ): RateLimitResult {
   return checkSearchRateLimit(`csp-report:${key}`, now, max, windowMs);
+}
+
+/**
+ * 客户端错误上报限流：同样的固定窗口实现，key 加 `client-error:` 前缀隔离配额。
+ * 与 CSP 上报分开计，一个端点被刷不会挤掉另一个。
+ */
+export function checkClientErrorRateLimit(
+  key: string,
+  now = Date.now(),
+  max = CLIENT_ERROR_RATE_LIMIT_MAX,
+  windowMs = SEARCH_RATE_LIMIT_WINDOW_MS,
+): RateLimitResult {
+  return checkSearchRateLimit(`client-error:${key}`, now, max, windowMs);
 }
 
 /** 测试专用：清空限流桶与操作计数，避免用例间串扰。 */

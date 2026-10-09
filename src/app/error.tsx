@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { reportError } from '@/lib/error-report';
 
 export default function ErrorBoundary({
   error,
@@ -13,6 +14,10 @@ export default function ErrorBoundary({
 }) {
   useEffect(() => {
     console.error('Page error:', error);
+    // 生产环境把错误送到同源 /api/client-error：在此之前这条 catch 只落在
+    // 访客自己的控制台里，站点维护者看不到。非生产环境 reportError 会直接
+    // 返回 false，不打扰本地开发。
+    reportError(error);
   }, [error]);
 
   // In production, don't expose raw error messages — they may contain
