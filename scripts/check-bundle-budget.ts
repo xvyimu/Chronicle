@@ -1,8 +1,14 @@
 /**
  * Bundle Budget Checker
  *
- * Runs after `next build` to enforce bundle size limits.
- * Checks individual chunk files and total static output.
+ * Runs after `next build` to enforce bundle size limits. Two gates:
+ *
+ *   1. Per-file + total static output (`.next/static` walk).
+ *   2. **Per-route first load** — the gzipped JS+CSS a browser actually fetches
+ *      for one route, read from Next's per-route
+ *      `page_client-reference-manifest.js`. Gate 1 alone cannot see a route
+ *      regression: total output was 883 KB against a 2 MB cap, so 57% of the
+ *      budget was slack and no single file came close to its 300 KB cap either.
  *
  * Usage: tsx scripts/check-bundle-budget.ts
  *
@@ -10,9 +16,9 @@
  *   0 — all budgets within limits
  *   1 — one or more budgets exceeded
  *
- * The size-evaluation logic is pure (`evaluateBudgets`) so CI can assert the
- * gate without a `.next` build; the filesystem walk is only used by the CLI
- * entry point.
+ * The size-evaluation logic is pure (`evaluateBudgets`, `evaluateRouteBudgets`)
+ * so CI can assert the gates without a `.next` build; the filesystem walks are
+ * only used by the CLI entry point.
  *
  * Related soft residuals (mobile LH not in CI · RUM p75 pending):
  *   docs/ops/ch-rum-ci-residual-board-2026-07-28.md
@@ -20,7 +26,8 @@
  * Assertable unit surface: src/lib/check-bundle-budget-script.test.ts (CH-PERF-011)
  */
 
-import { readdirSync, statSync, existsSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
+import { gzipSync } from 'node:zlib';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -40,6 +47,25 @@ export const BUDGETS: BudgetConfig[] = [
 
 /** Total static output budget in KB (excludes font files, which are loaded on demand) */
 export const TOTAL_BUDGET_KB = 2048; // 2 MB total (JS + CSS only)
+
+/**
+ * Per-route first-load budget, in gzipped KB (JS + CSS).
+ *
+ * Measured 2026-10-08 on the committed master build: heaviest route
+ * `/blog/[slug]` 248 KB gz, next `/` at 217 KB gz, median 181 KB gz.
+ * The cap sits ~15% above the heaviest route so normal content growth does not
+ * page anyone, while a stray dependency (a date library, an icon set imported
+ * wholesale) trips it. Raise it deliberately and record why.
+ */
+export const ROUTE_BUDGET_KB = 285;
+
+/**
+ * Routes exempt from the per-route gate.
+ *
+ * `/_global-error` renders without any app layout or route CSS; it is not a
+ * page a visitor navigates to and its number is not comparable.
+ */
+export const ROUTE_BUDGET_EXEMPT = new Set(['/_global-error/page']);
 
 const STATIC_DIR = join(process.cwd(), '.next', 'static');
 
@@ -148,6 +174,147 @@ export function collectStaticAssets(staticDir: string = STATIC_DIR): StaticAsset
   }));
 }
 
+/** One route's first-load assets, as gzipped KB. */
+export interface RouteAssets {
+  /** Human-facing route path from app-path-routes-manifest, e.g. `/blog/[slug]`. */
+  routePath: string;
+  /** Next's internal manifest key, e.g. `/blog/[slug]/page`. */
+  manifestKey: string;
+  /** Gzipped KB the browser downloads for this route (JS + CSS). */
+  kb: number;
+}
+
+export interface RouteBudgetResult {
+  passed: boolean;
+  violations: string[];
+}
+
+/**
+ * Pure per-route budget evaluation. Takes already-measured route sizes so the
+ * gate can be asserted without a build.
+ */
+export function evaluateRouteBudgets(
+  routes: RouteAssets[],
+  budgetKB: number = ROUTE_BUDGET_KB,
+  exempt: Set<string> = ROUTE_BUDGET_EXEMPT,
+): RouteBudgetResult {
+  const violations: string[] = [];
+  for (const route of routes) {
+    if (exempt.has(route.manifestKey)) continue;
+    if (route.kb > budgetKB) {
+      violations.push(
+        `[ROUTE EXCEEDED] ${route.routePath}: ${formatKB(route.kb)} gz > ${formatKB(budgetKB)} (first-load JS+CSS)`,
+      );
+    }
+  }
+  return { passed: violations.length === 0, violations };
+}
+
+/**
+ * Parse a `page_client-reference-manifest.js`.
+ *
+ * The file is JavaScript, not JSON:
+ *   globalThis.__RSC_MANIFEST = globalThis.__RSC_MANIFEST || {};
+ *   globalThis.__RSC_MANIFEST["/route/page"] = {...};
+ * so slice out the key and the object literal rather than evaluating it.
+ */
+export function parseClientReferenceManifest(source: string): {
+  manifestKey: string;
+  manifest: {
+    entryJSFiles?: Record<string, string[]>;
+    entryCSSFiles?: Record<string, Array<{ path: string }>>;
+  };
+} | null {
+  const match = /__RSC_MANIFEST\["([^"]+)"\]\s*=\s*/.exec(source);
+  if (!match) return null;
+  const assignEnd = match.index + match[0].length;
+  const start = source.indexOf('{', assignEnd);
+  const end = source.lastIndexOf('}');
+  if (start === -1 || end <= start) return null;
+  return {
+    manifestKey: match[1],
+    manifest: JSON.parse(source.slice(start, end + 1)),
+  };
+}
+
+/**
+ * Gzipped KB of a set of `.next/static`-relative paths, skipping any that are
+ * not on disk. Next emits entries for modules that may not produce a file
+ * (e.g. an empty CSS entry), so missing files are expected, not an error.
+ */
+function gzipKbFor(relPaths: Iterable<string>, staticDir: string): number {
+  let bytes = 0;
+  for (const rel of relPaths) {
+    const file = join(staticDir, rel.replace(/^\/?static\//, ''));
+    if (!existsSync(file)) continue;
+    bytes += gzipSync(readFileSync(file)).length;
+  }
+  return bytes / 1024;
+}
+
+/**
+ * Per-route first-load JS+CSS (gzipped) from the build on disk.
+ *
+ * Route → file mapping comes from Next's own per-route client-reference
+ * manifest, which is what the server uses to emit `<script>`/`<link>` tags.
+ * Verified 2026-10-08 against a served production page: the union computed here
+ * matched the HTML's asset list exactly (14 JS + 5 CSS for `/blog/[slug]`).
+ */
+export function collectRouteAssets(
+  nextDir: string = join(process.cwd(), '.next'),
+): RouteAssets[] {
+  const staticDir = join(nextDir, 'static');
+  const serverAppDir = join(nextDir, 'server', 'app');
+  if (!existsSync(serverAppDir)) return [];
+
+  // Framework chunks every route loads. polyfillFiles is the legacy-browser
+  // bundle; it is in the served HTML (checked 2026-10-08) so it counts.
+  let sharedFiles: string[] = [];
+  const buildManifestPath = join(nextDir, 'build-manifest.json');
+  if (existsSync(buildManifestPath)) {
+    const buildManifest = JSON.parse(readFileSync(buildManifestPath, 'utf8')) as {
+      rootMainFiles?: string[];
+      polyfillFiles?: string[];
+    };
+    sharedFiles = [
+      ...(buildManifest.rootMainFiles ?? []),
+      ...(buildManifest.polyfillFiles ?? []),
+    ];
+  }
+
+  let manifestKeyToRoute: Record<string, string> = {};
+  const appRoutesPath = join(nextDir, 'app-path-routes-manifest.json');
+  if (existsSync(appRoutesPath)) {
+    manifestKeyToRoute = JSON.parse(readFileSync(appRoutesPath, 'utf8')) as Record<
+      string,
+      string
+    >;
+  }
+
+  const routes: RouteAssets[] = [];
+  for (const manifestPath of walkDir(serverAppDir)) {
+    if (!manifestPath.endsWith('page_client-reference-manifest.js')) continue;
+    const parsed = parseClientReferenceManifest(readFileSync(manifestPath, 'utf8'));
+    if (!parsed) continue;
+
+    const files = new Set(sharedFiles);
+    for (const list of Object.values(parsed.manifest.entryJSFiles ?? {})) {
+      for (const file of list) files.add(file);
+    }
+    for (const list of Object.values(parsed.manifest.entryCSSFiles ?? {})) {
+      for (const entry of list) files.add(entry.path);
+    }
+
+    routes.push({
+      routePath: manifestKeyToRoute[parsed.manifestKey] ?? parsed.manifestKey,
+      manifestKey: parsed.manifestKey,
+      kb: gzipKbFor(files, staticDir),
+    });
+  }
+
+  return routes.sort((a, b) => b.kb - a.kb);
+}
+
 function printReport(result: BudgetResult, totalBudgetKB: number): void {
   console.log('\n📦 Bundle Budget Report');
   console.log('─'.repeat(60));
@@ -166,29 +333,56 @@ function printReport(result: BudgetResult, totalBudgetKB: number): void {
     `Total static output: ${formatKB(result.totalKB)} / ${formatKB(totalBudgetKB)}`,
   );
   console.log('─'.repeat(60));
+}
 
-  if (result.violations.length === 0) {
-    console.log('✅ All bundle budgets within limits.\n');
-  } else {
-    console.log(`❌ ${result.violations.length} budget violation(s):\n`);
-    for (const v of result.violations) console.log(`  ${v}`);
-    console.log('');
+function printRouteReport(routes: RouteAssets[], budgetKB: number): void {
+  console.log('📦 Per-route first load (gzipped JS+CSS)');
+  console.log('─'.repeat(60));
+  const top = routes.slice(0, 5);
+  for (const route of top) {
+    const status = route.kb > budgetKB ? '❌' : '✅';
+    console.log(
+      `${status} ${route.routePath.padEnd(30)} ${formatKB(route.kb).padStart(10)} / ${formatKB(budgetKB)}`,
+    );
   }
+  if (routes.length > top.length) {
+    console.log(`   … ${routes.length - top.length} more routes under budget`);
+  }
+  console.log('─'.repeat(60));
+}
+
+/** Both gates' output plus the per-route table, printed as one report. */
+function printAll(
+  result: BudgetResult,
+  routeResult: RouteBudgetResult,
+  routes: RouteAssets[],
+): void {
+  printReport(result, TOTAL_BUDGET_KB);
+  printRouteReport(routes, ROUTE_BUDGET_KB);
+
+  const violations = [...result.violations, ...routeResult.violations];
+  if (violations.length === 0) {
+    console.log('✅ All bundle budgets within limits.\n');
+    return;
+  }
+  console.log(`❌ ${violations.length} budget violation(s):\n`);
+  for (const v of violations) console.log(`  ${v}`);
+  console.log('');
+  process.exitCode = 1;
 }
 
 function main(): void {
   const assets = collectStaticAssets();
-  if (assets.length === 0) {
-    console.log('\n📦 Bundle Budget Report');
-    console.log('─'.repeat(60));
-    console.log('  WARNING: No files found in .next/static — did build run?');
-    console.log('');
-    process.exit(1);
+  const routes = collectRouteAssets();
+  if (assets.length === 0 || routes.length === 0) {
+    console.error(
+      'WARNING: no .next/static assets or route manifests found — did the build run?',
+    );
+    process.exitCode = 1;
+    return;
   }
 
-  const result = evaluateBudgets(assets);
-  printReport(result, TOTAL_BUDGET_KB);
-  process.exit(result.passed ? 0 : 1);
+  printAll(evaluateBudgets(assets), evaluateRouteBudgets(routes), routes);
 }
 
 const entryPath = process.argv[1];

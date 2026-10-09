@@ -319,3 +319,27 @@
 - **影响**：`src/app/fonts/` 新增 3 个 TTF；`layout.tsx` 改 `next/font/local` 并改 `body` 字体栈；`docs/adr/0008`、`docs/13-risk-register.md` R15。**构建不再依赖外网**——断网构建（无效代理强制失败）实测 exit 0。
 - **取舍**：中文渲染随访客 OS 变化（Windows 微软雅黑 / macOS 苹方 / Android 思源），属有意选择。
 - **复查**：若要求各平台字形完全一致 → 回到方案 A；中文系统字体在某平台出现明显缺陷 → 评估自托管中文子集。
+
+## 2026-10-08 · D-037 · 移除 CI 的显式 `vercel deploy`，`deploy` job 改为 `post-deploy` 烟测
+
+- **背景**：只读审计复核发现 master 主 CI 的 `deploy` job **自仓库有 CI 以来从未成功过一次**（连续 15 次 push run 全 failure），失败原文 `Error: The token provided via --token argument is not valid`（run `37751354760` 日志）。同期生产站点 HTTP 200 且跑的是重构后版本（首页命中 `workspace-home`）。
+- **证据（2026-10-08 实测）**：`gh api repos/xvyimu/Chronicle/deployments` 显示 `vercel[bot]` 创建了 `d87050b` 的 Production deployment，08:40:42 状态 `success`——而该 run 的 `deploy` job 08:45:24 才启动、08:46:05 失败。说明生产部署由 Vercel Git 集成完成，CI 里这条 `npx vercel deploy --prod` 既非生产来源、又永远红灯。
+- **可选**：A 删 `vercel deploy` 步，job 改名 `post-deploy`，只保留「等站点可达 + `check:production-content`」/ B 修 `VERCEL_TOKEN` secret 保留现状 / C 整个 job 删掉（连 production smoke 一起）。
+- **选择**：**A**。
+- **原因**：B 需要在 GitHub Settings 配一个与 Git 集成功能重复的部署通道，且显式 deploy 会绕过 Git 集成的构建缓存与预览流程；C 会丢掉 CI 里唯一的生产内容断言（首页标题、CSP 头、sitemap/RSS 等），而这是合并后唯一的端到端证据。A 保留断言、去掉死路径，不动生产部署方式（Git 集成）。
+- **修订（同日）· 「等站点可达」不够，改为核对 revision**：初版 `wait-for-deployment.ts` 只轮询生产域名 HTTP 200。这**证明不了新 commit 已上线**——Vercel 在新部署构建期间仍服务上一版，200 恒定成立，smoke test 可能对着旧构建跑绿、新构建带病上线。改查 GitHub Deployments API：`GET /repos/{repo}/deployments?environment=Production` 里找 `sha === GITHUB_SHA` 且 `state=success` 才放行。**实测该 API 匿名可读**（repo public，`vercel[bot]` 提交记录含 sha；本地无 token 查 `d87050b` → `id=6931040077, state=success`）。
+- **修订（同日）· token 权限与失败分类**：workflow 的 `permissions:` 只有 `contents: read`，而读 deployments 需要 `deployments: read`——把 `secrets.GITHUB_TOKEN` 发过去会 403。因 repo 是 public，脚本改为**带 token 收到 403 时自动改用匿名重试一次**，不依赖加 scope（也就不会因 scope 不匹配而红）。失败分三类：**401/404 等非 403 的 4xx 属配置错误**（repo 名错、凭据被撤销），重试无益，直接 exit 1，**不降级**——否则一个写错的 `GITHUB_REPOSITORY` 会让整步静默放行；**5xx / 429 / 403 属瞬时**（GitHub 把主限流与次限流都报 403），连犯两次且站点在线则降级为可达性探测并 exit 0（日志标 `revision NOT verified`），站点也不可达才算真失败。script 末尾用 `process.exitCode = 1` 而非 `process.exit(1)`——Windows 上后者会在 undici keep-alive 句柄关闭途中触发 libuv 断言（`UV_HANDLE_CLOSING`），以 `0xC0000409` 异常退出而非 1。
+- **影响**：`.github/workflows/ci.yml` 的 `deploy` → `post-deploy`，删 `Deploy to Vercel` 步（含 `VERCEL_TOKEN` / `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` 三个 env），新增 `Wait for production deployment` 步（`scripts/wait-for-deployment.ts`）。文档同步：`ARCHITECTURE.md` §8/§9、`HANDOFF.md` §2/§4/§6、`launch-baseline.md` §2。
+- **取舍**：删掉后 `VERCEL_TOKEN` / `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` 三个 secret 在 CI 中不再被引用，可在 GitHub Settings 中一并删除（本回合未动 secret，属仓库设置层）。
+- **复查**：下一次 master push 后确认 `post-deploy` job 变绿且日志出现 `deployed to Production (id …)`；若出现 `degraded to HTTP probe`，说明 GitHub API 被限流或被网络阻断，需查 runner 出口。若 `wait-for-deployment` 因站点始终不可达而超时，说明 Git 集成部署失败——这正是该步要暴露的信号。
+
+## 2026-10-08 · D-038 · 体积门禁加按路由首屏预算
+
+- **背景**：只读审计判「体积门禁形同虚设」（悬案 2.4）——`check-bundle-budget.ts` 只有 chunks/CSS 单文件 300 KB 与总量 2048 KB 三条，实测 883.7 KB / 2048 KB → 留白 57%。一个路由多装一个重依赖（日期库、整包图标）总量都不到 2 MB，门禁不会变红。
+- **可选**：A 加按路由首屏预算 / B 把总量阈值压到更贴 / C 不动。**选 A**。
+- **原因**：B 只是调数字，不解决「一个路由悄悄变重不影响总量」这一真实回归路径；总量留白大本身不是缺陷，是字体子集化后的正常态。A 直接盯首屏：一个路由的 gzipped JS+CSS（浏览器第一帧真正下载的字节）若超阈值，即回归。
+- **实现**：`scripts/check-bundle-budget.ts` 新增 `collectRouteAssets()` 与纯函数 `evaluateRouteBudgets()`。数据来源是 Next 的 per-route `page_client-reference-manifest.js`（`entryJSFiles` + `entryCSSFiles`）并 `build-manifest.json` 的 `rootMainFiles`/`polyfillFiles`——这是 Next 用来生成 `<script>`/`<link>` 标签的同一份清单。**验证过**：对 `/blog/nextjs-app-router` 起生产服抓 HTML，列出的 14 JS + 5 CSS 与脚本计算的并集**逐文件一致**（approach 1 over-counts by 0 files）。
+- **阈值**：`ROUTE_BUDGET_KB = 285`（gzipped）。实测最重路由 `/blog/[slug]` 248 KB gz，其次 `/` 230.7 KB，中位 181.5 KB。285 留 ~15% 给内容增长；**实测压到 200 KB 时门禁正确变红 exit 1**（15 条 violation，全为 `[ROUTE EXCEEDED]`）。
+- **影响**：`scripts/check-bundle-budget.ts`（新增 `collectRouteAssets`、`evaluateRouteBudgets`、`parseClientReferenceManifest`、`ROUTE_BUDGET_KB`、`ROUTE_BUDGET_EXEMPT`）；`src/lib/check-bundle-budget-script.test.ts`（7 例 → 16 例，新增 9 例覆盖 per-route 闸与 manifest 解析，含嵌套大括号）。CI `quality` job 的 `pnpm exec tsx scripts/check-bundle-budget.ts` 步无需改——脚本内部已加 per-route 报告。
+- **取舍**：`/_global-error/page` 被免检（`ROUTE_BUDGET_EXEMPT`）——它不挂 app layout、不载 route CSS，数字不可比，也不是用户会到的页面。
+- **复查**：若某路由因新增依赖超 285 KB，门禁会变红——此时要么移除该依赖，要么（有理由时）调高 `ROUTE_BUDGET_KB` 并记录依据。

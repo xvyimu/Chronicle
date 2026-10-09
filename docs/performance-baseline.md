@@ -24,19 +24,25 @@ Track synthetic Lighthouse data and real-user Vercel Speed Insights data for:
 
 These budgets are enforced in CI today. Latest verified run: [29573545749](https://github.com/xvyimu/Chronicle/actions/runs/29573545749), success on 2026-07-17.
 
-| Gate                       | Current threshold | Enforced in                                                                  |
-| -------------------------- | ----------------- | ---------------------------------------------------------------------------- |
-| Lighthouse performance     | `>= 0.80`         | `lighthouse.config.js` (error) → `.github/workflows/ci.yml` `e2e` job        |
-| Lighthouse accessibility   | `>= 0.90`         | `lighthouse.config.js` (error) → 同上                                        |
-| Lighthouse best practices  | `>= 0.90`         | `lighthouse.config.js` (error) → 同上                                        |
-| Lighthouse SEO             | `>= 0.90`         | `lighthouse.config.js` (error) → 同上                                        |
-| Lighthouse LCP             | `<= 3500 ms`      | `lighthouse.config.js` (error) → 同上                                        |
-| Lighthouse CLS             | `<= 0.15` (lab)   | `lighthouse.config.js` (error) → 同上；field 目标仍 `0.1` via Speed Insights |
-| Lighthouse TBT             | `<= 300 ms`       | `lighthouse.config.js` (error) → 同上                                        |
-| Lighthouse FCP             | `<= 2000 ms`      | `lighthouse.config.js` (warn) → 同上                                         |
-| Largest JS chunk           | `<= 300 KB`       | `scripts/check-bundle-budget.ts` → `ci.yml` `quality` job                    |
-| Largest CSS bundle         | `<= 300 KB`       | `scripts/check-bundle-budget.ts` → 同上                                      |
-| Total JS/CSS static output | `<= 2 MB`         | `scripts/check-bundle-budget.ts` → 同上                                      |
+| Gate                                   | Current threshold | Enforced in                                                                                   |
+| -------------------------------------- | ----------------- | --------------------------------------------------------------------------------------------- |
+| Lighthouse performance                 | `>= 0.80`         | `lighthouse.config.js` (error) → `.github/workflows/ci.yml` `e2e` job                         |
+| Lighthouse accessibility               | `>= 0.90`         | `lighthouse.config.js` (error) → 同上                                                         |
+| Lighthouse best practices              | `>= 0.90`         | `lighthouse.config.js` (error) → 同上                                                         |
+| Lighthouse SEO                         | `>= 0.90`         | `lighthouse.config.js` (error) → 同上                                                         |
+| Lighthouse LCP                         | `<= 3500 ms`      | `lighthouse.config.js` (error) → 同上                                                         |
+| Lighthouse CLS                         | `<= 0.15` (lab)   | `lighthouse.config.js` (error) → 同上；field 目标仍 `0.1` via Speed Insights                  |
+| Lighthouse TBT                         | `<= 300 ms`       | `lighthouse.config.js` (error) → 同上                                                         |
+| Lighthouse FCP                         | `<= 2000 ms`      | `lighthouse.config.js` (warn) → 同上                                                          |
+| Largest JS chunk                       | `<= 300 KB`       | `scripts/check-bundle-budget.ts` → `ci.yml` `quality` job                                     |
+| Largest CSS bundle                     | `<= 300 KB`       | `scripts/check-bundle-budget.ts` → 同上                                                       |
+| Total JS/CSS static output             | `<= 2 MB`         | `scripts/check-bundle-budget.ts` → 同上                                                       |
+| Per-route first load (JS+CSS, gzipped) | `<= 285 KB`       | `scripts/check-bundle-budget.ts` (`ROUTE_BUDGET_KB`) → 同上；见 [D-038](./14-decision-log.md) |
+
+> The per-route gate (added 2026-10-08) closes a gap the three file/total budgets cannot
+> see: a route can gain a heavy dependency while total output stays far under 2 MB.
+> Measured 2026-10-08: heaviest route `/blog/[slug]` 248 KB gz, `/` 230.7 KB, median
+> 181.5 KB. `/_global-error` is exempt (no app layout, not a navigable page).
 
 > Lighthouse CI 通过 `treosh/lighthouse-ci-action@v12`（`configPath: ./lighthouse.config.js`）执行，`numberOfRuns: 2` 取中位数，`preset: 'desktop'`。Bundle analyzer 报告另由 `bundle-analyze` job 上传至 artifact `.next/analyze/`。
 

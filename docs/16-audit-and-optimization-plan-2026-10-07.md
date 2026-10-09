@@ -461,3 +461,44 @@ WCAG 2.1 AA 1.4.3 要求正文（含 12–13px 辅助文字）≥ 4.5:1。深色
 - 生产构建 `pnpm build` 会重写 `.next/`（已被 `.gitignore:23` 忽略），也重跑 `scripts/generate-rss.ts` 与 `scripts/build-content-snapshot.ts`；两次构建后 `git status --porcelain` 均为空，未污染受版本控制的产物。
 - **未执行**：`pnpm test:e2e`（本机缺 Playwright 浏览器，安装未完成，见 1.3）、Lighthouse 本地跑分、真实浏览器下的深色对比度与键盘走查、`pnpm test:mutation`（Stryker）、生产站点 `pnpm check:production-content`（会打生产域名，未授权故未跑）。
 - 数字均为本机单次实测，非统计意义上的稳定值；引用请重跑文中给出的命令。
+
+---
+
+## 6. 2026-10-08 复核注记（本快照为 2026-10-07 时点，以下条目状态已变）
+
+本节只记落地状态，不改写上文正文（按 [docs/README.md](./README.md) 对历史快照的纪律）。
+
+| 上文位置                              | 当时结论                           | 2026-10-08 复核后                                                                                                                                                                                                          |
+| ------------------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| §1.1 基线 `6326724`                   | 审核时点 master                    | 当前 master 为 `d87050b`（PR #39 `736e601`、PR #40 `d87050b` 之后）                                                                                                                                                        |
+| §1.x 测试数 `73 files / 551`          | 审核时点实跑                       | 现为 **76 files / 588 tests**（本次新增 `wait-for-deployment-script.test.ts` 15 例；`check-bundle-budget-script.test.ts` 由 7 例增至 16 例）                                                                               |
+| §4 item 8 `VERCEL_TOKEN`              | 「不影响生产，不在本次范围」       | 已处置：`deploy` job 改名 `post-deploy`，删掉从未成功过的 `npx vercel deploy` 步；新 job 用 GitHub Deployments API 确认本 commit 的 Production 部署 `state=success` 后再做内容烟测（[D-037](./14-decision-log.md)）        |
+| §F10 `article-ui.css` 668 行          | 审核时点实测                       | 现为 **426 行**（PR #40 删死类）                                                                                                                                                                                           |
+| §F10 `AGENTS.md:56` 行数              | 「668 行 > 500」                   | 已回填为 426                                                                                                                                                                                                               |
+| §F10 `next.config.ts:15` ADR 路径     | 「该路径不存在」                   | 复核时已是 `docs/adr/0005-sri-over-nonce-evaluation.md`（正确）                                                                                                                                                            |
+| §F10 `AGENTS.md:40/101/126`           | 字体写法、`links.ts`、SEO 描述失实 | 复核时三处均已不在该位置或已改（`:40` 已是 `next/font/local`；`links.ts` 已无引用）                                                                                                                                        |
+| §F10 `AGENTS.md:78` proxy 位置        | 「画在 app/ 内」                   | 现为 `├── proxy.ts`（与 `app/` 平级，正确）                                                                                                                                                                                |
+| 未执行项 · `check:production-content` | 「未授权故未跑」                   | 2026-10-08 已实跑，8 个页面全 200 通过（见 HANDOFF 生产基线）                                                                                                                                                              |
+| 未执行项 · `pnpm test:e2e`            | 「本机缺 Playwright 浏览器」       | 2026-10-08 已实跑：dev 模式 45 passed + 1 skipped；`CI=1`（`next start` 生产服，CSP 生效）**46 passed**，即 CI 里的真实路径                                                                                                |
+| 未执行项 · Lighthouse 本地跑分        | 「需浏览器」                       | 2026-10-08 已实跑 CI 同款 `lighthouse.config.js`：5 URL × 2 次全部通过（`All results processed!`），perf 0.99–1.00、CLS ≤0.0004、LCP ≤991ms、TBT ≤13ms                                                                     |
+| P2-3「体积门禁改实测口径」            | 待办                               | **已落地**（2026-10-08）：`check-bundle-budget.ts` 新增按路由首屏预算闸，阈 `ROUTE_BUDGET_KB = 285`（实测最重路由 `/blog/[slug]` 248 KB gz，留 ~15%）；实测压到 200 KB 时正确变红 exit 1，见 [D-038](./14-decision-log.md) |
+| §F7「体积门禁留白过大」               | 既有债为主                         | 同上——原 W1/W2 两条（chunks 单文件 300 KB、总量 2048 KB）保留，新增按路由首屏闸补上它们看不到的回归路径                                                                                                                    |
+
+**仍悬**：四个 Dependabot PR 的处置，见下节。
+
+### Dependabot 逐个判定（2026-10-08）
+
+方法：在**隔离 worktree** 里对每条 PR 做 `git rebase origin/master`（不是 merge，也不是 squash）+ `pnpm install --frozen-lockfile` + 跑门禁。测完即删 worktree 与临时分支。
+
+| PR  | 升级                                           | CI 当前             | rebase 到 master 后                                                                                                                           | 判定              |
+| --- | ---------------------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| #36 | `@types/node` 20→26（dev 类型）                | 全绿                | `--frozen-lockfile` 装上 26.6.4；tsc / test / build / bundle 全 exit 0                                                                        | **可直接合**      |
+| #33 | `@commitlint/config-conventional` 19→21（dev） | e2e 红（R12 间歇）  | 全绿；commitlint CLI 19 + config 21 实跑通过（`badtype` 正确拒；`feat`/`integrate`/`merge` 正确过）。R12 已在 master 修复，红灯消失           | **rebase 后可合** |
+| #34 | `shiki` 4.2→4.5（**生产依赖**）                | quality 红（audit） | **锁文件损坏**——rebase 后 `source-map-js@1.2.2` 在 `packages:` 段出现**两次**（`@4826` 与 `@4830`，内容逐字相同）→ `ERR_PNPM_BROKEN_LOCKFILE` | **需重建锁**      |
+| #35 | `tsx` 4.22→4.23（dev 工具）                    | quality 红（audit） | **锁文件同样损坏**（`source-map-js@1.2.2` 同处重复）。内容上 tsx **确实会从 4.22.4 升到 4.23.15**（importers 段实测），但装不上               | **需重建锁**      |
+
+**#34 / #35 损坏的确切机制（实测）**：master 锁与 PR 分支锁**各自都是健康的**——按 section 分别扫重复键，两边都是 0 重复。只有 rebase 把两者叠起来后才出现。现场是 `packages:` 段同一位置连续两个 `source-map-js@1.2.2:` 块，resolution 的 sha512 逐字相同。`snapshots:` 段同样成对（`@10665`/`@10667`）。**是 git 在 `pnpm-lock.yaml` 上做文本三方合并时把两个不同的上下文锚点匹配到同一处**，不是任何一个输入有问题。
+
+**#35 不是空 PR**（此表 2026-10-08 初版写「空 PR、建议关闭」，**该结论已作废**）：早先那次 rebase 中途撞上 `fatal: 'v' is already used by worktree`，checkout 实际失败，我读到的是**未切换分支的 residual 状态**（提交数=0、diff 为空），据此误判成空 PR。干净重跑后：1 个提交、`pnpm-lock.yaml` 129+/123−，importers 段 `tsx: 4.22.4 → 4.23.15` 属实。**教训：`git checkout -B` 失败时后续 `git log`/`git diff` 仍会给出看似合理的空读数——批量脚本里每步的 exit code 都要看，不能只看最后一行。**
+
+**建议**：#34 与 #35 都走「关闭 PR → 在 master 上直接 `pnpm update <pkg>@<版本>` → 生成干净的单包锁 diff」。手写 `sed` 删掉那一块重复也能让 pnpm 通过，但那是在绕过工具、把后患留给下一次 lockfile 更新。`pnpm install`（不带 `--frozen`）虽能重算，但会连带升 300+ 个包（`@babel/*`、`@esbuild/*`、`@csstools/*` 全部跳小版本）——那不是「升一个包」，是全树重锁。**#36 可直接合；#33 rebase 后重判。**

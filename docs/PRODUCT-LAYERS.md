@@ -20,7 +20,7 @@
 
 ## L1 · 形态与栈
 
-见 PROJECT：Next 16 · React 19 · Tailwind 4 · BEM styles · MDX · fuse · Giscus · Vercel。
+见 PROJECT：Next 16 · React 19 · Tailwind 4 · BEM styles · MDX · fuse · Vercel。
 
 ---
 
@@ -42,19 +42,19 @@
 | `src/app`        | 路由与页面                                     |
 | `src/app/styles` | tokens/base/… BEM                              |
 | 内容管线         | MDX · frontmatter · snapshot                   |
-| 扩展点           | 专题/标签 · 搜索 API · 评论 env                |
+| 扩展点           | 专题/标签 · 客户端搜索 · RSS/sitemap           |
 | **禁止**         | 另起 Astro/Vue 平行站 · 内容进运行时 DB 无 ADR |
 
 ---
 
 ## L4 · 验收与质量
 
-| 命令                         | 用途                      |
-| ---------------------------- | ------------------------- |
-| `pnpm typecheck`             | 类型                      |
-| `pnpm test`                  | 单测（~716 级基线随 tip） |
-| `pnpm build` / content:build | 构建与快照                |
-| check:seo 等                 | 内容/SEO 门闩             |
+| 命令                         | 用途                          |
+| ---------------------------- | ----------------------------- |
+| `pnpm typecheck`             | 类型                          |
+| `pnpm test`                  | 单测（基线数字见 HANDOFF §2） |
+| `pnpm build` / content:build | 构建与快照                    |
+| check:seo 等                 | 内容/SEO 门闩                 |
 
 ---
 
