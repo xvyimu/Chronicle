@@ -151,20 +151,21 @@ data/projects.json
 
 ## 4. 路由与页面组合
 
-| 路由                                    | 入口                              | 数据来源                                         |
-| --------------------------------------- | --------------------------------- | ------------------------------------------------ |
-| `/`                                     | `src/app/page.tsx`                | posts、projects、tags（工作台首页）              |
-| `/about`                                | `src/app/about/page.tsx`          | `content/about.mdx`                              |
-| `/blog`                                 | `src/app/blog/page.tsx`           | paginated posts                                  |
-| `/blog/[slug]`                          | `src/app/blog/[slug]/page.tsx`    | post detail + related posts                      |
-| `/archive`                              | `src/app/archive/page.tsx`        | posts 按年份时间线                               |
-| `/favorites`                            | `src/app/favorites/page.tsx`      | posts + localStorage（收藏/最近阅读，客户端）    |
-| `/projects`                             | `src/app/projects/page.tsx`       | projects JSON                                    |
-| `/projects/[id]`                        | `src/app/projects/[id]/page.tsx`  | project detail                                   |
-| `/tags`, `/tags/[tag]`                  | `src/app/tags/*`                  | tag aggregation                                  |
-| `/categories`, `/categories/[category]` | `src/app/categories/*`            | category aggregation                             |
-| `/series`, `/series/[series]`           | `src/app/series/*`                | series aggregation                               |
-| `/api/csp-report`                       | `src/app/api/csp-report/route.ts` | CSP 违规收集（collect-only，唯一 Route Handler） |
+| 路由                                    | 入口                                | 数据来源                                      |
+| --------------------------------------- | ----------------------------------- | --------------------------------------------- |
+| `/`                                     | `src/app/page.tsx`                  | posts、projects、tags（工作台首页）           |
+| `/about`                                | `src/app/about/page.tsx`            | `content/about.mdx`                           |
+| `/blog`                                 | `src/app/blog/page.tsx`             | paginated posts                               |
+| `/blog/[slug]`                          | `src/app/blog/[slug]/page.tsx`      | post detail + related posts                   |
+| `/archive`                              | `src/app/archive/page.tsx`          | posts 按年份时间线                            |
+| `/favorites`                            | `src/app/favorites/page.tsx`        | posts + localStorage（收藏/最近阅读，客户端） |
+| `/projects`                             | `src/app/projects/page.tsx`         | projects JSON                                 |
+| `/projects/[id]`                        | `src/app/projects/[id]/page.tsx`    | project detail                                |
+| `/tags`, `/tags/[tag]`                  | `src/app/tags/*`                    | tag aggregation                               |
+| `/categories`, `/categories/[category]` | `src/app/categories/*`              | category aggregation                          |
+| `/series`, `/series/[series]`           | `src/app/series/*`                  | series aggregation                            |
+| `/api/csp-report`                       | `src/app/api/csp-report/route.ts`   | CSP 违规收集（collect-only）                  |
+| `/api/client-error`                     | `src/app/api/client-error/route.ts` | 客户端错误边界上报（collect-only）            |
 
 动态路由优先使用 `src/lib/route-adapter.ts` 的 `createDynamicRoute` 收敛参数处理、404 和静态参数生成模式。
 
