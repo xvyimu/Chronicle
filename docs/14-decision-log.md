@@ -343,3 +343,25 @@
 - **影响**：`scripts/check-bundle-budget.ts`（新增 `collectRouteAssets`、`evaluateRouteBudgets`、`parseClientReferenceManifest`、`ROUTE_BUDGET_KB`、`ROUTE_BUDGET_EXEMPT`）；`src/lib/check-bundle-budget-script.test.ts`（7 例 → 16 例，新增 9 例覆盖 per-route 闸与 manifest 解析，含嵌套大括号）。CI `quality` job 的 `pnpm exec tsx scripts/check-bundle-budget.ts` 步无需改——脚本内部已加 per-route 报告。
 - **取舍**：`/_global-error/page` 被免检（`ROUTE_BUDGET_EXEMPT`）——它不挂 app layout、不载 route CSS，数字不可比，也不是用户会到的页面。
 - **复查**：若某路由因新增依赖超 285 KB，门禁会变红——此时要么移除该依赖，要么（有理由时）调高 `ROUTE_BUDGET_KB` 并记录依据。
+
+## 2026-10-09 · D-039 · 生产探活改双链 + 判定表；`check:production-content` 对 WAF 403 降级
+
+- **背景**：D-037 改造后 `post-deploy` job 的 `check:production-content` 从 GitHub Actions runner 访问生产站点，8 个用例**全部** HTTP 403。查 Cloudflare zone 的 `firewallEventsAdaptive` 拿到证据：`action=managed_challenge · ruleId=bot_fight_mode · source=botFight`，命中 IP 为 `20.161.30.244` / `48.217.25.151` / `172.203.196.190`（均为 Azure 段）。伪装 Claude/Chrome UA 无效——**CF 按 IP 评分，不看 UA**。同时新增的 `uptime.yml` 首跑也报 403 并开了 issue #43（已关，误报）。
+- **可选**：A 让探活绕过 CF / B 探活判据放宽为「任一状态码即视为可达」/ C 加第二条绕过 CF 的探针，两条链各答一个问题。**选 C**。
+- **为什么 A 做不到**：Free plan 的 Bot Fight Mode **不可被 WAF custom rule 的 Skip/Bypass/Allow 豁免**——它不在 Ruleset Engine 上运行（`developers.cloudflare.com/bots/get-started/bot-fight-mode` 的 Limitations → Rules，及 `waf/feature-interoperability`「Bot Fight Mode cannot be skipped」）。唯一逃生口是 IP Access Rules（Allow），但它**只按 IP/ASN/国家匹配、不支持 UA**，而 GHA runner 是 Azure 动态 IP，覆盖整个 ASN 等于关掉 BFM。想按 UA 豁免需升 Pro（Super Bot Fight Mode）。
+- **为什么 B 不够**：把「拿到任何状态码」当健康，等于放弃了「origin 是否活着」这一问。CF 挑战的 403 证明边缘活着，**不证明源站活着**。
+- **选择 C 的机制**：探两条链，各答一个问题——
+  1. CF 域名（`SITE_URL`）→「Cloudflare 边缘 + 回源链路是否活着」
+  2. Vercel 生产别名（`VERCEL_ORIGIN_URL`，绕过 CF）→「origin 本身是否活着」
+
+  判定表（两条链同一套）：`2xx/3xx` → ok（正常应答/重定向）；`403/429` → ok（CF 挑战/限流，边缘在服务）；`5xx` → fault；`000`（连不上/超时）→ fault；其余 4xx（404 路由没了、401 要鉴权）→ fault。
+
+- **谁决定结论（审查后修订）**：**主探针 = CF 域名**。CF 探针 fault 即整体 `down`；CF 探针 ok 即整体 `up`，**不看**第二条链。理由：Vercel 别名是同一条 runner 上的第二条网络路径，它失败可能只是 DNS（本机对 `*.vercel.app` 就有污染，解析到 Facebook 段）、区域路由或 Deployment Protection，而站点其实在正常服务。若按「任一链 fault 即 down」，叠加评论节流前会每 10 分钟刷一次误报。「origin 是否活着」由第二条链提供**证据**写进 issue，而不是第二次投票。代价：origin 单独挂而 CF 仍 200 的场景不会告警——但本站源站设了 `Cache-Control: private, no-cache, no-store`（`cf-cache-status: DYNAMIC`），**CF 不缓存、每请求回源**，所以 CF 拿不到 2xx 时第二条链必被触发，该场景实际被覆盖。
+- **评论节流**：故障持续时不在同一 issue 上每 10 分钟追加评论（一天 144 条会埋掉真更新）。同 issue 上两条评论至少隔 1 小时。
+- **为什么 CF 的 200 就等价于 origin 活着**：本站在源站设了 `Cache-Control: private, no-cache, no-store`，实测响应头 `cf-cache-status: DYNAMIC`——**CF 不缓存任何页面，每个请求都回源**。所以拿到 2xx 即已穿透到 origin；只有拿不到时，第二条链才需要出场去区分「CF 拦了我们」与「origin 真挂了」。
+- **别名选型**：用 `blog-aijiai520.vercel.app`（项目生产别名，稳定），**不用** Vercel 每次部署生成的 `<project>-<hash>.vercel.app`——实测 8 次部署 URL 全不同，拿它做探活必炸。Vercel Deployment Protection 默认 Standard 只保护 preview/hash URL，生产别名公开。
+- **实现**：`scripts/probe-health.ts`（新增，纯函数 `classifyStatus` / `overallState` / `buildReport` 可单测；写入 `$GITHUB_OUTPUT` 的 `state` 与 `$GITHUB_ENV` 的 `PROBE_REPORT`）。`uptime.yml` 改为 `node scripts/probe-health.ts`（Node 24 原生跑 TS，**不装 pnpm/依赖**，每 10 分钟拉一次全量依赖不值得）。`check-production-content.ts` 两处改：`fetchResponseWithRetry` 对 403 **不重试**直接返回（原来 5 次重试 × 8 页全是浪费），`main()` 在**全部用例都 403** 时 warn 并 exit 0。
+- **诚实记账（降级 = 盲区）**：`check:production-content` 降级那一刻起，**部署后的内容正确性未被验证**（只验证了可达性）。这条不藏着——脚本日志明写 `Content CORRECTNESS was NOT verified this run`，本文件与 `HANDOFF.md` 同步记录。恢复真正的验证需二选一：允许探针身份（升 Pro 用 SBFM skip，或给探针挂 DNS-only 灰云的自定义域名）或改从 CF zone 内探测。归入延后运营。
+- **影响**：`.github/workflows/uptime.yml`（重写）、`scripts/probe-health.ts`（新增）、`src/lib/probe-health-script.test.ts`（新增 13 例）、`scripts/check-production-content.ts` + 其测试（`fetchResponseWithRetry` 对 403 短路不重试、`checkPage` 遇 403 快速返回、`main()` 全 403 时降级 exit 0；新增 403 短路例）。Vitest 77 files / 602 tests（本机实测 exit 0）。
+- **验证证据（本回合实跑）**：`actionlint` exit 0；`pnpm typecheck` exit 0；`pnpm test` 77 files / 602 tests exit 0；端到端 7 例（本地假服务器，异步 spawn）全 PASS——`cf403+vercel200→up`、`cf200+vercel-dead→up`、`cf522+vercel200→down`、`cf301→up`、`cf404→down`、`cf-dead→down`、`cf200+vercel500→up`；对真实 `https://incca.ccwu.cc` 实跑 → `state: up`，`GITHUB_OUTPUT` 写入 `state=up`、`GITHUB_ENV` 写入 heredoc 格式的 `PROBE_REPORT`。**未验**：Vercel 别名在 GitHub Actions runner 网络上是否可达（本机 DNS 污染无法验证，属 UNVERIFIED）。
+- **复查**：master push 后确认 `post-deploy` 变绿且 `Check production content` 步出现 `all N checks returned HTTP 403` 的 warn（而非 13 条假的 `Missing expected content`）；`uptime` workflow 首跑应报 `state: up` 且不开 issue。若 `VERCEL_ORIGIN_URL` 在 runner 上不可达，报告会照实显示该行为 `000`，主探针仍决定结论，不会误报。

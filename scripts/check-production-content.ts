@@ -285,6 +285,21 @@ export async function checkPage(
   try {
     const response = await fetchResponseWithRetry(url, options);
 
+    // A 403 here is almost certainly a Cloudflare WAF/bot-protection challenge
+    // on the CI runner's datacenter IP (see main() for the exit-code handling).
+    // Its body is a challenge page, not our HTML, so every content/header
+    // assertion below would fail with a misleading "Missing expected content".
+    // Short-circuit so the report points at the real cause instead of listing
+    // 13 phantom content regressions.
+    if (response.status === 403) {
+      return [
+        {
+          label: expectation.label,
+          message: `HTTP 403 at ${url} — blocked before content could be read (likely Cloudflare WAF on the CI IP).`,
+        },
+      ];
+    }
+
     if (!response.contentType.includes(expectation.contentTypeIncludes)) {
       failures.push({
         label: expectation.label,
@@ -346,19 +361,27 @@ async function main(): Promise<void> {
     return;
   }
 
-  // 403 across all pages means a WAF/bot-protection block on the CI IP,
-  // not a content regression. Still report it, but exit 0 so a Cloudflare
-  // WAF policy does not red-light every master push. The uptime workflow
-  // (cron probe from a different runner pool) catches real outages.
-  const allBlocked =
+  // Every page 403'd before its content could be read: a WAF/bot-protection
+  // block on the CI runner's IP (GitHub Actions egress is a datacenter range),
+  // not a content regression. Report it loudly but exit 0, so a Cloudflare
+  // policy change does not red-light every master push forever.
+  //
+  // This is a known blind spot and is stated as one: while it holds, content
+  // correctness after a deploy is NOT verified. The uptime workflow
+  // (.github/workflows/uptime.yml) covers "is the site reachable at all"; it
+  // does not cover "is the content right". Restoring real verification needs
+  // either an allowlisted probe identity or a check that runs from inside the
+  // Cloudflare zone — see docs/ops-deferred-work-plan.md.
+  const everyPageBlocked =
     failures.length > 0 && failures.every((f) => f.message.includes('HTTP 403'));
-  if (allBlocked) {
+  if (everyPageBlocked) {
     console.warn(
-      `[production-content] all pages returned HTTP 403 for ${baseUrl} — likely Cloudflare WAF block on CI IP, not a content regression. Proceeding (exit 0).`,
+      [
+        `[production-content] all ${failures.length} checks returned HTTP 403 for ${baseUrl}.`,
+        '  Cloudflare WAF/bot-protection blocked the CI runner IP before content could be read.',
+        '  Content CORRECTNESS was NOT verified this run (reachability only). Exiting 0.',
+      ].join('\n'),
     );
-    for (const failure of failures) {
-      console.warn(`- ${failure.label}: ${failure.message}`);
-    }
     return;
   }
 
