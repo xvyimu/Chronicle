@@ -1,0 +1,19 @@
+name = "chronicle-uptime"
+main = "index.ts"
+compatibility_date = "2026-09-01"
+
+# Cron Triggers run on Cloudflare's underutilized machines — reliable,
+# unlike GitHub Actions schedule (which silently never fired for 2+ hours
+# after merge to master; see D-039).
+[triggers]
+crons = ["*/10 * * * *"]
+
+# Secrets (set via `wrangler secret put`):
+#   GITHUB_TOKEN    — fine-grained PAT with issues:write on xvyimu/Chronicle
+#   GITHUB_REPO     — "xvyimu/Chronicle"
+#   VERCEL_ORIGIN_URL — "https://blog-aijiai520.vercel.app" (optional secondary probe)
+#
+# SITE_URL defaults to "https://incca.ccwu.cc" in the Worker code; override
+# here if needed:
+# [vars]
+# SITE_URL = "https://incca.ccwu.cc"

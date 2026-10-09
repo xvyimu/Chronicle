@@ -369,7 +369,8 @@
   - **未验**：Vercel 别名在 GitHub Actions runner 网络上是否可达（本机 DNS 污染，无法验证），属 UNVERIFIED。
 - **复查**：master push 后确认 `post-deploy` 变绿且 `Check production content` 步出现 `all 8 checks returned HTTP 403` 的 warn（而非每条 `Missing expected content`）。
   - **后续实测（2026-10-09，合入 master `81bd1b0` 之后）**：`post-deploy` 已转绿，日志原文 `all 8 checks returned HTTP 403 ... Content CORRECTNESS was NOT verified this run (reachability only). Exiting 0.`——降级路径按预期生效。手动 `workflow_dispatch` 跑 `uptime` 两次（run `37918706738` / `37925731718`）均得到 `state: up` 且不开 issue。
-  - **仍未闭环**：`uptime` 的 **`schedule` 事件从未触发过**。合入后等了两小时以上（12:49、13:21 UTC 均查），`event=schedule` 的全仓 run 数始终为 **0**；只有两次 `workflow_dispatch`。仓库无 fork、未归档、Actions enabled、workflow `state=active`、YAML 解析出的 `on.schedule` 正确、默认分支 `master` 上文件确实有 `*/10 * * * *`。**根因未定位**；社区有大量同类报告（`schedule` 注册可能因平台侧同步问题失效，官方建议推一个动到该 workflow 文件的 commit 触发 resync）。Cron 本身又是尽力而为（高峰可延迟甚至丢弃），不能当作精确计时器。**因此「站点持续探活」这条目前实际是不生效的**——文件在，但没人按点叫它。要真闭环，下一步要么推一个 resync commit 看是否恢复，要么把探活挪出 GitHub 的 cron（如 CF Worker 定时 / 外部 uptime 服务）。
+  - **仍未闭环**：`uptime` 的 **`schedule` 事件从未触发过**。合入后等了两小时以上（12:49、13:21 UTC 均查），`event=schedule` 的全仓 run 数始终为 **0**；只有两次 `workflow_dispatch`。仓库无 fork、未归档、Actions enabled、workflow `state=active`、YAML 解析出的 `on.schedule` 正确、默认分支 `master` 上文件确实有 `*/10 * * * *`。**根因未定位**；社区有大量同类报告（`schedule` 注册可能因平台侧同步问题失效，官方建议推一个动到该 workflow 文件的 commit 触发 resync）。Cron 本身又是尽力而为（高峰可延迟甚至丢弃），不能当作精确计时器。推过 resync commit（PR #46）后仍不触发——**GitHub 的 schedule 路线判定为不可靠**，改用 Cloudflare Worker Cron Trigger（D-041）。
+  - **已闭环（2026-10-09，D-041）**：探活改由 Cloudflare Worker 的 Cron Trigger 执行（`workers/uptime/`），不再依赖 GitHub Actions 的 `schedule`。详见 D-041。
 
 ## 2026-10-09 · D-040 · 客户端错误边界上报（补上运行时盲区）
 
@@ -383,3 +384,17 @@
 - **诚实记账（这不是完整的可观测性）**：本方案只覆盖**客户端**错误边界。服务端渲染错误、Route Handler 异常、构建期问题都不经这里；也没有错误聚合与告警——日志留在 Vercel 函数日志里，要看还得人去翻。它是「从零到有痕迹」，不是「有监控」。真要闭环仍需 Sentry 一类或 Vercel 的日志产品。
 - **影响**：新增 4 个文件（端点 + 端点测试 + 客户端模块 + 客户端测试），改 `error.tsx`、`rate-limit.ts`、`docs/API.md`、`docs/ARCHITECTURE.md`、本文件（含 D-030 复查行订正）。Vitest 79 files / 629 tests（本机实测 exit 0）。
 - **复查**：生产环境制造一次错误（如访问一个会抛的页面）确认 Vercel 函数日志出现 `[client-error] {...}`。若要升级为真正的监控，评估 Sentry 或 Vercel 日志导出，并同步改本文件的安全面描述。
+
+## 2026-10-09 · D-041 · 探活改用 Cloudflare Worker Cron Trigger
+
+- **背景**：D-039 的 GitHub Actions `schedule` 路线**不生效**——合入 master 后等了两小时以上（且推过 resync commit PR #46），`event=schedule` 的全仓 run 数始终为 0。社区大量同类报告确认这是 GitHub 平台侧的已知问题，无可靠修法。Cron 本身又是尽力而为（高峰可延迟甚至丢弃），不能当作精确计时器。**「站点持续探活」实际不生效**——文件在，逻辑对，但没人按点叫它。
+- **可选**：A 继续等 GitHub schedule 恢复 / B 改用 Cloudflare Worker Cron Trigger / C 接外部 uptime 服务（UptimeRobot 等）。**选 B**。
+- **原因**：A 已验证不靠谱（等了 2 小时 + resync commit 仍 0 触发）；C 引入第三方依赖且控制面在别处。B 落在已有的 Cloudflare 账号上（zone `incca.ccwu.cc` 已托管），Cron Trigger 跑在 CF 自己的机器上，**不依赖 GitHub 的调度队列**。且同 zone Worker 的 `fetch()` 对自己域名的子请求**默认绕过 CF 安全层（含 Bot Fight Mode）直达 origin**（官方文档 `workers/configuration/compatibility-flags`：未开 `global_fetch_strictly_public` 时同 zone 子请求直达 origin）——这恰好解决 D-039 里「CI runner 被 BFM 挑战返回 403」的问题。
+- **实现**：`workers/uptime/index.ts`（Worker，`scheduled` handler + `probeUrl` + `createIssue` / `closeIssue` via GitHub API）、`wrangler.toml`（crons `*/10 * * * *`）、`cloudflare.d.ts`（CF 运行时类型桩，让仓内 `tsc --noEmit` 不需要装 `@cloudflare/workers-types`）、`tsconfig.json`（继承根 tsconfig、去掉 DOM lib）、`README.md`（部署步骤 + secret 说明）。
+- **判定表与主/辅探针划分**：与 D-039 的 `scripts/probe-health.ts` 完全一致——主探针 CF 域名决定结论，辅探针 Vercel 别名提供证据；`2xx/3xx/403/429 → ok`，`5xx/000 → fault`。不共享代码（Worker 是独立部署，引入仓内模块会把 Next.js 依赖树拖进来）。
+- **告警**：复用 D-039 的 GitHub issue 路线——label `uptime`、评论节流 1 小时、恢复自动关。需要单独的 fine-grained PAT（`issues:write`），因为 Worker 不在 GitHub Actions 里、拿不到 `GITHUB_TOKEN`。
+- **部署**：`cd workers/uptime && npx wrangler deploy`，然后 `wrangler secret put GITHUB_TOKEN` / `GITHUB_REPO` / `VERCEL_ORIGIN_URL`。部署是**一次性的、需要人审**（改 Cloudflare 账号状态 + 建 PAT），属 L3「对外发布」——本 PR 只提交代码，不自动部署。
+- **GH Actions workflow 保留还是删**：**保留**。`uptime.yml` 仍留着，万一 Worker 那边出问题，`workflow_dispatch` 还能手动跑。但它的 `schedule` 不可靠，不作为主探活路径——D-039 复查行已订正为「已闭环（D-041）」。
+- **影响**：新增 `workers/uptime/`（5 个文件），改 `eslint.config.mjs`（`workers/**` 排除出 Next.js lint）、`docs/14-decision-log.md`（D-039 复查行订正 + 本条 D-041）。Vitest / typecheck / lint / format 不变（Worker 不在 vitest include 内，独立 tsconfig 类型检查通过）。
+- **诚实记账**：(1) Worker 部署本身**未在本回合执行**——需要 Cloudflare `wrangler deploy` + 建 PAT，属 L3，本 PR 只落地代码。(2) 同 zone 子请求绕过 BFM 是**默认行为**，但社区有偶发路由抖动报告（CF 回复建议 `cf.worker.upstream_zone` + Skip 规则兜底，Free 上 Skip 对 BFM 无效）——若 Worker 探活也拿到 403，说明该路由抖动发生了，需评估 DNS-only 灰云域名替代。(3) Free plan Worker 配额 100,000 请求/天、5 个 cron/账户、CPU 10ms/次——10 分钟一次绰绰有余。
+- **复查**：部署后查 `wrangler tail` 确认 cron 触发（Worker 的 `console.log` 在 CF dashboard 可见），并确认 10 分钟后 GitHub 不新增 uptime issue（站点 up 时）。若 Worker 的 `fetch()` 也拿到 403，同 zone 路由抖动发生，需改用跨 zone fetch 或 DNS-only 域名。
