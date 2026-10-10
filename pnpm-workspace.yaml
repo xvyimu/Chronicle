@@ -16,7 +16,11 @@ overrides:
   # ^2.9.19、browserslist@4.29 声明 ^2.11.23，不抬则 lock 里同时存在两份（2.10.38
   # 与 2.11.25），其中 2.10.38 就是那条 moderate。抬到 >=2.11.0 让两边并到一份。
   baseline-browser-mapping: '>=2.11.0'
-  qs: '6.15.2'
+  # GHSA-x5fp-wj9c-mxmx / GHSA-4mjr-xmp4-gh2g qs（经 stryker → typed-rest-client，dev-only）。
+  # 原精确钉 6.15.2（R13 记忆教训：精确钉随 advisory 推进变 stale pin，2026-10-10 实测
+  # 中招——两条 moderate 均指向它）。改范围 >=6.16.0 <7 跟随修复版；typed-rest-client
+  # 新版已声明 ^6.16.0，override 收敛后与其上游方向一致。
+  qs: '>=6.16.0 <7'
   tmp: '>=0.2.6'
   uuid: '>=11.1.1'
   # fast-uri host confusion / SSRF（经 stryker → ajv 传入，dev-only）。

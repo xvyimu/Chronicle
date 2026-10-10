@@ -195,6 +195,15 @@ body:has(.workspace-home) .site-backdrop__stage {
   white-space: nowrap;
 }
 
+/* R14 词高亮：命中段覆盖 mark 默认黄底，用品牌 token（暗色随 token 切换） */
+.search-panel__mark {
+  padding: 0 1px;
+  border-radius: 3px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-weight: 650;
+}
+
 .search-panel__item-meta {
   display: flex;
   gap: 10px;

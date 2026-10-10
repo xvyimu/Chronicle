@@ -35,17 +35,17 @@ const docs: SearchDoc[] = [
 describe('searchDocs', () => {
   it('matches by title', () => {
     const r = searchDocs(docs, 'PostgreSQL');
-    expect(r[0].slug).toBe('postgres-tuning');
+    expect(r[0].item.slug).toBe('postgres-tuning');
   });
 
   it('matches by tag', () => {
     const r = searchDocs(docs, '安全');
-    expect(r.map((d) => d.slug)).toContain('next-csp');
+    expect(r.map((d) => d.item.slug)).toContain('next-csp');
   });
 
   it('matches by description', () => {
     const r = searchDocs(docs, '服务器');
-    expect(r.map((d) => d.slug)).toContain('vps-setup');
+    expect(r.map((d) => d.item.slug)).toContain('vps-setup');
   });
 
   it('returns empty for empty query', () => {
@@ -74,5 +74,28 @@ describe('searchDocs', () => {
   it('truncates overly long queries', () => {
     const long = 'a'.repeat(500);
     expect(() => searchDocs(docs, long)).not.toThrow();
+  });
+
+  it('returns match ranges for highlighting (R14)', () => {
+    const r = searchDocs(docs, 'PostgreSQL');
+    expect(r).toHaveLength(1);
+    const titleMatch = r[0].matches.find((m) => m.key === 'title');
+    expect(titleMatch).toBeDefined();
+    // 命中区间必须落在标题长度内（闭区间 [start, end]）
+    const title = r[0].item.title;
+    for (const [start, end] of titleMatch!.indices) {
+      expect(start).toBeGreaterThanOrEqual(0);
+      expect(end).toBeLessThan(title.length);
+      expect(start).toBeLessThanOrEqual(end);
+    }
+  });
+
+  it('keeps results usable when matches are absent (tag-only hit)', () => {
+    // 标签命中：title/description 无区间，渲染层应原样输出
+    const r = searchDocs(docs, '安全');
+    const hit = r.find((x) => x.item.slug === 'next-csp');
+    expect(hit).toBeDefined();
+    expect(hit!.matches.some((m) => m.key === 'tags')).toBe(true);
+    expect(hit!.matches.some((m) => m.key === 'title')).toBe(false);
   });
 });
