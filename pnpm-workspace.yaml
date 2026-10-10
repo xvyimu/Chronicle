@@ -60,6 +60,12 @@ overrides:
   # commitlint → compare-func@2.0.0（声明 `^5.1.0`，5.x 修复版在范围内）。
   # 2026-10-07 新增。
   dot-prop: '>=5.1.1 <6'
+  # CVE-2026-104844 postcss-selector-parser DoS（via @tailwindcss/typography）。
+  # typography@0.5.20 全线 pin psp@6.0.10，等不到上游升；本站 CSS 全为仓内可信
+  # 来源、无用户输入选择器，构建期触发 CVE 前提不成立。override 只为收 Dependabot
+  # 噪声并保持「0 open alert」。用范围 >=7.1.6 <8：7.0.0 的 each breaking change
+  # 不影响 typography（其 utils.js 用 astSync/remove/prepend，无 each+insertAfter）。
+  postcss-selector-parser: '>=7.1.6 <8'
 
 allowBuilds:
   esbuild: true
