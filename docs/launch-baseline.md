@@ -1,21 +1,23 @@
 # 上线运营基线
 
-> 状态：当前维护版（2026-07-22）。历史上线检查见 [`archive/launch-readiness-2026-07-10.md`](./archive/launch-readiness-2026-07-10.md)。
+> 状态：当前维护版。文件建于 2026-07-22（§3 质量基线即当时快照，按纪律不改写）；§1 生产证据最近更新 2026-10-10。历史上线检查见 [`archive/launch-readiness-2026-07-10.md`](./archive/launch-readiness-2026-07-10.md)。
 
 ## 1. 最新生产证据
 
-| 项目     | 当前值                                        | 证据                                                                                                                                                                |
-| -------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 生产域名 | `https://incca.ccwu.cc`                       | production smoke + deploy                                                                                                                                           |
-| master   | **`3111acc`**（audit overrides + 前序 T4/T7） | 含 `63fe155` garden seed/T4 ADR · PR#14–#17；生产 SRI 由 Vercel `ENABLE_SRI=1` 开启；CI [29886338251](https://github.com/xvyimu/Chronicle/actions/runs/29886338251) |
-| 包名     | `chronicle`（private）                        | `package.json` · [GITHUB_IDENTITY.md](../GITHUB_IDENTITY.md)                                                                                                        |
-| CI 结论  | `success`（quality / bundle / e2e / deploy）  | master push 后 deploy 成功；生产 CSP 含 `report-to`/`report-uri`                                                                                                    |
-| 内容规模 | 20 篇文章、1 个项目、10 类 123 条收藏         | 本地 MDX/JSON + `generated/content-snapshot/`                                                                                                                       |
-| GSC/Bing | pending（需 Google 登录）                     | 见 [ops-deferred-work-plan.md](./ops-deferred-work-plan.md) §10                                                                                                     |
-| RUM p75  | pending（API 不可导出；控制台只读）           | Speed Insights `hasData=true`，无 CLI 明细                                                                                                                          |
-| SRI      | **生产开**（`ENABLE_SRI=1`）                  | ADR Accepted · 首页 `/_next/static` 含 `integrity="sha384-…"` · CSP nonce 保留 · 回滚=去 env 再 deploy                                                              |
+| 项目     | 当前值                                                    | 证据                                                                                                                                              |
+| -------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 生产域名 | `https://incca.ccwu.cc`                                   | production smoke + deploy                                                                                                                         |
+| master   | **`0efc7c8`**（作品集精简到 1 条 + 旧 id 307）            | CI [38024855353](https://github.com/xvyimu/Chronicle/actions/runs/38024855353)；生产 SRI 由 Vercel `ENABLE_SRI=1` 开启                            |
+| 包名     | `chronicle`（private）                                    | `package.json` · [GITHUB_IDENTITY.md](../GITHUB_IDENTITY.md)                                                                                      |
+| CI 结论  | `success`（quality / bundle-analyze / e2e / post-deploy） | master push 后 Vercel Git 集成部署；`post-deploy` 生产烟测遇 Cloudflare 403 降级为 warn（见 [D-039](./14-decision-log.md)，**内容正确性未验证**） |
+| 内容规模 | 20 篇文章、1 个项目                                       | 本地 MDX/JSON + `generated/content-snapshot/`（收藏导航 `data/links.json` 已无消费方）                                                            |
+| GSC/Bing | pending（需 Google 登录）                                 | 见 [ops-deferred-work-plan.md](./ops-deferred-work-plan.md) §10                                                                                   |
+| RUM p75  | pending（API 不可导出；控制台只读）                       | Speed Insights `hasData=true`，无 CLI 明细                                                                                                        |
+| SRI      | **生产开**（`ENABLE_SRI=1`）                              | ADR Accepted · 首页 `/_next/static` 含 `integrity="sha384-…"` · CSP nonce 保留 · 回滚=去 env 再 deploy                                            |
 
 生产证据是时间点快照。新 master 部署成功后更新本节，不要把历史报告中的提交号复制为当前状态。
+
+> **2026-10-10 更新**：`master` 已推进至 `0efc7c8`（作品集精简到 1 条），替换本表原先记录的 2026-07-22 值 `3111acc`。CI 四 job 全绿，但 `post-deploy` 的 Cloudflare 403 降级意味着「部署后内容正确性」当前未被自动验证——按本文件纪律，本次只回填 commit / CI run，未附新的实测 bundle，故下方 §3 保留 2026-07-22 快照不改写。
 
 > **2026-10-08 注**：上表 CI 结论中的 `deploy`（当时确实成功）已不复存在——`deploy` job 的显式 `vercel deploy` 后来因 token 失效连续失败，2026-10-08 移除并改为 `post-deploy` 烟测（见 [D-037](./14-decision-log.md)）。部署一直由 Vercel Git 集成完成。
 
@@ -37,7 +39,7 @@ bundle-analyze（并行、独立，不是 post-deploy 依赖）
 
 > **2026-10-08 注**：本节数字是 2026-07-22（Vitest/Playwright）与 2026-07-17（bundle）的快照，
 > **未随之后的迭代刷新**。当前真值见 [HANDOFF.md](./HANDOFF.md) §2 与 [performance-baseline.md](./performance-baseline.md)；
-> 2026-10-08 实测：Vitest 76 files / 588 tests、Playwright 46 tests（5 spec files）、
+> 2026-10-08 实测：Vitest 76 files / 588 tests（最新见 HANDOFF §2；2026-10-10 为 78/628）、Playwright 46 tests（5 spec files）、
 > JS chunks 882.8 KB / CSS 115.2 KB / 总 883.7 KB、最重路由 `/blog/[slug]` 248.0 KB gz。
 > 按 [docs/README.md](./README.md) 的纪律，本表不改写为当前值——它记录的是上线那一刻的证据。
 

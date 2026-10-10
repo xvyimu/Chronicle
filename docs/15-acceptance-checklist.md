@@ -9,7 +9,7 @@
 
 - [x] 项目可在当前环境运行（`pnpm dev` 200）
 - [x] 记录构建/测试/lint 基线（typecheck 0 / lint 0 / test 574 / build 0）
-      <!-- 574 为 Iteration 00 当时记录，与任何时点的实跑值都不吻合；当前基线见 docs/HANDOFF.md（2026-10-08 实测 76 files / 588 tests）。按 docs/README.md 纪律，历史记录不改写，仅加注。 -->
+      <!-- 574 为 Iteration 00 当时记录，与任何时点的实跑值都不吻合；当前基线见 docs/HANDOFF.md（2026-10-10 实测 78 files / 628 tests）。按 docs/README.md 纪律，历史记录不改写，仅加注。 -->
 - [x] 创建审计文档（`docs/01-project-audit.md`）
 - [x] 建立风险登记（`docs/13-risk-register.md`）与决策日志（`docs/14-decision-log.md`）
 - [x] 未修改核心业务功能（仅修 3 个因删功能失效的测试断言 + 格式化）

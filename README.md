@@ -79,7 +79,7 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 | `pnpm content:build`            | 重建 `generated/content-snapshot/`（改 MDX 后必跑并提交） |
 | `pnpm build`                    | RSS + content snapshot + 生产构建                         |
 | `pnpm start`                    | 启动生产服务器                                            |
-| `pnpm test`                     | Vitest 单元/集成（当前基线 588 测试 / 76 文件）           |
+| `pnpm test`                     | Vitest 单元/集成（当前基线 628 测试 / 78 文件）           |
 | `pnpm test:e2e`                 | Playwright E2E（当前 46 passed / 5 spec files）           |
 | `pnpm typecheck`                | `tsc --noEmit`                                            |
 | `pnpm check:seo`                | 内容 / sitemap / SEO 完整性                               |

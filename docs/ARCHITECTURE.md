@@ -311,9 +311,9 @@ push master
 
 | 层         | 基线                                                                                                                                                                                                                                            |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Vitest     | **76 files / 588 tests**（2026-10-08 本机实测 `pnpm test` exit 0）                                                                                                                                                                              |
+| Vitest     | **78 files / 628 tests**（2026-10-10 本机实测 `pnpm test` exit 0）                                                                                                                                                                              |
 | Playwright | 5 spec files / 46 tests                                                                                                                                                                                                                         |
-| Build      | production build succeeds（107 静态页）；document routes remain dynamic                                                                                                                                                                         |
+| Build      | production build succeeds（103 静态页）；document routes remain dynamic                                                                                                                                                                         |
 | CI         | **master 主 CI 的 `quality` / `e2e` / `bundle-analyze` 均 pass；`post-deploy` 只做生产烟测**（原 `deploy` job 的显式 `vercel deploy` 因 token 无效从未成功、且与 Vercel Git 集成重复，2026-10-08 移除，见 D-037）。CI Node 已对齐 24（R8 闭环） |
 
 新增行为时优先补单元或组件测试；浏览器交互、移动端布局、CSP、搜索和导航路径需要 Playwright 覆盖。
