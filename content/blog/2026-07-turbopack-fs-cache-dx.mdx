@@ -2,6 +2,7 @@
 title: 'Turbopack 文件系统缓存与本地 DX'
 description: 'Next 16.2 的 turbopackFileSystemCacheForDev 解决什么、不解决什么，以及如何避免把 dev 缓存问题误判成业务 bug。'
 date: '2026-07-21'
+updatedAt: '2026-10-10'
 tags: ['Next.js', 'DevOps', '性能优化']
 published: true
 featured: false
@@ -71,7 +72,7 @@ MDX 增删（见 [[mdx-remark-pipeline|MDX 管线]]）后，dev 应能热更新�
 3. `published: false` 是否把自己藏了
 4. 是否盯着旧的 dev 进程（换分支后未重启）
 
-花园图依赖正文 wikilink 扫描（[[digital-garden-force-layout|数字花园]]）；内容变更后若图不更新，先硬刷新再查缓存层。
+数字花园图当年依赖正文 wikilink 扫描（该功能 2026-10-07 已移除，见 `docs/adr/0007-workspace-rebuild-baseline.md`）；这类「内容变更后派生物没更新」仍适合先硬刷新再查缓存层。
 
 ## CI 对照
 

@@ -408,3 +408,38 @@
 - **诚实记账**：删除后**没有任何自动化在监控站点持续可用性**——站点若在两次部署之间挂掉，不会被自动发现。这是有意接受的取舍，不是遗漏。
 - **影响**：删 8 个文件，改 `eslint.config.mjs`、`scripts/check-production-content.ts`（注释去掉对 uptime workflow 的引用）、`docs/HANDOFF.md`（§2 / §4 / §6）、本文件。Vitest 79 files / 629 tests → **78 files / 616 tests**（本机实测 exit 0）。
 - **复查**：—
+
+## 2026-10-10 · D-043 · 作品集从 6 条精简到 1 条，旧 id 加 307 重定向
+
+- **背景**：用户指示「这些项目都清理掉」，并在确认「只删不换，先留空」（同轮问「新项目从哪来」，选该项）与「保留 chronicle」。此前审计已实测 6 条里有 4 条已损坏——`chrono-portal` 的线上地址 `https://yuanjia1314.ccwu.cc` 返回 Vercel `404 DEPLOYMENT_NOT_FOUND`、仓库 `xvyimu/ChronoPortal` 404；`chrono-relay` 的 `xvyimu/ChronoRelay` 404；`domain-check` / `qy-home` / `hermes-hug` 的仓在他人账号（`yutian81` / `yutianqq`）名下，作品集里列别人的 fork 无名分。
+- **可选**：（A）只删坏链接保留条目 /（B）保留 6 条只换链接 /（C）整表精简，只留 `chronicle` + 旧 id 重定向。
+- **选择**：**C**。用户明确选「只删不换，先留空」「保留 chronicle」。
+- **原因**：`data/projects.json` 是公开作品集，指向 404 的条目对访客是纯负信号。留空比塞未审的 fork 更诚实；后续补料走同一流程（`docs/content-workflow.md` §4）。
+- **改动清单**：
+  - `data/projects.json` 删 5 条只留 `chronicle`；其 description 去掉已删功能的「Giscus 评论」，改「客户端站内搜索」。
+  - 删 5 张无主封面图 `public/images/projects/{nav-site,relaycheck,domain-check,qinghome,hermes-hug}.png`。
+  - `src/lib/image-blur-map.ts` 随之从 6 条降到 1 条（按 `pnpm gen:blur` 重生成）。
+  - `src/lib/image-blur-data.test.ts`、`src/lib/projects.test.ts` 里写死的 `nav-site` 夹具与 `>= 6` 断言改为中性夹具 / `>= 1`。
+  - `next.config.ts` 加 `redirects()`：5 个旧 id 的 `/projects/<id>` → `/projects`，**307（`permanent: false`）**——内容整理不是永久搬家，旧 id 以后可能被重新占用，308 会把它钉死。
+  - `scripts/generate-blur-data.mjs` 修了一个**既有 bug**：`import sharp from 'sharp'` 在 pnpm 下必 `ERR_MODULE_NOT_FOUND`（sharp 是 `next` 的 optionalDependency，未提升到根，`package.json` 也没列它）。改为经 `next/package.json` 的解析路径 `require.resolve('sharp', { paths: [...] })` 取，版本随 next 走。
+  - `src/lib/category-rules-data.ts` 补 8 个此前未映射的标签（`App Router` / `泛型` → 前端开发，`索引` / `RLS` → 数据库，`反向代理` / `HTTPS` / `排查` / `SSH` → DevOps）；键数 37 → 45。此前 20 篇文章的分类全靠「第二个标签碰巧命中」才非空，补上后每篇的首标签即有映射。
+  - 文档订正：`AGENTS.md`（Identity 行）、`GITHUB_IDENTITY.md`（作品集交叉链接行）、`docs/HANDOFF.md`（内容规模行）、`docs/launch-baseline.md`（内容规模行）、`docs/content-workflow.md`（§4 仓库身份表 + frontmatter 示例 source）、`content/about.mdx`（技术来源列表去掉死链 `nav-site`）。
+- **影响**：首页项目计数 6 → 1；`/projects` 只剩 `chronicle`；sitemap 的 `projects` 条目只剩 2 条。5 个旧 URL **不再 404**，改为 307 到 `/projects`。
+- **诚实记账**：**未做**——没有被删 5 条的本地存档（用户选「只删」）。**已补做**：两篇正文里指向 404 仓库的 `source` frontmatter（`2026-06-supabase-practical-guide.mdx` 的 `yuanjia1314/nav-site`、`2026-06-cloudflare-workers-guide.mdx` 的 `yuanjia1314/domain-check`）已删除——该字段无渲染消费方，删掉不影响页面；另给 4 篇提到已删功能（数字花园 `/garden`、预览 API `/api/preview`）的旧文加「时效注」（`digital-garden-force-layout` / `mdx-remark-pipeline` / `nextjs-view-transitions` / `react-compiler-in-practice`），`turbopack-fs-cache-dx.mdx` 则直接改写正文那句引言（不加注块）；并给 `csp-nonce-and-sri.mdx` 修了 2 处失效 ADR 路径、2 处过期 SRI 状态陈述。这 8 篇的 `updatedAt` 一并更新为 2026-10-10（该字段驱动 sitemap `lastModified` 与 JSON-LD `dateModified`）。**未动** `web-performance-optimization.mdx` 里的 Giscus 懒加载代码示例——那是通用「重型组件懒加载」示例，未声称本站现存评论。**刻意未改**：`docs/01-project-audit.md:142` 仍写「`data/projects.json`，6 项目」——该文是 Iteration 00（2026-10-06）的**审计基线快照**，记的是审计当时的事实，改成 1 会自相矛盾（10-06 的审计不知 10-10 的精简）；按 `docs/README.md:70`「保留决策当时的事实，正文不为追逐当前统计而改写」的纪律保留。
+- **顺带修的既有 bug（2026-10-10 · D-044）**：给上面 8 篇改 `updatedAt` 时发现 `content:build` 报 `unchanged`、快照不更新。根因是 `computeContentHash`（`src/lib/content-snapshot/build.ts`）只哈希手挑的 IA 字段，`updatedAt` / `description` / `featured` / `published` / `license` / `image` / `source` 都不在内，而 `writeContentSnapshot` 又按该 hash 相同就 skip write——这些字段的编辑永远进不了已提交快照，生产 sitemap `lastmod` 与 OG description 用旧值。详见 [D-044](./14-decision-log.md)。
+- **复查**：本地 `next start` 实测 5 个旧 id 全 307、`chronicle` 200、`/projects` 只列 1 条、首页计数 1；`pnpm test` 78 files / 616 tests exit 0（D-043 落地时的计数；D-044 追加 12 条回归后为 628）；`pnpm build` exit 0。
+
+## 2026-10-10 · D-044 · 修 contentHash 只覆盖部分字段导致的快照静默过期
+
+- **背景**：D-043 里给 8 篇文章改 `updatedAt` 后跑 `pnpm content:build`，它报 `unchanged (hash=…)` 而没写任何文件——快照里 `updatedAt` 仍是旧值。根因：`computeContentHash`（`src/lib/content-snapshot/build.ts`）只把手挑的字段（`slug / date / title / series / seriesSlug / seriesOrder / category / tags`）+ 正文 sha256 拼进哈希；而 `description` / `updatedAt` / `featured` / `published` / `license` / `image` / `source` 都在**已序列化**的快照条目里却不参与哈希。`writeContentSnapshot` 按「hash 相同就 skip write」做幂等写入，于是这些字段的编辑永远进不了已提交快照。生产默认 `CONTENT_BACKEND=snapshot` 读快照，后果是 sitemap `lastmod` 与 JSON-LD `dateModified` 停在旧日期、OG 图/描述用旧 `description`。CI 那道 `git diff --exit-code -- generated/content-snapshot` 也抓不到——因为它同样只在「文件被改写」之后才生效。
+- **可选**：（A）不动，把「改这些字段要 `CONTENT_BUILD_FORCE=1`」写进文档当纪律；（B）把漏掉的字段逐个补进现有字段列表；（C）改为哈希**整条快照条目**（结构化序列化、键排序、`tags` 排序）。
+- **选择**：**C**。
+- **原因**：A 把正确性寄托在人记得加环境变量，且违反「规则必须有执法者」；B 仍是手挑列表，下次给 frontmatter 加字段会再漏一个——这正是本次 bug 的成因。C 让「快照里有什么就哈希什么」，没有可漂移的第二份字段清单；键排序保证纯键序重排不 churn，`tags` 排序保留「标签顺序无意义」的原语义。
+- **改动清单**：
+  - `src/lib/content-snapshot/build.ts`：`computeContentHash` 改为对**整条 `PostMeta`（去 `content`）+ 正文 sha256** 做哈希；新增局部 `canonicalJson`（递归排序对象键）。字段清单从函数里消失。**刻意不叫 `stableStringify`**——`./write.ts` 已有一个同名函数，只负责 `JSON.stringify(value, null, 2)` 美化缩进，不排序键；撞名会让两处语义混淆。
+  - `src/lib/content-snapshot/build.test.ts`：新增参数化回归测试，逐字段钉住「只改该字段、正文不动 → hash 必变」（`updatedAt` / `description` / `featured` / `published` / `license` / `category` / `image` / `source` / `readingTime` / `wordCount` / `excerpt` 共 11 例）。
+  - `generated/content-snapshot/*`：算法变更 → 整体重写（`CONTENT_BUILD_FORCE=1`），`contentHash` 由 `efeab1c2…` → `38cdfc5f…`。
+  - `docs/content-workflow.md` §contentHash 覆盖说明同步。
+- **影响**：只改 `updatedAt` / `description` 等字段的编辑，现在会照常触发快照重写与 CI 漂移门禁。`CONTENT_SNAPSHOT_VERSION` **不 bump**——它管快照**结构**（`read.ts:35` 版本不符即抛错），本次未改文件形状；bump 会让所有现存快照在读取时被误判为不支持。`verifyContentSnapshot` 是 fail-closed 比对，新旧算法不可能撞字符串，无假通过。
+- **诚实记账**：`readingTime` / `wordCount` / `excerpt` 是 `content` / `description` 的确定性派生（`repository.ts:44-54`），本可依赖二者，但既已全字段哈希就无需特判。**未处理**：`builtAt` 仍不进 hash（有 `SOURCE_DATE_EPOCH` 冻结机制，且不该因构建时刻 churn——保持现状）。
+- **复查**：`pnpm exec vitest run src/lib/content-snapshot/build.test.ts` 28 tests exit 0；`pnpm test` 78 files / 628 tests exit 0；`content:verify` exit 0；实测「只改一篇 `updatedAt` → 非 force `content:build` 报 wrote 且快照记录新值 → 还原后 hash 回到 `38cdfc5f`」。

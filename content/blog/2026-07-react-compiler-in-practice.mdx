@@ -2,6 +2,7 @@
 title: 'React Compiler 生产笔记：自动 memo 的边界与收益'
 description: 'Next 16 启用 React Compiler 后，何时还能手写 useMemo、哪些反模式会被编译器拒绝，以及如何用实站测量收益。'
 date: '2026-07-21'
+updatedAt: '2026-10-10'
 tags: ['React', 'Next.js', '性能优化']
 published: true
 featured: false
@@ -9,6 +10,8 @@ license: 'CC-BY-4.0'
 ---
 
 > 结论先说：Compiler 负责**默认路径上的 memo 纪律**，不是魔法。交互密集、依赖不稳定、或依赖 ref 副作用的代码，仍要你自己守边界；收益用 INP/重渲染次数说话，不要用「删了多少 useMemo」自我安慰。
+
+> **时效注（2026-10）**：下文用数字花园（导航图 / 力导向）当客户端岛的例子，该功能已在 2026-10-07 重构中移除——例子本身讲的 memo 边界仍然成立，只是不再是本站现存的交互。删除决策见 `docs/adr/0007-workspace-rebuild-baseline.md`。
 
 本站在 Next 16.2 打开了 `reactCompiler: true`，并安装 `babel-plugin-react-compiler@1.0.0`。App Router 默认服务端组件的拆分策略见 [[nextjs-app-router|Next.js App Router 实战]]；最终可感指标仍按 [[web-performance-optimization|Web 性能优化实战]] 的 LCP/INP/CLS 优先序。
 

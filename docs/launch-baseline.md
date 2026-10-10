@@ -10,7 +10,7 @@
 | master   | **`3111acc`**（audit overrides + 前序 T4/T7） | 含 `63fe155` garden seed/T4 ADR · PR#14–#17；生产 SRI 由 Vercel `ENABLE_SRI=1` 开启；CI [29886338251](https://github.com/xvyimu/Chronicle/actions/runs/29886338251) |
 | 包名     | `chronicle`（private）                        | `package.json` · [GITHUB_IDENTITY.md](../GITHUB_IDENTITY.md)                                                                                                        |
 | CI 结论  | `success`（quality / bundle / e2e / deploy）  | master push 后 deploy 成功；生产 CSP 含 `report-to`/`report-uri`                                                                                                    |
-| 内容规模 | 20 篇文章、6 个项目、10 类 123 条收藏         | 本地 MDX/JSON + `generated/content-snapshot/`                                                                                                                       |
+| 内容规模 | 20 篇文章、1 个项目、10 类 123 条收藏         | 本地 MDX/JSON + `generated/content-snapshot/`                                                                                                                       |
 | GSC/Bing | pending（需 Google 登录）                     | 见 [ops-deferred-work-plan.md](./ops-deferred-work-plan.md) §10                                                                                                     |
 | RUM p75  | pending（API 不可导出；控制台只读）           | Speed Insights `hasData=true`，无 CLI 明细                                                                                                                          |
 | SRI      | **生产开**（`ENABLE_SRI=1`）                  | ADR Accepted · 首页 `/_next/static` 含 `integrity="sha384-…"` · CSP nonce 保留 · 回滚=去 env 再 deploy                                                              |

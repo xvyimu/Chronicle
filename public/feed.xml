@@ -4,7 +4,7 @@
         <title>西江月</title>
         <link>https://incca.ccwu.cc</link>
         <description>云原生 · 全栈 · 自动化</description>
-        <lastBuildDate>Tue, 21 Jul 2026 00:00:00 GMT</lastBuildDate>
+        <lastBuildDate>Sat, 10 Oct 2026 00:00:00 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <language>zh-CN</language>
@@ -118,7 +118,7 @@ MDX 增删（见 [[mdx-remark-pipeline|MDX 管线]]）后，dev 应能热更新�
 3. `published: false` 是否把自己藏了
 4. 是否盯着旧的 dev 进程（换分支后未重启）
 
-花园图依赖正文 wikilink 扫描（[[digital-garden-force-layout|数字花园]]）；内容变更后若图不更新，先硬刷新再查缓存层。
+数字花园图当年依赖正文 wikilink 扫描（该功能 2026-10-07 已移除，见 `docs/adr/0007-workspace-rebuild-baseline.md`）；这类「内容变更后派生物没更新」仍适合先硬刷新再查缓存层。
 
 ## CI 对照
 
@@ -162,6 +162,8 @@ Hooks 与远程流水线分工见 [[git-hooks-github-actions|Git Hooks 文]]：�
             <description><![CDATA[Next 16 启用 React Compiler 后，何时还能手写 useMemo、哪些反模式会被编译器拒绝，以及如何用实站测量收益。]]></description>
             <content:encoded><![CDATA[
 > 结论先说：Compiler 负责**默认路径上的 memo 纪律**，不是魔法。交互密集、依赖不稳定、或依赖 ref 副作用的代码，仍要你自己守边界；收益用 INP/重渲染次数说话，不要用「删了多少 useMemo」自我安慰。
+
+> **时效注（2026-10）**：下文用数字花园（导航图 / 力导向）当客户端岛的例子，该功能已在 2026-10-07 重构中移除——例子本身讲的 memo 边界仍然成立，只是不再是本站现存的交互。删除决策见 `docs/adr/0007-workspace-rebuild-baseline.md`。
 
 本站在 Next 16.2 打开了 `reactCompiler: true`，并安装 `babel-plugin-react-compiler@1.0.0`。App Router 默认服务端组件的拆分策略见 [[nextjs-app-router|Next.js App Router 实战]]；最终可感指标仍按 [[web-performance-optimization|Web 性能优化实战]] 的 LCP/INP/CLS 优先序。
 
@@ -287,6 +289,8 @@ if (items.length > 100) analytics.track('large-list');
             <content:encoded><![CDATA[
 > 结论先说：View Transitions 是**渐进增强**，不是品牌大片。只在列表→详情这类「空间连续」导航上点缀；必须尊重 `prefers-reduced-motion`，且绝不能拖坏 INP。
 
+> **时效注（2026-10）**：下文提到数字花园力导向图作为 `usePrefersReducedMotion` 的用例，该功能已在 2026-10-07 重构中移除；钩子本身仍在用。删除决策见 `docs/adr/0007-workspace-rebuild-baseline.md`。
+
 服务端组件与导航模型见 [[nextjs-app-router|Next.js App Router 实战]]；动效与 CWV 的关系见 [[web-performance-optimization|Web 性能优化实战]]。
 
 ## 浏览器能力与 Next 封装
@@ -408,6 +412,8 @@ Compiler（见 [[react-compiler-in-practice|React Compiler 生产笔记]]）降�
             <description><![CDATA[个人博客 MDX 链路拆解：frontmatter schema、仓库层、next-mdx-remote、remark-wikilink，以及组件映射的边界。]]></description>
             <content:encoded><![CDATA[
 > 结论先说：MDX 管线要**分层**——解析 / 校验 / 查询 / 渲染各管一段。wikilink 属于编译期链接改写；popover 属于客户端增强。把两层揉进一个「万能 MDX 组件」会让测试与 CSP 边界一起糊掉。
+
+> **时效注（2026-10）**：编译期的 `remark-wikilink` 转换**本仓仍在用**（`src/lib/posts/remark-wikilink.ts`）；但客户端的 wikilink popover 与预览接口 `/api/preview` 已在 2026-10-07 重构中移除。文中涉及 popover / 预览 API 的部分按编写时（2026-07）理解。删除决策见 `docs/adr/0007-workspace-rebuild-baseline.md`。
 
 类型与 schema 纪律见 [[typescript-advanced-types|TypeScript 高级类型实战]]；页面渲染模型见 [[nextjs-app-router|Next.js App Router 实战]]。
 
@@ -532,6 +538,8 @@ rehype-pretty-code + Shiki 在服务端出 HTML。注意：
             <content:encoded><![CDATA[
 > 结论先说：数字花园是**探索面**，不是第二首页。力导向只服务「看见概念邻接」；`prefers-reduced-motion` 时退回列表；wikilink 预览走轻量 JSON，绝不把整篇 MDX 塞进 hover 卡片。
 
+> **时效注（2026-10）**：数字花园 `/garden` 与预览接口 `/api/preview` 已在 2026-10-07 重构中移除，本文保留的是**当时的实现方案与取舍**，不是「本站现在已有」。方法论仍然适用；文中「本站」「实现」等措辞请按编写时（2026-07）理解。删除决策见 `docs/adr/0007-workspace-rebuild-baseline.md`。
+
 内容从 MDX 到页面的管线见 [[mdx-remark-pipeline|MDX 渲染管线]]；客户端交互成本与 [[react-compiler-in-practice|React Compiler]]、[[web-performance-optimization|性能优化]] 同一套尺子。
 
 ## 为什么是次级路由
@@ -653,14 +661,14 @@ App Router 动态渲染背景见 [[nextjs-app-router|Next.js App Router 实战]]
 3. 文档路由因此倾向动态渲染——HTML 必须带当次 nonce。
 4. 静态资源仍可在边缘长期缓存；**缓存的是 JS/CSS 文件，不是带 nonce 的 HTML**。
 
-这与「为了 SSG 全站静态化而 `unsafe-inline`」是两条路。ADR 结论写在 `docs/adr/2026-07-17-csp-nonce-over-ssg.md`：安全基线优先。
+这与「为了 SSG 全站静态化而 `unsafe-inline`」是两条路。ADR 结论写在 `docs/adr/0003-csp-nonce-over-ssg.md`：安全基线优先。
 
-## SRI 在 Next 16.2 里长什么样
+## SRI 在 Next 里长什么样
 
 Next 在 `experimental.sri` 提供可选算法：
 
 ```ts
-// 评估时的形状（不要默认合入生产）
+// 本站的形状：由 ENABLE_SRI=1 门控，未设时整个键不出现（实验保持 inert）
 experimental: {
   sri: { algorithm: 'sha384' }, // 'sha256' | 'sha384' | 'sha512'
 }
@@ -674,7 +682,7 @@ experimental: {
 2. **与 nonce 并存**时，确认 CSP 未误杀带 integrity 的标签（一般不冲突）。
 3. **本地 build 污染**：未设置 `NEXT_PUBLIC_SITE_URL` 时生产构建会直接失败；设置后还要防止 RSS 等生成物被写成 localhost——验证完应还原。
 
-完整预览清单见仓库 `docs/adr/2026-07-21-sri-over-nonce-evaluation.md`（Status=Evaluation）。
+完整预览清单见仓库 `docs/adr/0005-sri-over-nonce-evaluation.md`（Status=Accepted，生产已开）。
 
 ## 错误示范
 
@@ -692,14 +700,14 @@ SRI 只保证**你构建时钉死的那份字节**。供应链投毒发生在 `p
 
 ### 3. 在 JSON API 上纠结 nonce
 
-像 `/api/preview/[slug]` 这种纯 JSON 预览接口（wikilink hover 卡片用）**不需要** nonce；它的风险在输入校验、缓存是否泄露草稿、以及响应是否投影多余字段。花园 popover 链路见 [[digital-garden-force-layout|数字花园]] 与 [[mdx-remark-pipeline|MDX 渲染管线]]。
+像纯 JSON 预览接口（如当年 `digital-garden` 的 wikilink hover 卡片所用的 `/api/preview/[slug]`，**该功能 2026-10-07 已移除**）**不需要** nonce；它的风险在输入校验、缓存是否泄露草稿、以及响应是否投影多余字段。站内现存的纯 JSON 端点（如 `/api/csp-report`）同理——nonce 只管文档里的脚本，JSON 响应的风险面不在这。相关链路见 [[digital-garden-force-layout|数字花园]] 与 [[mdx-remark-pipeline|MDX 渲染管线]]。
 
-## 实施顺序（建议）
+## 实施顺序（本站实际走的）
 
 1. **守住 nonce CSP**（已完成基线）。
-2. **SRI ADR 评估**（已记录，未启用）。
-3. 触发条件满足时：preview 分支开启 `experimental.sri` → build → 抽查 `integrity=` → CSP / e2e / bundle 回归。
-4. 任一步回归 → 放弃启用，更新 ADR 为 Rejected 或继续 Evaluation。
+2. **SRI ADR 评估** → Accepted；生产由 `ENABLE_SRI=1` 开启（2026-07-22）。
+3. Preview 分支先开 `experimental.sri` → build → 抽查 `integrity=` → CSP / e2e / bundle 回归。
+4. 任一步回归 → 去掉 Production `ENABLE_SRI` 并重新部署即可回滚（无需改代码）。
 
 ## 与性能的关系
 
@@ -708,9 +716,9 @@ SRI 只保证**你构建时钉死的那份字节**。供应链投毒发生在 `p
 ## 检查清单
 
 - [ ] CSP 仍每请求 nonce，无 `unsafe-inline` 脚本逃生口
-- [ ] SRI 仅在评估/预览，未默认进生产 config
+- [ ] SRI 只在 `ENABLE_SRI=1` 时进 config，键默认缺席
 - [ ] `experimental.sri` 使用 `{ algorithm }` 对象形，而非想当然的布尔
-- [ ] 预览验证包含 CSP 与 e2e，不只看 HTML 里有没有 integrity
+- [ ] 验证包含 CSP 与 e2e，不只看 HTML 里有没有 integrity
 - [ ] 密钥与 token 仍不进仓库
 
 ## 延伸阅读

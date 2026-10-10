@@ -117,6 +117,55 @@ describe('buildContentSnapshotPayload', () => {
     });
     expect(computeContentHash([a])).not.toBe(computeContentHash([b]));
   });
+
+  // Regression: writeContentSnapshot skips when contentHash matches. Every
+  // serialized field must therefore participate in the hash, or its edits
+  // silently stay stale in production's committed snapshot.
+  it.each([
+    ['updatedAt', { updatedAt: '2026-10-10' }],
+    ['description', { description: 'new desc' }],
+    ['featured', { featured: true }],
+    ['published', { published: false }],
+    ['license', { license: 'MIT' }],
+    ['category', { category: 'DevOps' }],
+    ['image', { image: '/images/x.png' }],
+    ['source', { source: 'https://example.com/repo' }],
+    ['readingTime', { readingTime: '2 min read' }],
+    ['wordCount', { wordCount: 20 }],
+    ['excerpt', { excerpt: 'new excerpt' }],
+  ])('changes contentHash when %s changes without body edit', (_, override) => {
+    const original = post('x', 'body', { date: '2026-06-01' });
+    const changed = post('x', 'body', {
+      date: '2026-06-01',
+      ...override,
+    });
+    expect(computeContentHash([original])).not.toBe(computeContentHash([changed]));
+  });
+
+  // The hash canonicalizes key order, so a pure property-order refactor (no
+  // value change) must NOT churn it — otherwise every field reorder would
+  // force a snapshot rewrite for nothing.
+  it('is invariant to frontmatter key insertion order', () => {
+    const a: PostFull = {
+      ...post('x', 'body', { date: '2026-06-01' }),
+      title: 'Same',
+      description: 'desc',
+    };
+    const b: PostFull = {
+      description: 'desc',
+      date: '2026-06-01',
+      content: 'body',
+      slug: 'x',
+      title: 'Same',
+      tags: a.tags,
+      published: true,
+      featured: false,
+      readingTime: a.readingTime,
+      wordCount: a.wordCount,
+      excerpt: a.excerpt,
+    };
+    expect(computeContentHash([a])).toBe(computeContentHash([b]));
+  });
 });
 
 describe('resolveSnapshotBuiltAt', () => {
