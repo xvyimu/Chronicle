@@ -126,6 +126,6 @@
 
 搜索已改为**客户端**实现，不再有服务端端点：
 
-- 逻辑：`src/lib/search/`（`SearchDoc` 投影 + `searchDocs` 纯函数，Fuse）。
-- UI：`src/components/search/SearchPanel.tsx`（客户端岛，键盘 `/` `Ctrl+K`，URL `?q=` 可分享）。
+- 逻辑：`src/lib/search/`（`SearchDoc` 投影 + `searchDocs` 纯函数，Fuse；`SearchResult` 带匹配区间）。
+- UI：`src/components/search/SearchPanel.tsx`（客户端岛，键盘 `/` `Ctrl+K`，URL `?q=` 可分享；title/description 命中段 `<mark>` 高亮，D-045）。
 - 规模：20 篇客户端内存索引足够；>200 篇时评估服务端方案（ADR-0006）。

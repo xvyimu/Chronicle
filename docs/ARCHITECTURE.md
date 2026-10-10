@@ -201,7 +201,8 @@ ArticleList（最近更新）
 SearchPanel（客户端岛，首页挂载）
   -> 接收 docs: SearchDoc[]（由 app/page.tsx 从文章元信息投影）
   -> lib/search.searchDocs(docs, query) —— 客户端 Fuse，无服务端往返
-  -> 渲染结果列表；`?q=` 写回当前路径（可分享）
+  -> 渲染结果列表（title/description 命中段 <mark> 高亮，highlight.ts 纯函数分段，D-045）；
+     `?q=` 写回当前路径（可分享）
 ```
 
 - 全部实现：`src/lib/search/`（`types.ts` / `engine.ts` / `index.ts`）
