@@ -3,8 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { searchDocs } from '@/lib/search';
-import { highlightSegments, rangesForKey } from '@/lib/search/highlight';
+import { searchDocs, highlightSegments, rangesForKey } from '@/lib/search';
 import type { SearchDoc, SearchResult } from '@/lib/search';
 
 type SearchPanelProps = {
