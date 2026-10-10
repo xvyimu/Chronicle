@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { searchDocs } from '@/lib/search';
-import type { SearchDoc } from '@/lib/search';
+import { searchDocs, highlightSegments, rangesForKey } from '@/lib/search';
+import type { SearchDoc, SearchResult } from '@/lib/search';
 
 type SearchPanelProps = {
   docs: SearchDoc[];
@@ -32,6 +32,24 @@ export default function SearchPanel({ docs }: SearchPanelProps) {
   const isOpen = trimmed !== '' && results.length > 0;
   /** 结果项的稳定 DOM id，供 aria-activedescendant 指向当前高亮项。 */
   const optionId = (index: number) => `search-option-${index}`;
+
+  /** 按字段匹配区间渲染文本，命中段包 <mark>（R14 词高亮）。 */
+  function renderHighlighted(
+    text: string,
+    result: SearchResult,
+    key: 'title' | 'description',
+  ) {
+    const segments = highlightSegments(text, rangesForKey(result.matches, key));
+    return segments.map((seg, i) =>
+      seg.hit ? (
+        <mark key={i} className="search-panel__mark">
+          {seg.text}
+        </mark>
+      ) : (
+        <span key={i}>{seg.text}</span>
+      ),
+    );
+  }
 
   // 全局快捷键：`/` 或 Ctrl/Cmd+K 聚焦输入框。
   useEffect(() => {
@@ -76,7 +94,7 @@ export default function SearchPanel({ docs }: SearchPanelProps) {
       setActiveIndex((i) => Math.max(i - 1, 0));
     } else if (e.key === 'Enter' && activeIndex >= 0 && results[activeIndex]) {
       e.preventDefault();
-      router.push(`/blog/${results[activeIndex].slug}`);
+      router.push(`/blog/${results[activeIndex].item.slug}`);
     } else if (e.key === 'Escape') {
       setQuery('');
       setActiveIndex(-1);
@@ -136,27 +154,34 @@ export default function SearchPanel({ docs }: SearchPanelProps) {
           <p className="search-panel__empty">没有找到匹配「{trimmed}」的文章。</p>
         ) : (
           <ul className="search-panel__list" role="listbox" aria-label="搜索结果">
-            {results.map((doc, index) => (
-              <li key={doc.slug} role="presentation">
-                <Link
-                  id={optionId(index)}
-                  href={`/blog/${doc.slug}`}
-                  role="option"
-                  aria-selected={index === activeIndex}
-                  className={`search-panel__item ${
-                    index === activeIndex ? 'search-panel__item--active' : ''
-                  }`}
-                  onMouseEnter={() => setActiveIndex(index)}
-                >
-                  <span className="search-panel__item-title">{doc.title}</span>
-                  <span className="search-panel__item-desc">{doc.description}</span>
-                  <span className="search-panel__item-meta">
-                    {doc.category && <span>{doc.category}</span>}
-                    <span>{doc.readingTime}</span>
-                  </span>
-                </Link>
-              </li>
-            ))}
+            {results.map((result, index) => {
+              const doc = result.item;
+              return (
+                <li key={doc.slug} role="presentation">
+                  <Link
+                    id={optionId(index)}
+                    href={`/blog/${doc.slug}`}
+                    role="option"
+                    aria-selected={index === activeIndex}
+                    className={`search-panel__item ${
+                      index === activeIndex ? 'search-panel__item--active' : ''
+                    }`}
+                    onMouseEnter={() => setActiveIndex(index)}
+                  >
+                    <span className="search-panel__item-title">
+                      {renderHighlighted(doc.title, result, 'title')}
+                    </span>
+                    <span className="search-panel__item-desc">
+                      {renderHighlighted(doc.description, result, 'description')}
+                    </span>
+                    <span className="search-panel__item-meta">
+                      {doc.category && <span>{doc.category}</span>}
+                      <span>{doc.readingTime}</span>
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>

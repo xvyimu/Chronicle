@@ -69,7 +69,33 @@ describe('SearchPanel', () => {
     fireEvent.change(screen.getByLabelText('搜索文章'), {
       target: { value: 'PostgreSQL' },
     });
-    expect(screen.getByText('PostgreSQL 性能调优')).toBeInTheDocument();
+    // 标题分段渲染后不再是单一文本节点，用选项 link 锚定结果
+    const option = screen.getByRole('option');
+    expect(option).toHaveAttribute('href', '/blog/postgres-tuning');
+  });
+
+  it('highlights matched terms in title and description (R14)', () => {
+    render(<SearchPanel docs={docs} />);
+    fireEvent.change(screen.getByLabelText('搜索文章'), {
+      target: { value: 'PostgreSQL' },
+    });
+    const marks = screen.getAllByText('PostgreSQL', { exact: true });
+    expect(marks.length).toBeGreaterThanOrEqual(1);
+    expect(marks[0].tagName).toBe('MARK');
+    expect(marks[0]).toHaveClass('search-panel__mark');
+  });
+
+  it('renders un-highlighted title as plain text when match is tag-only', () => {
+    render(<SearchPanel docs={docs} />);
+    fireEvent.change(screen.getByLabelText('搜索文章'), {
+      target: { value: '数据库' },
+    });
+    // 标签/分类命中：标题无 mark
+    const options = screen.getAllByRole('option');
+    expect(options.length).toBeGreaterThanOrEqual(1);
+    for (const opt of options) {
+      expect(opt.querySelector('mark')).toBeNull();
+    }
   });
 
   it('shows an empty state for no matches', () => {

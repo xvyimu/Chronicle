@@ -443,3 +443,13 @@
 - **影响**：只改 `updatedAt` / `description` 等字段的编辑，现在会照常触发快照重写与 CI 漂移门禁。`CONTENT_SNAPSHOT_VERSION` **不 bump**——它管快照**结构**（`read.ts:35` 版本不符即抛错），本次未改文件形状；bump 会让所有现存快照在读取时被误判为不支持。`verifyContentSnapshot` 是 fail-closed 比对，新旧算法不可能撞字符串，无假通过。
 - **诚实记账**：`readingTime` / `wordCount` / `excerpt` 是 `content` / `description` 的确定性派生（`repository.ts:44-54`），本可依赖二者，但既已全字段哈希就无需特判。**未处理**：`builtAt` 仍不进 hash（有 `SOURCE_DATE_EPOCH` 冻结机制，且不该因构建时刻 churn——保持现状）。
 - **复查**：`pnpm exec vitest run src/lib/content-snapshot/build.test.ts` 28 tests exit 0；`pnpm test` 78 files / 628 tests exit 0；`content:verify` exit 0；实测「只改一篇 `updatedAt` → 非 force `content:build` 报 wrote 且快照记录新值 → 还原后 hash 回到 `38cdfc5f`」。
+
+## 2026-10-10 · D-045 · R14 处置（搜索词高亮补齐 + 正文/范围筛选定案不做）与 R13 qs 治理
+
+- **背景**：全仓审查发现两项未闭环：R14 搜索三项规格差（正文/范围筛选/词高亮）「待定」挂了三周；R13 dev 树 3 条 audit 残留里 qs ×2 的根因是 override 精确钉 `6.15.2`——与本仓 pnpm-workspace.yaml 开头自己写的「精确钉会变 stale pin」通则相悖（2026-08-03 实测教训重演）。
+- **R14 可选**：A 三项全补 / B 补词高亮、其余定案不做 / C 三项全定案不做。
+- **选择**：**B**。词高亮是 UI 薄层（Fuse `includeMatches` 本就带区间，只差渲染），零新增依赖、零索引体积增量；正文索引在 20 篇规模下要给客户端塞 ~100KB 串数据，与「轻量客户端」取向相反；范围筛选与分类/标签页功能重叠。
+- **实现**：`engine.ts` 开 `includeMatches`，返回 `SearchResult { item, matches }`（类型复用 Fuse 的 `FuseResultMatch`）；新增 `highlight.ts` 纯函数（`highlightSegments` 区间合并/越界钳制 + `rangesForKey` 字段过滤），title/description 命中段 `<mark class="search-panel__mark">`，样式用 `--brand-soft`/`--brand` token；tags 不高亮（数组字段 value 与序列化值索引对不上，注释已说明）。
+- **R13 qs**：override 从精确钉 `6.15.2` 改范围 `>=6.16.0 <7`（6.16.0 已发布，typed-rest-client 新版已声明 `^6.16.0`），audit 3 条 → 1 条（余 braces high 上游无解）。顺手对齐 `@vitest/ui` `^4.1.9` → `^4.1.11`，消掉 master 既有的 vitest peer 错位警告。
+- **影响**：`src/lib/search/`（engine/highlight/index）、`SearchPanel.tsx`、`home.css`、`pnpm-workspace.yaml`、`package.json` + lockfile、PRD 实施现状表定案、R13/R14 登记册闭环。
+- **复查**：`pnpm typecheck` exit 0；`pnpm lint` exit 0；`pnpm test` 79 files / 642 tests exit 0（新增 1 文件 14 条）；`pnpm format:check` exit 0；`NEXT_PUBLIC_SITE_URL=… pnpm build` exit 0；`pnpm audit` 3→1。
