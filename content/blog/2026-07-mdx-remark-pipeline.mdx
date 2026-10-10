@@ -2,6 +2,7 @@
 title: 'MDX 渲染管线与 remark 插件：从 frontmatter 到 wikilink'
 description: '个人博客 MDX 链路拆解：frontmatter schema、仓库层、next-mdx-remote、remark-wikilink，以及组件映射的边界。'
 date: '2026-07-21'
+updatedAt: '2026-10-10'
 tags: ['Next.js', 'TypeScript', '前端']
 published: true
 featured: false
@@ -9,6 +10,8 @@ license: 'CC-BY-4.0'
 ---
 
 > 结论先说：MDX 管线要**分层**——解析 / 校验 / 查询 / 渲染各管一段。wikilink 属于编译期链接改写；popover 属于客户端增强。把两层揉进一个「万能 MDX 组件」会让测试与 CSP 边界一起糊掉。
+
+> **时效注（2026-10）**：编译期的 `remark-wikilink` 转换**本仓仍在用**（`src/lib/posts/remark-wikilink.ts`）；但客户端的 wikilink popover 与预览接口 `/api/preview` 已在 2026-10-07 重构中移除。文中涉及 popover / 预览 API 的部分按编写时（2026-07）理解。删除决策见 `docs/adr/0007-workspace-rebuild-baseline.md`。
 
 类型与 schema 纪律见 [[typescript-advanced-types|TypeScript 高级类型实战]]；页面渲染模型见 [[nextjs-app-router|Next.js App Router 实战]]。
 

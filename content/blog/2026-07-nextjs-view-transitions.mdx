@@ -2,6 +2,7 @@
 title: 'Next.js View Transitions 实战：从 Link 到可感知导航'
 description: '在 App Router 里启用 View Transitions：transitionTypes、减少动效偏好、与性能预算共存的写法。'
 date: '2026-07-21'
+updatedAt: '2026-10-10'
 tags: ['Next.js', 'React', '性能优化']
 published: true
 featured: false
@@ -9,6 +10,8 @@ license: 'CC-BY-4.0'
 ---
 
 > 结论先说：View Transitions 是**渐进增强**，不是品牌大片。只在列表→详情这类「空间连续」导航上点缀；必须尊重 `prefers-reduced-motion`，且绝不能拖坏 INP。
+
+> **时效注（2026-10）**：下文提到数字花园力导向图作为 `usePrefersReducedMotion` 的用例，该功能已在 2026-10-07 重构中移除；钩子本身仍在用。删除决策见 `docs/adr/0007-workspace-rebuild-baseline.md`。
 
 服务端组件与导航模型见 [[nextjs-app-router|Next.js App Router 实战]]；动效与 CWV 的关系见 [[web-performance-optimization|Web 性能优化实战]]。
 

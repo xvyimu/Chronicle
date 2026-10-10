@@ -238,8 +238,8 @@ describe('ProjectsRepository', () => {
     const repo = createProjectsRepository(
       makeJsonSource([
         {
-          id: 'nav-site',
-          title: 'Nav',
+          id: 'demo-project',
+          title: 'Demo',
           description: 'd',
           tags: [],
           image: '/nav.png',
@@ -248,9 +248,9 @@ describe('ProjectsRepository', () => {
         },
       ]),
     );
-    const project = repo.getById('nav-site');
+    const project = repo.getById('demo-project');
     expect(project).not.toBeNull();
-    expect(project!.id).toBe('nav-site');
+    expect(project!.id).toBe('demo-project');
     expect(project!.title).toBeTruthy();
   });
 
@@ -258,8 +258,8 @@ describe('ProjectsRepository', () => {
     const repo = createProjectsRepository(
       makeJsonSource([
         {
-          id: 'nav-site',
-          title: 'Nav',
+          id: 'demo-project',
+          title: 'Demo',
           description: 'd',
           tags: [],
           image: '/nav.png',

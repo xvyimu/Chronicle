@@ -11,7 +11,7 @@
 | **Giscus default**   | **已移除**（2026-10-07 重构删除评论功能：组件、`site.ts` 配置、CSP 白名单、`.env.example` 三项全清） |
 | **Remote**           | `git@github.com-obsidian:xvyimu/Chronicle.git`                                                       |
 
-作品集交叉链接见 `data/projects.json`（ChronoPortal / Chronicle / ChronoRelay 等）。
+作品集交叉链接见 `data/projects.json`（2026-10-10 起仅 `chronicle`，见 [D-043](./docs/14-decision-log.md)）。
 
 ## 合规 / 归属
 

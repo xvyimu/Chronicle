@@ -72,6 +72,28 @@ const nextConfig: NextConfig = {
    * them in every route bundle explicitly.
    */
   outputFileTracingIncludes: CONTENT_TRACE_INCLUDES,
+  /*
+   * 2026-10-10：作品集从 6 条精简到 1 条（chronicle），删掉的 5 条中
+   * chrono-portal / chrono-relay / domain-check / qy-home / hermes-hug 的
+   * `/projects/<id>` 都曾对外可达，旧外链与搜索引擎缓存仍会打过来。
+   * permanent: false（307）而非 true —— 这是内容整理不是永久搬家，
+   * 以后同 id 可能被重新占用，永久重定向会把它钉死在 /projects。
+   */
+  async redirects() {
+    const retiredProjectIds = [
+      'chrono-portal',
+      'chrono-relay',
+      'domain-check',
+      'qy-home',
+      'hermes-hug',
+    ];
+
+    return retiredProjectIds.map((id) => ({
+      source: `/projects/${id}`,
+      destination: '/projects',
+      permanent: false,
+    }));
+  },
   /* Security headers */
   async headers() {
     return [

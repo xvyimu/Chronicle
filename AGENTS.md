@@ -4,14 +4,14 @@
 
 ## Identity
 
-| 项                  | 值                                                                                                           |
-| ------------------- | ------------------------------------------------------------------------------------------------------------ |
-| GitHub              | [xvyimu/Chronicle](https://github.com/xvyimu/Chronicle)                                                      |
-| 产品显示名          | 西江月博客                                                                                                   |
-| 本地路径 / npm name | `D:\projects\Chronicle` · package `"name": "chronicle"`（private）                                           |
-| 生产                | https://incca.ccwu.cc                                                                                        |
-| License             | MIT · `LICENSE` · Copyright 2026 雨天狂奔                                                                    |
-| 作品集 GitHub 链接  | `data/projects.json`（公益API导航站 / 个人博客 / RelayCheck Desktop / Domain Check / QingHome / Hermes Hug） |
+| 项                  | 值                                                                                         |
+| ------------------- | ------------------------------------------------------------------------------------------ |
+| GitHub              | [xvyimu/Chronicle](https://github.com/xvyimu/Chronicle)                                    |
+| 产品显示名          | 西江月博客                                                                                 |
+| 本地路径 / npm name | `D:\projects\Chronicle` · package `"name": "chronicle"`（private）                         |
+| 生产                | https://incca.ccwu.cc                                                                      |
+| License             | MIT · `LICENSE` · Copyright 2026 雨天狂奔                                                  |
+| 作品集 GitHub 链接  | `data/projects.json`（当前仅 个人博客 `chronicle`；见 [D-043](./docs/14-decision-log.md)） |
 
 ## Project Overview
 

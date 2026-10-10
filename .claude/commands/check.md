@@ -1,6 +1,6 @@
 # /check — 提交前检查
 
-在提交流程前执行。按栈分叉：本目录是 `D:\projects\Chronicle`（pnpm）→ 用 Chronicle 脚本；若是 ChronoPortal（pnpm）→ 用其脚本。通用脚本放在全局 `.claude/commands/`，本命令按「先读本仓 CLAUDE.md 的常用命令」取值。
+在提交流程前执行。本目录是 `D:\projects\Chronicle`（pnpm）→ 用 Chronicle 脚本。通用脚本放在全局 `.claude/commands/`，本命令按「先读本仓 CLAUDE.md 的常用命令」取值。
 
 ## 流程
 

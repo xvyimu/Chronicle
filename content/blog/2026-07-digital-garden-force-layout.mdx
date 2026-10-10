@@ -2,6 +2,7 @@
 title: '数字花园：力导向布局与 wikilink 网络'
 description: '在 Next 内做次级 /garden：无 d3 的力导向、筛选、拖拽存视图、hover 邻居高亮，以及 wikilink popover 的数据契约。'
 date: '2026-07-21'
+updatedAt: '2026-10-10'
 tags: ['Next.js', 'React', '前端']
 published: true
 featured: false
@@ -9,6 +10,8 @@ license: 'CC-BY-4.0'
 ---
 
 > 结论先说：数字花园是**探索面**，不是第二首页。力导向只服务「看见概念邻接」；`prefers-reduced-motion` 时退回列表；wikilink 预览走轻量 JSON，绝不把整篇 MDX 塞进 hover 卡片。
+
+> **时效注（2026-10）**：数字花园 `/garden` 与预览接口 `/api/preview` 已在 2026-10-07 重构中移除，本文保留的是**当时的实现方案与取舍**，不是「本站现在已有」。方法论仍然适用；文中「本站」「实现」等措辞请按编写时（2026-07）理解。删除决策见 `docs/adr/0007-workspace-rebuild-baseline.md`。
 
 内容从 MDX 到页面的管线见 [[mdx-remark-pipeline|MDX 渲染管线]]；客户端交互成本与 [[react-compiler-in-practice|React Compiler]]、[[web-performance-optimization|性能优化]] 同一套尺子。
 

@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { blurDataFor, imageBlurProps, IMAGE_BLUR_DATA } from './image-blur-data';
 
 describe('image-blur-data', () => {
-  it('covers all project preview images', () => {
-    expect(Object.keys(IMAGE_BLUR_DATA).length).toBeGreaterThanOrEqual(6);
+  it('covers the chronicle project preview image', () => {
+    expect(Object.keys(IMAGE_BLUR_DATA).length).toBeGreaterThanOrEqual(1);
     expect(IMAGE_BLUR_DATA['/images/projects/blog.png']).toMatch(
       /^data:image\/webp;base64,/,
     );
@@ -16,8 +16,8 @@ describe('image-blur-data', () => {
   });
 
   it('returns blur for known paths', () => {
-    expect(blurDataFor('/images/projects/nav-site.png')).toBe(
-      IMAGE_BLUR_DATA['/images/projects/nav-site.png'],
+    expect(blurDataFor('/images/projects/blog.png')).toBe(
+      IMAGE_BLUR_DATA['/images/projects/blog.png'],
     );
   });
 

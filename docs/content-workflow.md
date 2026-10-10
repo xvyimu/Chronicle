@@ -62,7 +62,7 @@ tags:
 published: true
 featured: true
 image: /images/blog/cloudflare-workers-cover.jpg
-source: https://github.com/yuanjia1314/domain-check
+source: https://github.com/yutian81/domain-check
 license: MIT
 ---
 
@@ -115,7 +115,7 @@ pnpm content:build
 | `CONTENT_BUILD_FORCE=1` | 即使 `contentHash` 相同也重写文件                                                       |
 | `SOURCE_DATE_EPOCH`     | Unix 秒；冻结 `manifest.builtAt`（可重复时间戳）。hash 未变时仍 **skip write**，不漂 CI |
 
-- **contentHash** 覆盖：slug + date + title + series/seriesSlug/seriesOrder + category + tags + 正文 sha256（IA 元数据变更也会让 CI 要求重提 snapshot）。
+- **contentHash** 覆盖：**已序列化的整条快照条目**（全部 frontmatter 字段，含 `description` / `updatedAt` / `featured` / `published` / `license` / `image` / `source` 等）+ 正文 sha256；序列化键排序后参与哈希，`tags` 顺序不做语义故先排序。（2026-10-10 前只哈希手挑的 IA 字段，导致只改 `updatedAt` 之类的编辑会被 skip write 静默吞掉——见 D-043。）
 - 开发默认 `CONTENT_BACKEND=fs`：改 MDX 即时生效，无需每次重建快照。
 - 快照只含 **published !== false** 的文章；草稿不会进入生产快照。
 - 回滚：`CONTENT_BACKEND=fs` 或非 production `NODE_ENV`。
@@ -171,11 +171,12 @@ pnpm content:verify
 
 GitHub 仓库身份：
 
-| 作品 id         | GitHub                                 |
-| --------------- | -------------------------------------- |
-| `chronicle`     | https://github.com/xvyimu/Chronicle    |
-| `chrono-portal` | https://github.com/xvyimu/ChronoPortal |
-| `chrono-relay`  | https://github.com/xvyimu/ChronoRelay  |
+| 作品 id     | GitHub                              |
+| ----------- | ----------------------------------- |
+| `chronicle` | https://github.com/xvyimu/Chronicle |
+
+2026-10-10 起作品集只保留 `chronicle`（删除原因与完整记账见 [D-043](./14-decision-log.md)）。
+5 个已下线 id 的 `/projects/<id>` 在 `next.config.ts` 的 `redirects()` 里 307 到 `/projects`。
 
 `id` 变化会改变 `/projects/[id]` 路由；封面图路径（`/images/projects/*.png`）可保持文件名不变。
 

@@ -10,8 +10,9 @@ export type ContentSnapshotManifest = {
   builtAt: string; // ISO-8601
   postCount: number;
   /**
-   * Stable hash over sorted slug + date + title + series fields + category/tags
-   * + body sha256. Used for idempotent builds and CI drift detection.
+   * Stable hash over the whole serialized snapshot entry — every frontmatter
+   * field (canonical key order, `tags` sorted) plus body sha256. Used for
+   * idempotent builds and CI drift detection; see `computeContentHash`.
    */
   contentHash: string;
 };

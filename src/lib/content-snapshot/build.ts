@@ -16,27 +16,52 @@ function toMeta(post: PostFull): PostMeta {
 }
 
 /**
+ * Canonical JSON for hashing: sorts object keys recursively so a pure
+ * key-order refactor (no value change) does not churn the hash, while any
+ * value change does. Arrays keep their order — tag *order* is normalized
+ * separately below, everything else is order-significant.
+ *
+ * Named `canonicalJson` (not `stableStringify`) to avoid colliding with the
+ * unrelated `stableStringify` in `./write.ts`, which only pretty-prints.
+ */
+function canonicalJson(value: unknown): string {
+  return JSON.stringify(value, (_key, val) => {
+    if (val && typeof val === 'object' && !Array.isArray(val)) {
+      // Plain UTF-16 code-unit order (matches JSON.stringify's own ordering),
+      // not `localeCompare` — the goal is only "independent of insertion
+      // order", and locale collation is slower and machine-locale-dependent.
+      return Object.fromEntries(
+        Object.entries(val as Record<string, unknown>).sort(([a], [b]) =>
+          a < b ? -1 : a > b ? 1 : 0,
+        ),
+      );
+    }
+    return val;
+  });
+}
+
+/**
  * Stable content fingerprint (not cryptographic integrity for security —
  * just reproducible drift detection across builds).
- * Includes full body text so equal-length MDX rewrites still change the hash,
- * plus route-relevant frontmatter (series / seriesSlug / order / category / tags)
- * so IA metadata drift is not skipped by the idempotent write path.
+ *
+ * Hashes the **whole** committed snapshot entry — every frontmatter field
+ * (`description` / `updatedAt` / `featured` / `published` / `license` / …)
+ * plus the body — not a hand-picked subset. The idempotent write path skips
+ * the rewrite when this hash matches, so any field left out here becomes a
+ * field whose edit silently never reaches the committed snapshot (and thus
+ * production SEO dates / OG descriptions). A field list is exactly the kind
+ * of double-source that drifts; hashing the entry itself cannot.
+ *
+ * `tags` is the one deliberate normalization: tag order in frontmatter is
+ * not meaningful, so it is sorted before hashing.
  */
 export function computeContentHash(posts: PostFull[]): string {
   const lines = sortPostsByDateDesc(posts).map((p) => {
-    const bodyFp = createHash('sha256').update(p.content, 'utf8').digest('hex');
-    const tags = [...(p.tags ?? [])].sort().join(',');
-    return [
-      p.slug,
-      p.date,
-      p.title,
-      p.series ?? '',
-      p.seriesSlug ?? '',
-      p.seriesOrder ?? '',
-      p.category ?? '',
-      tags,
-      bodyFp,
-    ].join('\t');
+    const { content, ...rest } = p;
+    const meta = { ...rest, tags: [...(rest.tags ?? [])].sort() };
+    const metaFp = createHash('sha256').update(canonicalJson(meta), 'utf8').digest('hex');
+    const bodyFp = createHash('sha256').update(content, 'utf8').digest('hex');
+    return `${metaFp}\t${bodyFp}`;
   });
   return createHash('sha256').update(lines.join('\n'), 'utf8').digest('hex');
 }
