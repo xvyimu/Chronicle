@@ -45,7 +45,7 @@
 
 | 层         | 选型                                                    |
 | ---------- | ------------------------------------------------------- |
-| Framework  | Next.js 16.3.8 App Router                               |
+| Framework  | Next.js 16.4.0 App Router                               |
 | UI         | React 19.3.0, Tailwind CSS 4, BEM CSS                   |
 | Content    | MDX, `next-mdx-remote`, `js-yaml`, local JSON           |
 | Validation | Zod schemas + custom frontmatter parser                 |

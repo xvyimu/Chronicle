@@ -15,7 +15,7 @@
 
 ## Project Overview
 
-A personal blog built with Next.js 16.3.8 (App Router), React 19.3, and Tailwind CSS 4. Content is authored in MDX, stored in `content/blog/`. Projects data is in `data/projects.json`. Production reads `generated/content-snapshot/` by default (`CONTENT_BACKEND=snapshot`); after editing MDX run `pnpm content:build` and commit the snapshot.
+A personal blog built with Next.js 16.4.0 (App Router), React 19.3, and Tailwind CSS 4. Content is authored in MDX, stored in `content/blog/`. Projects data is in `data/projects.json`. Production reads `generated/content-snapshot/` by default (`CONTENT_BACKEND=snapshot`); after editing MDX run `pnpm content:build` and commit the snapshot.
 
 ## 形态与栈（先读）
 
@@ -26,7 +26,7 @@ A personal blog built with Next.js 16.3.8 (App Router), React 19.3, and Tailwind
 
 ## Tech Stack
 
-- **Framework**: Next.js 16.3.8 (App Router; local-content driven, dynamic rendering for CSP nonce)
+- **Framework**: Next.js 16.4.0 (App Router; local-content driven, dynamic rendering for CSP nonce)
 - **UI**: React 19.3, Tailwind CSS 4, BEM custom CSS
 - **Content**: MDX with custom frontmatter parser (`lib/parse-frontmatter.ts`, js-yaml 4.x), next-mdx-remote
 - **Syntax Highlighting**: Shiki via rehype-pretty-code
