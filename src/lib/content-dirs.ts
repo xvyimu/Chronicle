@@ -8,7 +8,6 @@ export const CONTENT_DIR = {
   blog: 'content/blog',
   about: 'content/about.mdx',
   projects: 'data/projects.json',
-  links: 'data/links.json',
 } as const;
 
 /** Committed content snapshot used when CONTENT_BACKEND=snapshot (production default). */

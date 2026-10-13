@@ -64,14 +64,11 @@
   --warning: #d97706;
 
   /* ---- 特色/CTA（收敛为中性强调，去掉橙金花哨）----
-     只留 `--cta`：docs/css-conventions.md 与 docs/design/atelier-v1a-matrix.md
-     把它登记为「Atelier 附加强调」的预留位。配套的 `--cta-ink` / `--cta-soft`
-     与 `--featured-soft` 一样全仓零 `var()` 消费、无文档登记，已删——真要启用
-     这个预留位时按当时的配色重新定前景/浅底更合适，留空壳只会让人以为有人在用。
+     `--cta` 及配套 `--cta-ink` / `--cta-soft` / `--featured-soft` 全仓零 `var()`
+     消费、无文档登记，已删——真要启用 Atelier 强调时按当时的配色重新定
+     前景/浅底更合适，留空壳只会让人以为有人在用。
      `--featured` 保留：base.css 顶栏轨道的渐变在用。 */
   --featured: #3f58dd;
-  --cta: #18181b;
-  --atelier-rail: 3px;
   --atelier-panel-blur: 12px;
 
   /* ---- 语义层（指向基底；新代码优先）---- */
@@ -96,12 +93,11 @@
   --radius-panel: 18px; /* 主面板大圆角 */
   --radius-full: 9999px;
 
-  /* ---- 阴影（保留；新组件少用，浮层才用）---- */
+  /* ---- 阴影（保留；新组件少用，浮层才用）----
+     `--shadow-md/lg/xl` 全仓零 `var()` 消费已删；TSX 浮层走 Tailwind 的
+     `shadow-md/lg` 工具类（@theme 未注册这些变量，二者不映射）。 */
   --shadow-xs: 0 1px 2px rgba(24, 24, 27, 0.05);
   --shadow-sm: 0 4px 16px rgba(24, 24, 27, 0.06);
-  --shadow-md: 0 8px 32px rgba(24, 24, 27, 0.08);
-  --shadow-lg: 0 16px 48px rgba(24, 24, 27, 0.1);
-  --shadow-xl: 0 24px 64px rgba(24, 24, 27, 0.12);
   --shadow-brand: 0 8px 24px rgba(63, 88, 221, 0.16);
 
   /* ---- 图片浮层 ---- */
@@ -116,18 +112,6 @@
      `--line-height-body` 全仓零 `var()` 消费，尺寸规范改由各组件直接写或在
      `docs/04-design-system.md` 的排版表里查——留空壳变量只会让人以为有统一控制点。 */
   --font-size-h1: clamp(1.75rem, 1.2rem + 2vw, 2.5rem);
-
-  /* ---- 间距（合法阶 4/8/16/24/32；3/5/10/12/16 为 legacy 别名）---- */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px; /* legacy · prefer 8 or 16 */
-  --space-4: 16px;
-  --space-5: 20px; /* legacy · prefer 16 or 24 */
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-10: 40px; /* legacy */
-  --space-12: 48px; /* legacy */
-  --space-16: 64px; /* legacy section gaps */
 
   /* ---- 动效 ---- */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -165,15 +149,11 @@
   --warning: #fbbf24;
 
   --featured: #7c93f5;
-  --cta: #fafafa;
 
   --primary-foreground: #09090b;
 
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.36);
-  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.42);
-  --shadow-xl: 0 24px 64px rgba(0, 0, 0, 0.48);
   --shadow-brand: 0 8px 24px rgba(124, 147, 245, 0.18);
 }
 

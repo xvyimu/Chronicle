@@ -94,6 +94,12 @@ jobs:
       # Bundle budget: fail if static output exceeds thresholds
       - run: pnpm exec tsx scripts/check-bundle-budget.ts
 
+      # SRI gate: verify ENABLE_SRI=1 gate shape + sha384 pin + build artifacts.
+      # Offline (default) — does NOT flip production SRI, which stays off unless
+      # ENABLE_SRI=1 is set on Vercel. Closes the doc/ops claim of "CI + 本地".
+      - run: pnpm check:sri-smoke
+      - run: pnpm test:sri
+
   bundle-analyze:
     runs-on: ubuntu-latest
     timeout-minutes: 10

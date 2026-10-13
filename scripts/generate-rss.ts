@@ -125,7 +125,7 @@ function assertProductionSiteUrl() {
   }
 }
 
-export function generateRss() {
+function generateRss() {
   assertProductionSiteUrl();
 
   if (!assertPostsDirectory()) return;
