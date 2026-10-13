@@ -31,8 +31,8 @@ function first<T>(arr: T[]): T | undefined {
   return arr[0];
 }
 
-const n = first([1, 2, 3]);        // number
-const s = first(['a', 'b']);       // string
+const n = first([1, 2, 3]); // number
+const s = first(['a', 'b']); // string
 ```
 
 ### 泛型约束（extends）
@@ -46,9 +46,9 @@ function logLength<T extends { length: number }>(item: T): T {
   return item;
 }
 
-logLength('hello');     // ✓
-logLength([1, 2, 3]);   // ✓
-logLength(123);         // ✗ number 没有 length
+logLength('hello'); // ✓
+logLength([1, 2, 3]); // ✓
+logLength(123); // ✗ number 没有 length
 ```
 
 ### keyof 和泛型组合
@@ -65,7 +65,7 @@ function pick<T, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
 }
 
 const user = { id: 1, name: 'Alice', email: 'a@b.com', role: 'admin' };
-const summary = pick(user, ['id', 'name']);  // { id: number; name: string }
+const summary = pick(user, ['id', 'name']); // { id: number; name: string }
 ```
 
 ## 条件类型：类型层面的 if-else
@@ -75,8 +75,8 @@ const summary = pick(user, ['id', 'name']);  // { id: number; name: string }
 ```typescript
 type IsString<T> = T extends string ? true : false;
 
-type A = IsString<'hello'>;  // true
-type B = IsString<42>;       // false
+type A = IsString<'hello'>; // true
+type B = IsString<42>; // false
 ```
 
 ### infer 关键字
@@ -93,9 +93,9 @@ type Awaited<T> = T extends Promise<infer U> ? U : T;
 // 提取数组元素类型
 type ElementOf<T> = T extends (infer E)[] ? E : never;
 
-type R1 = ReturnType<() => string>;          // string
-type R2 = Awaited<Promise<number>>;          // number
-type R3 = ElementOf<string[]>;               // string
+type R1 = ReturnType<() => string>; // string
+type R2 = Awaited<Promise<number>>; // number
+type R3 = ElementOf<string[]>; // string
 ```
 
 ### 实战：API 响应类型推导
@@ -110,14 +110,12 @@ interface ApiEndpoints {
 // 根据 path 自动推导响应类型
 type ResponseOf<P extends keyof ApiEndpoints> = ApiEndpoints[P];
 
-async function fetchApi<P extends keyof ApiEndpoints>(
-  path: P
-): Promise<ResponseOf<P>> {
+async function fetchApi<P extends keyof ApiEndpoints>(path: P): Promise<ResponseOf<P>> {
   const res = await fetch(path);
   return res.json();
 }
 
-const users = await fetchApi('/users');   // { id: number; name: string }[]
+const users = await fetchApi('/users'); // { id: number; name: string }[]
 const config = await fetchApi('/config'); // { theme: string; lang: string }
 ```
 
@@ -134,11 +132,11 @@ interface User {
   email: string;
 }
 
-type PartialUser = Partial<User>;       // 所有属性变可选
-type RequiredUser = Required<User>;     // 所有属性变必填
-type ReadonlyUser = Readonly<User>;     // 所有属性变只读
-type UserPreview = Pick<User, 'id' | 'name'>;  // 只保留部分属性
-type UserWithoutEmail = Omit<User, 'email'>;   // 排除部分属性
+type PartialUser = Partial<User>; // 所有属性变可选
+type RequiredUser = Required<User>; // 所有属性变必填
+type ReadonlyUser = Readonly<User>; // 所有属性变只读
+type UserPreview = Pick<User, 'id' | 'name'>; // 只保留部分属性
+type UserWithoutEmail = Omit<User, 'email'>; // 排除部分属性
 ```
 
 ### 自定义映射类型
@@ -149,7 +147,7 @@ type Nullable<T> = { [K in keyof T]: T[K] | null };
 
 // 所有属性变为 getter
 type Getters<T> = {
-  [K in keyof T as `get${Capitalize<string & K>}`]: () => T[K]
+  [K in keyof T as `get${Capitalize<string & K>}`]: () => T[K];
 };
 
 type NullableUser = Nullable<User>;
@@ -189,18 +187,18 @@ class TypedEmitter {
   }
 
   emit<E extends keyof EventMap>(event: E, data: EventMap[E]) {
-    this.handlers[event]?.forEach(h => h(data));
+    this.handlers[event]?.forEach((h) => h(data));
   }
 }
 
 const emitter = new TypedEmitter();
 emitter.on('click', (data) => {
-  console.log(data.x, data.y);  // ✓ 类型安全
+  console.log(data.x, data.y); // ✓ 类型安全
 });
 
-emitter.emit('click', { x: 10, y: 20 });        // ✓
-emitter.emit('click', { x: 10 });               // ✗ 缺少 y
-emitter.emit('hover', { x: 10, y: 20 });        // ✗ hover 不在 EventMap 中
+emitter.emit('click', { x: 10, y: 20 }); // ✓
+emitter.emit('click', { x: 10 }); // ✗ 缺少 y
+emitter.emit('hover', { x: 10, y: 20 }); // ✗ hover 不在 EventMap 中
 ```
 
 ## 类型守卫：收窄联合类型
@@ -210,23 +208,27 @@ emitter.emit('hover', { x: 10, y: 20 });        // ✗ hover 不在 EventMap 中
 ```typescript
 function process(value: string | number) {
   if (typeof value === 'string') {
-    return value.toUpperCase();  // 此处 value 是 string
+    return value.toUpperCase(); // 此处 value 是 string
   }
-  return value.toFixed(2);       // 此处 value 是 number
+  return value.toFixed(2); // 此处 value 是 number
 }
 ```
 
 ### in 操作符
 
 ```typescript
-interface Fish { swim: () => void }
-interface Bird { fly: () => void }
+interface Fish {
+  swim: () => void;
+}
+interface Bird {
+  fly: () => void;
+}
 
 function move(animal: Fish | Bird) {
   if ('swim' in animal) {
-    animal.swim();  // ✓
+    animal.swim(); // ✓
   } else {
-    animal.fly();   // ✓
+    animal.fly(); // ✓
   }
 }
 ```
@@ -234,8 +236,14 @@ function move(animal: Fish | Bird) {
 ### 自定义类型守卫（is）
 
 ```typescript
-interface ApiError { code: number; message: string }
-interface NetworkError { status: number; url: string }
+interface ApiError {
+  code: number;
+  message: string;
+}
+interface NetworkError {
+  status: number;
+  url: string;
+}
 
 function isApiError(err: unknown): err is ApiError {
   return typeof err === 'object' && err !== null && 'code' in err;
@@ -245,7 +253,7 @@ try {
   await apiCall();
 } catch (err) {
   if (isApiError(err)) {
-    console.log(err.code);     // ✓ err 被收窄为 ApiError
+    console.log(err.code); // ✓ err 被收窄为 ApiError
   }
 }
 ```
@@ -271,7 +279,7 @@ type User = z.infer<typeof UserSchema>;
 
 // 运行时验证 + 类型安全
 function parseUser(data: unknown): User {
-  return UserSchema.parse(data);  // 验证失败抛 ZodError
+  return UserSchema.parse(data); // 验证失败抛 ZodError
 }
 ```
 
@@ -284,14 +292,18 @@ function parseUser(data: unknown): User {
 type UserId = string & { readonly __brand: 'UserId' };
 type PostId = string & { readonly __brand: 'PostId' };
 
-function getUser(id: UserId) { /* ... */ }
-function getPost(id: PostId) { /* ... */ }
+function getUser(id: UserId) {
+  /* ... */
+}
+function getPost(id: PostId) {
+  /* ... */
+}
 
 const uid = '123' as UserId;
 const pid = '456' as PostId;
 
-getUser(uid);  // ✓
-getUser(pid);  // ✗ PostId 不能赋给 UserId
+getUser(uid); // ✓
+getUser(pid); // ✗ PostId 不能赋给 UserId
 ```
 
 ### 3. 递归类型处理树形结构
@@ -305,7 +317,7 @@ interface TreeNode {
 
 // 深度遍历树
 function flatten<T extends TreeNode>(nodes: T[]): T[] {
-  return nodes.flatMap(node => [
+  return nodes.flatMap((node) => [
     node,
     ...(node.children ? flatten(node.children) : []),
   ]);
@@ -333,26 +345,31 @@ const user = UserSchema.parse(data);
 TypeScript 采用结构类型系统（鸭子类型），只要结构匹配就兼容：
 
 ```typescript
-interface A { x: number }
-interface B { x: number; y: number }
+interface A {
+  x: number;
+}
+interface B {
+  x: number;
+  y: number;
+}
 
 const b: B = { x: 1, y: 2 };
-const a: A = b;  // ✓ B 比 A 多属性，结构兼容
+const a: A = b; // ✓ B 比 A 多属性，结构兼容
 ```
 
 这意味着你不能依赖"类型名"来区分对象，必要时用品牌类型。
 
 ## 小结
 
-| 技巧 | 适用场景 |
-| --- | --- |
-| 泛型约束 | 工具函数、数据层抽象 |
-| 条件类型 + infer | 类型推导、API 响应类型 |
-| 映射类型 | 批量转换接口属性 |
-| 模板字面量类型 | 事件系统、CSS 属性、路由参数 |
-| 类型守卫 | 联合类型收窄、运行时验证 |
-| 品牌类型 | 防止原始类型混用 |
-| zod + infer | 运行时验证 + 编译期类型 |
+| 技巧             | 适用场景                     |
+| ---------------- | ---------------------------- |
+| 泛型约束         | 工具函数、数据层抽象         |
+| 条件类型 + infer | 类型推导、API 响应类型       |
+| 映射类型         | 批量转换接口属性             |
+| 模板字面量类型   | 事件系统、CSS 属性、路由参数 |
+| 类型守卫         | 联合类型收窄、运行时验证     |
+| 品牌类型         | 防止原始类型混用             |
+| zod + infer      | 运行时验证 + 编译期类型      |
 
 类型系统的价值不在于写出更复杂的类型，而在于让错误在编译期暴露。当你发现自己在写 `as any` 时，停下来想想——大概率有更好的类型表达方式。
 

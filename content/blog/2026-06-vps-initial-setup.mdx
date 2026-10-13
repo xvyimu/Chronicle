@@ -2,7 +2,7 @@
 title: 'VPS 初始化安全与运维配置清单'
 description: '新 VPS 上线前的安全与运维清单：SSH 加固、UFW、Fail2Ban、自动更新、Docker 与基础监控，照着做即可。'
 date: '2026-06-23'
-updatedAt: '2026-07-13'
+updatedAt: '2026-10-12'
 tags: ['VPS', 'Linux', '安全', 'SSH']
 series: '个人服务部署路线'
 seriesSlug: '个人服务部署路线'
@@ -12,11 +12,11 @@ featured: false
 license: 'CC-BY-4.0'
 ---
 
-> 结论先说：新 VPS 不要急着装业务。先完成 SSH 密钥登录、禁 root 密码、防火墙与 Fail2Ban，再装 Docker——否则 22 端口的扫描会比你的应用先到。
+> 结论先说：新 VPS 不要急着装业务。先完成 SSH 密钥登录、禁 root 密码、防火墙与 Fail2Ban，再装 Docker；暴露服务前先验证访问控制和恢复路径。
 
 ## 前言
 
-买 VPS 之后第一时间就 `ssh root@ip` 开始装东西？别急。互联网上每分钟都有扫描机器在扫 22 端口，没做安全配置的服务器活不过 24 小时。
+买 VPS 之后第一时间就 `ssh root@ip` 开始装东西？别急。公网 SSH 服务会持续面对自动化探测；风险取决于认证方式、补丁状态、网络暴露面和监控响应，不能用固定存活时长概括。
 
 以下是我每台新服务器的标配配置步骤。
 
@@ -77,7 +77,7 @@ ClientAliveCountMax 3       # 超时重试次数
 sudo systemctl restart sshd
 ```
 
-**建议换端口**：把 `Port 22` 改成 10000-65535 之间的高位端口，能减少 99% 的扫描攻击。改之前确认防火墙放行了新端口，不然你会把自己锁在外面。
+**端口选择**：改 SSH 端口只能减少部分低质量扫描噪声，不是访问控制或加固的替代品。若确需更改，先在云厂商防火墙与主机防火墙同时放行新端口，保持现有会话，用第二个会话验证新端口登录成功后再关闭旧入口。
 
 ## 4. 配置 UFW 防火墙
 
@@ -92,8 +92,8 @@ sudo ufw allow 22/tcp
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 
-# 如果运行 Docker，Docker 会直接操作 iptables
-# 但 UFW 还是能控制主机层面的流量
+# Docker 发布端口可能通过其防火墙规则绕过 UFW 预期；不要仅凭 `ufw status` 判断容器端口是否暴露。
+# 在云厂商防火墙和主机规则中逐项核对发布端口；按 Docker 官方防火墙说明配置过滤。
 
 sudo ufw enable
 sudo ufw status verbose
@@ -156,10 +156,12 @@ Unattended-Upgrade::Automatic-Reboot "false";
 安全底座就绪后，再装容器运行时。完整多阶段构建与 Compose 编排见 [[docker-deploy-guide|Docker 部署实战]]。
 
 ```bash
-# 官方一键安装
-curl -fsSL https://get.docker.com | sh
+# 安装前先阅读并审阅官方脚本内容；不要在不了解影响时直接以 root 执行远程脚本。
+curl -fsSL https://get.docker.com -o get-docker.sh
+less get-docker.sh
+sudo sh get-docker.sh
 
-# 把用户加入 docker 组（避免每次 sudo）
+# docker 组成员通常可获得宿主机 root 级控制能力；仅对可信且确需管理 Docker 的账号授权。
 sudo usermod -aG docker $USER
 
 # 重启会话后验证
@@ -188,13 +190,20 @@ sudo apt install -y net-tools
 sudo apt install -y iotop
 ```
 
-建议同时装一个简单的系统监控，比如 netdata：
+可按暴露面和维护能力选择监控方案。若部署 Netdata，先审阅安装方式与采集/上报设置，并限制其 Web 端口只对可信网络开放；不要默认把管理面暴露到公网：
+
+先下载并审阅官方安装脚本，再按当前官方安装指南选择参数后人工执行；不要直接通过管道或进程替换运行远程内容：
 
 ```bash
-bash <(curl -Ss https://my-netdata.io/kickstart.sh)
+curl -fsSL https://my-netdata.io/kickstart.sh -o netdata-kickstart.sh
+less netdata-kickstart.sh
+# 确认脚本内容、版本和采集/上报选项后，再按官方文档执行：
+bash netdata-kickstart.sh
 ```
 
-它会启动一个 web 面板（默认端口 19999），可以直接在浏览器里看 CPU、内存、磁盘、网络等实时数据。
+脚本来自外部网络，执行前应核对下载地址、HTTPS 证书和当前官方安装说明；不需要时删除本地脚本。
+
+默认 Web 面板端口为 19999；部署后应通过防火墙、反向代理认证或私有网络限制访问，并核对当前版本的官方安全部署指南。
 
 ## 9. 配置时间同步
 
@@ -206,7 +215,9 @@ sudo systemctl start chrony
 sudo timedatectl status
 ```
 
-## 10. 系统级调优
+## 10. 系统级调优（按需）
+
+不要把较大的文件描述符上限或 BBR 配置作为所有 VPS 的必做项。先确认服务进程的实际限制、内核支持与网络环境，再为具体服务设置并验证。以下仅为配置示例：
 
 **调整文件描述符限制**——编辑 `/etc/security/limits.conf`：
 
@@ -232,53 +243,54 @@ sysctl net.ipv4.tcp_congestion_control
 # 输出：net.ipv4.tcp_congestion_control = bbr
 ```
 
-## 一步到位的初始化脚本
+## 初始化预检脚本
 
-以上步骤可以合并成一个初始化脚本，新买 VPS 后一键执行。这里提供一个简化版：
+不要把创建用户、修改 SSH、启用防火墙和安装远程脚本塞进一个“一键执行”脚本：任何一步出错都可能让当前会话断开，且不同发行版的默认端口、服务名和包名并不一致。下面的脚本只适用于使用 `apt` 和 `systemd` 的 Debian/Ubuntu，执行低风险的更新与工具安装，并输出需要人工确认的检查项；它不会修改 SSH 配置、启用 UFW 或执行远程安装脚本。
 
 ```bash
-#!/bin/bash
-# VPS 初始化脚本
+#!/usr/bin/env bash
+# Debian/Ubuntu VPS 预检脚本；不会启用防火墙或修改 SSH
 
 set -e
 
-echo "=== 更新系统 ==="
-apt update && apt upgrade -y
+if [[ "$(id -u)" -ne 0 ]]; then
+  echo "请以 root 或 sudo bash 运行此脚本"
+  exit 1
+fi
 
-echo "=== 安装基础工具 ==="
+if ! command -v apt-get >/dev/null || ! command -v systemctl >/dev/null; then
+  echo "仅支持带 apt-get 和 systemd 的 Debian/Ubuntu 系统"
+  exit 1
+fi
+
+echo "=== 更新系统并安装基础工具 ==="
+apt update && apt upgrade -y
 apt install -y curl wget git ufw fail2ban htop btop ncdu \
   net-tools chrony unattended-upgrades
 
-echo "=== 配置防火墙 ==="
-ufw default deny incoming
-ufw default allow outgoing
-ufw allow 22/tcp
-ufw allow 80/tcp
-ufw allow 443/tcp
-ufw --force enable
+echo "=== 只读检查 ==="
+ufw status verbose || true
+ss -lntup || true
+systemctl is-active ssh 2>/dev/null || systemctl is-active sshd 2>/dev/null || true
+systemctl is-active fail2ban 2>/dev/null || true
 
-echo "=== 安装 Docker ==="
-curl -fsSL https://get.docker.com | sh
-
-echo "=== 配置时间 ==="
-timedatectl set-timezone Asia/Shanghai
-systemctl enable chrony
-
-echo "=== 安全配置提示 ==="
-echo "1. 创建普通用户：adduser deploy && usermod -aG sudo deploy"
-echo "2. 配置 SSH 密钥登录并禁用密码"
-echo "3. 修改 SSH 端口（可选）"
-echo "4. 配置 fail2ban：service fail2ban start"
-echo "5. 调整 limits.conf 和 sysctl.conf（BBR）"
+cat <<'NOTICE'
+=== 需要人工确认的后续步骤 ===
+1. 先在第二个 SSH 会话用 deploy 用户验证密钥登录和 sudo，再修改 sshd_config。
+2. 根据云厂商防火墙和实际监听端口，人工执行 ufw allow 规则；确认 SSH 规则后再执行 ufw enable。
+3. 按“安装 Docker”章节下载并审阅官方安装脚本，确认内容后再本地执行；不要使用 curl|sh。
+4. 根据发行版服务名确认 chrony、fail2ban 状态，并安排维护窗口处理重启。
+NOTICE
 ```
 
-保存为 `init-vps.sh`，新 VPS 上 `bash init-vps.sh` 即可。
+保存为 `vps-preflight.sh`，确认系统符合前置条件后执行 `sudo bash vps-preflight.sh`。脚本成功只代表预检完成，不代表 SSH、防火墙或 Docker 已完成配置。
 
 ## 总结
 
-安全配置不是一劳永逸的事，但它有个**基础门槛**——过了这道门槛，绝大部分的自动扫描和低级攻击就与你无关了。上面这 10 步做完，你的 VPS 已经比互联网上 90% 的裸机安全得多。
+安全配置不是一劳永逸的事。完成上述步骤后，仍需结合云厂商防火墙、实际监听端口、日志和恢复演练持续验证；本文没有足够的测量数据支持对“比多少裸机更安全”作百分比结论。
 
 定期做的事：
+
 - 每月检查一次 `fail2ban` 状态
 - `apt update` 保持系统更新
 - 检查 `/var/log/auth.log` 看有没有异常登录尝试

@@ -114,10 +114,10 @@ describe('getRelated', () => {
 
   it('scores by shared tags, category, and series', () => {
     // a shares tag (docker) + category (后端) + series (vps): 3+1+2 = 6
-    // d shares series (vps) only: 2
+    // d is the next reading-path article, so it wins the otherwise tied score.
     // c shares nothing: 0 (filtered out)
     const related = getRelated(FIXTURE, 'b', current);
-    expect(related.map((p) => p.slug)).toEqual(['a', 'd']);
+    expect(related.map((p) => p.slug)).toEqual(['d', 'a']);
   });
 
   it('excludes current post', () => {
@@ -128,6 +128,57 @@ describe('getRelated', () => {
   it('respects limit', () => {
     const related = getRelated(FIXTURE, 'b', current, 1);
     expect(related.length).toBe(1);
+  });
+
+  it('prioritizes the next article in the same reading path over tag matches', () => {
+    const current: PostFull = {
+      ...makePost({ slug: 'current', tags: ['popular'], series: 'path', seriesOrder: 1 }),
+      content: '',
+    };
+    const candidates = [
+      makePost({ slug: 'tag-match', tags: ['popular'], date: '2026-06-05' }),
+      makePost({
+        slug: 'next',
+        tags: [],
+        date: '2026-05-01',
+        series: 'path',
+        seriesOrder: 2,
+      }),
+    ];
+
+    expect(getRelated([current, ...candidates], 'current', current)[0]?.slug).toBe(
+      'next',
+    );
+  });
+
+  it('keeps the next reading-path article first even when another post has more shared tags', () => {
+    const current: PostFull = {
+      ...makePost({
+        slug: 'current',
+        tags: ['popular', 'shared'],
+        series: 'path',
+        seriesOrder: 1,
+      }),
+      content: '',
+    };
+    const candidates = [
+      makePost({
+        slug: 'tag-match',
+        tags: ['popular', 'shared', 'third'],
+        date: '2026-06-05',
+      }),
+      makePost({
+        slug: 'next',
+        tags: [],
+        date: '2026-05-01',
+        series: 'path',
+        seriesOrder: 2,
+      }),
+    ];
+
+    expect(getRelated([current, ...candidates], 'current', current)[0]?.slug).toBe(
+      'next',
+    );
   });
 
   it('returns empty array when current is null', () => {

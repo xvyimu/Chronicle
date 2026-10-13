@@ -2,7 +2,7 @@
 title: 'Supabase 实战：从数据库到实时订阅'
 description: 'Supabase 全栈接入：表设计、Row Level Security、Realtime、Storage 与 Edge Functions 的分工边界。'
 date: '2026-06-23'
-updatedAt: '2026-10-10'
+updatedAt: '2026-10-11'
 tags: ['Supabase', 'PostgreSQL', 'RLS']
 published: true
 featured: false
@@ -39,11 +39,13 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
 );
 ```
 
 Next.js 中通常把这段放在 `src/lib/supabase.ts` 里统一导出。
+
+`NEXT_PUBLIC_SUPABASE_ANON_KEY` 可以出现在浏览器端，但它不等于绕过权限；数据库访问仍由 RLS 决定。`SUPABASE_SERVICE_ROLE_KEY` 具有绕过 RLS 的高权限，只能放在服务端或 Edge Function 的密钥环境变量中，不能进入客户端 bundle、日志或公开仓库。
 
 ## 数据库设计与迁移
 
@@ -93,7 +95,7 @@ create policy "apis_insert_policy" on public.apis
 -- 仅管理员可更新/删除
 create policy "apis_update_policy" on public.apis
   for update using (
-    auth.jwt() ->> 'role' = 'admin'
+    (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
   );
 ```
 
@@ -139,7 +141,7 @@ function ApiList() {
           console.log('变更类型:', payload.eventType);
           console.log('新数据:', payload.new);
           // 更新 UI
-        }
+        },
       )
       .subscribe();
 
@@ -153,6 +155,7 @@ function ApiList() {
 ```
 
 适合的场景：
+
 - 协作编辑应用
 - 实时通知/消息
 - 仪表盘数据实时刷新
@@ -171,14 +174,12 @@ const { data, error } = await supabase.storage
   });
 
 // 获取公开 URL
-const { data: { publicUrl } } = supabase.storage
-  .from('avatars')
-  .getPublicUrl(`public/${userId}.jpg`);
+const {
+  data: { publicUrl },
+} = supabase.storage.from('avatars').getPublicUrl(`public/${userId}.jpg`);
 
 // 删除文件
-await supabase.storage
-  .from('avatars')
-  .remove([`public/${userId}.jpg`]);
+await supabase.storage.from('avatars').remove([`public/${userId}.jpg`]);
 ```
 
 记得在 Storage 中设置 RLS 策略——同样支持 SQL 策略定义。
@@ -195,7 +196,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 serve(async (req) => {
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   );
 
   const { name, url } = await req.json();
@@ -226,20 +227,17 @@ npx supabase functions deploy webhook
 以下是在 nav-site 项目中使用 Supabase 的真实模式：
 
 ```typescript
-// src/lib/supabase-server.ts — 服务端客户端（有完整权限）
+// src/lib/supabase-server.ts — 服务端高权限客户端；绝不可导入客户端组件
 import { createClient } from '@supabase/supabase-js';
 
 export const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 // 在 Server Component 或 API Route 中直接查询数据库
 export async function getCategories() {
-  const { data } = await supabaseAdmin
-    .from('categories')
-    .select('*')
-    .order('sort_order');
+  const { data } = await supabaseAdmin.from('categories').select('*').order('sort_order');
   return data ?? [];
 }
 ```
@@ -251,7 +249,7 @@ import { createBrowserClient } from '@supabase/ssr';
 export function createClient() {
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   );
 }
 ```

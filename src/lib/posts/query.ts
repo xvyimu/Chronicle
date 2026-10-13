@@ -35,6 +35,10 @@ export function getRelated(
 ): PostMeta[] {
   if (!current) return [];
   const currentTags = new Set(current.tags.map((tag) => tag.toLowerCase()));
+  const seriesPosts = current.series ? getSeries(posts, current) : [];
+  const currentSeriesIndex = seriesPosts.findIndex((post) => post.slug === currentSlug);
+  const nextInSeries =
+    currentSeriesIndex >= 0 ? seriesPosts[currentSeriesIndex + 1] : undefined;
   return posts
     .filter((post) => post.slug !== currentSlug)
     .map((post) => {
@@ -43,10 +47,17 @@ export function getRelated(
       ).length;
       const sameCategory = current.category && post.category === current.category ? 1 : 0;
       const sameSeries = current.series && post.series === current.series ? 2 : 0;
-      return { post, score: sharedTags * 3 + sameCategory + sameSeries };
+      const isNextSeriesPost = post.slug === nextInSeries?.slug;
+      return {
+        post,
+        isNextSeriesPost,
+        score: (isNextSeriesPost ? 4 : 0) + sharedTags * 3 + sameCategory + sameSeries,
+      };
     })
     .filter((item) => item.score > 0)
     .sort((a, b) => {
+      // The next article is a deliberate reading-path handoff, so it wins score ties.
+      if (a.isNextSeriesPost !== b.isNextSeriesPost) return a.isNextSeriesPost ? -1 : 1;
       if (b.score !== a.score) return b.score - a.score;
       if (a.post.date !== b.post.date) return a.post.date > b.post.date ? -1 : 1;
       return a.post.slug.localeCompare(b.post.slug);

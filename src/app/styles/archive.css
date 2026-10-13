@@ -250,6 +250,10 @@
   grid-template-columns: auto minmax(0, 1fr) auto;
 }
 
+.archive-list__body {
+  min-width: 0;
+}
+
 .archive-list__index {
   display: flex;
   align-items: center;
@@ -290,4 +294,11 @@
   color: var(--text-dim);
   font-size: 0.86rem;
   white-space: nowrap;
+}
+
+.archive-list__reading-time {
+  display: inline-block;
+  margin-top: 8px;
+  color: var(--text-dim);
+  font-size: 0.78rem;
 }

@@ -74,4 +74,18 @@ describe('ProjectDetailPage', () => {
     expect(screen.getByRole('heading', { name: project.title })).toBeInTheDocument();
     expect(screen.getByText(project.tags[0])).toHaveAttribute('data-slot', 'badge');
   });
+
+  it('renders evidence-led case study sections when supplied', async () => {
+    const project = getAllProjects()[0];
+    const jsx = await ProjectDetailPage({
+      params: Promise.resolve({ id: project.id }),
+    });
+    render(jsx);
+
+    expect(screen.getByRole('heading', { name: '要解决的问题' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '实现取舍' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '可验证证据' })).toBeInTheDocument();
+    expect(screen.getByText(project.approach![0])).toBeInTheDocument();
+    expect(screen.getByText(project.evidence![0])).toBeInTheDocument();
+  });
 });

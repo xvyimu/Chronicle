@@ -330,6 +330,9 @@ describe('createSnapshotPostRepository', () => {
     writeContentSnapshot(payload, { cwd });
     const root = path.join(cwd, 'generated', 'content-snapshot');
 
+    const metaText = fs.readFileSync(path.join(root, 'posts-meta.json'), 'utf8');
+    expect(metaText).toContain('"tags": ["t"]');
+
     const repo = createSnapshotPostRepository(root);
     const all = repo.getAllPosts();
     expect(all.map((p) => p.slug)).toEqual(['alpha', 'beta']);

@@ -78,6 +78,44 @@ function ProjectDetailContent({ project }: { project: Project }) {
 
           <p className="project-detail__desc">{project.description}</p>
 
+          {project.problem && (
+            <section
+              className="project-detail__section"
+              aria-labelledby="project-problem-title"
+            >
+              <h2 id="project-problem-title">要解决的问题</h2>
+              <p>{project.problem}</p>
+            </section>
+          )}
+
+          {project.approach && project.approach.length > 0 && (
+            <section
+              className="project-detail__section"
+              aria-labelledby="project-approach-title"
+            >
+              <h2 id="project-approach-title">实现取舍</h2>
+              <ul>
+                {project.approach.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {project.evidence && project.evidence.length > 0 && (
+            <section
+              className="project-detail__section"
+              aria-labelledby="project-evidence-title"
+            >
+              <h2 id="project-evidence-title">可验证证据</h2>
+              <ul>
+                {project.evidence.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           <div className="project-detail__actions">
             {project.url && (
               <Button asChild size="cta">

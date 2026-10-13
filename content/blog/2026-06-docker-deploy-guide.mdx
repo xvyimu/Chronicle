@@ -2,7 +2,7 @@
 title: 'Docker 容器部署实战：从零搭建 Node.js 应用'
 description: '把 Node.js 应用从源码做到生产容器：Dockerfile 多阶段构建、Compose 编排与镜像体积优化。'
 date: '2026-06-22'
-updatedAt: '2026-07-13'
+updatedAt: '2026-10-12'
 tags: ['Docker', 'Node.js', '部署']
 series: '个人服务部署路线'
 seriesSlug: '个人服务部署路线'
@@ -57,10 +57,11 @@ echo "deb [arch=$(dpkg --print-architecture) \
 
 # 安装 Docker
 sudo apt update
-sudo apt install -y docker-ce docker-ce-cli containerd.io
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
 # 验证安装
 sudo docker run hello-world
+sudo docker compose version
 ```
 
 看到 Hello World 的输出就说明安装成功了。
@@ -72,16 +73,19 @@ sudo docker run hello-world
 ```
 my-app/
 ├── package.json
+├── yarn.lock
 ├── src/
 │   └── index.js
 └── Dockerfile
 ```
 
+示例假设项目使用对应的 Yarn 锁文件，且 `build` 脚本输出 `dist/index.js`；请按实际构建工具和产物调整。基础镜像使用 Node.js 24；实际项目应选择仍受支持且通过应用兼容性验证的版本。
+
 一个简单但规范的 `Dockerfile` 是这样的：
 
 ```dockerfile
 # ---- 构建阶段 ----
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /app
 COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
@@ -89,7 +93,7 @@ COPY . .
 RUN yarn build
 
 # ---- 运行阶段 ----
-FROM node:20-alpine AS runner
+FROM node:24-alpine AS runner
 WORKDIR /app
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 appuser
@@ -105,21 +109,22 @@ CMD ["node", "dist/index.js"]
 ```
 
 这里用了**多阶段构建**（multi-stage build）：
-- **构建阶段**：安装所有依赖，执行构建
-- **运行阶段**：只复制构建产物和运行时依赖，镜像体积小得多
 
-对比一下：单阶段构建的镜像大约 ~500MB，用多阶段构建后只有 ~150MB。
+- **构建阶段**：安装所有依赖，执行构建
+- **运行阶段**：只复制构建产物、`package.json` 和构建阶段生成的 `node_modules`；当前示例仍包含开发依赖，若要继续缩小镜像需按包管理器和应用运行方式单独裁剪
+
+镜像体积取决于基础镜像、依赖和构建产物，多阶段构建本身不保证固定降幅。对同一应用记录优化前后的 `docker images` 输出，再判断收益。
 
 ## 第三步：构建镜像
 
 ```bash
-docker build -t my-app:latest .
+sudo docker build -t my-app:latest .
 ```
 
 构建完成后，查看镜像：
 
 ```bash
-docker images
+sudo docker images
 ```
 
 ## 第四步：运行容器
@@ -127,32 +132,34 @@ docker images
 最简单的启动方式：
 
 ```bash
-docker run -d \
+sudo docker run -d \
   --name my-app \
-  -p 3000:3000 \
+  -p 127.0.0.1:3000:3000 \
   --restart unless-stopped \
   my-app:latest
 ```
 
 参数说明：
+
 - `-d`：后台运行
 - `--name`：容器命名
-- `-p 宿主机端口:容器端口`：端口映射
+- `-p 宿主机地址:宿主机端口:容器端口`：端口映射
 - `--restart unless-stopped`：退出时自动重启（除非手动停止）
 
 ## 第五步：用 Docker Compose 管理
 
 当你的应用不止一个服务时（比如需要数据库），Docker Compose 就派上用场了。
 
+本文假设 Nginx 运行在宿主机，通过 `127.0.0.1:3000` 转发请求；容器中的应用仍需监听 `0.0.0.0:3000`。如果 Nginx 也运行在容器中，应使用共同 Docker 网络和服务名访问应用。
+
 在项目根目录创建 `docker-compose.yml`：
 
 ```yaml
-version: '3.8'
 services:
   app:
     build: .
     ports:
-      - '3000:3000'
+      - '127.0.0.1:3000:3000'
     environment:
       - NODE_ENV=production
       - DB_HOST=postgres
@@ -167,7 +174,7 @@ services:
       - pgdata:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=myapp
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:?Set DB_PASSWORD before starting}
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 5s
@@ -179,16 +186,25 @@ volumes:
   pgdata:
 ```
 
+启动前先在项目根目录提供 `DB_PASSWORD`。推荐使用仅供 Compose 读取的本地 `.env` 文件，并确保它已被 `.gitignore` 和 `.dockerignore` 排除：
+
+```dotenv
+# .env — do not commit or copy into the image
+DB_PASSWORD=replace-with-a-strong-password
+```
+
+Compose 插值只负责给 PostgreSQL 设置密码，应用自身使用的数据库凭据仍需按应用配置接口传入。不要把密码写进 `docker-compose.yml` 或命令行参数，以免进入 shell 历史和进程列表。
+
 启动所有服务：
 
 ```bash
-docker compose up -d
+sudo docker compose up -d
 ```
 
 查看日志：
 
 ```bash
-docker compose logs -f app
+sudo docker compose logs -f app
 ```
 
 ## 生产环境最佳实践
@@ -202,8 +218,8 @@ Dockerfile 里一定要建一个普通用户，然后用 `USER` 切换。上面�
 ### 2. 定期更新基础镜像
 
 ```bash
-docker pull node:20-alpine
-docker compose build --pull
+sudo docker pull node:24-alpine
+sudo docker compose build --pull
 ```
 
 不要忽视安全更新。
@@ -226,7 +242,7 @@ Docker 容器默认会写日志到 JSON 文件，时间长了会占满磁盘。�
 }
 ```
 
-改完重启 Docker：`sudo systemctl restart docker`。
+合并到已有 daemon 配置，不要覆盖其他设置；重启 Docker 可能影响运行容器，应安排维护窗口。新的日志默认设置通常只对新建容器生效，已有容器需重建。改完重启 Docker：`sudo systemctl restart docker`。
 
 ### 5. 使用 .dockerignore
 
@@ -234,17 +250,19 @@ Docker 容器默认会写日志到 JSON 文件，时间长了会占满磁盘。�
 node_modules
 .git
 .env
+.env.*
+!.env.example
 dist
 *.md
 ```
 
-避免把不必要的文件打包进镜像，能显著加快构建速度。
+避免把不必要的文件打包进镜像，能显著加快构建速度。`.env.example` 只保留变量名和占位值，真实密钥通过部署环境注入；不要写入镜像。
 
 ## 总结
 
 从安装 Docker、写 Dockerfile、构建镜像，到用 Docker Compose 编排多容器服务——这套流程已经成了我部署应用的标配。容器化的好处不用多说，关键是**形成规范**：每个项目都按同样的方式组织、同样的命令部署，省心很多。
 
-下一篇会讲如何用 Docker Compose 编排更多服务，以及一些进阶的部署策略。
+下一篇衔接 [[nginx-reverse-proxy|Nginx 反向代理与负载均衡]]，给容器应用配置 HTTPS 入口。
 
 ## 延伸阅读
 

@@ -183,6 +183,16 @@
     grid-template-columns: 1fr;
   }
 
+  .article-related__heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .article-related__continue {
+    max-width: none;
+    text-align: left;
+  }
+
   .article-panel__head {
     display: grid;
   }

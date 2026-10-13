@@ -2,7 +2,7 @@
 title: 'Cloudflare Workers 实战：构建无服务器应用'
 description: 'Cloudflare Workers 从路由到 KV、Cron 与部署：边缘无服务器应用的可运行骨架与适用边界。'
 date: '2026-06-22'
-updatedAt: '2026-10-10'
+updatedAt: '2026-10-11'
 tags: ['Cloudflare', 'Workers', 'Serverless']
 published: true
 featured: true
@@ -13,14 +13,14 @@ license: 'MIT'
 
 ## 什么是 Cloudflare Workers
 
-Cloudflare Workers 是一个在 Cloudflare 全球边缘网络上运行的无服务器计算平台。简单理解：你写一段 JavaScript/TypeScript 代码，提交到 Cloudflare，它在全球 300+ 个节点上自动部署。用户请求时会从距离最近的节点响应，延迟极低。
+Cloudflare Workers 是一个在 Cloudflare 全球边缘网络上运行的无服务器计算平台。简单理解：你写一段 JavaScript/TypeScript 代码，提交到 Cloudflare，由平台负责在其边缘网络上运行。用户请求会由 Cloudflare 的边缘基础设施接收，再按平台的路由和调度规则执行；具体覆盖范围、延迟和计费取决于当前产品计划与官方限制。
 
 相比传统的 VPS + [[nginx-reverse-proxy|Nginx 反向代理]] 部署方式，Workers 的优势很明显：
 
 - **无需管理服务器**——只管写代码，Cloudflare 负责运行
-- **全球部署**——一个指令，分布到 300+ 节点
+- **边缘部署**——一个指令即可发布到 Cloudflare 的边缘基础设施，覆盖范围以当前官方文档为准
 - **冷启动极快**——基于 V8 Isolate，比传统 Serverless 运行时（如 AWS Lambda）启动快得多
-- **免费额度慷慨**——每天 10 万次请求免费
+- **有免费计划**——请求数、CPU 时间、KV 等资源的额度和计费规则会随产品计划调整，发布前应以官方定价页为准
 
 需要长连接、重 CPU 或完整容器编排时，仍应回到 [[docker-deploy-guide|容器部署]] 与源站运维，而不是硬把一切塞进边缘。
 
@@ -121,10 +121,10 @@ export default {
 ```
 
 KV 的特点：
+
 - 最终一致性（写入后全球传播需要几秒）
 - 适合读多写少的场景
-- 单个值最大 25MB
-- 免费版每天 10 万次读写
+- 单个值大小、读写额度和计费规则受当前 KV 产品限制约束，使用前应核对官方文档
 
 ## 定时任务（Cron Triggers）
 
@@ -185,8 +185,8 @@ npx wrangler secret put API_KEY
 ```typescript
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    const siteName = env.SITE_NAME;    // 明文变量
-    const apiKey = env.API_KEY;        // 加密变量
+    const siteName = env.SITE_NAME; // 明文变量
+    const apiKey = env.API_KEY; // 加密变量
     return new Response(`${siteName}: ${apiKey ? 'has key' : 'no key'}`);
   },
 };

@@ -2,14 +2,14 @@
 title: 'Redis 缓存策略：从入门到生产环境实践'
 description: '生产 Redis 用法：穿透/击穿/雪崩、热点 Key、写后删缓存与一致性策略，以及命中率监控。'
 date: '2026-06-25'
-updatedAt: '2026-07-13'
+updatedAt: '2026-10-11'
 tags: ['Redis', '缓存']
 published: true
 featured: false
 license: 'CC-BY-4.0'
 ---
 
-> 结论先说：缓存只放读多写少的数据；过期加随机偏移，写后删而非更新；命中率长期低于 90% 先查设计，别先加机器。
+> 结论先说：缓存只放读多写少的数据；过期加随机偏移，写后删而非更新；命中率持续偏低时先查设计和流量分布，别先加机器。
 
 ## 什么时候需要 Redis
 
@@ -74,13 +74,14 @@ async function updateUser(id: string, data: UpdateInput) {
 **问题**：请求一个永远不存在的 Key（如 `user:999999999`），缓存不命中，每次都穿透到数据库。
 
 **解法**：
+
 - **缓存空值**：即使数据库返回 null，也缓存一个空值（短过期时间）
 - **布隆过滤器**：在缓存层之前加一层布隆过滤器，快速判断 Key 是否存在
 
 ```typescript
 async function getUser(id: string) {
   // 布隆过滤器检查
-  if (!await bloomFilter.mightContain(id)) return null;
+  if (!(await bloomFilter.mightContain(id))) return null;
 
   const cached = await redis.get(`user:${id}`);
   if (cached !== null) return cached ? JSON.parse(cached) : null;
@@ -101,6 +102,7 @@ async function getUser(id: string) {
 **问题**：某个热点 Key 过期瞬间，大量并发请求同时穿透到数据库。
 
 **解法**：
+
 - **互斥锁**：缓存未命中时只允许一个请求去查数据库，其他请求等待
 - **逻辑过期**：缓存值带一个过期时间戳，后台异步更新，永远不会"同时失效"
 
@@ -129,10 +131,14 @@ async function getHotUser(id: string) {
 
   try {
     const user = await db.user.findUnique({ where: { id } });
-    await redis.set(`user:${id}`, JSON.stringify({
-      value: user,
-      expireAt: Date.now() + 3600000,
-    }), { ex: 7200 });
+    await redis.set(
+      `user:${id}`,
+      JSON.stringify({
+        value: user,
+        expireAt: Date.now() + 3600000,
+      }),
+      { ex: 7200 },
+    );
     return user;
   } finally {
     await redis.del(`lock:user:${id}`);
@@ -145,6 +151,7 @@ async function getHotUser(id: string) {
 **问题**：大量 Key 同时过期，或者 Redis 宕机，所有请求同时打到数据库。
 
 **解法**：
+
 - **过期时间加随机偏移**：避免同一时刻大面积失效
 - **多级缓存**：本地缓存（如 LRU 内存缓存） + Redis 缓存 + 数据库
 - **Redis 高可用**：Cluster 模式或 Sentinel，避免单点故障
@@ -160,11 +167,11 @@ await redis.set(key, value, { ex: baseTTL + jitter });
 
 这是最容易被忽视的问题。以下策略按一致性强度排列：
 
-| 策略 | 一致性 | 性能 | 复杂度 |
-|------|--------|------|--------|
-| 更新数据库后删除缓存 | 最终一致 | 高 | 低 |
-| 延迟双删 | 较强 | 中 | 中 |
-| 订阅数据库变更（CDC） | 强一致 | 高 | 高 |
+| 策略                  | 一致性   | 性能 | 复杂度 |
+| --------------------- | -------- | ---- | ------ |
+| 更新数据库后删除缓存  | 最终一致 | 高   | 低     |
+| 延迟双删              | 较强     | 中   | 中     |
+| 订阅数据库变更（CDC） | 强一致   | 高   | 高     |
 
 **延迟双删**：更新数据库 → 删除缓存 → 延迟几百毫秒 → 再删一次缓存。中间可能有旧数据写入缓存，但第二次删除会覆盖。
 
@@ -186,7 +193,7 @@ async function updateWithDoubleDelete(id: string, data: UpdateInput) {
 
 ```typescript
 // 热点 Key 自动探测
-redis.INFO('stats') // 查看 key 访问频率
+redis.INFO('stats'); // 查看 key 访问频率
 
 // 热点 Key 多副本策略——把一个 Key 复制成 N 个
 const replicas = 5;
@@ -200,22 +207,22 @@ const value = await redis.get(distributedKey);
 
 不要所有东西都用 String：
 
-| 场景 | 数据结构 | 说明 |
-|------|----------|------|
-| 缓存值 | String | 最常见 |
-| 排行榜 | Sorted Set | ZADD/ZRANGE，按分数排序 |
-| 计数器 | String (INCR) | 原子递增 |
-| 消息队列 | List | LPUSH/BRPOP |
-| 用户标签 | Set | SADD/SMEMBERS |
-| 去重 | Set / Bloom Filter | 判断是否已存在 |
-| 时间线 | Sorted Set | 按时间戳作为 score |
+| 场景     | 数据结构           | 说明                    |
+| -------- | ------------------ | ----------------------- |
+| 缓存值   | String             | 最常见                  |
+| 排行榜   | Sorted Set         | ZADD/ZRANGE，按分数排序 |
+| 计数器   | String (INCR)      | 原子递增                |
+| 消息队列 | List               | LPUSH/BRPOP             |
+| 用户标签 | Set                | SADD/SMEMBERS           |
+| 去重     | Set / Bloom Filter | 判断是否已存在          |
+| 时间线   | Sorted Set         | 按时间戳作为 score      |
 
 ## 常见误区
 
 1. **过度缓存**：不是所有数据都适合缓存。频繁变更的数据放缓存反而增加复杂度。
 2. **忽略缓存失效时间**：不设过期时间 = 永久缓存 = 内存泄漏。
 3. **大 Key 问题**：一个 Key 存几 MB 数据，会导致 Redis 阻塞。拆分大 Key。
-4. **没有监控**：用 `redis-cli info` 查看命中率。命中率低于 90% 说明缓存设计有问题。
+4. **没有监控**：用 `redis-cli info` 查看命中率，并按接口、Key 类型和业务流量基线分开观察。单一百分比不能证明设计好坏：低命中率可能来自查询本就不适合缓存，也可能来自 TTL、Key 设计或流量分布问题。
 5. **把 Redis 当数据库用**：Redis 是内存数据库，不是持久化存储。重要数据必须写关系型数据库。
 
 ## 总结
@@ -226,7 +233,7 @@ Redis 的核心价值是把"慢"变成"快"。但缓存是双刃剑——引入�
 - **设置合理的过期时间 + 随机偏移**
 - **写操作后删除缓存，不更新**
 - **热点 Key 提前预案**
-- **监控命中率，低于 90% 要检查设计**
+- **监控命中率，结合业务基线检查设计**
 
 参考：[Redis 官方文档](https://redis.io/docs/)
 

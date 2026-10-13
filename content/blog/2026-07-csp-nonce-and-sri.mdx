@@ -15,12 +15,12 @@ App Router 动态渲染背景见 [[nextjs-app-router|Next.js App Router 实战]]
 
 ## 威胁模型对照
 
-| 攻击面 | CSP nonce | SRI |
-| --- | --- | --- |
-| 注入的 inline `<script>` | 无匹配 nonce → 拦截 | 不管 inline |
-| 被允许的外链脚本内容被篡改 | 若已在白名单/带 nonce 则可能执行 | hash 不匹配 → 拦截 |
-| 构建缓存 / CDN 上的 `/_next/static/*` 被替换 | 通常不校验内容 | 校验 |
-| CSS 被篡改 | 取决于 `style-src` | 可对 link 加 integrity |
+| 攻击面                                       | CSP nonce                        | SRI                    |
+| -------------------------------------------- | -------------------------------- | ---------------------- |
+| 注入的 inline `<script>`                     | 无匹配 nonce → 拦截              | 不管 inline            |
+| 被允许的外链脚本内容被篡改                   | 若已在白名单/带 nonce 则可能执行 | hash 不匹配 → 拦截     |
+| 构建缓存 / CDN 上的 `/_next/static/*` 被替换 | 通常不校验内容                   | 校验                   |
+| CSS 被篡改                                   | 取决于 `style-src`               | 可对 link 加 integrity |
 
 所以：**SRI 不能替代 nonce**；关掉 nonce 只开 SRI，inline 注入仍然活口。
 
@@ -70,7 +70,7 @@ SRI 只保证**你构建时钉死的那份字节**。供应链投毒发生在 `p
 
 ### 3. 在 JSON API 上纠结 nonce
 
-像纯 JSON 预览接口（如当年 `digital-garden` 的 wikilink hover 卡片所用的 `/api/preview/[slug]`，**该功能 2026-10-07 已移除**）**不需要** nonce；它的风险在输入校验、缓存是否泄露草稿、以及响应是否投影多余字段。站内现存的纯 JSON 端点（如 `/api/csp-report`）同理——nonce 只管文档里的脚本，JSON 响应的风险面不在这。相关链路见 [[digital-garden-force-layout|数字花园]] 与 [[mdx-remark-pipeline|MDX 渲染管线]]。
+像纯 JSON 预览接口（例如已移除的 `digital-garden` wikilink hover 卡片所用的 `/api/preview/[slug]`）**不需要** nonce；它的风险在输入校验、缓存是否泄露草稿、以及响应是否投影多余字段。站内现存的纯 JSON 端点（如 `/api/csp-report`）同理——nonce 只管文档里的脚本，JSON 响应的风险面不在这。相关历史设计见 [[digital-garden-force-layout|数字花园]]；当前 MDX 链路见 [[mdx-remark-pipeline|MDX 渲染管线]]。
 
 ## 实施顺序（本站实际走的）
 

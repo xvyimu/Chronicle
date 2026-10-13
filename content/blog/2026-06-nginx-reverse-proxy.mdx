@@ -2,7 +2,7 @@
 title: 'Nginx 反向代理与负载均衡实战'
 description: '生产前端层 Nginx：反向代理、负载均衡、HTTPS 终端与静态缓存，让后端只关心业务。'
 date: '2026-06-24'
-updatedAt: '2026-07-13'
+updatedAt: '2026-10-12'
 tags: ['Nginx', '反向代理', 'HTTPS']
 series: '个人服务部署路线'
 seriesSlug: '个人服务部署路线'
@@ -46,7 +46,9 @@ sudo nano /etc/nginx/sites-available/myapp
 sudo ln -s /etc/nginx/sites-available/myapp /etc/nginx/sites-enabled/
 ```
 
-一个完整的生产级配置：
+下面的示例适用于**静态导出的 SPA**。Next.js SSR 等需要 Node 运行时的应用不能把页面请求回退到 `dist/index.html`；应把 `location /` 改为反向代理到应用，例如 `proxy_pass http://127.0.0.1:3000;`，并配置与 API 相同的转发头。静态目录和哈希资源的匹配规则也要按实际构建产物调整。
+
+**先签发证书，再启用 HTTPS 配置。** 首次部署时只启用下面的 HTTP 引导配置，创建挑战目录并确认域名 A/AAAA 记录指向这台服务器、80 端口可达；用 ACME 客户端完成 HTTP-01 验证和证书签发后，再替换为后面的 HTTPS 配置。不要在证书文件不存在时引用它们，否则 `nginx -t` 会失败。
 
 ```nginx
 server {
@@ -54,8 +56,41 @@ server {
     listen [::]:80;
     server_name example.com;
 
-    # 跳转到 HTTPS
-    return 301 https://$host$request_uri;
+    location /.well-known/acme-challenge/ {
+        root /var/www/letsencrypt;
+    }
+
+    location / {
+        return 503;
+    }
+}
+```
+
+以已安装的 Certbot 为例，先创建目录、验证配置并重载，再签发：
+
+```bash
+sudo mkdir -p /var/www/letsencrypt
+sudo nginx -t
+sudo systemctl reload nginx
+sudo certbot certonly --webroot -w /var/www/letsencrypt -d example.com
+```
+
+静态 SPA 的 HTTPS 配置示例：
+
+```nginx
+server {
+    listen 80;
+    listen [::]:80;
+    server_name example.com;
+
+    # 保留 HTTP-01 挑战入口，供证书续期使用
+    location /.well-known/acme-challenge/ {
+        root /var/www/letsencrypt;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
 }
 
 server {
@@ -74,15 +109,28 @@ server {
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
 
     # 静态资源——直接由 Nginx 处理，不转发到后端
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff2?)$ {
+    # 示例匹配 app.0123456789abcdef.js；按实际构建的哈希命名规则调整
+    location ~* "\.[0-9a-f]{8,}\.(js|css|png|jpg|jpeg|gif|ico|svg|woff2?)$" {
         root /var/www/myapp/dist;
         expires 1y;
         add_header Cache-Control "public, immutable";
+        # 子 location 定义 add_header 后，显式重复需要的安全头
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        try_files $uri =404;
         access_log off;
     }
 
+    # 非哈希静态文件使用短缓存，不使用 immutable
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff2?)$ {
+        root /var/www/myapp/dist;
+        expires 5m;
+        try_files $uri =404;
+    }
+
     # API 请求——转发到后端服务
-    location /api/ {
+    location ^~ /api/ {
         proxy_pass http://127.0.0.1:3000/api/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -103,6 +151,10 @@ server {
 }
 ```
 
+`immutable` 只适用于内容变更后 URL 也变化的资源；`logo.svg` 等固定文件名不应缓存一年。传统 `add_header` 规则只在当前层没有任何 `add_header` 时继承上层，因此哈希资源的 location 显式保留了安全头。以上示例不依赖较新版本的继承控制指令。
+
+证书续期还需要 ACME 客户端的定时任务及成功续期后的 Nginx reload hook；上线前应检查续期任务并执行 `sudo certbot renew --dry-run`。本文未在实际服务器执行这些部署命令。
+
 验证配置并重载：
 
 ```bash
@@ -117,29 +169,33 @@ sudo systemctl reload nginx  # 重载（不中断现有连接）
 **方式一：端口映射 + localhost**
 
 ```bash
-docker run -d -p 3000:3000 myapp
+sudo docker run -d -p 127.0.0.1:3000:3000 myapp
 ```
 
-Nginx 配置不变，`proxy_pass http://127.0.0.1:3000` 就行。
+这种方式适用于 **Nginx 运行在宿主机**：容器端口只映射到宿主机 loopback，Nginx 使用 `proxy_pass http://127.0.0.1:3000;`。应用在容器内应监听 `0.0.0.0:3000`。
 
-**方式二：Docker 网络（推荐）**
+**方式二：Nginx 与应用都运行在 Docker 网络中**
 
 ```bash
 # 创建 bridge 网络
-docker network create webnet
+sudo docker network create webnet
 
 # 启动应用容器，加入网络
-docker run -d --name myapp --network webnet myapp
+sudo docker run -d --name myapp --network webnet myapp
 
 # Nginx 容器也用同一个网络
-docker run -d --name nginx-proxy --network webnet \
+sudo docker run -d --name nginx-proxy --network webnet \
   -p 80:80 -p 443:443 \
-  -v /etc/nginx/conf.d \
-  -v /etc/letsencrypt \
+  -v /srv/nginx/conf.d:/etc/nginx/conf.d:ro \
+  -v /etc/letsencrypt:/etc/letsencrypt:ro \
+  -v /var/www/letsencrypt:/var/www/letsencrypt:ro \
+  -v /var/www/myapp/dist:/var/www/myapp/dist:ro \
   nginx:alpine
 ```
 
-Nginx 里直接用容器名：
+启动前准备 `/srv/nginx/conf.d/myapp.conf` 和对应的证书、挑战目录及静态构建产物。挂载写出宿主路径与容器路径并设为只读；挂载整个 `/etc/letsencrypt` 才能保留 `live` 指向 `archive` 的证书软链接。首次签发仍先使用 HTTP 引导配置，签发完成后验证并重载容器内 Nginx。应用无需发布宿主机端口，容器内监听 `0.0.0.0:3000`。
+
+Nginx 里直接用容器名（容器内的 `127.0.0.1` 指向 Nginx 自己）：
 
 ```nginx
 location /api/ {
@@ -176,11 +232,11 @@ server {
 
 负载均衡策略：
 
-| 策略 | 配置 | 适用场景 |
-|------|------|----------|
-| 轮询 | 默认 | 各实例性能相近 |
-| 加权轮询 | `weight=N` | 实例性能不同 |
-| IP 哈希 | `ip_hash;` | 需要会话保持 |
+| 策略     | 配置          | 适用场景           |
+| -------- | ------------- | ------------------ |
+| 轮询     | 默认          | 各实例性能相近     |
+| 加权轮询 | `weight=N`    | 实例性能不同       |
+| IP 哈希  | `ip_hash;`    | 需要会话保持       |
 | 最少连接 | `least_conn;` | 请求处理时长差异大 |
 
 ## 请求限流
@@ -203,19 +259,22 @@ server {
 ```
 
 参数解释：
-- `rate=10r/s`：每秒最多 10 个请求
-- `burst=20`：允许突发最多 20 个请求排队
-- `nodelay`：突发请求立即处理（不排队等待）
+
+- `rate=10r/s`：按漏桶机制限制每个键的平均处理速率，不是按自然秒统计的硬上限
+- `burst=20`：允许最多 20 个超出当前速率的请求占用突发额度；再超出时拒绝请求，默认状态码为 503，可用 `limit_req_status 429;` 调整
+- `nodelay`：额度内的突发请求立即放行，但已占用的额度仍按配置速率释放；去掉它才会延迟处理这些请求
+
+此处按客户端 IP 分组。若前面还有 CDN 或代理，应先配置受信任的真实 IP 来源；不能直接信任任意请求带来的转发头，否则限流可能失效。
 
 ## 访问日志优化
 
 默认 Nginx 会记录每次请求的完整日志，时间长了磁盘吃紧：
 
 ```nginx
-# 自定义日志格式（只记录必要字段）
+# log_format 放在 http 块中，末尾记录整个请求处理时间（秒）
 log_format slim '$remote_addr - $remote_user [$time_local] '
                 '"$request" $status $body_bytes_sent '
-                '"$http_referer" "$http_user_agent"';
+                '"$http_referer" "$http_user_agent" $request_time';
 
 access_log /var/log/nginx/access.log slim buffer=32k flush=5s;
 
@@ -229,21 +288,23 @@ location ~* \.(css|js|png|jpg)$ {
 
 ```bash
 # 测试配置语法
-nginx -t
+sudo nginx -t
 
-# 重载（零停机）
-systemctl reload nginx
+# 重载配置
+sudo systemctl reload nginx
 
 # 查看错误日志
-tail -f /var/log/nginx/error.log
+sudo tail -f /var/log/nginx/error.log
 
 # 查看访问日志中的慢请求
-awk '$7 ~ /api/ {print $0}' /var/log/nginx/access.log | \
-  awk '{print $NF}' | sort -nr | head -20
+sudo awk '$7 ~ /^\/api\// && $NF ~ /^[0-9]+([.][0-9]+)?$/ {print $NF, $0}' \
+  /var/log/nginx/access.log | sort -nr | head -20
 
 # 查看 Nginx 状态（如果开启了 stub_status）
 curl http://127.0.0.1/nginx_status
 ```
+
+上述慢请求命令只适用于本文定义的 `slim` 格式：请求路径是第 7 列，最后一列是 `$request_time`。切换格式前的旧日志不适用；它衡量完整请求耗时，排查后端时可进一步记录 `$upstream_response_time`。
 
 ## 总结
 

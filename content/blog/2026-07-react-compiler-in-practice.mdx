@@ -2,7 +2,7 @@
 title: 'React Compiler 生产笔记：自动 memo 的边界与收益'
 description: 'Next 16 启用 React Compiler 后，何时还能手写 useMemo、哪些反模式会被编译器拒绝，以及如何用实站测量收益。'
 date: '2026-07-21'
-updatedAt: '2026-10-10'
+updatedAt: '2026-10-11'
 tags: ['React', 'Next.js', '性能优化']
 published: true
 featured: false
@@ -11,9 +11,7 @@ license: 'CC-BY-4.0'
 
 > 结论先说：Compiler 负责**默认路径上的 memo 纪律**，不是魔法。交互密集、依赖不稳定、或依赖 ref 副作用的代码，仍要你自己守边界；收益用 INP/重渲染次数说话，不要用「删了多少 useMemo」自我安慰。
 
-> **时效注（2026-10）**：下文用数字花园（导航图 / 力导向）当客户端岛的例子，该功能已在 2026-10-07 重构中移除——例子本身讲的 memo 边界仍然成立，只是不再是本站现存的交互。删除决策见 `docs/adr/0007-workspace-rebuild-baseline.md`。
-
-本站在 Next 16.2 打开了 `reactCompiler: true`，并安装 `babel-plugin-react-compiler@1.0.0`。App Router 默认服务端组件的拆分策略见 [[nextjs-app-router|Next.js App Router 实战]]；最终可感指标仍按 [[web-performance-optimization|Web 性能优化实战]] 的 LCP/INP/CLS 优先序。
+本站在 Next.js 16.3.8 中打开了 `reactCompiler: true`，并安装 `babel-plugin-react-compiler@1.0.0`。App Router 默认服务端组件的拆分策略见 [[nextjs-app-router|Next.js App Router 实战]]；最终可感指标仍按 [[web-performance-optimization|Web 性能优化实战]] 的 LCP/INP/CLS 优先序。
 
 ## 它实际编译了什么
 
@@ -38,13 +36,13 @@ function TagCloud({ tags }: { tags: string[] }) {
 
 ## 与手写 memo 的分工
 
-| 场景 | 建议 |
-| --- | --- |
-| 纯展示、依赖清晰的 props | 交给 Compiler |
-| 昂贵计算但依赖是每次新建的对象字面量 | 先稳定依赖，再谈 memo |
-| 事件处理器要传给深层 memo 子树 | Compiler 通常能处理；不要为「风格」手写 useCallback |
-| 依赖 `ref.current` 做派生状态 | 不要指望 Compiler；重构成 state 或显式同步 |
-| 第三方组件要求稳定回调 identity | 测一次；不稳再局部 `useCallback` |
+| 场景                                 | 建议                                                |
+| ------------------------------------ | --------------------------------------------------- |
+| 纯展示、依赖清晰的 props             | 交给 Compiler                                       |
+| 昂贵计算但依赖是每次新建的对象字面量 | 先稳定依赖，再谈 memo                               |
+| 事件处理器要传给深层 memo 子树       | Compiler 通常能处理；不要为「风格」手写 useCallback |
+| 依赖 `ref.current` 做派生状态        | 不要指望 Compiler；重构成 state 或显式同步          |
+| 第三方组件要求稳定回调 identity      | 测一次；不稳再局部 `useCallback`                    |
 
 类型体操与泛型约束仍按 [[typescript-advanced-types|TypeScript 高级类型实战]] 的纪律写——Compiler **不替代**类型系统。
 
@@ -89,20 +87,20 @@ if (items.length > 100) analytics.track('large-list');
 
 ### 3. 把「删除全部 useMemo」当 KPI
 
-手写 memo 里**语义型**的缓存（例如按 slug 建 `Map` 邻接表）可以保留——它表达领域结构，不是「怕重渲染」的补丁。本站花园图的 `neighborsOf` 就是这类结构：就算 Compiler 能缓存，显式 `useMemo` 也更可读。
+手写 memo 里**语义型**的缓存（例如按 slug 建 `Map` 邻接表）可以保留——它表达领域结构，不是「怕重渲染」的补丁。就算 Compiler 能缓存，显式 `useMemo` 也可能更可读。
 
 ## 如何证明有收益
 
 1. **React Profiler**：同一交互路径下，提交时长与重渲染组件数是否下降。
-2. **INP**：交互热点（搜索输入、花园拖拽、主题切换）在真机上的 p75。
+2. **INP**：交互热点（搜索输入、筛选面板、主题切换）在真机上的 p75。
 3. **包体**：Compiler 可能略增编译产物；用既有 bundle budget 门禁看是否越线。
 4. **对比分支**：同一 commit 开关 `reactCompiler`，固定数据集，禁止「感觉更快」。
 
 没有 RUM 时，至少保留本地 Profiler 截图与 Lighthouse 实验室数据，并标明环境——这与 [[web-performance-optimization|性能优化]] 文中「禁止假 p75」一致。
 
-## 与数字花园 / 客户端岛的关系
+## 与客户端岛的关系
 
-花园力导向、wikilink popover 都是 `"use client"` 岛。Compiler 对这类交互树最有价值：hover 状态变化不应拖着整棵筛选面板重算。布局算法本身是纯函数（见 [[digital-garden-force-layout|数字花园：力导向与 wikilink]]），放在 `useMemo` 或模块级缓存都合理；Compiler 负责「忘写 memo 也不至于每次 hover 全量重排」。
+交互密集的筛选面板、搜索输入和主题切换通常是 `"use client"` 岛。Compiler 对这类交互树最有价值：局部状态变化不应拖着整棵面板重算。布局或排序算法本身若是纯函数，放在 `useMemo` 或模块级缓存都合理；Compiler 负责降低遗漏缓存造成的重复计算，但不会替代组件边界和稳定 props 设计。
 
 ## 检查清单
 
@@ -119,4 +117,3 @@ if (items.length > 100) analytics.track('large-list');
 - [[web-performance-optimization|Web 性能优化实战]]
 - [[typescript-advanced-types|TypeScript 高级类型实战]]
 - [[nextjs-view-transitions|Next.js View Transitions 实战]]
-- [[digital-garden-force-layout|数字花园：力导向与 wikilink]]

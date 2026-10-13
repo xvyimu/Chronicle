@@ -2,7 +2,7 @@
 title: 'Next.js View Transitions 实战：从 Link 到可感知导航'
 description: '在 App Router 里启用 View Transitions：transitionTypes、减少动效偏好、与性能预算共存的写法。'
 date: '2026-07-21'
-updatedAt: '2026-10-10'
+updatedAt: '2026-10-11'
 tags: ['Next.js', 'React', '性能优化']
 published: true
 featured: false
@@ -11,27 +11,20 @@ license: 'CC-BY-4.0'
 
 > 结论先说：View Transitions 是**渐进增强**，不是品牌大片。只在列表→详情这类「空间连续」导航上点缀；必须尊重 `prefers-reduced-motion`，且绝不能拖坏 INP。
 
-> **时效注（2026-10）**：下文提到数字花园力导向图作为 `usePrefersReducedMotion` 的用例，该功能已在 2026-10-07 重构中移除；钩子本身仍在用。删除决策见 `docs/adr/0007-workspace-rebuild-baseline.md`。
+> **时效注（2026-10）**：下文提到数字花园力导向图作为 `usePrefersReducedMotion` 的历史用例；该功能已在 2026-10-07 重构中移除，钩子本身仍可复用于现有交互。删除决策见 `docs/adr/0007-workspace-rebuild-baseline.md`。
 
 服务端组件与导航模型见 [[nextjs-app-router|Next.js App Router 实战]]；动效与 CWV 的关系见 [[web-performance-optimization|Web 性能优化实战]]。
 
 ## 浏览器能力与 Next 封装
 
-[View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transition_API) 让浏览器在 DOM 更新前后截两帧，做交叉淡化或共享元素动画。Next.js 16 通过 `experimental.viewTransition` 与 `<Link transitionTypes>` 把路由切换接到该 API。
-
-```ts
-// next.config.ts
-experimental: {
-  viewTransition: true,
-}
-```
+[View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transition_API) 让浏览器在 DOM 更新前后截两帧，做交叉淡化或共享元素动画。当前 Next.js 16 App Router 可直接使用 React 的 View Transition 能力；本站使用的 Next.js 16.3.8 不再需要 `experimental.viewTransition` 配置。
 
 ```tsx
 import Link from 'next/link';
 
 <Link href={`/blog/${post.slug}`} transitionTypes={['blog-detail']}>
   {post.title}
-</Link>
+</Link>;
 ```
 
 要点：
@@ -42,13 +35,13 @@ import Link from 'next/link';
 
 ## 什么时候该用
 
-| 适合 | 不适合 |
-| --- | --- |
-| 博客卡片 → 文章详情 | 搜索结果每一击 |
-| 同布局下的分页切换（谨慎） | 表单提交后的重定向 |
-| 作品集网格 → 详情 | 主题切换（用 CSS 变量即可） |
+| 适合                       | 不适合                      |
+| -------------------------- | --------------------------- |
+| 博客卡片 → 文章详情        | 搜索结果每一击              |
+| 同布局下的分页切换（谨慎） | 表单提交后的重定向          |
+| 作品集网格 → 详情          | 主题切换（用 CSS 变量即可） |
 
-14→20 篇规模的站点，**一处**列表到详情就够建立「纸面翻页」的记忆点。全站每个链都加 transition 会让用户觉得站点「粘」。
+作为起点，可先在一处列表到详情导航中验证体验，再根据真实浏览器覆盖与用户反馈决定是否扩展；这不是通用的数量上限。全站每个链都加 transition 会让用户觉得站点「粘」。
 
 ## CSS 侧最小集
 
@@ -71,7 +64,7 @@ import Link from 'next/link';
 }
 ```
 
-本站已有 `usePrefersReducedMotion` 钩子（花园图关闭力导向时会用到，见 [[digital-garden-force-layout|数字花园]]）。View Transitions 的减少动效应优先交给 **CSS 媒体查询**，避免 JS 与浏览器默认策略打架。
+View Transitions 的减少动效应优先交给 **CSS 媒体查询**，避免 JS 与浏览器默认策略打架。示例不假定本站存在某个特定的画布或导航图功能。
 
 ## 与 RSC / 流式渲染的边界
 
@@ -85,10 +78,10 @@ View Transition 发生在**客户端导航**完成、DOM 提交的窗口。它�
 
 ## 性能预算
 
-1. **时长 ≤ 200ms**。超过就变成等待，而不是连贯。
+1. **先从短时长开始试验**。例如可用 180ms 作为初始值，再通过设备测试和用户反馈调整；200ms 不是普适硬阈值。
 2. **避免大面积 filter / blur**。低端机 GPU 会掉帧，直接伤 INP。
-3. **共享元素要克制**。`view-transition-name` 冲突会导致整页闪烁；命名空间按路由前缀划分。
-4. **测量**：Chrome Performance 面板看 transition 期间长任务；对照 [[web-performance-optimization|性能文]] 的 INP 阈值。
+3. **共享元素要克制**。同一过渡快照中重复的 `view-transition-name` 可能造成非预期的共享元素匹配；名称应明确且只分配给预期的一对元素。
+4. **测量**：Chrome Performance 面板检查过渡期间的长任务与掉帧；再用真实交互测量评估是否损害体验，对照 [[web-performance-optimization|性能文]] 的指标解释。
 
 ## 与 React Compiler 的协作
 
@@ -96,16 +89,16 @@ Compiler（见 [[react-compiler-in-practice|React Compiler 生产笔记]]）降�
 
 ## 故障排查
 
-| 现象 | 排查 |
-| --- | --- |
-| 完全无动画 | 系统是否开了减少动效；`viewTransition` 是否在 config；浏览器是否支持 |
-| 整页白闪 | 是否有冲突的 `view-transition-name`；旧页是否在 transition 中卸载过快 |
-| 类型报错 | `transitionTypes` 是否写成了字符串而非数组 |
-| 仅生产无动画 | 是否被旧版浏览器或内嵌 WebView 降级（属预期） |
+| 现象         | 排查                                                                  |
+| ------------ | --------------------------------------------------------------------- |
+| 完全无动画   | 系统是否开了减少动效；浏览器是否支持；是否确实发生了客户端导航        |
+| 整页白闪     | 是否有冲突的 `view-transition-name`；旧页是否在 transition 中卸载过快 |
+| 类型报错     | `transitionTypes` 是否写成了字符串而非数组                            |
+| 仅生产无动画 | 是否被旧版浏览器或内嵌 WebView 降级（属预期）                         |
 
 ## 检查清单
 
-- [ ] `experimental.viewTransition: true`
+- [ ] 未添加已移除的 `experimental.viewTransition` 配置
 - [ ] `transitionTypes` 使用 `string[]`
 - [ ] 减少动效媒体查询覆盖 `::view-transition-*`
 - [ ] 只在 1～2 类导航启用
@@ -117,4 +110,3 @@ Compiler（见 [[react-compiler-in-practice|React Compiler 生产笔记]]）降�
 - [[nextjs-app-router|Next.js App Router 实战]]
 - [[web-performance-optimization|Web 性能优化实战]]
 - [[react-compiler-in-practice|React Compiler 生产笔记]]
-- [[digital-garden-force-layout|数字花园：力导向与 wikilink]]

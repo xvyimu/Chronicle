@@ -22,6 +22,9 @@ export interface Project {
   id: string;
   title: string;
   description: string;
+  problem?: string;
+  approach?: string[];
+  evidence?: string[];
   tags: string[];
   url?: string;
   github?: string;

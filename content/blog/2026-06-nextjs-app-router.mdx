@@ -2,7 +2,7 @@
 title: 'Next.js 16 App Router 实战：服务端组件与流式渲染'
 description: 'Next.js App Router 生产笔记：Server Component 默认、Streaming、Server Actions 与数据获取边界。'
 date: '2026-06-23'
-updatedAt: '2026-07-13'
+updatedAt: '2026-10-11'
 tags: ['Next.js', 'React', 'App Router']
 published: true
 featured: true
@@ -17,13 +17,13 @@ license: 'CC-BY-4.0'
 
 Next.js 13 引入的 App Router 在 16 版本已经稳定，成为推荐的首选路由方案：
 
-| | Pages Router | App Router |
-|--|-------------|------------|
-| 组件类型 | 客户端组件 | 服务端组件（默认） |
+|          | Pages Router                            | App Router                 |
+| -------- | --------------------------------------- | -------------------------- |
+| 组件类型 | 客户端组件                              | 服务端组件（默认）         |
 | 数据获取 | `getServerSideProps` / `getStaticProps` | 直接在组件中 `async/await` |
-| 流式渲染 | 不支持 | 支持 Suspense 边界 |
-| 布局系统 | 每个页面独立 | 嵌套 Layout，保留状态 |
-| 数据变更 | 自己写 API 路由 | Server Actions |
+| 流式渲染 | 不支持                                  | 支持 Suspense 边界         |
+| 布局系统 | 每个页面独立                            | 嵌套 Layout，保留状态      |
+| 数据变更 | 自己写 API 路由                         | Server Actions             |
 
 ## 服务端组件（Server Components）
 
@@ -35,11 +35,11 @@ import { BlogList } from '@/components/blog';
 import { getAllPosts } from '@/lib/posts';
 
 export default async function HomePage() {
-  const posts = await getAllPosts(); // 直接在组件中查询数据库
+  const posts = await getAllPosts(); // 服务端调用数据访问层
 
   return (
     <div>
-      {posts.map(post => (
+      {posts.map((post) => (
         <article key={post.slug}>
           <h2>{post.title}</h2>
           <p>{post.excerpt}</p>
@@ -51,9 +51,12 @@ export default async function HomePage() {
 ```
 
 服务端组件的好处：
-- **更少的客户端 JavaScript**——框架代码不在页面上执行，组件只在服务端运行
-- **直接访问数据库**——不用建 API 路由，组件里直接查
-- **自动代码分割**——只有用到客户端交互的地方才加载 JS
+
+- **更少的客户端 JavaScript**——服务端组件实现不会发送到浏览器
+- **靠近数据源读取**——可在服务端调用数据库或其他数据访问层；是否使用数据库取决于应用架构
+- **明确客户端边界**——把状态与浏览器交互限制在需要它们的组件中
+
+> 这里的 `getAllPosts()` 是应用自有的数据访问函数，并不表示所有 Next.js 项目或 Chronicle 都使用运行时数据库。Chronicle 当前从本地 MDX/JSON 与构建期内容快照读取数据。
 
 ## 客户端组件（"use client"）
 
@@ -70,7 +73,7 @@ export function SearchBar() {
   return (
     <input
       value={query}
-      onChange={e => setQuery(e.target.value)}
+      onChange={(e) => setQuery(e.target.value)}
       placeholder="搜索文章..."
     />
   );
@@ -133,14 +136,19 @@ Stats 和 RecentActivity 会**并行加载**，各自在完成后立即流式注
 
 ### 3. 增量静态生成（ISR）
 
-对于不经常变更的内容，可以在构建时生成静态页面，然后按需重新验证：
+如果应用使用可缓存的数据源，可按需重新验证缓存；是否预渲染以及何时更新，取决于路由配置和数据缓存策略。`revalidate` 是一种配置方式，不是所有页面都需要的通用 ISR 模板：
 
 ```tsx
 // app/blog/[slug]/page.tsx
 export const revalidate = 3600; // 每小时重新生成
 
-export default async function BlogPost({ params }: { params: { slug: string } }) {
-  const post = await getPost(params.slug);
+export default async function BlogPost({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const post = await getPost(slug);
 
   if (!post) notFound();
 
@@ -155,7 +163,7 @@ export default async function BlogPost({ params }: { params: { slug: string } })
 
 ## Server Actions
 
-Server Actions 让表单提交和数据库操作变得非常简单——不再需要写 API 路由：
+Server Actions 可以把服务端变更逻辑绑定到表单或客户端调用点；它们不是数据库，也不意味着应用必须使用运行时数据库。下面的数据库操作仅为通用示例，并非 Chronicle 的实现：
 
 ```tsx
 // app/contact/page.tsx
@@ -172,7 +180,7 @@ export default function ContactPage() {
       data: { name, email, message },
     });
 
-    // 不需要手动 revalidate——Next.js 自动处理
+    // 数据变更后按需要显式失效相关缓存/路由
     revalidatePath('/contact');
   }
 
@@ -188,10 +196,11 @@ export default function ContactPage() {
 ```
 
 Server Actions 的关键点：
+
 - `'use server'` 标记让 Next.js 知道这是一个只在服务端执行的函数
 - 可以直接操作数据库、调用 API、操作文件系统
 - 表单提交不需要手动管理 loading 状态（Next.js 内置 `useFormStatus`）
-- 支持 revalidation，数据变更后页面自动刷新
+- Server Actions 不会自动推断需要失效的缓存；按应用的数据缓存策略显式调用 `revalidatePath` 或 `revalidateTag`。调用后 Next.js 会处理相应的 UI 更新行为。
 
 ## 布局嵌套
 
@@ -227,6 +236,7 @@ export default function BlogLayout({ children }: { children: React.ReactNode }) 
 ```
 
 布局的特点：
+
 - 跨页面切换时**保持状态**（Header 不会重新挂载）
 - 支持嵌套——每个路由段可以有独立的布局
 - 不会重新获取数据——如果在布局层获取的数据，切换子页面时不会重新查询
@@ -244,7 +254,7 @@ export default function BlogLayout({ children }: { children: React.ReactNode }) 
 ```tsx
 export async function generateStaticParams() {
   const posts = await getAllPosts();
-  return posts.map(post => ({ slug: post.slug }));
+  return posts.map((post) => ({ slug: post.slug }));
 }
 ```
 
@@ -277,6 +287,7 @@ export default function Analytics() {
 App Router 的学习曲线比 Pages Router 陡一些——概念更多（服务端/客户端组件、流式渲染、Server Actions）。但熟悉之后，开发体验和性能都更好。
 
 几个核心要点：
+
 - **默认服务端组件**，只在必要时加 `"use client"`
 - **服务端直接获取数据**，不用建 API 路由
 - **Suspense 做流式渲染**，让页面更快展示

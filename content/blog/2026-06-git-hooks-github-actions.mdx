@@ -1,8 +1,8 @@
 ---
 title: '用 Git Hooks 和 GitHub Actions 打造自动化代码工作流'
-description: '本地 pre-commit + 远程 GitHub Actions：把检查、构建和部署串成「提交即可上线」的双层自动化。'
+description: '本地 pre-commit + 远程 GitHub Actions：用必需检查、部署依赖和环境审批串起代码交付。'
 date: '2026-06-24'
-updatedAt: '2026-07-13'
+updatedAt: '2026-10-12'
 tags: ['Git', 'GitHub Actions', 'CI/CD']
 series: '个人服务部署路线'
 seriesSlug: '个人服务部署路线'
@@ -12,7 +12,7 @@ featured: false
 license: 'CC-BY-4.0'
 ---
 
-> 结论先说：本地 Git Hooks 挡脏提交，远程 Actions 挡脏合并；两层配齐后，部署命令不该再出现在你的日常操作里。
+> 结论先说：本地 Git Hooks 提供快速反馈；远程 CI 配合分支保护限制合并，部署 job 显式依赖检查结果。生产环境是否自动上线，取决于审批与发布策略。
 
 ## 为什么需要自动化工作流
 
@@ -23,7 +23,7 @@ license: 'CC-BY-4.0'
 - 部署命令敲错了或者漏了一步
 - 本地跑得好好的，线上却崩了
 
-自动化工作流的价值：**让正确的流程成为唯一的选择**。你不需要"记得"去跑测试——代码提交的那一刻，测试自动跑了。本地 hooks 挡脏提交；远程流水线的阶段划分、缓存与回滚策略见 [[cicd-pipeline-design|CI/CD 流水线设计]]。
+自动化工作流的价值：**把检查变成可重复执行的流程**。本地 hooks 可被 `--no-verify`、`HUSKY=0` 或修改配置绕过，不能作为合并权限边界。远程流水线的阶段划分、缓存与回滚策略见 [[cicd-pipeline-design|CI/CD 流水线设计]]。
 
 ## 第一层：Git Hooks（本地）
 
@@ -34,17 +34,16 @@ Git Hooks 是在本地 Git 操作触发时自动执行的脚本。最常用的�
 Husky 是 Git Hooks 的 npm 封装，lint-staged 只对暂存的文件运行检查：
 
 ```bash
-npm install -D husky lint-staged
-npx husky init
+pnpm add -D husky@9 lint-staged
+pnpm exec husky init
 ```
 
 在 `.husky/pre-commit` 里：
 
-```bash
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
+以下采用 [Husky 9 的初始化方式](https://typicode.github.io/husky/get-started.html)：`init` 创建 hook 并设置 `prepare`。hook 文件直接写命令，不再加载旧的 `_/husky.sh`。
 
-npx lint-staged
+```bash
+pnpm exec lint-staged
 ```
 
 在 `package.json` 里配置 lint-staged：
@@ -52,13 +51,8 @@ npx lint-staged
 ```json
 {
   "lint-staged": {
-    "*.{js,ts,tsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.{json,md}": [
-      "prettier --write"
-    ]
+    "*.{js,ts,tsx}": ["eslint --fix", "prettier --write"],
+    "*.{json,md}": ["prettier --write"]
   }
 }
 ```
@@ -70,13 +64,22 @@ npx lint-staged
 在 `.husky/commit-msg` 里加规范检查：
 
 ```bash
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
-npx commitlint --edit "$1"
+pnpm exec commitlint --edit "$1"
 ```
 
-配合 `@commitlint/cli` + `@commitlint/config-conventional`，强制提交信息遵循 Conventional Commits 格式：
+安装并配置 commitlint：
+
+```bash
+pnpm add -D @commitlint/cli @commitlint/config-conventional
+```
+
+在 `commitlint.config.cjs` 里：
+
+```javascript
+module.exports = { extends: ['@commitlint/config-conventional'] };
+```
+
+启用 hook 后，未绕过本地检查的提交会按 Conventional Commits 格式校验：
 
 ```
 feat: 新增用户注册功能
@@ -87,20 +90,23 @@ chore: 升级依赖版本
 
 ## 第二层：GitHub Actions（远程）
 
-本地检查通过还不够——PR 合并到 main 之后，代码需要再次验证，然后自动部署。
+PR 先运行 CI，合并到 main 后再校验并部署。还需在分支保护或 ruleset 中要求 PR 和 `lint-and-test` 状态检查，并限制绕过权限；只有工作流文件并不会阻止合并。使用 merge queue 时，应按 GitHub 的要求补上 `merge_group` 触发器。
 
 ### 基础 CI 工作流
 
 在 `.github/workflows/ci.yml`：
 
 ```yaml
-name: CI
+name: CI and Deploy
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+
+permissions:
+  contents: read
 
 jobs:
   lint-and-test:
@@ -114,10 +120,10 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: 'pnpm'
 
-      - run: pnpm install
+      - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm test
       - run: pnpm build
@@ -127,80 +133,84 @@ CI 的作用：**不管谁提交的代码，都按同一套标准跑一遍**。�
 
 ### 自动部署工作流
 
-CI 通过之后，自动把代码部署到服务器：
+把下面的 `deploy` job 加到**同一个文件的 `jobs` 下**，整体缩进两个空格，与 `lint-and-test` 对齐。两个独立工作流都监听 push 时，部署不会自动等待 CI；这里由 `needs` 建立依赖，只部署 main 的 push 提交：
 
 ```yaml
-name: Deploy
-
-on:
-  push:
-    branches: [main]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      # SSH 到服务器执行部署
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
-            cd /var/www/myapp
-            git pull origin main
-            docker compose build --no-cache
-            docker compose up -d --force-recreate
-            docker compose exec app pnpm migrate
+deploy:
+  needs: lint-and-test
+  if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  runs-on: ubuntu-latest
+  environment: production
+  concurrency:
+    group: deploy-production
+    cancel-in-progress: false
+  steps:
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      env:
+        DEPLOY_SHA: ${{ github.sha }}
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        fingerprint: ${{ secrets.SERVER_HOST_FINGERPRINT }}
+        envs: DEPLOY_SHA
+        script: |
+          set -eu
+          case "$DEPLOY_SHA" in
+            ''|*[!0-9a-f]*) exit 1 ;;
+          esac
+          test "${#DEPLOY_SHA}" -eq 40
+          cd /var/www/releases
+          git -C repository.git fetch origin "$DEPLOY_SHA"
+          git -C repository.git worktree add --detach "/var/www/releases/$DEPLOY_SHA" "$DEPLOY_SHA"
+          cd "$DEPLOY_SHA"
+          export COMPOSE_PROJECT_NAME=myapp
+          docker compose build --no-cache
+          docker compose run --rm --no-deps app pnpm migrate
+          docker compose up -d --force-recreate
+          curl --fail --silent --show-error --retry 5 --retry-connrefused \
+            --retry-delay 2 --max-time 10 http://127.0.0.1:3000/health
 ```
 
-部署流程：git pull → 重建镜像 → 重启容器 → 跑数据库迁移。全自动，`git push` 之后不需要做任何事。
+示例采用已校验的提交 SHA 创建独立 release 目录，避免 `git pull main` 在等待部署时取到另一个提交。服务器需事先创建 `/var/www/releases/repository.git` 裸仓库并配置只读拉取凭据；SSH 用户还需具备 release 目录和 Docker 的必要权限。重复部署同一 SHA 时，已有 worktree 会让命令失败，应先核查上次状态再处理，不能直接覆盖正在运行的版本。
+
+部署前还必须按应用补齐这些条件：
+
+- 在 GitHub 创建 `production` environment，配置部署分支限制、环境 secrets；需要人工审批时配置 required reviewers，并确认仓库套餐支持相应规则。
+- `SERVER_HOST_FINGERPRINT` 来自可信渠道核对过的服务器 SSH 主机公钥指纹；连接私钥只授予部署所需权限。Git 仓库拉取的 SSH 身份与主机校验也要独立配置。
+- Compose 使用固定项目名，持久化目录与部署密钥从 release 目录外管理；`pnpm migrate` 和 `/health` 是应用接口示例，需替换为真实命令和就绪检查。
+- 迁移前备份并演练恢复。示例只适用于旧应用兼容新 schema 的迁移，且要求数据库已可用；破坏性迁移需单独安排停机或分阶段发布。先迁移再切应用并不保证数据库可随代码回滚。
+
+`set -eu` 让失败停止后续步骤，末尾健康检查失败会让 job 失败，但不会自动恢复旧版本。正式使用前，应设计并演练应用回退与数据库恢复。Node 示例采用本博客 CI 使用的 Node 24；其他应用应按依赖兼容性选择仍受支持的 LTS，并保持构建与运行环境一致。Action 标签和 pnpm 版本只是示例，按项目支持范围核对；生产工作流建议固定到已审核的完整 Action commit SHA。
 
 ### 多环境配置
 
-如果需要 staging 和 production 两套环境：
+如果需要 staging 和 production 两套环境，让同一工作流的 `push` / `pull_request` 同时覆盖 `main`、`staging`，并保留 `needs: lint-and-test`。按分支选择环境：
 
 ```yaml
-name: Deploy
-
-on:
-  push:
-    branches:
-      - main       # → production
-      - staging    # → staging
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Deploy
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets[format('{0}_HOST', github.ref == 'refs/heads/main' && 'PROD' || 'STAGING')] }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
-            cd /var/www/myapp
-            git pull origin ${{ github.ref_name }}
-            docker compose build
-            docker compose up -d
+deploy:
+  needs: lint-and-test
+  if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+  runs-on: ubuntu-latest
+  environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+  concurrency:
+    group: deploy-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+    cancel-in-progress: false
 ```
+
+这个片段只展示 job 的差异配置，需接上前面的 SSH `steps`，再整体缩进两个空格放入 `jobs`。在两个 environment 中使用同名的 `SERVER_HOST`、`SERVER_USER`、`SERVER_SSH_KEY`、`SERVER_HOST_FINGERPRINT` secrets，分别设置其值与审批策略。两套环境应使用独立服务器，或隔离 release 目录、Compose 项目名、数据库与端口，避免覆盖彼此。
 
 ## 常用 Actions 推荐
 
-| 用途 | Action |
-|------|--------|
-| SSH 部署 | `appleboy/ssh-action` |
-| Docker 构建推送 | `docker/build-push-action` |
-| 缓存依赖 | `actions/setup-node` (内置 cache) |
-| 代码质量报告 | ` SonarSource/sonarqube-scan-action` |
-| 通知 | `slackapi/slack-github-action` |
-| 环境变量管理 | `crazy-max/ghaction-import-env` |
+| 用途            | Action                               |
+| --------------- | ------------------------------------ |
+| SSH 部署        | `appleboy/ssh-action`                |
+| Docker 构建推送 | `docker/build-push-action`           |
+| 缓存依赖        | `actions/setup-node` (内置 cache)    |
+| 代码质量报告    | ` SonarSource/sonarqube-scan-action` |
+| 通知            | `slackapi/slack-github-action`       |
+| 环境变量管理    | `crazy-max/ghaction-import-env`      |
 
 ## 完整的工作流链路
 
@@ -211,24 +221,24 @@ jobs:
 
 GitHub: push / PR
   → CI: lint → test → build
-  → 不通过则阻断合并
-  → 通过后自动合并
+  → 必需检查不通过时，分支保护阻断合并
+  → 检查通过后由维护者合并（自动合并需另行启用）
 
 main 分支 push
-  → Deploy workflow 触发
+  → 同一工作流重新检查，deploy job 等待 CI 和环境审批
   → SSH 到服务器
-  → git pull → build → deploy
-  → 完成
+  → fetch 已校验 SHA → build → 兼容迁移 → deploy → 健康检查
+  → 根据检查结果确认发布或处理故障
 ```
 
 ## 总结
 
-两层自动化覆盖了从"写代码"到"上线"的完整链路：
+两层自动化可以串起从"写代码"到"上线"的检查链路：
 
-- **Git Hooks** 把好本地提交这一关，不让问题代码进入版本库
-- **GitHub Actions 把好远程合并这一关**，不管谁来提交都按统一标准验证，通过后自动部署
+- **Git Hooks** 提供快速反馈，减少遗漏，但允许本地绕过
+- **GitHub Actions** 运行统一检查，配合分支保护、部署依赖与环境规则约束合并和上线
 
-这两层配好之后，"提交即上线"成为常态，不需要再手动敲部署命令。
+示例尚需适配应用并在测试环境演练，包括检查失败时不部署、审批等待、SHA 一致性、SSH 指纹不匹配以及迁移和健康检查失败的处理。完成这些验证后，再决定哪些环境允许自动上线。
 
 ## 延伸阅读
 

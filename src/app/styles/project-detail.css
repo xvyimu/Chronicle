@@ -89,6 +89,32 @@
   line-height: 1.85;
 }
 
+.project-detail__section {
+  margin: 28px 0;
+  color: var(--text-soft);
+  line-height: 1.75;
+}
+
+.project-detail__section h2 {
+  margin: 0 0 10px;
+  color: var(--text);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.project-detail__section p,
+.project-detail__section ul {
+  margin: 0;
+}
+
+.project-detail__section ul {
+  padding-left: 1.25rem;
+}
+
+.project-detail__section li + li {
+  margin-top: 6px;
+}
+
 .project-detail__actions {
   display: flex;
   flex-wrap: wrap;

@@ -33,17 +33,21 @@ const {
       <ol className="archive-list">
         {series.posts.map((post, index) => (
           <li key={post.slug}>
-            <Link
-              href={`/blog/${post.slug}`}
-              className="archive-list__item archive-list__item--series"
-            >
-              <span className="archive-list__index">{index + 1}</span>
-              <span className="min-w-0">
-                <span className="archive-list__title">{post.title}</span>
-                <span className="archive-list__desc">{post.description}</span>
+            <div className="archive-list__item archive-list__item--series">
+              <span className="archive-list__index" aria-label={`第 ${index + 1} 篇`}>
+                {index + 1}
               </span>
-              <span className="archive-list__date">{formatDate(post.date)}</span>
-            </Link>
+              <div className="archive-list__body">
+                <Link href={`/blog/${post.slug}`} className="archive-list__title">
+                  {post.title}
+                </Link>
+                <p className="archive-list__desc">{post.description}</p>
+                <span className="archive-list__reading-time">{post.readingTime}</span>
+              </div>
+              <time className="archive-list__date" dateTime={post.date}>
+                {formatDate(post.date)}
+              </time>
+            </div>
           </li>
         ))}
       </ol>

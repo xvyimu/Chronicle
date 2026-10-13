@@ -37,6 +37,23 @@ test.describe('首页（工作台）', () => {
     });
   });
 
+  test('阅读路径可通过键盘进入专题，并提供有序文章入口', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+
+    const section = page.getByRole('region', { name: /阅读路径/ });
+    await expect(section).toBeVisible({ timeout: 10000 });
+    const seriesLink = section.locator('a[href^="/series/"]').first();
+    await expect(seriesLink).toBeVisible();
+    await seriesLink.focus();
+    await expect(seriesLink).toBeFocused();
+    await expect(seriesLink.locator('ol li')).toHaveCount(3);
+
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(/\/series\/[^/]+$/);
+    await expect(page.getByRole('heading', { name: /专题：/ })).toBeVisible();
+  });
+
   test('顶部栏显示品牌与搜索入口', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');

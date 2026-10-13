@@ -4,7 +4,7 @@
         <title>西江月</title>
         <link>https://incca.ccwu.cc</link>
         <description>云原生 · 全栈 · 自动化</description>
-        <lastBuildDate>Sat, 10 Oct 2026 00:00:00 GMT</lastBuildDate>
+        <lastBuildDate>Mon, 12 Oct 2026 00:00:00 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <language>zh-CN</language>
@@ -53,7 +53,7 @@
             <link>https://incca.ccwu.cc/blog/turbopack-fs-cache-dx</link>
             <guid isPermaLink="false">https://incca.ccwu.cc/blog/turbopack-fs-cache-dx</guid>
             <pubDate>Tue, 21 Jul 2026 00:00:00 GMT</pubDate>
-            <description><![CDATA[Next 16.2 的 turbopackFileSystemCacheForDev 解决什么、不解决什么，以及如何避免把 dev 缓存问题误判成业务 bug。]]></description>
+            <description><![CDATA[Next 16 的 turbopackFileSystemCacheForDev 解决什么、不解决什么，以及如何避免把 dev 缓存问题误判成业务 bug。]]></description>
             <content:encoded><![CDATA[
 > 结论先说：FS cache 只加速**本地 dev 冷启动与增量编译**，不改变生产 `next build` 产物语义。遇到「我这能跑、CI 不行」，先怀疑环境与缓存，再怀疑业务代码——但**禁止**用删缓存当唯一修复手段而不留根因。
 
@@ -64,15 +64,20 @@
 ```ts
 // next.config.ts
 experimental: {
-  // 仅 dev；名称里的 ForDev 不是装饰
+  // 仅 next dev；名称里的 ForDev 不是装饰。
+  // Next 16 默认开启，也可以显式写出当前策略。
   turbopackFileSystemCacheForDev: true,
 }
 ```
 
+Next 16.3.8 中该选项仍位于 `experimental`，默认值为 `true`。它只控制
+`next dev` 的磁盘缓存；生产构建缓存由独立的
+`experimental.turbopackFileSystemCacheForBuild` 选项控制，不能把两者混为一谈。
+
 同时本站启用了：
 
 - `reactCompiler: true`（见 [[react-compiler-in-practice|React Compiler]]）
-- `experimental.viewTransition: true`（见 [[nextjs-view-transitions|View Transitions]]）
+- App Router 的 View Transitions 不再需要 `experimental.viewTransition` 配置（见 [[nextjs-view-transitions|View Transitions]]）
 
 三者正交：Compiler/VT 影响产物与运行时；FS cache 影响**你等待编译的时间**。
 
@@ -81,11 +86,12 @@ experimental: {
 典型包括：
 
 - Turbopack 的模块图与编译中间态
-- 跨 `pnpm dev` 会话可复用的文件系统快照
+- 跨 `pnpm dev` 会话可复用的文件系统快照（默认位于 `.next/dev/cache/turbopack`）
 
 它不缓存：
 
 - 生产 `.next` 的完整发布语义（那是 `pnpm build` 的职责）
+- `next build` 的构建缓存（由另一个 `turbopackFileSystemCacheForBuild` 开关控制）
 - 远程 CI 的机器状态（CI 每次干净环境，本身就没有你的 dev 缓存）
 - 浏览器 Cache Storage / CDN
 
@@ -93,17 +99,17 @@ experimental: {
 
 ## 何时值得开
 
-| 情况 | 建议 |
-| --- | --- |
-| 冷启动经常 > 数秒，且项目中等以上 | 开 |
-| 极小仓库，冷启动本就可忽略 | 可关，减少「缓存脏了」变量 |
-| 正在排查「只在 dev 复现」的诡异 UI | 临时关或清缓存对比 |
-| CI | 无关；CI 跑 build/test 不依赖该旗标 |
+| 情况                               | 建议                                |
+| ---------------------------------- | ----------------------------------- |
+| 冷启动经常 > 数秒，且项目中等以上  | 开                                  |
+| 极小仓库，冷启动本就可忽略         | 可关，减少「缓存脏了」变量          |
+| 正在排查「只在 dev 复现」的诡异 UI | 临时关或清缓存对比                  |
+| CI                                 | 无关；CI 跑 build/test 不依赖该旗标 |
 
 ## 故障排查顺序
 
 1. **复现是否仅 dev？** 若 `pnpm build && pnpm start` 正常 → 优先缓存 / HMR / 懒编译路径。
-2. **清 Next 缓存再试**：删除 `.next` 后 `pnpm dev`（不要顺手 `git clean -fdx` 清掉有用本地文件）。
+2. **清 Next 缓存再试**：停止服务后删除 `.next`，再运行 `pnpm dev`（不要顺手 `git clean -fdx` 清掉有用本地文件）。
 3. **对比关闭旗标**：`turbopackFileSystemCacheForDev: false` 是否消失。
 4. **仍存在则当业务 bug**：用测试与生产构建钉死。
 
@@ -133,7 +139,7 @@ Hooks 与远程流水线分工见 [[git-hooks-github-actions|Git Hooks 文]]：�
 
 ## 检查清单
 
-- [ ] 知悉旗标仅 dev
+- [ ] 知悉 `turbopackFileSystemCacheForDev` 仅影响 dev，且默认已开启
 - [ ] 生产验收始终走 `pnpm build`
 - [ ] 记录清缓存步骤，而不只说「重启试试」
 - [ ] 与 Compiler / VT 变更分开评估回归
@@ -151,7 +157,7 @@ Hooks 与远程流水线分工见 [[git-hooks-github-actions|Git Hooks 文]]：�
             <category>DevOps</category>
             <category>性能优化</category>
             <_reading_time>
-                <readingTime>4 min read</readingTime>
+                <readingTime>5 min read</readingTime>
             </_reading_time>
         </item>
         <item>
@@ -163,9 +169,7 @@ Hooks 与远程流水线分工见 [[git-hooks-github-actions|Git Hooks 文]]：�
             <content:encoded><![CDATA[
 > 结论先说：Compiler 负责**默认路径上的 memo 纪律**，不是魔法。交互密集、依赖不稳定、或依赖 ref 副作用的代码，仍要你自己守边界；收益用 INP/重渲染次数说话，不要用「删了多少 useMemo」自我安慰。
 
-> **时效注（2026-10）**：下文用数字花园（导航图 / 力导向）当客户端岛的例子，该功能已在 2026-10-07 重构中移除——例子本身讲的 memo 边界仍然成立，只是不再是本站现存的交互。删除决策见 `docs/adr/0007-workspace-rebuild-baseline.md`。
-
-本站在 Next 16.2 打开了 `reactCompiler: true`，并安装 `babel-plugin-react-compiler@1.0.0`。App Router 默认服务端组件的拆分策略见 [[nextjs-app-router|Next.js App Router 实战]]；最终可感指标仍按 [[web-performance-optimization|Web 性能优化实战]] 的 LCP/INP/CLS 优先序。
+本站在 Next.js 16.3.8 中打开了 `reactCompiler: true`，并安装 `babel-plugin-react-compiler@1.0.0`。App Router 默认服务端组件的拆分策略见 [[nextjs-app-router|Next.js App Router 实战]]；最终可感指标仍按 [[web-performance-optimization|Web 性能优化实战]] 的 LCP/INP/CLS 优先序。
 
 ## 它实际编译了什么
 
@@ -190,13 +194,13 @@ function TagCloud({ tags }: { tags: string[] }) {
 
 ## 与手写 memo 的分工
 
-| 场景 | 建议 |
-| --- | --- |
-| 纯展示、依赖清晰的 props | 交给 Compiler |
-| 昂贵计算但依赖是每次新建的对象字面量 | 先稳定依赖，再谈 memo |
-| 事件处理器要传给深层 memo 子树 | Compiler 通常能处理；不要为「风格」手写 useCallback |
-| 依赖 `ref.current` 做派生状态 | 不要指望 Compiler；重构成 state 或显式同步 |
-| 第三方组件要求稳定回调 identity | 测一次；不稳再局部 `useCallback` |
+| 场景                                 | 建议                                                |
+| ------------------------------------ | --------------------------------------------------- |
+| 纯展示、依赖清晰的 props             | 交给 Compiler                                       |
+| 昂贵计算但依赖是每次新建的对象字面量 | 先稳定依赖，再谈 memo                               |
+| 事件处理器要传给深层 memo 子树       | Compiler 通常能处理；不要为「风格」手写 useCallback |
+| 依赖 `ref.current` 做派生状态        | 不要指望 Compiler；重构成 state 或显式同步          |
+| 第三方组件要求稳定回调 identity      | 测一次；不稳再局部 `useCallback`                    |
 
 类型体操与泛型约束仍按 [[typescript-advanced-types|TypeScript 高级类型实战]] 的纪律写——Compiler **不替代**类型系统。
 
@@ -241,20 +245,20 @@ if (items.length > 100) analytics.track('large-list');
 
 ### 3. 把「删除全部 useMemo」当 KPI
 
-手写 memo 里**语义型**的缓存（例如按 slug 建 `Map` 邻接表）可以保留——它表达领域结构，不是「怕重渲染」的补丁。本站花园图的 `neighborsOf` 就是这类结构：就算 Compiler 能缓存，显式 `useMemo` 也更可读。
+手写 memo 里**语义型**的缓存（例如按 slug 建 `Map` 邻接表）可以保留——它表达领域结构，不是「怕重渲染」的补丁。就算 Compiler 能缓存，显式 `useMemo` 也可能更可读。
 
 ## 如何证明有收益
 
 1. **React Profiler**：同一交互路径下，提交时长与重渲染组件数是否下降。
-2. **INP**：交互热点（搜索输入、花园拖拽、主题切换）在真机上的 p75。
+2. **INP**：交互热点（搜索输入、筛选面板、主题切换）在真机上的 p75。
 3. **包体**：Compiler 可能略增编译产物；用既有 bundle budget 门禁看是否越线。
 4. **对比分支**：同一 commit 开关 `reactCompiler`，固定数据集，禁止「感觉更快」。
 
 没有 RUM 时，至少保留本地 Profiler 截图与 Lighthouse 实验室数据，并标明环境——这与 [[web-performance-optimization|性能优化]] 文中「禁止假 p75」一致。
 
-## 与数字花园 / 客户端岛的关系
+## 与客户端岛的关系
 
-花园力导向、wikilink popover 都是 `"use client"` 岛。Compiler 对这类交互树最有价值：hover 状态变化不应拖着整棵筛选面板重算。布局算法本身是纯函数（见 [[digital-garden-force-layout|数字花园：力导向与 wikilink]]），放在 `useMemo` 或模块级缓存都合理；Compiler 负责「忘写 memo 也不至于每次 hover 全量重排」。
+交互密集的筛选面板、搜索输入和主题切换通常是 `"use client"` 岛。Compiler 对这类交互树最有价值：局部状态变化不应拖着整棵面板重算。布局或排序算法本身若是纯函数，放在 `useMemo` 或模块级缓存都合理；Compiler 负责降低遗漏缓存造成的重复计算，但不会替代组件边界和稳定 props 设计。
 
 ## 检查清单
 
@@ -271,7 +275,6 @@ if (items.length > 100) analytics.track('large-list');
 - [[web-performance-optimization|Web 性能优化实战]]
 - [[typescript-advanced-types|TypeScript 高级类型实战]]
 - [[nextjs-view-transitions|Next.js View Transitions 实战]]
-- [[digital-garden-force-layout|数字花园：力导向与 wikilink]]
 ]]></content:encoded>
             <category>React</category>
             <category>Next.js</category>
@@ -289,27 +292,20 @@ if (items.length > 100) analytics.track('large-list');
             <content:encoded><![CDATA[
 > 结论先说：View Transitions 是**渐进增强**，不是品牌大片。只在列表→详情这类「空间连续」导航上点缀；必须尊重 `prefers-reduced-motion`，且绝不能拖坏 INP。
 
-> **时效注（2026-10）**：下文提到数字花园力导向图作为 `usePrefersReducedMotion` 的用例，该功能已在 2026-10-07 重构中移除；钩子本身仍在用。删除决策见 `docs/adr/0007-workspace-rebuild-baseline.md`。
+> **时效注（2026-10）**：下文提到数字花园力导向图作为 `usePrefersReducedMotion` 的历史用例；该功能已在 2026-10-07 重构中移除，钩子本身仍可复用于现有交互。删除决策见 `docs/adr/0007-workspace-rebuild-baseline.md`。
 
 服务端组件与导航模型见 [[nextjs-app-router|Next.js App Router 实战]]；动效与 CWV 的关系见 [[web-performance-optimization|Web 性能优化实战]]。
 
 ## 浏览器能力与 Next 封装
 
-[View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transition_API) 让浏览器在 DOM 更新前后截两帧，做交叉淡化或共享元素动画。Next.js 16 通过 `experimental.viewTransition` 与 `<Link transitionTypes>` 把路由切换接到该 API。
-
-```ts
-// next.config.ts
-experimental: {
-  viewTransition: true,
-}
-```
+[View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transition_API) 让浏览器在 DOM 更新前后截两帧，做交叉淡化或共享元素动画。当前 Next.js 16 App Router 可直接使用 React 的 View Transition 能力；本站使用的 Next.js 16.3.8 不再需要 `experimental.viewTransition` 配置。
 
 ```tsx
 import Link from 'next/link';
 
 <Link href={`/blog/${post.slug}`} transitionTypes={['blog-detail']}>
   {post.title}
-</Link>
+</Link>;
 ```
 
 要点：
@@ -320,13 +316,13 @@ import Link from 'next/link';
 
 ## 什么时候该用
 
-| 适合 | 不适合 |
-| --- | --- |
-| 博客卡片 → 文章详情 | 搜索结果每一击 |
-| 同布局下的分页切换（谨慎） | 表单提交后的重定向 |
-| 作品集网格 → 详情 | 主题切换（用 CSS 变量即可） |
+| 适合                       | 不适合                      |
+| -------------------------- | --------------------------- |
+| 博客卡片 → 文章详情        | 搜索结果每一击              |
+| 同布局下的分页切换（谨慎） | 表单提交后的重定向          |
+| 作品集网格 → 详情          | 主题切换（用 CSS 变量即可） |
 
-14→20 篇规模的站点，**一处**列表到详情就够建立「纸面翻页」的记忆点。全站每个链都加 transition 会让用户觉得站点「粘」。
+作为起点，可先在一处列表到详情导航中验证体验，再根据真实浏览器覆盖与用户反馈决定是否扩展；这不是通用的数量上限。全站每个链都加 transition 会让用户觉得站点「粘」。
 
 ## CSS 侧最小集
 
@@ -349,7 +345,7 @@ import Link from 'next/link';
 }
 ```
 
-本站已有 `usePrefersReducedMotion` 钩子（花园图关闭力导向时会用到，见 [[digital-garden-force-layout|数字花园]]）。View Transitions 的减少动效应优先交给 **CSS 媒体查询**，避免 JS 与浏览器默认策略打架。
+View Transitions 的减少动效应优先交给 **CSS 媒体查询**，避免 JS 与浏览器默认策略打架。示例不假定本站存在某个特定的画布或导航图功能。
 
 ## 与 RSC / 流式渲染的边界
 
@@ -363,10 +359,10 @@ View Transition 发生在**客户端导航**完成、DOM 提交的窗口。它�
 
 ## 性能预算
 
-1. **时长 ≤ 200ms**。超过就变成等待，而不是连贯。
+1. **先从短时长开始试验**。例如可用 180ms 作为初始值，再通过设备测试和用户反馈调整；200ms 不是普适硬阈值。
 2. **避免大面积 filter / blur**。低端机 GPU 会掉帧，直接伤 INP。
-3. **共享元素要克制**。`view-transition-name` 冲突会导致整页闪烁；命名空间按路由前缀划分。
-4. **测量**：Chrome Performance 面板看 transition 期间长任务；对照 [[web-performance-optimization|性能文]] 的 INP 阈值。
+3. **共享元素要克制**。同一过渡快照中重复的 `view-transition-name` 可能造成非预期的共享元素匹配；名称应明确且只分配给预期的一对元素。
+4. **测量**：Chrome Performance 面板检查过渡期间的长任务与掉帧；再用真实交互测量评估是否损害体验，对照 [[web-performance-optimization|性能文]] 的指标解释。
 
 ## 与 React Compiler 的协作
 
@@ -374,16 +370,16 @@ Compiler（见 [[react-compiler-in-practice|React Compiler 生产笔记]]）降�
 
 ## 故障排查
 
-| 现象 | 排查 |
-| --- | --- |
-| 完全无动画 | 系统是否开了减少动效；`viewTransition` 是否在 config；浏览器是否支持 |
-| 整页白闪 | 是否有冲突的 `view-transition-name`；旧页是否在 transition 中卸载过快 |
-| 类型报错 | `transitionTypes` 是否写成了字符串而非数组 |
-| 仅生产无动画 | 是否被旧版浏览器或内嵌 WebView 降级（属预期） |
+| 现象         | 排查                                                                  |
+| ------------ | --------------------------------------------------------------------- |
+| 完全无动画   | 系统是否开了减少动效；浏览器是否支持；是否确实发生了客户端导航        |
+| 整页白闪     | 是否有冲突的 `view-transition-name`；旧页是否在 transition 中卸载过快 |
+| 类型报错     | `transitionTypes` 是否写成了字符串而非数组                            |
+| 仅生产无动画 | 是否被旧版浏览器或内嵌 WebView 降级（属预期）                         |
 
 ## 检查清单
 
-- [ ] `experimental.viewTransition: true`
+- [ ] 未添加已移除的 `experimental.viewTransition` 配置
 - [ ] `transitionTypes` 使用 `string[]`
 - [ ] 减少动效媒体查询覆盖 `::view-transition-*`
 - [ ] 只在 1～2 类导航启用
@@ -395,13 +391,12 @@ Compiler（见 [[react-compiler-in-practice|React Compiler 生产笔记]]）降�
 - [[nextjs-app-router|Next.js App Router 实战]]
 - [[web-performance-optimization|Web 性能优化实战]]
 - [[react-compiler-in-practice|React Compiler 生产笔记]]
-- [[digital-garden-force-layout|数字花园：力导向与 wikilink]]
 ]]></content:encoded>
             <category>Next.js</category>
             <category>React</category>
             <category>性能优化</category>
             <_reading_time>
-                <readingTime>5 min read</readingTime>
+                <readingTime>6 min read</readingTime>
             </_reading_time>
         </item>
         <item>
@@ -411,9 +406,9 @@ Compiler（见 [[react-compiler-in-practice|React Compiler 生产笔记]]）降�
             <pubDate>Tue, 21 Jul 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[个人博客 MDX 链路拆解：frontmatter schema、仓库层、next-mdx-remote、remark-wikilink，以及组件映射的边界。]]></description>
             <content:encoded><![CDATA[
-> 结论先说：MDX 管线要**分层**——解析 / 校验 / 查询 / 渲染各管一段。wikilink 属于编译期链接改写；popover 属于客户端增强。把两层揉进一个「万能 MDX 组件」会让测试与 CSP 边界一起糊掉。
+> 结论先说：MDX 管线要**分层**——解析 / 校验 / 查询 / 渲染各管一段。wikilink 属于编译期链接改写；交互增强属于客户端层。把两层揉进一个「万能 MDX 组件」会让测试与 CSP 边界一起糊掉。
 
-> **时效注（2026-10）**：编译期的 `remark-wikilink` 转换**本仓仍在用**（`src/lib/posts/remark-wikilink.ts`）；但客户端的 wikilink popover 与预览接口 `/api/preview` 已在 2026-10-07 重构中移除。文中涉及 popover / 预览 API 的部分按编写时（2026-07）理解。删除决策见 `docs/adr/0007-workspace-rebuild-baseline.md`。
+> **时效注（2026-10）**：当前管线以仓库实现为准：`remark-wikilink` 只把语法转换成普通站内链接；客户端 wikilink popover 与 `/api/preview` 已在 2026-10-07 重构中移除。删除决策见 `docs/adr/0007-workspace-rebuild-baseline.md`。
 
 类型与 schema 纪律见 [[typescript-advanced-types|TypeScript 高级类型实战]]；页面渲染模型见 [[nextjs-app-router|Next.js App Router 实战]]。
 
@@ -427,7 +422,7 @@ content/blog/*.mdx
   → PostRepository 缓存 / 可见性过滤
   → 页面 getPostBySlug / 列表 getAllPosts
   → next-mdx-remote + remark/rehype
-  → MdxContent 组件映射 (a → WikilinkPopover, …)
+  → MdxContent 组件映射 (pre → CodeBlock, img → ImageZoom, …)
 ```
 
 每一层只依赖下一层的稳定接口。页面组件**不**直接 `fs.readFile`。
@@ -457,27 +452,21 @@ content/blog/*.mdx
 
 1. 解析 wiki 目标与可选 label
 2. 生成 `href=/blog/{slug}`
-3. 打上 `data-wikilink={slug}`，供客户端识别
-4. **不**在 remark 阶段发网络请求或读数据库
+3. **不**在 remark 阶段发网络请求或读数据库
 
-坏链策略放在构图 / 反链索引：可见集合内找不到目标则失败，避免花园图出现悬空边。正文渲染期是否 fail-closed 取决于产品选择；本站构图路径选择严格。
+插件本身不校验目标是否存在。失效目标由内容图审计和内容校验发现；渲染时仍输出普通链接。
 
 ## 组件映射
 
 ```tsx
-// 示意：MdxContent
+// MdxContent 中的实际映射
 const components = {
-  a: WikilinkPopover,
-  // pre/code → CodeBlock …
+  pre: CodeBlock,
+  img: ImageZoom,
 };
 ```
 
-`WikilinkPopover`：
-
-- 有 `data-wikilink` → 可 hover 拉 `/api/preview/{slug}`
-- 无该属性 → 普通 `<a>`（外链、手动 markdown 链接）
-
-这保证 remark 只产声明式 HTML 语义，交互增强可测试、可关掉。
+`remark-wikilink` 只生成普通的站内 `<a href="/blog/{slug}">`。它不校验目标是否存在，也不生成 `data-wikilink`；链接完整性由内容图审计和内容校验脚本负责。这样 remark 保持声明式、无 IO，客户端组件也不会被迫参与正文链接解析。
 
 ## 代码高亮与 prose
 
@@ -489,19 +478,18 @@ rehype-pretty-code + Shiki 在服务端出 HTML。注意：
 
 ## 测试策略
 
-| 层 | 测什么 |
-| --- | --- |
-| schema | 合法 / 非法 frontmatter |
-| repository | slug、published 过滤、缓存引用 |
-| remark-wikilink | AST/HTML 中的 href 与 data 属性 |
-| preview route | 投影字段、404、无 content 泄露 |
-| WikilinkPopover | 不请求的外链、缓存、XSS 文本转义 |
+| 层              | 测什么                         |
+| --------------- | ------------------------------ |
+| schema          | 合法 / 非法 frontmatter        |
+| repository      | slug、published 过滤、缓存引用 |
+| remark-wikilink | AST/HTML 中的 href 与 label    |
+| MdxContent      | 代码块、图片组件与正文渲染     |
 
 不要用「启动整站点一下」替代层测；e2e 留给导航与 CSP 冒烟。
 
-## 与安全 / 花园
+## 与安全边界
 
-- 预览 API 与正文渲染分离 → 见 [[csp-nonce-and-sri|CSP Nonce 与 SRI]]、[[digital-garden-force-layout|数字花园]]
+- 正文渲染与安全边界 → 见 [[csp-nonce-and-sri|CSP Nonce 与 SRI]]
 - 作者内容默认不可信：即使是自己的 MDX，渲染路径也不应 `eval` 或裸 `dangerouslySetInnerHTML` 拼用户字符串
 - 图片路径校验在 schema（http(s) 或 `/` 开头）
 
@@ -509,8 +497,8 @@ rehype-pretty-code + Shiki 在服务端出 HTML。注意：
 
 - [ ] frontmatter 只经 Zod strict schema
 - [ ] 页面只打 server facade，不直读 fs
-- [ ] wikilink 与外链语义分离（`data-wikilink`）
-- [ ] preview 与 MDX body 字段分离
+- [ ] wikilink 只生成普通站内链接，并由内容审计检查目标
+- [ ] 仅测试当前保留的渲染路径，不依赖已删除的 preview route 或客户端 popover
 - [ ] 关键层有单测，不靠手工点
 - [ ] 新增文章文件名与 slug 规则一致
 
@@ -518,7 +506,6 @@ rehype-pretty-code + Shiki 在服务端出 HTML。注意：
 
 - [[nextjs-app-router|Next.js App Router 实战]]
 - [[typescript-advanced-types|TypeScript 高级类型实战]]
-- [[digital-garden-force-layout|数字花园：力导向与 wikilink]]
 - [[csp-nonce-and-sri|CSP Nonce 与 SRI]]
 - [[react-compiler-in-practice|React Compiler 生产笔记]]
 ]]></content:encoded>
@@ -534,9 +521,9 @@ rehype-pretty-code + Shiki 在服务端出 HTML。注意：
             <link>https://incca.ccwu.cc/blog/digital-garden-force-layout</link>
             <guid isPermaLink="false">https://incca.ccwu.cc/blog/digital-garden-force-layout</guid>
             <pubDate>Tue, 21 Jul 2026 00:00:00 GMT</pubDate>
-            <description><![CDATA[在 Next 内做次级 /garden：无 d3 的力导向、筛选、拖拽存视图、hover 邻居高亮，以及 wikilink popover 的数据契约。]]></description>
+            <description><![CDATA[一篇已移除数字花园的设计复盘：讨论力导向布局、筛选、拖拽存视图、邻居高亮，以及 wikilink 预览的数据契约。]]></description>
             <content:encoded><![CDATA[
-> 结论先说：数字花园是**探索面**，不是第二首页。力导向只服务「看见概念邻接」；`prefers-reduced-motion` 时退回列表；wikilink 预览走轻量 JSON，绝不把整篇 MDX 塞进 hover 卡片。
+> 结论先说：这篇文章复盘的数字花园曾是**探索面**，不是第二首页。力导向只服务「看见概念邻接」；`prefers-reduced-motion` 时退回列表；当时设想的 wikilink 预览走轻量 JSON，绝不把整篇 MDX 塞进 hover 卡片。
 
 > **时效注（2026-10）**：数字花园 `/garden` 与预览接口 `/api/preview` 已在 2026-10-07 重构中移除，本文保留的是**当时的实现方案与取舍**，不是「本站现在已有」。方法论仍然适用；文中「本站」「实现」等措辞请按编写时（2026-07）理解。删除决策见 `docs/adr/0007-workspace-rebuild-baseline.md`。
 
@@ -544,25 +531,25 @@ rehype-pretty-code + Shiki 在服务端出 HTML。注意：
 
 ## 为什么是次级路由
 
-把力导向图塞进首页有三个问题：
+把力导向图塞进首页有三个问题（这是当时设计决策的背景）：
 
 1. **品牌违和**：首页是阅读路径与精选，不是研究画布。
 2. **性能**：主路径 LCP 不该绑在 canvas/SVG 模拟上。
 3. **规模**：二十篇量级时，全站图「玩具感」重于信息增益。
 
-因此 `/garden` 保持次级入口；文章页只提供折叠邻接与反链，满足「这篇连去哪 / 谁链过来」。
+因此当时让 `/garden` 保持次级入口；文章页只提供折叠邻接与反链，满足「这篇连去哪 / 谁链过来」。这些路由和能力已不属于当前站点。
 
 ## 图从哪来
 
-1. remark 插件把 `[[slug]]` / `[[slug|label]]` 编成指向 `/blog/{slug}` 的链接，并打上 `data-wikilink`。
-2. 构图阶段扫描可见文章正文，抽出有向边；坏链 fail-closed（构建或读取时报错，而不是静默丢边）。
-3. `getGardenGraph()` 投影为 `{ nodes, edges }`，节点带 title/tags/series，**不含正文**。
+1. 当时的 remark 插件把 `[[slug]]` / `[[slug|label]]` 编成指向 `/blog/{slug}` 的链接，并打上 `data-wikilink`。
+2. 当时的构图阶段扫描可见文章正文，抽出有向边；坏链 fail-closed（构建或读取时报错，而不是静默丢边）。
+3. 当时的 `getGardenGraph()` 投影为 `{ nodes, edges }`，节点带 title/tags/series，**不含正文**。
 
 正文互链是网络的主干；文末「延伸阅读」列表也应使用同一套 wikilink 语法，避免两套链接语义。
 
 ## 力导向：无 d3 的确定性布局
 
-本站 `layoutForceGraph` 是纯函数：相同节点/边 → 相同坐标。好处：
+当时的 `layoutForceGraph` 是纯函数：相同节点/边 → 相同坐标。这个取舍的好处是：
 
 - 单测可断言相对位置，不必 mock 随机数
 - SSR/CSR 不会「同构闪一下」
@@ -570,21 +557,21 @@ rehype-pretty-code + Shiki 在服务端出 HTML。注意：
 
 迭代次数、斥力、弹簧参数写在模块默认值里；调参凭观感可以，但**合入前固定种子行为**，避免每次刷新像换了一张图。
 
-筛选（专题 / 标签）先过滤图，再布局。过滤后的子图若为空，UI 提示清筛选，而不是渲染空白 SVG。
+当时的筛选（专题 / 标签）先过滤图，再布局。过滤后的子图若为空，UI 提示清筛选，而不是渲染空白 SVG。
 
 ## 交互层
 
-| 能力 | 行为 |
-| --- | --- |
-| 拖拽 | pointer 事件改坐标；超过阈值才算拖，否则 click 打开文章 |
-| 保存视图 | `localStorage` 存筛选 + 坐标；仅本机，不进账号体系 |
-| hover 高亮 | `hoverSlug` + 邻接表；非邻居边/点 dim |
-| 键盘 | 节点 `tabIndex=0`，Enter/Space 导航；focus 与 hover 共用高亮通道 |
-| 减少动效 | 关闭力导向与拖拽画布，只留边列表与笔记列表 |
+| 能力       | 行为                                                             |
+| ---------- | ---------------------------------------------------------------- |
+| 拖拽       | pointer 事件改坐标；超过阈值才算拖，否则 click 打开文章          |
+| 保存视图   | `localStorage` 存筛选 + 坐标；仅本机，不进账号体系               |
+| hover 高亮 | `hoverSlug` + 邻接表；非邻居边/点 dim                            |
+| 键盘       | 节点 `tabIndex=0`，Enter/Space 导航；focus 与 hover 共用高亮通道 |
+| 减少动效   | 关闭力导向与拖拽画布，只留边列表与笔记列表                       |
 
-hover 只服务指针用户；键盘依赖 focus。触屏没有稳定 hover——列表出口必须始终可用。
+当时的交互设计只把 hover 作为指针增强；键盘依赖 focus。触屏没有稳定 hover——列表出口必须始终可用。
 
-## G3：wikilink popover
+## G3：wikilink popover（已移除能力的设计草案）
 
 ```text
 hover/focus wikilink
@@ -593,29 +580,31 @@ hover/focus wikilink
   → 卡片；缓存于组件 state，二次 hover 不打网
 ```
 
-契约要点：
+当时草案的契约要点：
 
 1. **无 `content` 字段**——防止把整篇 MDX 打进客户端缓存。
 2. **404 静默**——加载态可保留，不弹错。
 3. **文本 React 转义**——禁止 `dangerouslySetInnerHTML`。
 4. **草稿不可见**——底层 `getPostBySlug` 已按 `published` 过滤。
 
-非 wikilink 的 `<a>`（外链、锚点）不带 `data-wikilink`，组件直接渲染普通锚点，不发请求。
+非 wikilink 的 `<a>`（外链、锚点）不带 `data-wikilink`，组件直接渲染普通锚点，不发请求。当前仓库的 `remark-wikilink` 已改为只生成普通站内链接，详见 [[mdx-remark-pipeline|MDX 渲染管线]]。
 
 ## 与性能 / Compiler
 
-- 邻接表 `Map<string, Set<string>>` 适合 `useMemo`：语义清晰。
+- 当时的邻接表 `Map<string, Set<string>>` 适合 `useMemo`：语义清晰。
 - 力导向结果变更频率低（筛选变化时），不要绑在每次 mousemove。
-- Compiler（[[react-compiler-in-practice|笔记]]）可兜底忘写的浅层 memo；布局纯函数仍建议显式缓存。
+- 当时的 Compiler（[[react-compiler-in-practice|笔记]]）可兜底忘写的浅层 memo；布局纯函数仍建议显式缓存。
 
 ## 检查清单
 
-- [ ] `/garden` 非首页主路径
-- [ ] 减少动效路径可完成全部阅读任务
-- [ ] preview API 不返回正文
-- [ ] 坏链 fail-closed
-- [ ] 拖拽与 click 阈值分离
-- [ ] popover 有自动化测试（fetch mock + hover）
+- [x] `/garden` 作为非首页主路径（历史实现）
+- [x] 减少动效路径可完成全部阅读任务（历史设计）
+- [x] preview API 不返回正文（历史设计）
+- [x] 坏链 fail-closed（历史设计）
+- [x] 拖拽与 click 阈值分离（历史设计）
+- [x] popover 有自动化测试（历史设计目标）
+
+> 当前站点不提供上述路由、预览 API 或图谱实现；这份清单记录的是历史方案，不是当前验收状态。
 
 ## 延伸阅读
 
@@ -629,7 +618,7 @@ hover/focus wikilink
             <category>React</category>
             <category>前端</category>
             <_reading_time>
-                <readingTime>5 min read</readingTime>
+                <readingTime>6 min read</readingTime>
             </_reading_time>
         </item>
         <item>
@@ -645,12 +634,12 @@ App Router 动态渲染背景见 [[nextjs-app-router|Next.js App Router 实战]]
 
 ## 威胁模型对照
 
-| 攻击面 | CSP nonce | SRI |
-| --- | --- | --- |
-| 注入的 inline `<script>` | 无匹配 nonce → 拦截 | 不管 inline |
-| 被允许的外链脚本内容被篡改 | 若已在白名单/带 nonce 则可能执行 | hash 不匹配 → 拦截 |
-| 构建缓存 / CDN 上的 `/_next/static/*` 被替换 | 通常不校验内容 | 校验 |
-| CSS 被篡改 | 取决于 `style-src` | 可对 link 加 integrity |
+| 攻击面                                       | CSP nonce                        | SRI                    |
+| -------------------------------------------- | -------------------------------- | ---------------------- |
+| 注入的 inline `<script>`                     | 无匹配 nonce → 拦截              | 不管 inline            |
+| 被允许的外链脚本内容被篡改                   | 若已在白名单/带 nonce 则可能执行 | hash 不匹配 → 拦截     |
+| 构建缓存 / CDN 上的 `/_next/static/*` 被替换 | 通常不校验内容                   | 校验                   |
+| CSS 被篡改                                   | 取决于 `style-src`               | 可对 link 加 integrity |
 
 所以：**SRI 不能替代 nonce**；关掉 nonce 只开 SRI，inline 注入仍然活口。
 
@@ -700,7 +689,7 @@ SRI 只保证**你构建时钉死的那份字节**。供应链投毒发生在 `p
 
 ### 3. 在 JSON API 上纠结 nonce
 
-像纯 JSON 预览接口（如当年 `digital-garden` 的 wikilink hover 卡片所用的 `/api/preview/[slug]`，**该功能 2026-10-07 已移除**）**不需要** nonce；它的风险在输入校验、缓存是否泄露草稿、以及响应是否投影多余字段。站内现存的纯 JSON 端点（如 `/api/csp-report`）同理——nonce 只管文档里的脚本，JSON 响应的风险面不在这。相关链路见 [[digital-garden-force-layout|数字花园]] 与 [[mdx-remark-pipeline|MDX 渲染管线]]。
+像纯 JSON 预览接口（例如已移除的 `digital-garden` wikilink hover 卡片所用的 `/api/preview/[slug]`）**不需要** nonce；它的风险在输入校验、缓存是否泄露草稿、以及响应是否投影多余字段。站内现存的纯 JSON 端点（如 `/api/csp-report`）同理——nonce 只管文档里的脚本，JSON 响应的风险面不在这。相关历史设计见 [[digital-garden-force-layout|数字花园]]；当前 MDX 链路见 [[mdx-remark-pipeline|MDX 渲染管线]]。
 
 ## 实施顺序（本站实际走的）
 
@@ -749,13 +738,13 @@ SRI 只保证**你构建时钉死的那份字节**。供应链投毒发生在 `p
 
 ## Core Web Vitals：Google 的性能三件套
 
-Google 用三个核心指标衡量网页体验，直接影响搜索排名：
+Google 用三个 Core Web Vitals 指标评估真实用户体验；良好的指标有助于页面体验，但不能单独保证搜索排名：
 
-| 指标 | 全称 | 含义 | Good | Poor |
-| --- | --- | --- | --- | --- |
-| LCP | Largest Contentful Paint | 最大内容绘制时间 | < 2.5s | > 4.0s |
-| INP | Interaction to Next Paint | 交互到下一次绘制 | < 200ms | > 500ms |
-| CLS | Cumulative Layout Shift | 累积布局偏移 | < 0.1 | > 0.25 |
+| 指标 | 全称                      | 含义             | Good    | Poor    |
+| ---- | ------------------------- | ---------------- | ------- | ------- |
+| LCP  | Largest Contentful Paint  | 最大内容绘制时间 | < 2.5s  | > 4.0s  |
+| INP  | Interaction to Next Paint | 交互到下一次绘制 | < 200ms | > 500ms |
+| CLS  | Cumulative Layout Shift   | 累积布局偏移     | < 0.1   | > 0.25  |
 
 ### LCP（最大内容绘制）
 
@@ -791,20 +780,28 @@ LCP 元素的加载链路通常是：HTML → CSS → 图片/字体 → 渲染�
 ```html
 <head>
   <!-- 预连接到图片 CDN -->
-  <link rel="preconnect" href="https://cdn.example.com">
-  <link rel="dns-prefetch" href="https://cdn.example.com">
+  <link rel="preconnect" href="https://cdn.example.com" />
+  <link rel="dns-prefetch" href="https://cdn.example.com" />
 
   <!-- 预加载 LCP 图片 -->
-  <link rel="preload" as="image" href="/images/hero.jpg" fetchpriority="high">
+  <link rel="preload" as="image" href="/images/hero.jpg" fetchpriority="high" />
 
   <!-- 关键 CSS 内联（减少渲染阻塞） -->
   <style>
     /* 首屏关键样式内联 */
-    .hero { min-height: 50vh; background: var(--bg); }
+    .hero {
+      min-height: 50vh;
+      background: var(--bg);
+    }
   </style>
 
   <!-- 非关键 CSS 异步加载 -->
-  <link rel="preload" as="style" href="/css/non-critical.css" onload="this.rel='stylesheet'">
+  <link
+    rel="preload"
+    as="style"
+    href="/css/non-critical.css"
+    onload="this.rel='stylesheet'"
+  />
 </head>
 ```
 
@@ -819,9 +816,13 @@ LCP 元素的加载链路通常是：HTML → CSS → 图片/字体 → 渲染�
   height="630"
   loading="eager"
   fetchpriority="high"
-  srcset="/images/hero-480.jpg 480w, /images/hero-800.jpg 800w, /images/hero-1200.jpg 1200w"
+  srcset="
+    /images/hero-480.jpg   480w,
+    /images/hero-800.jpg   800w,
+    /images/hero-1200.jpg 1200w
+  "
   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 1200px"
->
+/>
 ```
 
 **Next.js Image 组件自动处理：**
@@ -829,17 +830,17 @@ LCP 元素的加载链路通常是：HTML → CSS → 图片/字体 → 渲染�
 ```tsx
 import Image from 'next/image';
 
-// 首屏图片：priority 自动添加 preload
+// 仅在确认为 LCP 资源时预加载；Next.js 16 中 priority 已弃用
 <Image
   src="/images/hero.jpg"
   alt="Hero"
   width={1200}
   height={630}
-  priority
+  preload
   sizes="(max-width: 640px) 100vw, 1200px"
 />
 
-// 非首屏图片：自动懒加载
+// 非首屏图片：默认 loading="lazy"
 <Image
   src="/images/article-cover.jpg"
   alt="Cover"
@@ -858,29 +859,29 @@ import Image from 'next/image';
 @font-face {
   font-family: 'Noto Sans SC';
   src: url('/fonts/noto-sans-sc.woff2') format('woff2');
-  font-display: swap;  /* 先用系统字体，字体加载后替换 */
+  font-display: swap; /* 先用系统字体，字体加载后替换 */
   font-weight: 400;
-  unicode-range: U+0000-00FF, U+4E00-9FFF;  /* 只加载需要的字符范围 */
+  unicode-range: U+0000-00FF, U+4E00-9FFF; /* 只加载需要的字符范围 */
 }
 ```
 
-**Next.js next/font 自动优化：**
+**Next.js next/font 自动优化：**下面以 `next/font/local` 展示自托管字体。`next/font/google` 则会在构建期间获取 Google Fonts；选择前应考虑构建网络依赖、许可和字体子集体积。Chronicle 使用本地拉丁字体，中文采用系统字体栈（见 ADR-0008）：
 
 ```tsx
-import { Noto_Sans_SC, JetBrains_Mono } from 'next/font/google';
+import localFont from 'next/font/local';
 
-const notoSansSC = Noto_Sans_SC({
-  subsets: ['latin'],
-  weight: ['400', '700'],
+const jetbrainsMono = localFont({
+  src: './fonts/jetbrains-mono-400.woff2',
+  weight: '400',
   display: 'swap',
-  variable: '--font-noto-sans-sc',
+  variable: '--font-jetbrains-mono',
 });
 
 // next/font 会：
-// 1. 自动下载字体文件并自托管
+// 1. 在构建期读取本地字体文件并自托管
 // 2. 注入 CSS 变量
 // 3. 使用 font-display: swap
-// 4. 预加载字体文件
+// 4. 按需生成字体预加载（可用 preload 配置控制）
 ```
 
 ### 5. 减少 JavaScript 阻塞
@@ -893,9 +894,12 @@ const notoSansSC = Noto_Sans_SC({
 <!-- 关键 JS 内联 -->
 <script>
   // 主题初始化（避免 FOUC）
-  (function() {
+  (function () {
     const theme = localStorage.getItem('theme') ?? 'system';
-    if (theme === 'dark' || (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)) {
+    if (
+      theme === 'dark' ||
+      (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
+    ) {
       document.documentElement.classList.add('dark');
     }
   })();
@@ -911,7 +915,7 @@ INP 衡量的是从用户交互到屏幕更新的完整延迟。长任务是 INP
 ```javascript
 // 坏：一个 200ms 的长任务阻塞主线程
 function processAll(items) {
-  items.forEach(item => {
+  items.forEach((item) => {
     heavyComputation(item);
   });
 }
@@ -924,7 +928,7 @@ async function processAll(items) {
     if ('scheduler' in window && 'yield' in scheduler) {
       await scheduler.yield();
     } else {
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
     }
   }
 }
@@ -932,14 +936,22 @@ async function processAll(items) {
 
 ### 2. 使用 requestIdleCallback
 
+`requestIdleCallback` 尚未在所有浏览器中普遍支持；使用前应提供兼容回退，且回调内只安排可延迟工作。
+
 ```javascript
 // 非紧急任务放到空闲时间执行
 function prefetchLinks() {
-  requestIdleCallback(() => {
-    document.querySelectorAll('a[href]').forEach(link => {
-      // 预取链接
+  const run = () => {
+    document.querySelectorAll('a[href]').forEach((link) => {
+      // 在这里安排经验证不会造成额外负载的预取
     });
-  }, { timeout: 2000 });
+  };
+
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(run, { timeout: 2000 });
+  } else {
+    window.setTimeout(run, 1);
+  }
 }
 ```
 
@@ -969,14 +981,20 @@ function throttle<T extends (...args: any[]) => void>(fn: T, limit: number) {
 
 // 使用
 const handleSearch = debounce((query: string) => fetchResults(query), 300);
-const handleScroll = throttle(() => updateProgress(), 16);  // ~60fps
+const handleScroll = throttle(() => updateProgress(), 16); // ~60fps
 ```
 
 ### 4. React 中的优化
 
 ```tsx
 // 使用 useTransition 标记非紧急更新
-import { useTransition, useDeferredValue } from 'react';
+import {
+  Suspense,
+  useCallback,
+  useDeferredValue,
+  useMemo,
+  useTransition,
+} from 'react';
 
 function SearchResults({ query }) {
   const [isPending, startTransition] = useTransition();
@@ -992,9 +1010,9 @@ function SearchResults({ query }) {
   );
 }
 
-// useMemo 缓存计算结果
+// useMemo 缓存计算结果；复制数组，避免原地修改 props/state
 const sortedItems = useMemo(
-  () => items.sort((a, b) => a.date - b.date),
+  () => [...items].sort((a, b) => a.date - b.date),
   [items]
 );
 
@@ -1012,7 +1030,7 @@ const handleClick = useCallback((id: string) => {
 /* 图片必须设置宽高或 aspect-ratio */
 img {
   width: 100%;
-  aspect-ratio: 16 / 9;  /* 预留空间 */
+  aspect-ratio: 16 / 9; /* 预留空间 */
 }
 
 /* 视频容器 */
@@ -1034,7 +1052,7 @@ img {
   font-family: 'Noto Sans SC';
   src: url('/fonts/noto.woff2') format('woff2');
   font-display: swap;
-  size-adjust: 100%;  /* 调整 fallback 字体大小匹配自定义字体 */
+  size-adjust: 100%; /* 调整 fallback 字体大小匹配自定义字体 */
   ascent-override: 90%;
   descent-override: 20%;
   line-gap-override: 0%;
@@ -1116,14 +1134,11 @@ async function search(query: string) {
 ### 命令行运行
 
 ```bash
-# 安装 Lighthouse CLI
-npm install -g lighthouse
-
 # 运行审计
-lighthouse http://localhost:3000 --output html --output-path ./lighthouse-report.html
+pnpm exec lighthouse http://localhost:3000 --output html --output-path ./lighthouse-report.html
 
 # 只跑性能审计
-lighthouse http://localhost:3000 --only-categories=performance --view
+pnpm exec lighthouse http://localhost:3000 --only-categories=performance --view
 ```
 
 ### Chrome DevTools
@@ -1135,18 +1150,18 @@ lighthouse http://localhost:3000 --only-categories=performance --view
 
 ### 关键审计项
 
-| 审计项 | 说明 | 优化方法 |
-| --- | --- | --- |
-| LCP | 首屏最大内容 | 预加载 LCP 资源、优化图片 |
-| Eliminate render-blocking resources | 渲染阻塞资源 | 内联关键 CSS、defer JS |
-| Minify CSS/JS | 代码压缩 | 生产构建自动处理 |
-| Serve images in next-gen formats | 现代图片格式 | WebP/AVIF |
-| Efficiently encode images | 图片压缩 | 压缩工具 |
-| Preconnect to required origins | 预连接 | `<link rel="preconnect">` |
-| Reduce JS execution time | JS 执行时间 | 代码分割、减少 polyfill |
-| Avoid multiple page redirects | 重定向 | 避免不必要的重定向 |
-| Use HTTP/2 | 多路复用 | 服务器配置 H2/H3 |
-| Passes `preload` audit | 预加载关键资源 | `<link rel="preload">` |
+| 审计项                              | 说明           | 优化方法                  |
+| ----------------------------------- | -------------- | ------------------------- |
+| LCP                                 | 首屏最大内容   | 预加载 LCP 资源、优化图片 |
+| Eliminate render-blocking resources | 渲染阻塞资源   | 内联关键 CSS、defer JS    |
+| Minify CSS/JS                       | 代码压缩       | 生产构建自动处理          |
+| Serve images in next-gen formats    | 现代图片格式   | WebP/AVIF                 |
+| Efficiently encode images           | 图片压缩       | 压缩工具                  |
+| Preconnect to required origins      | 预连接         | `<link rel="preconnect">` |
+| Reduce JS execution time            | JS 执行时间    | 代码分割、减少 polyfill   |
+| Avoid multiple page redirects       | 重定向         | 避免不必要的重定向        |
+| Use HTTP/2                          | 多路复用       | 服务器配置 H2/H3          |
+| Passes `preload` audit              | 预加载关键资源 | `<link rel="preload">`    |
 
 ## 性能监控
 
@@ -1154,18 +1169,16 @@ lighthouse http://localhost:3000 --only-categories=performance --view
 
 ```typescript
 // 使用 web-vitals 库
+// 需先将 web-vitals 加为项目依赖；此处不接入 Chronicle 的运行时采集。
 import { onLCP, onINP, onCLS, onFCP, onTTFB } from 'web-vitals';
 
 function sendToAnalytics(metric: any) {
-  // 发送到分析平台
-  fetch('/api/vitals', {
-    method: 'POST',
-    body: JSON.stringify({
-      name: metric.name,
-      value: metric.value,
-      id: metric.id,
-      rating: metric.rating,  // 'good' | 'needs-improvement' | 'poor'
-    }),
+  // 示例仅说明数据形状；接入前需选择获准的数据接收端并处理同意、隐私与失败。
+  console.log({
+    name: metric.name,
+    value: metric.value,
+    id: metric.id,
+    rating: metric.rating, // 'good' | 'needs-improvement' | 'poor'
   });
 }
 
@@ -1180,6 +1193,7 @@ onTTFB(sendToAnalytics);
 
 ```tsx
 // app/layout.tsx
+// 需先安装对应 Vercel SDK，并按项目隐私策略决定是否启用。
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 
@@ -1242,7 +1256,7 @@ export default function RootLayout({ children }) {
             <category>Lighthouse</category>
             <category>性能优化</category>
             <_reading_time>
-                <readingTime>11 min read</readingTime>
+                <readingTime>12 min read</readingTime>
             </_reading_time>
         </item>
         <item>
@@ -1252,11 +1266,11 @@ export default function RootLayout({ children }) {
             <pubDate>Tue, 23 Jun 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[新 VPS 上线前的安全与运维清单：SSH 加固、UFW、Fail2Ban、自动更新、Docker 与基础监控，照着做即可。]]></description>
             <content:encoded><![CDATA[
-> 结论先说：新 VPS 不要急着装业务。先完成 SSH 密钥登录、禁 root 密码、防火墙与 Fail2Ban，再装 Docker——否则 22 端口的扫描会比你的应用先到。
+> 结论先说：新 VPS 不要急着装业务。先完成 SSH 密钥登录、禁 root 密码、防火墙与 Fail2Ban，再装 Docker；暴露服务前先验证访问控制和恢复路径。
 
 ## 前言
 
-买 VPS 之后第一时间就 `ssh root@ip` 开始装东西？别急。互联网上每分钟都有扫描机器在扫 22 端口，没做安全配置的服务器活不过 24 小时。
+买 VPS 之后第一时间就 `ssh root@ip` 开始装东西？别急。公网 SSH 服务会持续面对自动化探测；风险取决于认证方式、补丁状态、网络暴露面和监控响应，不能用固定存活时长概括。
 
 以下是我每台新服务器的标配配置步骤。
 
@@ -1317,7 +1331,7 @@ ClientAliveCountMax 3       # 超时重试次数
 sudo systemctl restart sshd
 ```
 
-**建议换端口**：把 `Port 22` 改成 10000-65535 之间的高位端口，能减少 99% 的扫描攻击。改之前确认防火墙放行了新端口，不然你会把自己锁在外面。
+**端口选择**：改 SSH 端口只能减少部分低质量扫描噪声，不是访问控制或加固的替代品。若确需更改，先在云厂商防火墙与主机防火墙同时放行新端口，保持现有会话，用第二个会话验证新端口登录成功后再关闭旧入口。
 
 ## 4. 配置 UFW 防火墙
 
@@ -1332,8 +1346,8 @@ sudo ufw allow 22/tcp
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 
-# 如果运行 Docker，Docker 会直接操作 iptables
-# 但 UFW 还是能控制主机层面的流量
+# Docker 发布端口可能通过其防火墙规则绕过 UFW 预期；不要仅凭 `ufw status` 判断容器端口是否暴露。
+# 在云厂商防火墙和主机规则中逐项核对发布端口；按 Docker 官方防火墙说明配置过滤。
 
 sudo ufw enable
 sudo ufw status verbose
@@ -1396,10 +1410,12 @@ Unattended-Upgrade::Automatic-Reboot "false";
 安全底座就绪后，再装容器运行时。完整多阶段构建与 Compose 编排见 [[docker-deploy-guide|Docker 部署实战]]。
 
 ```bash
-# 官方一键安装
-curl -fsSL https://get.docker.com | sh
+# 安装前先阅读并审阅官方脚本内容；不要在不了解影响时直接以 root 执行远程脚本。
+curl -fsSL https://get.docker.com -o get-docker.sh
+less get-docker.sh
+sudo sh get-docker.sh
 
-# 把用户加入 docker 组（避免每次 sudo）
+# docker 组成员通常可获得宿主机 root 级控制能力；仅对可信且确需管理 Docker 的账号授权。
 sudo usermod -aG docker $USER
 
 # 重启会话后验证
@@ -1428,13 +1444,20 @@ sudo apt install -y net-tools
 sudo apt install -y iotop
 ```
 
-建议同时装一个简单的系统监控，比如 netdata：
+可按暴露面和维护能力选择监控方案。若部署 Netdata，先审阅安装方式与采集/上报设置，并限制其 Web 端口只对可信网络开放；不要默认把管理面暴露到公网：
+
+先下载并审阅官方安装脚本，再按当前官方安装指南选择参数后人工执行；不要直接通过管道或进程替换运行远程内容：
 
 ```bash
-bash <(curl -Ss https://my-netdata.io/kickstart.sh)
+curl -fsSL https://my-netdata.io/kickstart.sh -o netdata-kickstart.sh
+less netdata-kickstart.sh
+# 确认脚本内容、版本和采集/上报选项后，再按官方文档执行：
+bash netdata-kickstart.sh
 ```
 
-它会启动一个 web 面板（默认端口 19999），可以直接在浏览器里看 CPU、内存、磁盘、网络等实时数据。
+脚本来自外部网络，执行前应核对下载地址、HTTPS 证书和当前官方安装说明；不需要时删除本地脚本。
+
+默认 Web 面板端口为 19999；部署后应通过防火墙、反向代理认证或私有网络限制访问，并核对当前版本的官方安全部署指南。
 
 ## 9. 配置时间同步
 
@@ -1446,7 +1469,9 @@ sudo systemctl start chrony
 sudo timedatectl status
 ```
 
-## 10. 系统级调优
+## 10. 系统级调优（按需）
+
+不要把较大的文件描述符上限或 BBR 配置作为所有 VPS 的必做项。先确认服务进程的实际限制、内核支持与网络环境，再为具体服务设置并验证。以下仅为配置示例：
 
 **调整文件描述符限制**——编辑 `/etc/security/limits.conf`：
 
@@ -1472,53 +1497,54 @@ sysctl net.ipv4.tcp_congestion_control
 # 输出：net.ipv4.tcp_congestion_control = bbr
 ```
 
-## 一步到位的初始化脚本
+## 初始化预检脚本
 
-以上步骤可以合并成一个初始化脚本，新买 VPS 后一键执行。这里提供一个简化版：
+不要把创建用户、修改 SSH、启用防火墙和安装远程脚本塞进一个“一键执行”脚本：任何一步出错都可能让当前会话断开，且不同发行版的默认端口、服务名和包名并不一致。下面的脚本只适用于使用 `apt` 和 `systemd` 的 Debian/Ubuntu，执行低风险的更新与工具安装，并输出需要人工确认的检查项；它不会修改 SSH 配置、启用 UFW 或执行远程安装脚本。
 
 ```bash
-#!/bin/bash
-# VPS 初始化脚本
+#!/usr/bin/env bash
+# Debian/Ubuntu VPS 预检脚本；不会启用防火墙或修改 SSH
 
 set -e
 
-echo "=== 更新系统 ==="
-apt update && apt upgrade -y
+if [[ "$(id -u)" -ne 0 ]]; then
+  echo "请以 root 或 sudo bash 运行此脚本"
+  exit 1
+fi
 
-echo "=== 安装基础工具 ==="
+if ! command -v apt-get >/dev/null || ! command -v systemctl >/dev/null; then
+  echo "仅支持带 apt-get 和 systemd 的 Debian/Ubuntu 系统"
+  exit 1
+fi
+
+echo "=== 更新系统并安装基础工具 ==="
+apt update && apt upgrade -y
 apt install -y curl wget git ufw fail2ban htop btop ncdu \
   net-tools chrony unattended-upgrades
 
-echo "=== 配置防火墙 ==="
-ufw default deny incoming
-ufw default allow outgoing
-ufw allow 22/tcp
-ufw allow 80/tcp
-ufw allow 443/tcp
-ufw --force enable
+echo "=== 只读检查 ==="
+ufw status verbose || true
+ss -lntup || true
+systemctl is-active ssh 2>/dev/null || systemctl is-active sshd 2>/dev/null || true
+systemctl is-active fail2ban 2>/dev/null || true
 
-echo "=== 安装 Docker ==="
-curl -fsSL https://get.docker.com | sh
-
-echo "=== 配置时间 ==="
-timedatectl set-timezone Asia/Shanghai
-systemctl enable chrony
-
-echo "=== 安全配置提示 ==="
-echo "1. 创建普通用户：adduser deploy && usermod -aG sudo deploy"
-echo "2. 配置 SSH 密钥登录并禁用密码"
-echo "3. 修改 SSH 端口（可选）"
-echo "4. 配置 fail2ban：service fail2ban start"
-echo "5. 调整 limits.conf 和 sysctl.conf（BBR）"
+cat <<'NOTICE'
+=== 需要人工确认的后续步骤 ===
+1. 先在第二个 SSH 会话用 deploy 用户验证密钥登录和 sudo，再修改 sshd_config。
+2. 根据云厂商防火墙和实际监听端口，人工执行 ufw allow 规则；确认 SSH 规则后再执行 ufw enable。
+3. 按“安装 Docker”章节下载并审阅官方安装脚本，确认内容后再本地执行；不要使用 curl|sh。
+4. 根据发行版服务名确认 chrony、fail2ban 状态，并安排维护窗口处理重启。
+NOTICE
 ```
 
-保存为 `init-vps.sh`，新 VPS 上 `bash init-vps.sh` 即可。
+保存为 `vps-preflight.sh`，确认系统符合前置条件后执行 `sudo bash vps-preflight.sh`。脚本成功只代表预检完成，不代表 SSH、防火墙或 Docker 已完成配置。
 
 ## 总结
 
-安全配置不是一劳永逸的事，但它有个**基础门槛**——过了这道门槛，绝大部分的自动扫描和低级攻击就与你无关了。上面这 10 步做完，你的 VPS 已经比互联网上 90% 的裸机安全得多。
+安全配置不是一劳永逸的事。完成上述步骤后，仍需结合云厂商防火墙、实际监听端口、日志和恢复演练持续验证；本文没有足够的测量数据支持对“比多少裸机更安全”作百分比结论。
 
 定期做的事：
+
 - 每月检查一次 `fail2ban` 状态
 - `apt update` 保持系统更新
 - 检查 `/var/log/auth.log` 看有没有异常登录尝试
@@ -1535,7 +1561,7 @@ echo "5. 调整 limits.conf 和 sysctl.conf（BBR）"
             <category>安全</category>
             <category>SSH</category>
             <_reading_time>
-                <readingTime>7 min read</readingTime>
+                <readingTime>10 min read</readingTime>
             </_reading_time>
         </item>
         <item>
@@ -1567,8 +1593,8 @@ function first<T>(arr: T[]): T | undefined {
   return arr[0];
 }
 
-const n = first([1, 2, 3]);        // number
-const s = first(['a', 'b']);       // string
+const n = first([1, 2, 3]); // number
+const s = first(['a', 'b']); // string
 ```
 
 ### 泛型约束（extends）
@@ -1582,9 +1608,9 @@ function logLength<T extends { length: number }>(item: T): T {
   return item;
 }
 
-logLength('hello');     // ✓
-logLength([1, 2, 3]);   // ✓
-logLength(123);         // ✗ number 没有 length
+logLength('hello'); // ✓
+logLength([1, 2, 3]); // ✓
+logLength(123); // ✗ number 没有 length
 ```
 
 ### keyof 和泛型组合
@@ -1601,7 +1627,7 @@ function pick<T, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
 }
 
 const user = { id: 1, name: 'Alice', email: 'a@b.com', role: 'admin' };
-const summary = pick(user, ['id', 'name']);  // { id: number; name: string }
+const summary = pick(user, ['id', 'name']); // { id: number; name: string }
 ```
 
 ## 条件类型：类型层面的 if-else
@@ -1611,8 +1637,8 @@ const summary = pick(user, ['id', 'name']);  // { id: number; name: string }
 ```typescript
 type IsString<T> = T extends string ? true : false;
 
-type A = IsString<'hello'>;  // true
-type B = IsString<42>;       // false
+type A = IsString<'hello'>; // true
+type B = IsString<42>; // false
 ```
 
 ### infer 关键字
@@ -1629,9 +1655,9 @@ type Awaited<T> = T extends Promise<infer U> ? U : T;
 // 提取数组元素类型
 type ElementOf<T> = T extends (infer E)[] ? E : never;
 
-type R1 = ReturnType<() => string>;          // string
-type R2 = Awaited<Promise<number>>;          // number
-type R3 = ElementOf<string[]>;               // string
+type R1 = ReturnType<() => string>; // string
+type R2 = Awaited<Promise<number>>; // number
+type R3 = ElementOf<string[]>; // string
 ```
 
 ### 实战：API 响应类型推导
@@ -1646,14 +1672,12 @@ interface ApiEndpoints {
 // 根据 path 自动推导响应类型
 type ResponseOf<P extends keyof ApiEndpoints> = ApiEndpoints[P];
 
-async function fetchApi<P extends keyof ApiEndpoints>(
-  path: P
-): Promise<ResponseOf<P>> {
+async function fetchApi<P extends keyof ApiEndpoints>(path: P): Promise<ResponseOf<P>> {
   const res = await fetch(path);
   return res.json();
 }
 
-const users = await fetchApi('/users');   // { id: number; name: string }[]
+const users = await fetchApi('/users'); // { id: number; name: string }[]
 const config = await fetchApi('/config'); // { theme: string; lang: string }
 ```
 
@@ -1670,11 +1694,11 @@ interface User {
   email: string;
 }
 
-type PartialUser = Partial<User>;       // 所有属性变可选
-type RequiredUser = Required<User>;     // 所有属性变必填
-type ReadonlyUser = Readonly<User>;     // 所有属性变只读
-type UserPreview = Pick<User, 'id' | 'name'>;  // 只保留部分属性
-type UserWithoutEmail = Omit<User, 'email'>;   // 排除部分属性
+type PartialUser = Partial<User>; // 所有属性变可选
+type RequiredUser = Required<User>; // 所有属性变必填
+type ReadonlyUser = Readonly<User>; // 所有属性变只读
+type UserPreview = Pick<User, 'id' | 'name'>; // 只保留部分属性
+type UserWithoutEmail = Omit<User, 'email'>; // 排除部分属性
 ```
 
 ### 自定义映射类型
@@ -1685,7 +1709,7 @@ type Nullable<T> = { [K in keyof T]: T[K] | null };
 
 // 所有属性变为 getter
 type Getters<T> = {
-  [K in keyof T as `get${Capitalize<string & K>}`]: () => T[K]
+  [K in keyof T as `get${Capitalize<string & K>}`]: () => T[K];
 };
 
 type NullableUser = Nullable<User>;
@@ -1725,18 +1749,18 @@ class TypedEmitter {
   }
 
   emit<E extends keyof EventMap>(event: E, data: EventMap[E]) {
-    this.handlers[event]?.forEach(h => h(data));
+    this.handlers[event]?.forEach((h) => h(data));
   }
 }
 
 const emitter = new TypedEmitter();
 emitter.on('click', (data) => {
-  console.log(data.x, data.y);  // ✓ 类型安全
+  console.log(data.x, data.y); // ✓ 类型安全
 });
 
-emitter.emit('click', { x: 10, y: 20 });        // ✓
-emitter.emit('click', { x: 10 });               // ✗ 缺少 y
-emitter.emit('hover', { x: 10, y: 20 });        // ✗ hover 不在 EventMap 中
+emitter.emit('click', { x: 10, y: 20 }); // ✓
+emitter.emit('click', { x: 10 }); // ✗ 缺少 y
+emitter.emit('hover', { x: 10, y: 20 }); // ✗ hover 不在 EventMap 中
 ```
 
 ## 类型守卫：收窄联合类型
@@ -1746,23 +1770,27 @@ emitter.emit('hover', { x: 10, y: 20 });        // ✗ hover 不在 EventMap 中
 ```typescript
 function process(value: string | number) {
   if (typeof value === 'string') {
-    return value.toUpperCase();  // 此处 value 是 string
+    return value.toUpperCase(); // 此处 value 是 string
   }
-  return value.toFixed(2);       // 此处 value 是 number
+  return value.toFixed(2); // 此处 value 是 number
 }
 ```
 
 ### in 操作符
 
 ```typescript
-interface Fish { swim: () => void }
-interface Bird { fly: () => void }
+interface Fish {
+  swim: () => void;
+}
+interface Bird {
+  fly: () => void;
+}
 
 function move(animal: Fish | Bird) {
   if ('swim' in animal) {
-    animal.swim();  // ✓
+    animal.swim(); // ✓
   } else {
-    animal.fly();   // ✓
+    animal.fly(); // ✓
   }
 }
 ```
@@ -1770,8 +1798,14 @@ function move(animal: Fish | Bird) {
 ### 自定义类型守卫（is）
 
 ```typescript
-interface ApiError { code: number; message: string }
-interface NetworkError { status: number; url: string }
+interface ApiError {
+  code: number;
+  message: string;
+}
+interface NetworkError {
+  status: number;
+  url: string;
+}
 
 function isApiError(err: unknown): err is ApiError {
   return typeof err === 'object' && err !== null && 'code' in err;
@@ -1781,7 +1815,7 @@ try {
   await apiCall();
 } catch (err) {
   if (isApiError(err)) {
-    console.log(err.code);     // ✓ err 被收窄为 ApiError
+    console.log(err.code); // ✓ err 被收窄为 ApiError
   }
 }
 ```
@@ -1807,7 +1841,7 @@ type User = z.infer<typeof UserSchema>;
 
 // 运行时验证 + 类型安全
 function parseUser(data: unknown): User {
-  return UserSchema.parse(data);  // 验证失败抛 ZodError
+  return UserSchema.parse(data); // 验证失败抛 ZodError
 }
 ```
 
@@ -1820,14 +1854,18 @@ function parseUser(data: unknown): User {
 type UserId = string & { readonly __brand: 'UserId' };
 type PostId = string & { readonly __brand: 'PostId' };
 
-function getUser(id: UserId) { /* ... */ }
-function getPost(id: PostId) { /* ... */ }
+function getUser(id: UserId) {
+  /* ... */
+}
+function getPost(id: PostId) {
+  /* ... */
+}
 
 const uid = '123' as UserId;
 const pid = '456' as PostId;
 
-getUser(uid);  // ✓
-getUser(pid);  // ✗ PostId 不能赋给 UserId
+getUser(uid); // ✓
+getUser(pid); // ✗ PostId 不能赋给 UserId
 ```
 
 ### 3. 递归类型处理树形结构
@@ -1841,7 +1879,7 @@ interface TreeNode {
 
 // 深度遍历树
 function flatten<T extends TreeNode>(nodes: T[]): T[] {
-  return nodes.flatMap(node => [
+  return nodes.flatMap((node) => [
     node,
     ...(node.children ? flatten(node.children) : []),
   ]);
@@ -1869,26 +1907,31 @@ const user = UserSchema.parse(data);
 TypeScript 采用结构类型系统（鸭子类型），只要结构匹配就兼容：
 
 ```typescript
-interface A { x: number }
-interface B { x: number; y: number }
+interface A {
+  x: number;
+}
+interface B {
+  x: number;
+  y: number;
+}
 
 const b: B = { x: 1, y: 2 };
-const a: A = b;  // ✓ B 比 A 多属性，结构兼容
+const a: A = b; // ✓ B 比 A 多属性，结构兼容
 ```
 
 这意味着你不能依赖"类型名"来区分对象，必要时用品牌类型。
 
 ## 小结
 
-| 技巧 | 适用场景 |
-| --- | --- |
-| 泛型约束 | 工具函数、数据层抽象 |
-| 条件类型 + infer | 类型推导、API 响应类型 |
-| 映射类型 | 批量转换接口属性 |
-| 模板字面量类型 | 事件系统、CSS 属性、路由参数 |
-| 类型守卫 | 联合类型收窄、运行时验证 |
-| 品牌类型 | 防止原始类型混用 |
-| zod + infer | 运行时验证 + 编译期类型 |
+| 技巧             | 适用场景                     |
+| ---------------- | ---------------------------- |
+| 泛型约束         | 工具函数、数据层抽象         |
+| 条件类型 + infer | 类型推导、API 响应类型       |
+| 映射类型         | 批量转换接口属性             |
+| 模板字面量类型   | 事件系统、CSS 属性、路由参数 |
+| 类型守卫         | 联合类型收窄、运行时验证     |
+| 品牌类型         | 防止原始类型混用             |
+| zod + infer      | 运行时验证 + 编译期类型      |
 
 类型系统的价值不在于写出更复杂的类型，而在于让错误在编译期暴露。当你发现自己在写 `as any` 时，停下来想想——大概率有更好的类型表达方式。
 
@@ -1943,11 +1986,13 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
 );
 ```
 
 Next.js 中通常把这段放在 `src/lib/supabase.ts` 里统一导出。
+
+`NEXT_PUBLIC_SUPABASE_ANON_KEY` 可以出现在浏览器端，但它不等于绕过权限；数据库访问仍由 RLS 决定。`SUPABASE_SERVICE_ROLE_KEY` 具有绕过 RLS 的高权限，只能放在服务端或 Edge Function 的密钥环境变量中，不能进入客户端 bundle、日志或公开仓库。
 
 ## 数据库设计与迁移
 
@@ -1997,7 +2042,7 @@ create policy "apis_insert_policy" on public.apis
 -- 仅管理员可更新/删除
 create policy "apis_update_policy" on public.apis
   for update using (
-    auth.jwt() ->> 'role' = 'admin'
+    (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
   );
 ```
 
@@ -2043,7 +2088,7 @@ function ApiList() {
           console.log('变更类型:', payload.eventType);
           console.log('新数据:', payload.new);
           // 更新 UI
-        }
+        },
       )
       .subscribe();
 
@@ -2057,6 +2102,7 @@ function ApiList() {
 ```
 
 适合的场景：
+
 - 协作编辑应用
 - 实时通知/消息
 - 仪表盘数据实时刷新
@@ -2075,14 +2121,12 @@ const { data, error } = await supabase.storage
   });
 
 // 获取公开 URL
-const { data: { publicUrl } } = supabase.storage
-  .from('avatars')
-  .getPublicUrl(`public/${userId}.jpg`);
+const {
+  data: { publicUrl },
+} = supabase.storage.from('avatars').getPublicUrl(`public/${userId}.jpg`);
 
 // 删除文件
-await supabase.storage
-  .from('avatars')
-  .remove([`public/${userId}.jpg`]);
+await supabase.storage.from('avatars').remove([`public/${userId}.jpg`]);
 ```
 
 记得在 Storage 中设置 RLS 策略——同样支持 SQL 策略定义。
@@ -2099,7 +2143,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 serve(async (req) => {
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   );
 
   const { name, url } = await req.json();
@@ -2130,20 +2174,17 @@ npx supabase functions deploy webhook
 以下是在 nav-site 项目中使用 Supabase 的真实模式：
 
 ```typescript
-// src/lib/supabase-server.ts — 服务端客户端（有完整权限）
+// src/lib/supabase-server.ts — 服务端高权限客户端；绝不可导入客户端组件
 import { createClient } from '@supabase/supabase-js';
 
 export const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 // 在 Server Component 或 API Route 中直接查询数据库
 export async function getCategories() {
-  const { data } = await supabaseAdmin
-    .from('categories')
-    .select('*')
-    .order('sort_order');
+  const { data } = await supabaseAdmin.from('categories').select('*').order('sort_order');
   return data ?? [];
 }
 ```
@@ -2155,7 +2196,7 @@ import { createBrowserClient } from '@supabase/ssr';
 export function createClient() {
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   );
 }
 ```
@@ -2184,7 +2225,7 @@ Supabase 让我可以专注于前端逻辑，后端的基础设施——数据�
             <category>PostgreSQL</category>
             <category>RLS</category>
             <_reading_time>
-                <readingTime>7 min read</readingTime>
+                <readingTime>8 min read</readingTime>
             </_reading_time>
         </item>
         <item>
@@ -2194,7 +2235,7 @@ Supabase 让我可以专注于前端逻辑，后端的基础设施——数据�
             <pubDate>Thu, 25 Jun 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[生产 Redis 用法：穿透/击穿/雪崩、热点 Key、写后删缓存与一致性策略，以及命中率监控。]]></description>
             <content:encoded><![CDATA[
-> 结论先说：缓存只放读多写少的数据；过期加随机偏移，写后删而非更新；命中率长期低于 90% 先查设计，别先加机器。
+> 结论先说：缓存只放读多写少的数据；过期加随机偏移，写后删而非更新；命中率持续偏低时先查设计和流量分布，别先加机器。
 
 ## 什么时候需要 Redis
 
@@ -2259,13 +2300,14 @@ async function updateUser(id: string, data: UpdateInput) {
 **问题**：请求一个永远不存在的 Key（如 `user:999999999`），缓存不命中，每次都穿透到数据库。
 
 **解法**：
+
 - **缓存空值**：即使数据库返回 null，也缓存一个空值（短过期时间）
 - **布隆过滤器**：在缓存层之前加一层布隆过滤器，快速判断 Key 是否存在
 
 ```typescript
 async function getUser(id: string) {
   // 布隆过滤器检查
-  if (!await bloomFilter.mightContain(id)) return null;
+  if (!(await bloomFilter.mightContain(id))) return null;
 
   const cached = await redis.get(`user:${id}`);
   if (cached !== null) return cached ? JSON.parse(cached) : null;
@@ -2286,6 +2328,7 @@ async function getUser(id: string) {
 **问题**：某个热点 Key 过期瞬间，大量并发请求同时穿透到数据库。
 
 **解法**：
+
 - **互斥锁**：缓存未命中时只允许一个请求去查数据库，其他请求等待
 - **逻辑过期**：缓存值带一个过期时间戳，后台异步更新，永远不会"同时失效"
 
@@ -2314,10 +2357,14 @@ async function getHotUser(id: string) {
 
   try {
     const user = await db.user.findUnique({ where: { id } });
-    await redis.set(`user:${id}`, JSON.stringify({
-      value: user,
-      expireAt: Date.now() + 3600000,
-    }), { ex: 7200 });
+    await redis.set(
+      `user:${id}`,
+      JSON.stringify({
+        value: user,
+        expireAt: Date.now() + 3600000,
+      }),
+      { ex: 7200 },
+    );
     return user;
   } finally {
     await redis.del(`lock:user:${id}`);
@@ -2330,6 +2377,7 @@ async function getHotUser(id: string) {
 **问题**：大量 Key 同时过期，或者 Redis 宕机，所有请求同时打到数据库。
 
 **解法**：
+
 - **过期时间加随机偏移**：避免同一时刻大面积失效
 - **多级缓存**：本地缓存（如 LRU 内存缓存） + Redis 缓存 + 数据库
 - **Redis 高可用**：Cluster 模式或 Sentinel，避免单点故障
@@ -2345,11 +2393,11 @@ await redis.set(key, value, { ex: baseTTL + jitter });
 
 这是最容易被忽视的问题。以下策略按一致性强度排列：
 
-| 策略 | 一致性 | 性能 | 复杂度 |
-|------|--------|------|--------|
-| 更新数据库后删除缓存 | 最终一致 | 高 | 低 |
-| 延迟双删 | 较强 | 中 | 中 |
-| 订阅数据库变更（CDC） | 强一致 | 高 | 高 |
+| 策略                  | 一致性   | 性能 | 复杂度 |
+| --------------------- | -------- | ---- | ------ |
+| 更新数据库后删除缓存  | 最终一致 | 高   | 低     |
+| 延迟双删              | 较强     | 中   | 中     |
+| 订阅数据库变更（CDC） | 强一致   | 高   | 高     |
 
 **延迟双删**：更新数据库 → 删除缓存 → 延迟几百毫秒 → 再删一次缓存。中间可能有旧数据写入缓存，但第二次删除会覆盖。
 
@@ -2371,7 +2419,7 @@ async function updateWithDoubleDelete(id: string, data: UpdateInput) {
 
 ```typescript
 // 热点 Key 自动探测
-redis.INFO('stats') // 查看 key 访问频率
+redis.INFO('stats'); // 查看 key 访问频率
 
 // 热点 Key 多副本策略——把一个 Key 复制成 N 个
 const replicas = 5;
@@ -2385,22 +2433,22 @@ const value = await redis.get(distributedKey);
 
 不要所有东西都用 String：
 
-| 场景 | 数据结构 | 说明 |
-|------|----------|------|
-| 缓存值 | String | 最常见 |
-| 排行榜 | Sorted Set | ZADD/ZRANGE，按分数排序 |
-| 计数器 | String (INCR) | 原子递增 |
-| 消息队列 | List | LPUSH/BRPOP |
-| 用户标签 | Set | SADD/SMEMBERS |
-| 去重 | Set / Bloom Filter | 判断是否已存在 |
-| 时间线 | Sorted Set | 按时间戳作为 score |
+| 场景     | 数据结构           | 说明                    |
+| -------- | ------------------ | ----------------------- |
+| 缓存值   | String             | 最常见                  |
+| 排行榜   | Sorted Set         | ZADD/ZRANGE，按分数排序 |
+| 计数器   | String (INCR)      | 原子递增                |
+| 消息队列 | List               | LPUSH/BRPOP             |
+| 用户标签 | Set                | SADD/SMEMBERS           |
+| 去重     | Set / Bloom Filter | 判断是否已存在          |
+| 时间线   | Sorted Set         | 按时间戳作为 score      |
 
 ## 常见误区
 
 1. **过度缓存**：不是所有数据都适合缓存。频繁变更的数据放缓存反而增加复杂度。
 2. **忽略缓存失效时间**：不设过期时间 = 永久缓存 = 内存泄漏。
 3. **大 Key 问题**：一个 Key 存几 MB 数据，会导致 Redis 阻塞。拆分大 Key。
-4. **没有监控**：用 `redis-cli info` 查看命中率。命中率低于 90% 说明缓存设计有问题。
+4. **没有监控**：用 `redis-cli info` 查看命中率，并按接口、Key 类型和业务流量基线分开观察。单一百分比不能证明设计好坏：低命中率可能来自查询本就不适合缓存，也可能来自 TTL、Key 设计或流量分布问题。
 5. **把 Redis 当数据库用**：Redis 是内存数据库，不是持久化存储。重要数据必须写关系型数据库。
 
 ## 总结
@@ -2411,7 +2459,7 @@ Redis 的核心价值是把"慢"变成"快"。但缓存是双刃剑——引入�
 - **设置合理的过期时间 + 随机偏移**
 - **写操作后删除缓存，不更新**
 - **热点 Key 提前预案**
-- **监控命中率，低于 90% 要检查设计**
+- **监控命中率，结合业务基线检查设计**
 
 参考：[Redis 官方文档](https://redis.io/docs/)
 
@@ -2449,9 +2497,9 @@ FROM pg_stat_activity
 WHERE state != 'idle'
 ORDER BY duration DESC;
 
--- 查看慢查询日志（需要配置 log_min_duration_statement）
+-- 查看慢查询日志（需要配置 log_min_duration_statement；阈值按业务 SLO 设定）
 -- postgresql.conf:
--- log_min_duration_statement = 100  -- 记录超过 100ms 的查询
+-- log_min_duration_statement = 250  -- 示例值，请按业务 SLO 和日志量调整
 -- log_line_prefix = '%t [%p] %u@%d '
 ```
 
@@ -2479,15 +2527,15 @@ Execution Time: 0.08 ms
 
 ### 关键指标
 
-| 指标 | 含义 | 关注点 |
-| --- | --- | --- |
-| `Seq Scan` | 全表扫描 | 大表出现通常意味着缺索引 |
-| `Index Scan` | 索引扫描 | 理想情况 |
-| `Bitmap Heap Scan` | 位图扫描 | 介于两者之间，大量行匹配时常见 |
-| `cost` | 优化器估算成本 | 第一行是启动成本，第二行是总成本 |
-| `actual time` | 实际执行时间 | 和 cost 对比，差异大说明统计信息过期 |
-| `rows` | 返回行数 | 估算值和实际值差异大时需要 ANALYZE |
-| `loops` | 循环次数 | 嵌套循环连接时关注 |
+| 指标               | 含义                         | 关注点                                                                       |
+| ------------------ | ---------------------------- | ---------------------------------------------------------------------------- |
+| `Seq Scan`         | 全表扫描                     | 大表出现通常意味着缺索引                                                     |
+| `Index Scan`       | 索引扫描                     | 理想情况                                                                     |
+| `Bitmap Heap Scan` | 位图扫描                     | 介于两者之间，大量行匹配时常见                                               |
+| `cost`             | 优化器估算成本（无时间单位） | 第一行是启动成本，第二行是总成本；只用于比较候选计划                         |
+| `actual time`      | 实际执行时间（毫秒）         | 与 `rows`/`loops` 一起核对；估算偏差大时再检查统计信息、参数分布和计划稳定性 |
+| `rows`             | 返回行数                     | 估算值和实际值差异大时需要 ANALYZE                                           |
+| `loops`            | 循环次数                     | 嵌套循环连接时关注                                                           |
 
 ### 常见问题模式
 
@@ -2503,7 +2551,7 @@ CREATE INDEX idx_orders_customer ON orders(customer_id);
 -- Index Scan using idx_orders_customer on orders (cost=0.42..8.44 rows=3 width=128) (actual time=0.015..0.018 rows=3 loops=1)
 ```
 
-**Nested Loop with high cost** — 嵌套循环连接大表，考虑改用 Hash Join：
+**Nested Loop with high estimated cost** — 先用实际计划和行数确认问题，不要仅凭 cost 数字切换连接算法：
 
 ```sql
 -- 强制使用 Hash Join（测试用，不要在生产环境随意加 hint）
@@ -2568,10 +2616,13 @@ SELECT * FROM events WHERE data @> '{"type": "click"}';  -- 会使用 GIN 索引
 适合全文搜索、数组、JSONB：
 
 ```sql
--- 全文搜索
-CREATE INDEX idx_posts_search ON posts USING GIN (to_tsvector('chinese', title || ' ' || body));
+-- 全文搜索：simple 是内置配置；中文分词需先确认实例已安装并选定兼容的配置（例如经验证的扩展），不能直接假设存在 chinese
+CREATE INDEX idx_posts_search ON posts USING GIN (to_tsvector('simple', title || ' ' || body));
 
-SELECT * FROM posts WHERE to_tsvector('chinese', title || ' ' || body) @@ to_tsquery('PostgreSQL & 性能');
+SELECT * FROM posts WHERE to_tsvector('simple', title || ' ' || body) @@ to_tsquery('PostgreSQL & 性能');
+
+-- 在切换到其他配置前，先检查实例实际提供的配置：
+SELECT cfgname FROM pg_ts_config ORDER BY cfgname;
 
 -- 数组包含查询
 CREATE INDEX idx_tags ON posts USING GIN (tags);
@@ -2637,7 +2688,7 @@ const pool = new Pool({
   host: 'localhost',
   port: 5432,
   database: 'mydb',
-  max: 20,           // 最大连接数
+  max: 20, // 最大连接数
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
 });
@@ -2648,7 +2699,7 @@ try {
   const result = await client.query('SELECT * FROM posts WHERE id = $1', [1]);
   return result.rows[0];
 } finally {
-  client.release();  // 归还连接
+  client.release(); // 归还连接
 }
 ```
 
@@ -2713,7 +2764,7 @@ VACUUM ANALYZE posts;
 
 ## 分区表
 
-当单表数据量超过千万级，考虑分区。
+当查询裁剪、生命周期管理或维护窗口已经显示出收益时，再评估分区；行数本身不是通用的分区阈值。
 
 ### 按范围分区（时间最常见）
 
@@ -2787,7 +2838,7 @@ const result = await db.query(`
 `);
 ```
 
-### 2. SELECT * 滥用
+### 2. SELECT \* 滥用
 
 ```sql
 -- 坏：传输不需要的列，无法利用覆盖索引
@@ -2833,21 +2884,23 @@ FROM pg_stat_activity blocked
 JOIN pg_stat_activity blocking
   ON blocking.pid = ANY(pg_blocking_pids(blocked.pid));
 
--- 终止长时间运行的查询
-SELECT pg_terminate_backend(pid) FROM pg_stat_activity
-WHERE state = 'active' AND now() - query_start > INTERVAL '5 minutes';
+-- 仅在确认阻塞来源、业务影响和连接归属后，终止选定的 PID。
+-- 先从上面的 blocked_pid / blocking_pid 结果中人工确认目标，再执行：
+SELECT pg_terminate_backend(12345); -- 替换为已确认的 blocking_pid
+
+-- 这会回滚该会话未提交事务；连接池可能立即重连，生产环境应先暂停/隔离相关流量并记录审计信息。
 ```
 
 ## 监控指标
 
-| 指标 | 查询方式 | 告警阈值 |
-| --- | --- | --- |
-| 连接数 | `SELECT count(*) FROM pg_stat_activity` | > max_connections * 0.8 |
-| 死锁 | `SELECT deadlocks FROM pg_stat_database` | > 0 |
-| 缓存命中率 | `SELECT sum(blks_hit) / sum(blks_hit + blks_read) FROM pg_stat_database` | < 0.95 |
-| 事务回滚率 | `SELECT xact_rollback / (xact_commit + xact_rollback) FROM pg_stat_database` | > 0.01 |
-| 表膨胀率 | `n_dead_tup / n_live_tup` | > 0.2 |
-| 慢查询 | pg_stat_statements 扩展 | > 1s |
+| 指标       | 查询方式                                                                     | 告警阈值                                              |
+| ---------- | ---------------------------------------------------------------------------- | ----------------------------------------------------- |
+| 连接数     | `SELECT count(*) FROM pg_stat_activity`                                      | 按连接池上限、数据库 `max_connections` 和历史基线设定 |
+| 死锁       | `SELECT deadlocks FROM pg_stat_database`                                     | > 0                                                   |
+| 缓存命中率 | `SELECT sum(blks_hit) / sum(blks_hit + blks_read) FROM pg_stat_database`     | 与工作集、采样窗口和存储特征一起建立基线              |
+| 事务回滚率 | `SELECT xact_rollback / (xact_commit + xact_rollback) FROM pg_stat_database` | 对照业务基线与异常趋势                                |
+| 表膨胀线索 | `n_dead_tup`、`n_live_tup` 与 autovacuum 统计                                | 结合采样时点、表更新率与 vacuum 进度分析              |
+| 慢查询     | pg_stat_statements 扩展                                                      | 按请求延迟目标和查询分布设定                          |
 
 ## 小结
 
@@ -2855,9 +2908,9 @@ PostgreSQL 性能优化的核心思路：
 
 1. **先测量，再优化** — 用 EXPLAIN ANALYZE 找到真正的瓶颈
 2. **索引设计遵循查询模式** — 复合索引的列顺序很重要
-3. **连接池是必须的** — PgBouncer + 应用层池化
+3. **连接池按连接模型配置** — 评估连接创建成本、并发模型、数据库上限与部署拓扑后选择应用池或 PgBouncer；避免重复池化和连接数乘法失控
 4. **VACUUM 不能忽视** — 监控膨胀率，调优 autovacuum
-5. **大表考虑分区** — 时间序列数据按月分区是最常见的模式
+5. **大表仅在访问与维护模式支持时分区** — 分区键、裁剪收益和运维成本需结合查询证据评估
 6. **避免 N+1 和大 OFFSET** — 这是应用层最常见的数据库性能杀手
 
 性能优化是一个持续过程，不是一次性工作。建立监控、定期审查慢查询、保持统计信息更新，比任何单次优化都重要。
@@ -2872,7 +2925,7 @@ PostgreSQL 性能优化的核心思路：
             <category>索引</category>
             <category>性能优化</category>
             <_reading_time>
-                <readingTime>12 min read</readingTime>
+                <readingTime>14 min read</readingTime>
             </_reading_time>
         </item>
         <item>
@@ -2916,7 +2969,9 @@ sudo nano /etc/nginx/sites-available/myapp
 sudo ln -s /etc/nginx/sites-available/myapp /etc/nginx/sites-enabled/
 ```
 
-一个完整的生产级配置：
+下面的示例适用于**静态导出的 SPA**。Next.js SSR 等需要 Node 运行时的应用不能把页面请求回退到 `dist/index.html`；应把 `location /` 改为反向代理到应用，例如 `proxy_pass http://127.0.0.1:3000;`，并配置与 API 相同的转发头。静态目录和哈希资源的匹配规则也要按实际构建产物调整。
+
+**先签发证书，再启用 HTTPS 配置。** 首次部署时只启用下面的 HTTP 引导配置，创建挑战目录并确认域名 A/AAAA 记录指向这台服务器、80 端口可达；用 ACME 客户端完成 HTTP-01 验证和证书签发后，再替换为后面的 HTTPS 配置。不要在证书文件不存在时引用它们，否则 `nginx -t` 会失败。
 
 ```nginx
 server {
@@ -2924,8 +2979,41 @@ server {
     listen [::]:80;
     server_name example.com;
 
-    # 跳转到 HTTPS
-    return 301 https://$host$request_uri;
+    location /.well-known/acme-challenge/ {
+        root /var/www/letsencrypt;
+    }
+
+    location / {
+        return 503;
+    }
+}
+```
+
+以已安装的 Certbot 为例，先创建目录、验证配置并重载，再签发：
+
+```bash
+sudo mkdir -p /var/www/letsencrypt
+sudo nginx -t
+sudo systemctl reload nginx
+sudo certbot certonly --webroot -w /var/www/letsencrypt -d example.com
+```
+
+静态 SPA 的 HTTPS 配置示例：
+
+```nginx
+server {
+    listen 80;
+    listen [::]:80;
+    server_name example.com;
+
+    # 保留 HTTP-01 挑战入口，供证书续期使用
+    location /.well-known/acme-challenge/ {
+        root /var/www/letsencrypt;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
 }
 
 server {
@@ -2944,15 +3032,28 @@ server {
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
 
     # 静态资源——直接由 Nginx 处理，不转发到后端
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff2?)$ {
+    # 示例匹配 app.0123456789abcdef.js；按实际构建的哈希命名规则调整
+    location ~* "\.[0-9a-f]{8,}\.(js|css|png|jpg|jpeg|gif|ico|svg|woff2?)$" {
         root /var/www/myapp/dist;
         expires 1y;
         add_header Cache-Control "public, immutable";
+        # 子 location 定义 add_header 后，显式重复需要的安全头
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        try_files $uri =404;
         access_log off;
     }
 
+    # 非哈希静态文件使用短缓存，不使用 immutable
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff2?)$ {
+        root /var/www/myapp/dist;
+        expires 5m;
+        try_files $uri =404;
+    }
+
     # API 请求——转发到后端服务
-    location /api/ {
+    location ^~ /api/ {
         proxy_pass http://127.0.0.1:3000/api/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -2973,6 +3074,10 @@ server {
 }
 ```
 
+`immutable` 只适用于内容变更后 URL 也变化的资源；`logo.svg` 等固定文件名不应缓存一年。传统 `add_header` 规则只在当前层没有任何 `add_header` 时继承上层，因此哈希资源的 location 显式保留了安全头。以上示例不依赖较新版本的继承控制指令。
+
+证书续期还需要 ACME 客户端的定时任务及成功续期后的 Nginx reload hook；上线前应检查续期任务并执行 `sudo certbot renew --dry-run`。本文未在实际服务器执行这些部署命令。
+
 验证配置并重载：
 
 ```bash
@@ -2987,29 +3092,33 @@ sudo systemctl reload nginx  # 重载（不中断现有连接）
 **方式一：端口映射 + localhost**
 
 ```bash
-docker run -d -p 3000:3000 myapp
+sudo docker run -d -p 127.0.0.1:3000:3000 myapp
 ```
 
-Nginx 配置不变，`proxy_pass http://127.0.0.1:3000` 就行。
+这种方式适用于 **Nginx 运行在宿主机**：容器端口只映射到宿主机 loopback，Nginx 使用 `proxy_pass http://127.0.0.1:3000;`。应用在容器内应监听 `0.0.0.0:3000`。
 
-**方式二：Docker 网络（推荐）**
+**方式二：Nginx 与应用都运行在 Docker 网络中**
 
 ```bash
 # 创建 bridge 网络
-docker network create webnet
+sudo docker network create webnet
 
 # 启动应用容器，加入网络
-docker run -d --name myapp --network webnet myapp
+sudo docker run -d --name myapp --network webnet myapp
 
 # Nginx 容器也用同一个网络
-docker run -d --name nginx-proxy --network webnet \
+sudo docker run -d --name nginx-proxy --network webnet \
   -p 80:80 -p 443:443 \
-  -v /etc/nginx/conf.d \
-  -v /etc/letsencrypt \
+  -v /srv/nginx/conf.d:/etc/nginx/conf.d:ro \
+  -v /etc/letsencrypt:/etc/letsencrypt:ro \
+  -v /var/www/letsencrypt:/var/www/letsencrypt:ro \
+  -v /var/www/myapp/dist:/var/www/myapp/dist:ro \
   nginx:alpine
 ```
 
-Nginx 里直接用容器名：
+启动前准备 `/srv/nginx/conf.d/myapp.conf` 和对应的证书、挑战目录及静态构建产物。挂载写出宿主路径与容器路径并设为只读；挂载整个 `/etc/letsencrypt` 才能保留 `live` 指向 `archive` 的证书软链接。首次签发仍先使用 HTTP 引导配置，签发完成后验证并重载容器内 Nginx。应用无需发布宿主机端口，容器内监听 `0.0.0.0:3000`。
+
+Nginx 里直接用容器名（容器内的 `127.0.0.1` 指向 Nginx 自己）：
 
 ```nginx
 location /api/ {
@@ -3046,11 +3155,11 @@ server {
 
 负载均衡策略：
 
-| 策略 | 配置 | 适用场景 |
-|------|------|----------|
-| 轮询 | 默认 | 各实例性能相近 |
-| 加权轮询 | `weight=N` | 实例性能不同 |
-| IP 哈希 | `ip_hash;` | 需要会话保持 |
+| 策略     | 配置          | 适用场景           |
+| -------- | ------------- | ------------------ |
+| 轮询     | 默认          | 各实例性能相近     |
+| 加权轮询 | `weight=N`    | 实例性能不同       |
+| IP 哈希  | `ip_hash;`    | 需要会话保持       |
 | 最少连接 | `least_conn;` | 请求处理时长差异大 |
 
 ## 请求限流
@@ -3073,19 +3182,22 @@ server {
 ```
 
 参数解释：
-- `rate=10r/s`：每秒最多 10 个请求
-- `burst=20`：允许突发最多 20 个请求排队
-- `nodelay`：突发请求立即处理（不排队等待）
+
+- `rate=10r/s`：按漏桶机制限制每个键的平均处理速率，不是按自然秒统计的硬上限
+- `burst=20`：允许最多 20 个超出当前速率的请求占用突发额度；再超出时拒绝请求，默认状态码为 503，可用 `limit_req_status 429;` 调整
+- `nodelay`：额度内的突发请求立即放行，但已占用的额度仍按配置速率释放；去掉它才会延迟处理这些请求
+
+此处按客户端 IP 分组。若前面还有 CDN 或代理，应先配置受信任的真实 IP 来源；不能直接信任任意请求带来的转发头，否则限流可能失效。
 
 ## 访问日志优化
 
 默认 Nginx 会记录每次请求的完整日志，时间长了磁盘吃紧：
 
 ```nginx
-# 自定义日志格式（只记录必要字段）
+# log_format 放在 http 块中，末尾记录整个请求处理时间（秒）
 log_format slim '$remote_addr - $remote_user [$time_local] '
                 '"$request" $status $body_bytes_sent '
-                '"$http_referer" "$http_user_agent"';
+                '"$http_referer" "$http_user_agent" $request_time';
 
 access_log /var/log/nginx/access.log slim buffer=32k flush=5s;
 
@@ -3099,21 +3211,23 @@ location ~* \.(css|js|png|jpg)$ {
 
 ```bash
 # 测试配置语法
-nginx -t
+sudo nginx -t
 
-# 重载（零停机）
-systemctl reload nginx
+# 重载配置
+sudo systemctl reload nginx
 
 # 查看错误日志
-tail -f /var/log/nginx/error.log
+sudo tail -f /var/log/nginx/error.log
 
 # 查看访问日志中的慢请求
-awk '$7 ~ /api/ {print $0}' /var/log/nginx/access.log | \
-  awk '{print $NF}' | sort -nr | head -20
+sudo awk '$7 ~ /^\/api\// && $NF ~ /^[0-9]+([.][0-9]+)?$/ {print $NF, $0}' \
+  /var/log/nginx/access.log | sort -nr | head -20
 
 # 查看 Nginx 状态（如果开启了 stub_status）
 curl http://127.0.0.1/nginx_status
 ```
+
+上述慢请求命令只适用于本文定义的 `slim` 格式：请求路径是第 7 列，最后一列是 `$request_time`。切换格式前的旧日志不适用；它衡量完整请求耗时，排查后端时可进一步记录 `$upstream_response_time`。
 
 ## 总结
 
@@ -3132,7 +3246,7 @@ Nginx 是部署流程里最值得花时间配置好的环节。一个合理的 N
             <category>反向代理</category>
             <category>HTTPS</category>
             <_reading_time>
-                <readingTime>6 min read</readingTime>
+                <readingTime>10 min read</readingTime>
             </_reading_time>
         </item>
         <item>
@@ -3150,13 +3264,13 @@ Nginx 是部署流程里最值得花时间配置好的环节。一个合理的 N
 
 Next.js 13 引入的 App Router 在 16 版本已经稳定，成为推荐的首选路由方案：
 
-| | Pages Router | App Router |
-|--|-------------|------------|
-| 组件类型 | 客户端组件 | 服务端组件（默认） |
+|          | Pages Router                            | App Router                 |
+| -------- | --------------------------------------- | -------------------------- |
+| 组件类型 | 客户端组件                              | 服务端组件（默认）         |
 | 数据获取 | `getServerSideProps` / `getStaticProps` | 直接在组件中 `async/await` |
-| 流式渲染 | 不支持 | 支持 Suspense 边界 |
-| 布局系统 | 每个页面独立 | 嵌套 Layout，保留状态 |
-| 数据变更 | 自己写 API 路由 | Server Actions |
+| 流式渲染 | 不支持                                  | 支持 Suspense 边界         |
+| 布局系统 | 每个页面独立                            | 嵌套 Layout，保留状态      |
+| 数据变更 | 自己写 API 路由                         | Server Actions             |
 
 ## 服务端组件（Server Components）
 
@@ -3168,11 +3282,11 @@ import { BlogList } from '@/components/blog';
 import { getAllPosts } from '@/lib/posts';
 
 export default async function HomePage() {
-  const posts = await getAllPosts(); // 直接在组件中查询数据库
+  const posts = await getAllPosts(); // 服务端调用数据访问层
 
   return (
     <div>
-      {posts.map(post => (
+      {posts.map((post) => (
         <article key={post.slug}>
           <h2>{post.title}</h2>
           <p>{post.excerpt}</p>
@@ -3184,9 +3298,12 @@ export default async function HomePage() {
 ```
 
 服务端组件的好处：
-- **更少的客户端 JavaScript**——框架代码不在页面上执行，组件只在服务端运行
-- **直接访问数据库**——不用建 API 路由，组件里直接查
-- **自动代码分割**——只有用到客户端交互的地方才加载 JS
+
+- **更少的客户端 JavaScript**——服务端组件实现不会发送到浏览器
+- **靠近数据源读取**——可在服务端调用数据库或其他数据访问层；是否使用数据库取决于应用架构
+- **明确客户端边界**——把状态与浏览器交互限制在需要它们的组件中
+
+> 这里的 `getAllPosts()` 是应用自有的数据访问函数，并不表示所有 Next.js 项目或 Chronicle 都使用运行时数据库。Chronicle 当前从本地 MDX/JSON 与构建期内容快照读取数据。
 
 ## 客户端组件（"use client"）
 
@@ -3203,7 +3320,7 @@ export function SearchBar() {
   return (
     <input
       value={query}
-      onChange={e => setQuery(e.target.value)}
+      onChange={(e) => setQuery(e.target.value)}
       placeholder="搜索文章..."
     />
   );
@@ -3266,14 +3383,19 @@ Stats 和 RecentActivity 会**并行加载**，各自在完成后立即流式注
 
 ### 3. 增量静态生成（ISR）
 
-对于不经常变更的内容，可以在构建时生成静态页面，然后按需重新验证：
+如果应用使用可缓存的数据源，可按需重新验证缓存；是否预渲染以及何时更新，取决于路由配置和数据缓存策略。`revalidate` 是一种配置方式，不是所有页面都需要的通用 ISR 模板：
 
 ```tsx
 // app/blog/[slug]/page.tsx
 export const revalidate = 3600; // 每小时重新生成
 
-export default async function BlogPost({ params }: { params: { slug: string } }) {
-  const post = await getPost(params.slug);
+export default async function BlogPost({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const post = await getPost(slug);
 
   if (!post) notFound();
 
@@ -3288,7 +3410,7 @@ export default async function BlogPost({ params }: { params: { slug: string } })
 
 ## Server Actions
 
-Server Actions 让表单提交和数据库操作变得非常简单——不再需要写 API 路由：
+Server Actions 可以把服务端变更逻辑绑定到表单或客户端调用点；它们不是数据库，也不意味着应用必须使用运行时数据库。下面的数据库操作仅为通用示例，并非 Chronicle 的实现：
 
 ```tsx
 // app/contact/page.tsx
@@ -3305,7 +3427,7 @@ export default function ContactPage() {
       data: { name, email, message },
     });
 
-    // 不需要手动 revalidate——Next.js 自动处理
+    // 数据变更后按需要显式失效相关缓存/路由
     revalidatePath('/contact');
   }
 
@@ -3321,10 +3443,11 @@ export default function ContactPage() {
 ```
 
 Server Actions 的关键点：
+
 - `'use server'` 标记让 Next.js 知道这是一个只在服务端执行的函数
 - 可以直接操作数据库、调用 API、操作文件系统
 - 表单提交不需要手动管理 loading 状态（Next.js 内置 `useFormStatus`）
-- 支持 revalidation，数据变更后页面自动刷新
+- Server Actions 不会自动推断需要失效的缓存；按应用的数据缓存策略显式调用 `revalidatePath` 或 `revalidateTag`。调用后 Next.js 会处理相应的 UI 更新行为。
 
 ## 布局嵌套
 
@@ -3360,6 +3483,7 @@ export default function BlogLayout({ children }: { children: React.ReactNode }) 
 ```
 
 布局的特点：
+
 - 跨页面切换时**保持状态**（Header 不会重新挂载）
 - 支持嵌套——每个路由段可以有独立的布局
 - 不会重新获取数据——如果在布局层获取的数据，切换子页面时不会重新查询
@@ -3377,7 +3501,7 @@ export default function BlogLayout({ children }: { children: React.ReactNode }) 
 ```tsx
 export async function generateStaticParams() {
   const posts = await getAllPosts();
-  return posts.map(post => ({ slug: post.slug }));
+  return posts.map((post) => ({ slug: post.slug }));
 }
 ```
 
@@ -3410,6 +3534,7 @@ export default function Analytics() {
 App Router 的学习曲线比 Pages Router 陡一些——概念更多（服务端/客户端组件、流式渲染、Server Actions）。但熟悉之后，开发体验和性能都更好。
 
 几个核心要点：
+
 - **默认服务端组件**，只在必要时加 `"use client"`
 - **服务端直接获取数据**，不用建 API 路由
 - **Suspense 做流式渲染**，让页面更快展示
@@ -3431,7 +3556,7 @@ App Router 的学习曲线比 Pages Router 陡一些——概念更多（服务�
             <category>React</category>
             <category>App Router</category>
             <_reading_time>
-                <readingTime>8 min read</readingTime>
+                <readingTime>9 min read</readingTime>
             </_reading_time>
         </item>
         <item>
@@ -3441,7 +3566,7 @@ App Router 的学习曲线比 Pages Router 陡一些——概念更多（服务�
             <pubDate>Fri, 26 Jun 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[服务异常时按 CPU → 内存 → 磁盘 → 网络四维排查：常用命令、定位顺序与日常预防清单。]]></description>
             <content:encoded><![CDATA[
-> 结论先说：别凭感觉乱扫日志。固定顺序 CPU → 内存 → 磁盘 → 网络，配合 top/free/df/ss，多数线上故障能在几分钟内落到根因。
+> 结论先说：别凭感觉乱扫日志。固定顺序 CPU → 内存 → 磁盘 → 网络，配合 top/free/df/ss，逐步缩小故障范围；实际定位时间取决于影响面与监控资料。
 
 ## 排查前的心态
 
@@ -3488,12 +3613,12 @@ strace -p <PID> -e trace=network  # 只看网络相关调用
 
 ### 常见原因
 
-| 现象 | 可能原因 | 临时方案 |
-|------|----------|----------|
-| 单个进程 100% | 死循环 / 计算密集型任务 | `kill -9` 或重启 |
-| CPU 用户态高 | 应用层问题 | 检查应用日志 |
-| CPU 内核态高 | 磁盘 IO / 系统调用频繁 | `iostat -x 1` 看 IO 等待 |
-| 挖矿病毒 | 不认识的进程名 | 查 crontab，杀进程删文件 |
+| 现象                 | 可能原因                | 临时方案                                                                                       |
+| -------------------- | ----------------------- | ---------------------------------------------------------------------------------------------- |
+| 单个进程持续占满 CPU | 死循环 / 计算密集型任务 | 先记录进程和影响范围，优先正常停止或重启；只有确认无法退出且允许丢失未写入状态时才考虑强制终止 |
+| CPU 用户态高         | 应用层问题              | 检查应用日志                                                                                   |
+| CPU 内核态高         | 磁盘 IO / 系统调用频繁  | `iostat -x 1` 看 IO 等待                                                                       |
+| 挖矿病毒             | 不认识的进程名          | 先隔离主机、保留进程和文件证据，再按应急响应流程处理；不要直接杀进程或删文件                   |
 
 ## 二、内存不足
 
@@ -3536,6 +3661,7 @@ smem -t -p   # 按 RSS/USS/PSS 查看
 ```
 
 常见内存泄漏来源：
+
 - Node.js 应用的闭包引用未释放
 - Python 列表 / dict 无限增长
 - Java 堆设置过大或未回收
@@ -3559,7 +3685,7 @@ sudo swapon /swapfile
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 ```
 
-但也别太依赖 Swap——Swap 使用率超过 10-20% 说明物理内存确实不够了，该升级机器了。
+Swap 持续活动会增加延迟，但不存在适用于所有工作负载的统一百分比阈值；结合 `vmstat`、应用延迟和 OOM 日志判断是否需要扩容。
 
 ## 三、磁盘占满
 
@@ -3595,8 +3721,11 @@ ncdu          # 交互式，推荐装
 # 检查 Docker 日志文件大小
 ls -lh /var/lib/docker/containers/*/*-json.log
 
-# 清理（注意：这是全局清理，确认没有正在调试的容器）
-sudo sh -c 'truncate -s 0 /var/lib/docker/containers/*/*-json.log'
+# 先定位日志占用；清空日志前确认容器、保留要求和备份策略
+docker system df
+sudo du -ah /var/lib/docker/containers | sort -h | tail -20
+
+# 不要直接对通配路径执行清空；确认目标容器和保留要求后再按运维流程处理
 
 # 更好的方式：配置日志轮转（/etc/docker/daemon.json）
 {
@@ -3607,13 +3736,14 @@ sudo sh -c 'truncate -s 0 /var/lib/docker/containers/*/*-json.log'
   }
 }
 
-# 清理已停止的容器 / 未使用的镜像 / 构建缓存
-docker system prune -a
+# 清理已停止的容器 / 未使用的网络和构建缓存；`-a` 会扩大镜像删除范围，执行前人工确认
+docker system prune
 
 # apt 缓存
 sudo apt clean
 
-# journal 日志
+# 先查看占用，再按已确认的保留要求清理 journal
+sudo journalctl --disk-usage
 sudo journalctl --vacuum-size=200M
 
 # npm/pnpm 缓存
@@ -3664,12 +3794,12 @@ ss -tan | grep ESTAB | awk '{print $4}' | cut -d: -f1 | sort | uniq -c | sort -r
 
 `ss -tan` 输出的状态解读：
 
-| 状态 | 含义 |
-|------|------|
-| LISTEN | 服务在监听端口 |
-| ESTABLISHED | 已建立的连接 |
-| TIME_WAIT | 主动关闭后的等待状态（大量正常） |
-| CLOSE_WAIT | 被动关闭但未关闭（需排查应用层） |
+| 状态        | 含义                             |
+| ----------- | -------------------------------- |
+| LISTEN      | 服务在监听端口                   |
+| ESTABLISHED | 已建立的连接                     |
+| TIME_WAIT   | 主动关闭后的等待状态（大量正常） |
+| CLOSE_WAIT  | 被动关闭但未关闭（需排查应用层） |
 
 大量 `CLOSE_WAIT` 说明应用没有正确关闭连接——通常是 HTTP 客户端或数据库连接池的问题。
 
@@ -3732,9 +3862,10 @@ ps aux --sort=-%mem | head -6
 
 ## 总结
 
-排查问题的核心是**系统化**——不要凭感觉从一个方向跳到另一个方向。按 CPU → 内存 → 磁盘 → 网络的顺序逐个排除，大部分问题可以在 5 分钟内定位到根因。
+排查问题的核心是**系统化**——不要凭感觉从一个方向跳到另一个方向。按 CPU → 内存 → 磁盘 → 网络的顺序逐个排除，逐步缩小根因范围；实际定位时间取决于故障影响面和可用证据。
 
 日常预防更重要：
+
 - 装好监控（netdata / prometheus）
 - 配置日志轮转
 - 给关键指标设告警（磁盘 > 80%、内存 < 20%）
@@ -3750,7 +3881,7 @@ ps aux --sort=-%mem | head -6
             <category>运维</category>
             <category>排查</category>
             <_reading_time>
-                <readingTime>9 min read</readingTime>
+                <readingTime>10 min read</readingTime>
             </_reading_time>
         </item>
         <item>
@@ -4024,9 +4155,9 @@ Go 写 CLI 工具的体验很舒适——标准库够用、编译产物简单、
             <link>https://incca.ccwu.cc/blog/git-hooks-github-actions</link>
             <guid isPermaLink="false">https://incca.ccwu.cc/blog/git-hooks-github-actions</guid>
             <pubDate>Wed, 24 Jun 2026 00:00:00 GMT</pubDate>
-            <description><![CDATA[本地 pre-commit + 远程 GitHub Actions：把检查、构建和部署串成「提交即可上线」的双层自动化。]]></description>
+            <description><![CDATA[本地 pre-commit + 远程 GitHub Actions：用必需检查、部署依赖和环境审批串起代码交付。]]></description>
             <content:encoded><![CDATA[
-> 结论先说：本地 Git Hooks 挡脏提交，远程 Actions 挡脏合并；两层配齐后，部署命令不该再出现在你的日常操作里。
+> 结论先说：本地 Git Hooks 提供快速反馈；远程 CI 配合分支保护限制合并，部署 job 显式依赖检查结果。生产环境是否自动上线，取决于审批与发布策略。
 
 ## 为什么需要自动化工作流
 
@@ -4037,7 +4168,7 @@ Go 写 CLI 工具的体验很舒适——标准库够用、编译产物简单、
 - 部署命令敲错了或者漏了一步
 - 本地跑得好好的，线上却崩了
 
-自动化工作流的价值：**让正确的流程成为唯一的选择**。你不需要"记得"去跑测试——代码提交的那一刻，测试自动跑了。本地 hooks 挡脏提交；远程流水线的阶段划分、缓存与回滚策略见 [[cicd-pipeline-design|CI/CD 流水线设计]]。
+自动化工作流的价值：**把检查变成可重复执行的流程**。本地 hooks 可被 `--no-verify`、`HUSKY=0` 或修改配置绕过，不能作为合并权限边界。远程流水线的阶段划分、缓存与回滚策略见 [[cicd-pipeline-design|CI/CD 流水线设计]]。
 
 ## 第一层：Git Hooks（本地）
 
@@ -4048,17 +4179,16 @@ Git Hooks 是在本地 Git 操作触发时自动执行的脚本。最常用的�
 Husky 是 Git Hooks 的 npm 封装，lint-staged 只对暂存的文件运行检查：
 
 ```bash
-npm install -D husky lint-staged
-npx husky init
+pnpm add -D husky@9 lint-staged
+pnpm exec husky init
 ```
 
 在 `.husky/pre-commit` 里：
 
-```bash
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
+以下采用 [Husky 9 的初始化方式](https://typicode.github.io/husky/get-started.html)：`init` 创建 hook 并设置 `prepare`。hook 文件直接写命令，不再加载旧的 `_/husky.sh`。
 
-npx lint-staged
+```bash
+pnpm exec lint-staged
 ```
 
 在 `package.json` 里配置 lint-staged：
@@ -4066,13 +4196,8 @@ npx lint-staged
 ```json
 {
   "lint-staged": {
-    "*.{js,ts,tsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.{json,md}": [
-      "prettier --write"
-    ]
+    "*.{js,ts,tsx}": ["eslint --fix", "prettier --write"],
+    "*.{json,md}": ["prettier --write"]
   }
 }
 ```
@@ -4084,13 +4209,22 @@ npx lint-staged
 在 `.husky/commit-msg` 里加规范检查：
 
 ```bash
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
-npx commitlint --edit "$1"
+pnpm exec commitlint --edit "$1"
 ```
 
-配合 `@commitlint/cli` + `@commitlint/config-conventional`，强制提交信息遵循 Conventional Commits 格式：
+安装并配置 commitlint：
+
+```bash
+pnpm add -D @commitlint/cli @commitlint/config-conventional
+```
+
+在 `commitlint.config.cjs` 里：
+
+```javascript
+module.exports = { extends: ['@commitlint/config-conventional'] };
+```
+
+启用 hook 后，未绕过本地检查的提交会按 Conventional Commits 格式校验：
 
 ```
 feat: 新增用户注册功能
@@ -4101,20 +4235,23 @@ chore: 升级依赖版本
 
 ## 第二层：GitHub Actions（远程）
 
-本地检查通过还不够——PR 合并到 main 之后，代码需要再次验证，然后自动部署。
+PR 先运行 CI，合并到 main 后再校验并部署。还需在分支保护或 ruleset 中要求 PR 和 `lint-and-test` 状态检查，并限制绕过权限；只有工作流文件并不会阻止合并。使用 merge queue 时，应按 GitHub 的要求补上 `merge_group` 触发器。
 
 ### 基础 CI 工作流
 
 在 `.github/workflows/ci.yml`：
 
 ```yaml
-name: CI
+name: CI and Deploy
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+
+permissions:
+  contents: read
 
 jobs:
   lint-and-test:
@@ -4128,10 +4265,10 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: 'pnpm'
 
-      - run: pnpm install
+      - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm test
       - run: pnpm build
@@ -4141,80 +4278,84 @@ CI 的作用：**不管谁提交的代码，都按同一套标准跑一遍**。�
 
 ### 自动部署工作流
 
-CI 通过之后，自动把代码部署到服务器：
+把下面的 `deploy` job 加到**同一个文件的 `jobs` 下**，整体缩进两个空格，与 `lint-and-test` 对齐。两个独立工作流都监听 push 时，部署不会自动等待 CI；这里由 `needs` 建立依赖，只部署 main 的 push 提交：
 
 ```yaml
-name: Deploy
-
-on:
-  push:
-    branches: [main]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      # SSH 到服务器执行部署
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
-            cd /var/www/myapp
-            git pull origin main
-            docker compose build --no-cache
-            docker compose up -d --force-recreate
-            docker compose exec app pnpm migrate
+deploy:
+  needs: lint-and-test
+  if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  runs-on: ubuntu-latest
+  environment: production
+  concurrency:
+    group: deploy-production
+    cancel-in-progress: false
+  steps:
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      env:
+        DEPLOY_SHA: ${{ github.sha }}
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        fingerprint: ${{ secrets.SERVER_HOST_FINGERPRINT }}
+        envs: DEPLOY_SHA
+        script: |
+          set -eu
+          case "$DEPLOY_SHA" in
+            ''|*[!0-9a-f]*) exit 1 ;;
+          esac
+          test "${#DEPLOY_SHA}" -eq 40
+          cd /var/www/releases
+          git -C repository.git fetch origin "$DEPLOY_SHA"
+          git -C repository.git worktree add --detach "/var/www/releases/$DEPLOY_SHA" "$DEPLOY_SHA"
+          cd "$DEPLOY_SHA"
+          export COMPOSE_PROJECT_NAME=myapp
+          docker compose build --no-cache
+          docker compose run --rm --no-deps app pnpm migrate
+          docker compose up -d --force-recreate
+          curl --fail --silent --show-error --retry 5 --retry-connrefused \
+            --retry-delay 2 --max-time 10 http://127.0.0.1:3000/health
 ```
 
-部署流程：git pull → 重建镜像 → 重启容器 → 跑数据库迁移。全自动，`git push` 之后不需要做任何事。
+示例采用已校验的提交 SHA 创建独立 release 目录，避免 `git pull main` 在等待部署时取到另一个提交。服务器需事先创建 `/var/www/releases/repository.git` 裸仓库并配置只读拉取凭据；SSH 用户还需具备 release 目录和 Docker 的必要权限。重复部署同一 SHA 时，已有 worktree 会让命令失败，应先核查上次状态再处理，不能直接覆盖正在运行的版本。
+
+部署前还必须按应用补齐这些条件：
+
+- 在 GitHub 创建 `production` environment，配置部署分支限制、环境 secrets；需要人工审批时配置 required reviewers，并确认仓库套餐支持相应规则。
+- `SERVER_HOST_FINGERPRINT` 来自可信渠道核对过的服务器 SSH 主机公钥指纹；连接私钥只授予部署所需权限。Git 仓库拉取的 SSH 身份与主机校验也要独立配置。
+- Compose 使用固定项目名，持久化目录与部署密钥从 release 目录外管理；`pnpm migrate` 和 `/health` 是应用接口示例，需替换为真实命令和就绪检查。
+- 迁移前备份并演练恢复。示例只适用于旧应用兼容新 schema 的迁移，且要求数据库已可用；破坏性迁移需单独安排停机或分阶段发布。先迁移再切应用并不保证数据库可随代码回滚。
+
+`set -eu` 让失败停止后续步骤，末尾健康检查失败会让 job 失败，但不会自动恢复旧版本。正式使用前，应设计并演练应用回退与数据库恢复。Node 示例采用本博客 CI 使用的 Node 24；其他应用应按依赖兼容性选择仍受支持的 LTS，并保持构建与运行环境一致。Action 标签和 pnpm 版本只是示例，按项目支持范围核对；生产工作流建议固定到已审核的完整 Action commit SHA。
 
 ### 多环境配置
 
-如果需要 staging 和 production 两套环境：
+如果需要 staging 和 production 两套环境，让同一工作流的 `push` / `pull_request` 同时覆盖 `main`、`staging`，并保留 `needs: lint-and-test`。按分支选择环境：
 
 ```yaml
-name: Deploy
-
-on:
-  push:
-    branches:
-      - main       # → production
-      - staging    # → staging
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Deploy
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets[format('{0}_HOST', github.ref == 'refs/heads/main' && 'PROD' || 'STAGING')] }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
-            cd /var/www/myapp
-            git pull origin ${{ github.ref_name }}
-            docker compose build
-            docker compose up -d
+deploy:
+  needs: lint-and-test
+  if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+  runs-on: ubuntu-latest
+  environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+  concurrency:
+    group: deploy-${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+    cancel-in-progress: false
 ```
+
+这个片段只展示 job 的差异配置，需接上前面的 SSH `steps`，再整体缩进两个空格放入 `jobs`。在两个 environment 中使用同名的 `SERVER_HOST`、`SERVER_USER`、`SERVER_SSH_KEY`、`SERVER_HOST_FINGERPRINT` secrets，分别设置其值与审批策略。两套环境应使用独立服务器，或隔离 release 目录、Compose 项目名、数据库与端口，避免覆盖彼此。
 
 ## 常用 Actions 推荐
 
-| 用途 | Action |
-|------|--------|
-| SSH 部署 | `appleboy/ssh-action` |
-| Docker 构建推送 | `docker/build-push-action` |
-| 缓存依赖 | `actions/setup-node` (内置 cache) |
-| 代码质量报告 | ` SonarSource/sonarqube-scan-action` |
-| 通知 | `slackapi/slack-github-action` |
-| 环境变量管理 | `crazy-max/ghaction-import-env` |
+| 用途            | Action                               |
+| --------------- | ------------------------------------ |
+| SSH 部署        | `appleboy/ssh-action`                |
+| Docker 构建推送 | `docker/build-push-action`           |
+| 缓存依赖        | `actions/setup-node` (内置 cache)    |
+| 代码质量报告    | ` SonarSource/sonarqube-scan-action` |
+| 通知            | `slackapi/slack-github-action`       |
+| 环境变量管理    | `crazy-max/ghaction-import-env`      |
 
 ## 完整的工作流链路
 
@@ -4225,24 +4366,24 @@ jobs:
 
 GitHub: push / PR
   → CI: lint → test → build
-  → 不通过则阻断合并
-  → 通过后自动合并
+  → 必需检查不通过时，分支保护阻断合并
+  → 检查通过后由维护者合并（自动合并需另行启用）
 
 main 分支 push
-  → Deploy workflow 触发
+  → 同一工作流重新检查，deploy job 等待 CI 和环境审批
   → SSH 到服务器
-  → git pull → build → deploy
-  → 完成
+  → fetch 已校验 SHA → build → 兼容迁移 → deploy → 健康检查
+  → 根据检查结果确认发布或处理故障
 ```
 
 ## 总结
 
-两层自动化覆盖了从"写代码"到"上线"的完整链路：
+两层自动化可以串起从"写代码"到"上线"的检查链路：
 
-- **Git Hooks** 把好本地提交这一关，不让问题代码进入版本库
-- **GitHub Actions 把好远程合并这一关**，不管谁来提交都按统一标准验证，通过后自动部署
+- **Git Hooks** 提供快速反馈，减少遗漏，但允许本地绕过
+- **GitHub Actions** 运行统一检查，配合分支保护、部署依赖与环境规则约束合并和上线
 
-这两层配好之后，"提交即上线"成为常态，不需要再手动敲部署命令。
+示例尚需适配应用并在测试环境演练，包括检查失败时不部署、审批等待、SHA 一致性、SSH 指纹不匹配以及迁移和健康检查失败的处理。完成这些验证后，再决定哪些环境允许自动上线。
 
 ## 延伸阅读
 
@@ -4255,7 +4396,7 @@ main 分支 push
             <category>GitHub Actions</category>
             <category>CI/CD</category>
             <_reading_time>
-                <readingTime>6 min read</readingTime>
+                <readingTime>10 min read</readingTime>
             </_reading_time>
         </item>
         <item>
@@ -4310,10 +4451,11 @@ echo "deb [arch=$(dpkg --print-architecture) \
 
 # 安装 Docker
 sudo apt update
-sudo apt install -y docker-ce docker-ce-cli containerd.io
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
 # 验证安装
 sudo docker run hello-world
+sudo docker compose version
 ```
 
 看到 Hello World 的输出就说明安装成功了。
@@ -4325,16 +4467,19 @@ sudo docker run hello-world
 ```
 my-app/
 ├── package.json
+├── yarn.lock
 ├── src/
 │   └── index.js
 └── Dockerfile
 ```
 
+示例假设项目使用对应的 Yarn 锁文件，且 `build` 脚本输出 `dist/index.js`；请按实际构建工具和产物调整。基础镜像使用 Node.js 24；实际项目应选择仍受支持且通过应用兼容性验证的版本。
+
 一个简单但规范的 `Dockerfile` 是这样的：
 
 ```dockerfile
 # ---- 构建阶段 ----
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /app
 COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
@@ -4342,7 +4487,7 @@ COPY . .
 RUN yarn build
 
 # ---- 运行阶段 ----
-FROM node:20-alpine AS runner
+FROM node:24-alpine AS runner
 WORKDIR /app
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 appuser
@@ -4358,21 +4503,22 @@ CMD ["node", "dist/index.js"]
 ```
 
 这里用了**多阶段构建**（multi-stage build）：
-- **构建阶段**：安装所有依赖，执行构建
-- **运行阶段**：只复制构建产物和运行时依赖，镜像体积小得多
 
-对比一下：单阶段构建的镜像大约 ~500MB，用多阶段构建后只有 ~150MB。
+- **构建阶段**：安装所有依赖，执行构建
+- **运行阶段**：只复制构建产物、`package.json` 和构建阶段生成的 `node_modules`；当前示例仍包含开发依赖，若要继续缩小镜像需按包管理器和应用运行方式单独裁剪
+
+镜像体积取决于基础镜像、依赖和构建产物，多阶段构建本身不保证固定降幅。对同一应用记录优化前后的 `docker images` 输出，再判断收益。
 
 ## 第三步：构建镜像
 
 ```bash
-docker build -t my-app:latest .
+sudo docker build -t my-app:latest .
 ```
 
 构建完成后，查看镜像：
 
 ```bash
-docker images
+sudo docker images
 ```
 
 ## 第四步：运行容器
@@ -4380,32 +4526,34 @@ docker images
 最简单的启动方式：
 
 ```bash
-docker run -d \
+sudo docker run -d \
   --name my-app \
-  -p 3000:3000 \
+  -p 127.0.0.1:3000:3000 \
   --restart unless-stopped \
   my-app:latest
 ```
 
 参数说明：
+
 - `-d`：后台运行
 - `--name`：容器命名
-- `-p 宿主机端口:容器端口`：端口映射
+- `-p 宿主机地址:宿主机端口:容器端口`：端口映射
 - `--restart unless-stopped`：退出时自动重启（除非手动停止）
 
 ## 第五步：用 Docker Compose 管理
 
 当你的应用不止一个服务时（比如需要数据库），Docker Compose 就派上用场了。
 
+本文假设 Nginx 运行在宿主机，通过 `127.0.0.1:3000` 转发请求；容器中的应用仍需监听 `0.0.0.0:3000`。如果 Nginx 也运行在容器中，应使用共同 Docker 网络和服务名访问应用。
+
 在项目根目录创建 `docker-compose.yml`：
 
 ```yaml
-version: '3.8'
 services:
   app:
     build: .
     ports:
-      - '3000:3000'
+      - '127.0.0.1:3000:3000'
     environment:
       - NODE_ENV=production
       - DB_HOST=postgres
@@ -4420,7 +4568,7 @@ services:
       - pgdata:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=myapp
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:?Set DB_PASSWORD before starting}
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 5s
@@ -4432,16 +4580,25 @@ volumes:
   pgdata:
 ```
 
+启动前先在项目根目录提供 `DB_PASSWORD`。推荐使用仅供 Compose 读取的本地 `.env` 文件，并确保它已被 `.gitignore` 和 `.dockerignore` 排除：
+
+```dotenv
+# .env — do not commit or copy into the image
+DB_PASSWORD=replace-with-a-strong-password
+```
+
+Compose 插值只负责给 PostgreSQL 设置密码，应用自身使用的数据库凭据仍需按应用配置接口传入。不要把密码写进 `docker-compose.yml` 或命令行参数，以免进入 shell 历史和进程列表。
+
 启动所有服务：
 
 ```bash
-docker compose up -d
+sudo docker compose up -d
 ```
 
 查看日志：
 
 ```bash
-docker compose logs -f app
+sudo docker compose logs -f app
 ```
 
 ## 生产环境最佳实践
@@ -4455,8 +4612,8 @@ Dockerfile 里一定要建一个普通用户，然后用 `USER` 切换。上面�
 ### 2. 定期更新基础镜像
 
 ```bash
-docker pull node:20-alpine
-docker compose build --pull
+sudo docker pull node:24-alpine
+sudo docker compose build --pull
 ```
 
 不要忽视安全更新。
@@ -4479,7 +4636,7 @@ Docker 容器默认会写日志到 JSON 文件，时间长了会占满磁盘。�
 }
 ```
 
-改完重启 Docker：`sudo systemctl restart docker`。
+合并到已有 daemon 配置，不要覆盖其他设置；重启 Docker 可能影响运行容器，应安排维护窗口。新的日志默认设置通常只对新建容器生效，已有容器需重建。改完重启 Docker：`sudo systemctl restart docker`。
 
 ### 5. 使用 .dockerignore
 
@@ -4487,17 +4644,19 @@ Docker 容器默认会写日志到 JSON 文件，时间长了会占满磁盘。�
 node_modules
 .git
 .env
+.env.*
+!.env.example
 dist
 *.md
 ```
 
-避免把不必要的文件打包进镜像，能显著加快构建速度。
+避免把不必要的文件打包进镜像，能显著加快构建速度。`.env.example` 只保留变量名和占位值，真实密钥通过部署环境注入；不要写入镜像。
 
 ## 总结
 
 从安装 Docker、写 Dockerfile、构建镜像，到用 Docker Compose 编排多容器服务——这套流程已经成了我部署应用的标配。容器化的好处不用多说，关键是**形成规范**：每个项目都按同样的方式组织、同样的命令部署，省心很多。
 
-下一篇会讲如何用 Docker Compose 编排更多服务，以及一些进阶的部署策略。
+下一篇衔接 [[nginx-reverse-proxy|Nginx 反向代理与负载均衡]]，给容器应用配置 HTTPS 入口。
 
 ## 延伸阅读
 
@@ -4510,7 +4669,7 @@ dist
             <category>Node.js</category>
             <category>部署</category>
             <_reading_time>
-                <readingTime>6 min read</readingTime>
+                <readingTime>8 min read</readingTime>
             </_reading_time>
         </item>
         <item>
@@ -4524,14 +4683,14 @@ dist
 
 ## 什么是 Cloudflare Workers
 
-Cloudflare Workers 是一个在 Cloudflare 全球边缘网络上运行的无服务器计算平台。简单理解：你写一段 JavaScript/TypeScript 代码，提交到 Cloudflare，它在全球 300+ 个节点上自动部署。用户请求时会从距离最近的节点响应，延迟极低。
+Cloudflare Workers 是一个在 Cloudflare 全球边缘网络上运行的无服务器计算平台。简单理解：你写一段 JavaScript/TypeScript 代码，提交到 Cloudflare，由平台负责在其边缘网络上运行。用户请求会由 Cloudflare 的边缘基础设施接收，再按平台的路由和调度规则执行；具体覆盖范围、延迟和计费取决于当前产品计划与官方限制。
 
 相比传统的 VPS + [[nginx-reverse-proxy|Nginx 反向代理]] 部署方式，Workers 的优势很明显：
 
 - **无需管理服务器**——只管写代码，Cloudflare 负责运行
-- **全球部署**——一个指令，分布到 300+ 节点
+- **边缘部署**——一个指令即可发布到 Cloudflare 的边缘基础设施，覆盖范围以当前官方文档为准
 - **冷启动极快**——基于 V8 Isolate，比传统 Serverless 运行时（如 AWS Lambda）启动快得多
-- **免费额度慷慨**——每天 10 万次请求免费
+- **有免费计划**——请求数、CPU 时间、KV 等资源的额度和计费规则会随产品计划调整，发布前应以官方定价页为准
 
 需要长连接、重 CPU 或完整容器编排时，仍应回到 [[docker-deploy-guide|容器部署]] 与源站运维，而不是硬把一切塞进边缘。
 
@@ -4632,10 +4791,10 @@ export default {
 ```
 
 KV 的特点：
+
 - 最终一致性（写入后全球传播需要几秒）
 - 适合读多写少的场景
-- 单个值最大 25MB
-- 免费版每天 10 万次读写
+- 单个值大小、读写额度和计费规则受当前 KV 产品限制约束，使用前应核对官方文档
 
 ## 定时任务（Cron Triggers）
 
@@ -4696,8 +4855,8 @@ npx wrangler secret put API_KEY
 ```typescript
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    const siteName = env.SITE_NAME;    // 明文变量
-    const apiKey = env.API_KEY;        // 加密变量
+    const siteName = env.SITE_NAME; // 明文变量
+    const apiKey = env.API_KEY; // 加密变量
     return new Response(`${siteName}: ${apiKey ? 'has key' : 'no key'}`);
   },
 };
@@ -4783,7 +4942,7 @@ Cloudflare Workers 是我最推荐的无服务器平台。门槛低（一个文�
             <category>Workers</category>
             <category>Serverless</category>
             <_reading_time>
-                <readingTime>7 min read</readingTime>
+                <readingTime>8 min read</readingTime>
             </_reading_time>
         </item>
         <item>
@@ -4793,7 +4952,9 @@ Cloudflare Workers 是我最推荐的无服务器平台。门槛低（一个文�
             <pubDate>Thu, 25 Jun 2026 00:00:00 GMT</pubDate>
             <description><![CDATA[GitHub Actions 多阶段流水线：阶段划分、并行与缓存、制品管理与部署策略，从单脚本演进到可回滚发布。]]></description>
             <content:encoded><![CDATA[
-> 结论先说：流水线按 lint → test → build → deploy 快速失败；能并行就并行，依赖与镜像必须缓存，制品用 commit SHA 标识。
+> 结论先说：流水线按 lint → test → build → deploy 快速失败；能并行就并行，依赖与镜像必须缓存，制品用 commit SHA 关联源码，部署时锁定镜像 digest。
+
+本文是通用流水线设计示例，尚未执行其中的部署。Chronicle 实际使用 Node 24、pnpm（版本由 `package.json` 的 `packageManager` 锁定）和 Vercel；下文的 `dist/` 是静态应用示例，不能直接作为 Next.js 服务端部署产物。Action 主版本沿用仓库已有配置或示例；上线前核对维护状态，并按团队策略固定到审阅过的完整 commit SHA。
 
 ## 为什么要设计流水线
 
@@ -4817,15 +4978,15 @@ lint → type-check → test → build → deploy
 
 每个阶段的设计原则：
 
-| 阶段 | 作用 | 失败策略 | 执行速度 |
-|------|------|----------|----------|
-| lint | 代码风格检查 | 阻断 | 极快（< 30s） |
-| type-check | 类型检查 | 阻断 | 快（< 1min） |
-| test | 单元测试 + 集成测试 | 阻断 | 中（1-5min） |
-| build | 构建制品 | 阻断 | 中（1-5min） |
-| deploy | 部署到环境 | 阻断/通知 | 慢（视环境） |
+| 阶段       | 作用                | 失败策略  | 执行速度                  |
+| ---------- | ------------------- | --------- | ------------------------- |
+| lint       | 代码风格检查        | 阻断      | 取决于文件数量与规则      |
+| type-check | 类型检查            | 阻断      | 取决于类型复杂度与缓存    |
+| test       | 单元测试 + 集成测试 | 阻断      | 取决于套件规模与外部依赖  |
+| build      | 构建制品            | 阻断      | 取决于框架、缓存与 runner |
+| deploy     | 部署到环境          | 阻断/通知 | 慢（视环境）              |
 
-**核心原则：快速失败**。把快的检查放前面，慢的放后面。lint 失败就没必要跑测试了——尽早暴露问题，节省 CI 资源。
+**核心原则：快速失败**。把快的检查放前面，慢的放后面。需要节省资源时可串行设置依赖；下面选择独立检查并行，因此 lint 失败不会自动停止已启动的测试，但会阻止 build。
 
 ### 基础流水线骨架
 
@@ -4839,6 +5000,10 @@ on:
   pull_request:
     branches: [main]
 
+# 默认收紧令牌权限；发布 job 再单独声明 packages: write 等额外权限
+permissions:
+  contents: read
+
 # 同一分支新推送时取消旧的运行
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -4849,13 +5014,11 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
-          version: 9
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
+          node-version: 24
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
@@ -4864,28 +5027,24 @@ jobs:
   type-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
-          version: 9
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
+          node-version: 24
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: pnpm type-check
+      - run: pnpm typecheck
 
   # 阶段 3：测试
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
-          version: 9
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
+          node-version: 24
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - run: pnpm test --coverage
@@ -4895,17 +5054,15 @@ jobs:
     needs: [lint, type-check, test]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
-          version: 9
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
+          node-version: 24
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: build-output
           path: dist/
@@ -4940,9 +5097,11 @@ build:
   # ...
 ```
 
-并行的好处是总耗时等于最慢的那个 job，而不是所有 job 之和。如果 lint 30s、type-check 60s、test 120s，串行要 210s，并行只要 120s。
+理想情况下，并行阶段的执行时间由最慢 job 决定。例如假设 lint、typecheck、test 分别耗时 30s、60s、120s，且 runner 同时可用，执行部分从 210s 降至 120s；真实流水线还包含排队和每个 job 的重复初始化。
 
 ### 串行执行有依赖的任务
+
+下面只演示 job 依赖；`rsync` 和服务重启需提前配置 SSH 凭证、host key 和最小权限，且缺少原子切换与健康检查，不构成生产发布方案。
 
 部署有环境顺序要求——先部署到预发，验证通过再部署到生产：
 
@@ -4953,7 +5112,7 @@ deploy-staging:
   if: github.ref == 'refs/heads/main'
   environment: staging
   steps:
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v7
       with:
         name: build-output
         path: dist/
@@ -4970,7 +5129,7 @@ deploy-production:
     name: production
     url: https://app.example.com
   steps:
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v7
       with:
         name: build-output
         path: dist/
@@ -4980,7 +5139,7 @@ deploy-production:
         ssh user@prod 'systemctl restart app'
 ```
 
-`environment` 关键字不只是注释——它会触发 GitHub 的环境保护规则，可以配置必需的审批人、等待时间、部署分支限制。生产环境的部署必须有人工审批，这是最后一道防线。
+`environment` 将 job 关联到 GitHub Environment。只有在仓库 Settings → Environments 中配置了可用的 required reviewers、等待时间或分支限制，才会执行相应保护；仅写 `environment: production` 不会自动产生审批。是否支持这些保护也取决于仓库可见性和 GitHub 套餐。
 
 ### 并行测试分片
 
@@ -4993,19 +5152,17 @@ test:
     matrix:
       shard: [1, 2, 3, 4]
   steps:
-    - uses: actions/checkout@v4
-    - uses: pnpm/action-setup@v3
+    - uses: actions/checkout@v7
+    - uses: pnpm/action-setup@v6
+    - uses: actions/setup-node@v7
       with:
-        version: 9
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 20
+        node-version: 24
         cache: 'pnpm'
     - run: pnpm install --frozen-lockfile
     - run: pnpm test --shard=${{ matrix.shard }}/4
 ```
 
-Vitest 原生支持分片：`vitest --shard=1/4` 会只运行 1/4 的测试。4 个分片并行，测试时间缩短到原来的 1/4。
+Vitest 支持 `vitest run --shard=1/4`，按测试文件分配分片，不保证每片恰好有 1/4 的测试用例或耗时。总时间还包括排队、安装和最慢分片；以实测耗时判断收益。覆盖率需收集各分片报告后合并，不能把单个分片覆盖率当成全套结果。
 
 ## 缓存优化
 
@@ -5016,13 +5173,11 @@ Vitest 原生支持分片：`vitest --shard=1/4` 会只运行 1/4 的测试。4 
 `actions/setup-node` 内置了 pnpm 缓存支持，但配置要对：
 
 ```yaml
-- uses: pnpm/action-setup@v3
+- uses: pnpm/action-setup@v6
+- uses: actions/setup-node@v7
   with:
-    version: 9
-- uses: actions/setup-node@v4
-  with:
-    node-version: 20
-    cache: 'pnpm'  # 关键：指定缓存 pnpm store
+    node-version: 24
+    cache: 'pnpm' # 关键：指定缓存 pnpm store
 ```
 
 如果需要更精细的控制，手动缓存：
@@ -5034,6 +5189,7 @@ Vitest 原生支持分片：`vitest --shard=1/4` 会只运行 1/4 的测试。4 
   run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
 
 - name: Setup pnpm cache
+  id: pnpm-store-cache
   uses: actions/cache@v4
   with:
     path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
@@ -5046,7 +5202,7 @@ Vitest 原生支持分片：`vitest --shard=1/4` 会只运行 1/4 的测试。4 
 
 ### 构建缓存
 
-构建产物也可以缓存。Next.js、Vite 等工具的构建缓存目录：
+框架构建缓存可以复用，但缓存不同于最终发布制品。目录取决于工具；下面的 `.next/cache` 用于 Next.js，不表示 Vite 默认也使用此路径。多运行时项目应把 Node 版本、构建配置等纳入 key：
 
 ```yaml
 - name: Cache build
@@ -5066,16 +5222,16 @@ Docker 构建用 BuildKit 的缓存挂载：
 
 ```yaml
 - name: Build Docker image
-  uses: docker/build-push-action@v5
+  uses: docker/build-push-action@v7
   with:
     context: .
     push: true
-    tags: app:${{ github.sha }}
+    tags: ghcr.io/example/app:${{ github.sha }}
     cache-from: type=gha
     cache-to: type=gha,mode=max
 ```
 
-`type=gha` 是 GitHub Actions 的缓存后端，`mode=max` 缓存所有层（包括中间层），下次构建直接复用。
+这个片段需放在已配置 Buildx 和 registry 登录的 job 中；Action 与 Buildx/BuildKit 版本需满足当前 GHA 缓存 API 要求。`type=gha` 是 GitHub Actions 的缓存后端，`mode=max` 缓存所有层（包括中间层），下次构建直接复用。
 
 ### 缓存命中率检查
 
@@ -5083,7 +5239,7 @@ Docker 构建用 BuildKit 的缓存挂载：
 
 ```yaml
 - name: Cache hit check
-  if: steps.pnpm-cache.outputs.cache-hit == 'true'
+  if: steps.pnpm-store-cache.outputs.cache-hit == 'true'
   run: echo "Cache hit!"
   # 如果总是 miss，检查 key 是否过于严格
 ```
@@ -5098,15 +5254,13 @@ Docker 构建用 BuildKit 的缓存挂载：
 test:
   runs-on: ubuntu-latest
   strategy:
-    fail-fast: false  # 一个失败不取消其他
+    fail-fast: false # 一个失败不取消其他
     matrix:
-      node-version: [18, 20, 22]
+      node-version: [24]
   steps:
-    - uses: actions/checkout@v4
-    - uses: pnpm/action-setup@v3
-      with:
-        version: 9
-    - uses: actions/setup-node@v4
+    - uses: actions/checkout@v7
+    - uses: pnpm/action-setup@v6
+    - uses: actions/setup-node@v7
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'pnpm'
@@ -5124,14 +5278,12 @@ test:
     fail-fast: false
     matrix:
       os: [ubuntu-latest, macos-latest, windows-latest]
-      node-version: [18, 20, 22]
+      node-version: [24]
   runs-on: ${{ matrix.os }}
   steps:
-    - uses: actions/checkout@v4
-    - uses: pnpm/action-setup@v3
-      with:
-        version: 9
-    - uses: actions/setup-node@v4
+    - uses: actions/checkout@v7
+    - uses: pnpm/action-setup@v6
+    - uses: actions/setup-node@v7
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'pnpm'
@@ -5139,25 +5291,11 @@ test:
     - run: pnpm test
 ```
 
-这会生成 9 个 job（3 OS × 3 Node）。注意 Windows 上 pnpm 的路径处理可能有问题，需要测试。
+这会生成 3 个 job（3 OS × 1 Node）。增加版本前，先确认应用、pnpm 和依赖共同支持该版本；不要为了矩阵数量测试已不受支持的运行时。
 
 ### 矩阵的排除和包含
 
-```yaml
-strategy:
-  matrix:
-    os: [ubuntu-latest, macos-latest]
-    node-version: [18, 20, 22]
-    exclude:
-      # macOS 上不测 Node 18
-      - os: macos-latest
-        node-version: 18
-    include:
-      # 额外加一个 Linux + Node 22 的 lint job
-      - os: ubuntu-latest
-        node-version: 22
-        lint: true
-```
+需要排除某个已知不支持的组合时用 `exclude`；增加特殊配置时用 `include`。新增条目也必须符合应用和包管理器的运行时要求，避免用失败组合来增加覆盖数字。
 
 ## 制品管理
 
@@ -5165,23 +5303,23 @@ strategy:
 
 ### 上传和下载制品
 
+以下以产生 `dist/` 的静态应用为例。复制到现有目录的步骤只演示传输：生产发布需使用独立 release 目录、校验制品、原子切换和健康检查，并预先固定 SSH host key；不能依靠覆盖解压保证回滚或删除旧文件。
+
 ```yaml
 build:
   runs-on: ubuntu-latest
   steps:
-    - uses: actions/checkout@v4
-    - uses: pnpm/action-setup@v3
+    - uses: actions/checkout@v7
+    - uses: pnpm/action-setup@v6
+    - uses: actions/setup-node@v7
       with:
-        version: 9
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 20
+        node-version: 24
         cache: 'pnpm'
     - run: pnpm install --frozen-lockfile
     - run: pnpm build
 
     # 上传构建产物
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         name: dist-${{ github.sha }}
         path: |
@@ -5196,7 +5334,7 @@ deploy-staging:
   runs-on: ubuntu-latest
   steps:
     # 下载构建产物——不重新构建
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v7
       with:
         name: dist-${{ github.sha }}
         path: ./
@@ -5209,29 +5347,39 @@ deploy-staging:
 
 ### Docker 镜像作为制品
 
-对于容器化部署，Docker 镜像就是制品。推送到镜像仓库后，各环境拉取即可：
+容器化部署应在质量门禁通过后构建并推送镜像。下面片段假定已有 `lint`、`type-check`、`test` job、可用 Dockerfile 和已授权的 GHCR 包发布权限：
 
 ```yaml
 build-and-push:
-  needs: [lint, test]
+  needs: [lint, type-check, test]
   runs-on: ubuntu-latest
+  permissions:
+    contents: read
+    packages: write
+  outputs:
+    image: ${{ steps.image.outputs.name }}
+    digest: ${{ steps.push.outputs.digest }}
   steps:
-    - uses: actions/checkout@v4
-    - uses: docker/setup-buildx-action@v3
-    - uses: docker/login-action@v3
+    - uses: actions/checkout@v7
+    - name: Normalize image name
+      id: image
+      shell: bash
+      env:
+        REPOSITORY: ${{ github.repository }}
+      run: echo "name=ghcr.io/${REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+    - uses: docker/setup-buildx-action@v4
+    - uses: docker/login-action@v4
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-
     - name: Build and push
-      uses: docker/build-push-action@v5
+      id: push
+      uses: docker/build-push-action@v7
       with:
         context: .
         push: true
-        tags: |
-          ghcr.io/${{ github.repository }}:${{ github.sha }}
-          ghcr.io/${{ github.repository }}:latest
+        tags: ${{ steps.image.outputs.name }}:${{ github.sha }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
         labels: |
@@ -5239,168 +5387,49 @@ build-and-push:
           org.opencontainers.image.revision=${{ github.sha }}
 ```
 
-用 commit SHA 作为镜像 tag——每次构建唯一标识，方便回滚到任意版本。
+镜像名称必须小写。commit SHA 标签便于定位源码，但标签仍可被覆盖；部署 job 应用 `needs.build-and-push.outputs.image` 和 `needs.build-and-push.outputs.digest` 组成 `image@sha256:...`，让预发和生产使用同一内容。私有镜像还需要部署环境自己的只读拉取凭证。缓存是否命中取决于层、输入和缓存后端权限，不保证每次复用。
 
 ## 部署策略
 
+以下是实施步骤，不能直接复制为生产部署脚本。真实脚本需要匹配平台、网络、身份校验、数据库兼容性和故障恢复机制，并先在预发演练。
+
 ### 蓝绿部署
 
-蓝绿部署维护两套完全相同的环境（蓝和绿），切换流量实现零停机部署。
+蓝绿部署维护两套服务，先验证非活跃环境，再切换流量：
 
-```yaml
-deploy-blue-green:
-  needs: build-and-push
-  runs-on: ubuntu-latest
-  environment: production
-  steps:
-    - uses: actions/checkout@v4
+1. 读取并校验当前活跃环境，只接受已知的 blue/green 值；记录旧镜像 digest 和流量配置。
+2. 在非活跃环境部署目标 digest，保持旧环境可用。
+3. 检查 readiness、依赖和关键业务路径；超时或失败立即终止，不切流量。
+4. 通过负载均衡器实际支持的监听器或路由 API 切换，并读取配置确认生效。修改 target group attributes 本身不等于切换监听器目标。
+5. 从公开入口复测并观察错误率；异常时恢复旧路由，再验证恢复结果。
 
-    - name: Determine active environment
-      id: active
-      run: |
-        # 查询当前活跃环境（通过负载均衡器或 DNS）
-        ACTIVE=$(curl -s https://api.example.com/health/env)
-        echo "active=$ACTIVE" >> $GITHUB_OUTPUT
-        if [ "$ACTIVE" = "blue" ]; then
-          echo "target=green" >> $GITHUB_OUTPUT
-        else
-          echo "target=blue" >> $GITHUB_OUTPUT
-        fi
-
-    - name: Deploy to inactive environment
-      run: |
-        TARGET=${{ steps.active.outputs.target }}
-        IMAGE=ghcr.io/${{ github.repository }}:${{ github.sha }}
-
-        # 部署到非活跃环境
-        ssh deploy@$TARGET.example.com "
-          docker pull $IMAGE
-          docker stop app || true
-          docker rm app || true
-          docker run -d --name app --restart always -p 3000:3000 $IMAGE
-        "
-
-    - name: Health check
-      run: |
-        TARGET=${{ steps.active.outputs.target }}
-        for i in {1..10}; do
-          if curl -f https://$TARGET.example.com/health; then
-            echo "Health check passed"
-            exit 0
-          fi
-          sleep 5
-        done
-        echo "Health check failed"
-        exit 1
-
-    - name: Switch traffic
-      run: |
-        TARGET=${{ steps.active.outputs.target }}
-        # 切换负载均衡器或 DNS 指向新环境
-        aws elbv2 modify-target-group-attributes \
-          --target-group-arn $TARGET_ARN \
-          # ... 切换逻辑
-        echo "Traffic switched to $TARGET"
-```
-
-蓝绿部署的优点是**秒级回滚**——出问题直接切回旧环境。缺点是需要双倍资源。
+回滚速度取决于路由、连接排空和检查时间，DNS 还有 TTL 与客户端缓存；不能承诺秒级回滚或绝对零停机。旧环境必须保持可用，且共享数据库变更不能破坏旧版本。
 
 ### 滚动部署
 
-滚动部署逐步替换实例，不需要双倍资源，但回滚较慢。
+滚动部署逐批替换实例，批次大小由可用容量决定：
 
-```yaml
-deploy-rolling:
-  needs: build-and-push
-  runs-on: ubuntu-latest
-  environment: production
-  steps:
-    - name: Rolling update
-      run: |
-        IMAGE=ghcr.io/${{ github.repository }}:${{ github.sha }}
+1. 根据目标组类型获取合法的 instance ID 或 IP；不能把任意私网 IP 当成所有目标组的目标 ID。
+2. 摘除当前批次，等待负载均衡器确认连接排空，不以固定 `sleep` 代替状态检查。
+3. 部署锁定的 digest，运行限时健康检查并记录成功状态。
+4. 只有检查成功才重新注册；检查次数耗尽时退出失败，停止后续批次并执行已演练的恢复步骤。
+5. 等待目标组确认健康，再开始下一批；从公开入口检查整个服务。
 
-        # 获取所有实例
-        INSTANCES=$(aws ec2 describe-instances \
-          --filters "Name=tag:Role,Values=app" \
-          --query 'Reservations[].Instances[].PrivateIpAddress' \
-          --output text)
-
-        # 逐个更新——每次只更新一个，等健康检查通过再更新下一个
-        for INSTANCE in $INSTANCES; do
-          echo "Updating $INSTANCE..."
-
-          # 从负载均衡器摘除
-          aws elbv2 deregister-targets \
-            --target-group-arn $TG_ARN \
-            --targets Id=$INSTANCE
-
-          # 等待连接排空
-          sleep 10
-
-          # 更新实例
-          ssh deploy@$INSTANCE "
-            docker pull $IMAGE
-            docker stop app && docker rm app
-            docker run -d --name app --restart always -p 3000:3000 $IMAGE
-          "
-
-          # 健康检查
-          for i in {1..12}; do
-            if ssh deploy@$INSTANCE 'curl -f http://localhost:3000/health'; then
-              break
-            fi
-            sleep 5
-          done
-
-          # 重新加入负载均衡器
-          aws elbv2 register-targets \
-            --target-group-arn $TG_ARN \
-            --targets Id=$INSTANCE
-        done
-```
+健康检查循环中的 `break` 只表示退出循环；如果重试耗尽后不显式退出失败，脚本可能把不健康实例重新加入流量。
 
 ### Kubernetes 部署
 
-K8s 环境下部署更简单——更新镜像 tag，K8s 自动处理滚动更新和回滚：
+更新镜像后，Kubernetes 按 Deployment 策略执行 rollout。它不会仅因应用异常自动回滚；readiness、资源配额、滚动策略和发布验证都需要预先配置。
 
-```yaml
-deploy-k8s:
-  needs: build-and-push
-  runs-on: ubuntu-latest
-  environment: production
-  steps:
-    - uses: actions/checkout@v4
-
-    - name: Configure kubectl
-      uses: azure/setup-kubectl@v3
-      with:
-        version: 'latest'
-
-    - name: Set K8s context
-      uses: azure/k8s-set-context@v3
-      with:
-        kubeconfig: ${{ secrets.KUBE_CONFIG }}
-
-    - name: Deploy
-      run: |
-        # 滚动更新——只需更新镜像 tag
-        kubectl set image deployment/app \
-          app=ghcr.io/${{ github.repository }}:${{ github.sha }} \
-          -n production
-
-        # 等待 rollout 完成
-        kubectl rollout status deployment/app \
-          -n production \
-          --timeout=300s
-
-    - name: Rollback on failure
-      if: failure()
-      run: |
-        kubectl rollout undo deployment/app -n production
-        echo "Deployment failed, rolled back"
+```bash
+# 操作示例：先确认 context、namespace、容器名和 digest；不是完整发布脚本。
+kubectl --context "$KUBE_CONTEXT" -n production set image deployment/app app="$IMAGE_REF"
+kubectl --context "$KUBE_CONTEXT" -n production rollout status deployment/app --timeout=300s
 ```
 
-`kubectl rollout status` 会等待所有 Pod 更新完成。如果超时或失败，`if: failure()` 触发自动回滚。
+`IMAGE_REF` 必须是从受信任构建 job 取得并校验的 digest 引用。发布前记录旧 revision/digest；只有确认本次发布已修改目标 Deployment 且验证失败，才恢复记录的版本。避免在宽泛的 `if: failure()` 中无条件 `rollout undo`：凭证配置失败也会触发它，可能撤销一次无关发布。
+
+回滚后仍需等待 rollout、检查业务和监控，并保留发布失败状态。镜像回滚不恢复数据库或外部副作用；迁移采用向后兼容的 expand/contract 流程，破坏性迁移另行审批和备份。
 
 ## 密钥管理
 
@@ -5408,28 +5437,20 @@ CI/CD 里的密钥管理是安全重点。**永远不要把密钥写在 YAML 里
 
 ### GitHub Secrets 配置
 
-在仓库的 Settings → Secrets and variables → Actions 中配置：
+在仓库或 Environment 的 Secrets 中保存部署凭证，并只提供给实际使用它的步骤：
 
 ```yaml
-deploy:
-  runs-on: ubuntu-latest
-  steps:
-    - name: Deploy with secrets
-      env:
-        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        API_KEY: ${{ secrets.API_KEY }}
-        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-      run: |
-        # 配置 SSH
-        mkdir -p ~/.ssh
-        echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-
-        # 使用密钥（不会在日志中打印）
-        ssh deploy@server "DATABASE_PASSWORD=${DB_PASSWORD} ./deploy.sh"
+- name: Check credential availability
+  shell: bash
+  env:
+    API_KEY: ${{ secrets.API_KEY }}
+  run: |
+    test -n "$API_KEY" || { echo 'API_KEY is missing'; exit 1; }
 ```
 
-GitHub 会自动遮蔽 secret 的值——即使脚本里 `echo $DB_PASSWORD`，日志里也只显示 `***`。
+不要输出密钥，不开启 `set -x`，也不要把密钥拼接到远程 shell 命令中。`ssh ... "DATABASE_PASSWORD=${DB_PASSWORD} ..."` 会把值带入远程命令行，并可能因引号、换行或命令替换产生注入和泄漏。数据库密码应由服务器受限权限配置或密钥管理服务读取，CI 只传制品标识。
+
+SSH 还需要预先校验并固定服务器 host key；不要关闭 `StrictHostKeyChecking`。密钥文件应限制权限，并在 job 结束后清理。GitHub 的 masking 是补充措施，变形、编码、分段或结构化输出未必被遮蔽，不能以 `echo` 测试秘密是否安全。
 
 ### 环境级密钥
 
@@ -5443,13 +5464,13 @@ deploy-staging:
   # ...
 
 deploy-production:
-  environment: production  # 需要审批
+  environment: production # 保护规则需在 Settings 中配置
   env:
     DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
   # ...
 ```
 
-生产环境的 `environment` 配置审批规则——必须有人工确认才能运行，防止误部署。
+在 Settings → Environments 为生产配置 required reviewers 和部署分支规则，再验证测试发布确实等待审批。Environment 同名 Secrets 可隔离不同环境的值；不要把生产凭证提供给 PR 或未经审核的工作流。
 
 ### 短期密钥（OIDC）
 
@@ -5457,11 +5478,12 @@ deploy-production:
 
 ```yaml
 permissions:
-  id-token: write  # 必须开启 OIDC
+  id-token: write # 必须开启 OIDC
   contents: read
 
 deploy-aws:
   runs-on: ubuntu-latest
+  environment: production
   steps:
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -5472,171 +5494,36 @@ deploy-aws:
     - run: aws s3 sync dist/ s3://my-bucket/
 ```
 
-OIDC 方式不需要在 GitHub 存 AWS 密钥——每次运行时通过角色扮演获取临时凭证，用完即弃。
+OIDC 不需要在 GitHub 保存长期 AWS access key，但必须在 AWS 角色信任策略中限制 `token.actions.githubusercontent.com:aud` 为 `sts.amazonaws.com`，并把 `sub` 限定到明确仓库及分支或 Environment。使用 `environment: production` 时，subject 形态为 `repo:OWNER/REPO:environment:production`，还需 Environment 的分支保护来限制来源。不要仅信任整个组织或任意仓库；角色自身权限也应限制到发布所需资源。
 
-## 完整流水线示例
+## 串联整条发布流程
 
-把前面的内容组合成一条完整的多阶段流水线：
-
-```yaml
-# .github/workflows/deploy.yml
-name: Deploy
-
-on:
-  push:
-    branches: [main]
-
-concurrency:
-  group: deploy-${{ github.ref }}
-  cancel-in-progress: false  # 部署不取消，避免中断
-
-jobs:
-  # === 质量门禁阶段（并行） ===
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 9
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm lint
-
-  type-check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 9
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm type-check
-
-  test:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        shard: [1, 2]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 9
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm test --shard=${{ matrix.shard }}/2 --coverage
-
-  # === 构建阶段 ===
-  build:
-    needs: [lint, type-check, test]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
-            ghcr.io/${{ github.repository }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  # === 部署预发 ===
-  deploy-staging:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: staging
-      url: https://staging.example.com
-    steps:
-      - uses: actions/checkout@v4
-      - uses: azure/setup-kubectl@v3
-      - uses: azure/k8s-set-context@v3
-        with:
-          kubeconfig: ${{ secrets.STAGING_KUBE_CONFIG }}
-      - run: |
-          kubectl set image deployment/app \
-            app=ghcr.io/${{ github.repository }}:${{ github.sha }} \
-            -n staging
-          kubectl rollout status deployment/app -n staging --timeout=180s
-
-  # === 集成测试（预发环境） ===
-  e2e-test:
-    needs: deploy-staging
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 9
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm e2e --base-url=https://staging.example.com
-        env:
-          E2E_TOKEN: ${{ secrets.E2E_TOKEN }}
-
-  # === 部署生产（需要审批） ===
-  deploy-production:
-    needs: e2e-test
-    runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: https://example.com
-    steps:
-      - uses: actions/checkout@v4
-      - uses: azure/setup-kubectl@v3
-      - uses: azure/k8s-set-context@v3
-        with:
-          kubeconfig: ${{ secrets.PRODUCTION_KUBE_CONFIG }}
-      - run: |
-          kubectl set image deployment/app \
-            app=ghcr.io/${{ github.repository }}:${{ github.sha }} \
-            -n production
-          kubectl rollout status deployment/app -n production --timeout=300s
-      - name: Rollback on failure
-        if: failure()
-        run: kubectl rollout undo deployment/app -n production
-```
-
-这条流水线的执行流程：
+前面的 CI 与镜像构建片段可组成质量门禁和制品生产流程。部署部分必须接入已验证的团队发布脚本，不能靠占位 SSH、空切流量命令或通用回滚命令凑成“完整可部署”配置。
 
 ```text
-lint ─┐
-type-check ─┤
-test (shard 1) ─┼─→ build → deploy-staging → e2e-test → deploy-production
-test (shard 2) ─┘                                        (需审批)
+lint ──────┐
+typecheck ─┼→ build-and-push → deploy-staging → e2e-test → deploy-production
+test ──────┘                     同一 digest                环境保护规则
 ```
 
-总耗时约 8-12 分钟，其中质量门禁阶段 2-3 分钟（并行），构建 2-3 分钟，预发部署 + E2E 测试 3-4 分钟，生产部署 1-2 分钟。
+每个箭头对应 `needs`：生产部署需同时声明 `needs: [build-and-push, e2e-test]`，这样才能直接读取构建的 image/digest 输出；仅依赖 E2E 不会自动取得间接依赖的输出。发布流程还需要：
+
+- workflow 默认 `permissions: contents: read`；仅构建 job 提升 `packages: write`，仅 OIDC job 提升 `id-token: write`。
+- 发布 job 明确 `environment`，并在 Settings 配置审核人与允许发布分支；E2E 使用预发测试身份。
+- 同一生产目标用固定 concurrency group，`cancel-in-progress: false`，避免取消正在修改服务的发布；审批等待和并发队列也计入交付耗时。
+- 将 digest 输出传入步骤的 `env`，校验格式后再使用；服务器配置、SSH 身份、Kubernetes context 和 namespace 均提前固定。
+- 回滚只处理本次发布修改的对象，恢复记录的旧版本后再次验证；失败通知不把 job 改写成成功。
+
+耗时取决于 runner 排队、套件规模、缓存、部署和审批。记录各阶段实际耗时后再优化；本文没有可支撑固定分钟数或加速比例的实测数据。
 
 ## 流水线设计要点
 
 ### 1. 快速反馈
 
-PR 阶段只跑 lint + type-check + unit test，不跑构建和部署。让开发者在 2 分钟内得到反馈。
+PR 阶段优先运行 lint、typecheck 和 unit test；框架编译错误、内容产物或打包边界需要构建才能发现时，也应保留 build。部署和生产凭证只提供给受保护的发布流程。用实际反馈时间设定预算。
 
 ```yaml
+# 以下是流程示意片段，不能直接作为完整 workflow 运行；需补齐每个 job 的 steps。
 on:
   pull_request:
     branches: [main]
@@ -5648,15 +5535,15 @@ jobs:
 
 ### 2. 构建一次，部署多次
 
-不要在每个环境重新构建。构建产物用 commit SHA 标识，各环境拉取同一个制品。这保证了"测试通过的就是上线的"。
+不要在每个环境重新构建。构建产物关联 commit SHA，镜像部署锁定 digest，并记录预发验证的 digest。不同环境的配置仍可能改变行为，例如构建期公开变量会写入前端产物；只有产物与配置边界明确，才能验证预发和生产的一致性。
 
 ### 3. 失败要可追溯
 
 每个步骤都要有清晰的日志。测试失败要上传报告：
 
 ```yaml
-- uses: actions/upload-artifact@v4
-  if: always()  # 即使失败也上传
+- uses: actions/upload-artifact@v7
+  if: always() # 即使失败也上传
   with:
     name: test-report
     path: coverage/
@@ -5665,7 +5552,7 @@ jobs:
 
 ### 4. 部署要可回滚
 
-生产部署必须配回滚机制。K8s 用 `kubectl rollout undo`，蓝绿部署切回旧环境，Docker 切回旧 tag。回滚应该是自动的——部署失败立即回滚，不等人工介入。
+生产部署需要明确恢复机制：K8s 恢复记录的 revision/digest，蓝绿恢复旧路由，Docker 恢复旧 digest。只有回滚作用域、数据库兼容性和验证步骤已经演练，才启用自动恢复；涉及不可逆数据变更时应停止并交给负责人员处理。
 
 ### 5. 监控流水线本身
 
@@ -5676,7 +5563,7 @@ jobs:
   if: failure()
   uses: slackapi/slack-github-action@v1
   with:
-    slack-message: "Deploy failed: ${{ github.run_id }}"
+    slack-message: 'Deploy failed: ${{ github.run_id }}'
   env:
     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 ```
@@ -5689,14 +5576,14 @@ jobs:
 - **并行优先**——独立任务并行，有依赖才串行
 - **缓存必备**——依赖缓存、构建缓存、Docker 缓存，能省则省
 - **矩阵测试**——多版本多平台，保证兼容性
-- **制品管理**——构建一次部署多次，用 SHA 标识版本
-- **部署策略**——蓝绿秒级回滚，滚动节省资源，K8s 自动化
+- **制品管理**——构建一次部署多次，SHA 关联源码、digest 锁定镜像
+- **部署策略**——按容量、路由和健康检查选择蓝绿、滚动或 K8s
 - **密钥安全**——Secrets 管理，环境隔离，OIDC 短期凭证
-- **自动回滚**——部署失败自动回滚，不等人工
+- **恢复机制**——记录旧版本，限制回滚作用域，恢复后再验证
 
 流水线是演进的。从最简单的 lint + test 开始，逐步加构建、部署、缓存、矩阵。不要一开始就设计完美流水线——先跑起来，再优化。
 
-参考：[GitHub Actions 文档](https://docs.github.com/en/actions)、[Docker Build Push Action](https://github.com/docker/build-push-action)、[Kubernetes 部署文档](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)
+参考：[Docker GHA 缓存版本要求](https://docs.docker.com/build/ci/github-actions/cache/)、[GitHub Actions 文档](https://docs.github.com/en/actions)、[Docker Build Push Action](https://github.com/docker/build-push-action)、[Kubernetes 部署文档](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)
 
 ## 延伸阅读
 
@@ -5709,7 +5596,7 @@ jobs:
             <category>GitHub Actions</category>
             <category>DevOps</category>
             <_reading_time>
-                <readingTime>20 min read</readingTime>
+                <readingTime>25 min read</readingTime>
             </_reading_time>
         </item>
     </channel>

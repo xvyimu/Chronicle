@@ -4,7 +4,19 @@ import { CONTENT_SNAPSHOT_FILES, getContentSnapshotRoot } from './paths';
 import type { ContentSnapshotManifest, ContentSnapshotPayload } from './types';
 
 function stableStringify(value: unknown): string {
-  return `${JSON.stringify(value, null, 2)}\n`;
+  const json = JSON.stringify(value, (_key, nested) => nested, 2);
+  const compactTags = json.replace(
+    /"tags": \[\n((?:\s+"[^"]*",?\n)+)\s+\]/g,
+    (_, entries: string) => {
+      const compact = entries
+        .split('\n')
+        .filter(Boolean)
+        .map((entry) => entry.trim().replace(/,$/, ''))
+        .join(', ');
+      return `"tags": [${compact}]`;
+    },
+  );
+  return `${compactTags}\n`;
 }
 
 function readExistingManifest(root: string): ContentSnapshotManifest | null {

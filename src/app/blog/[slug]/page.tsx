@@ -52,6 +52,9 @@ async function BlogPostContent({ post }: { post: PostFull }) {
   const { prev, next } = getAdjacentPosts(slug);
   const relatedPosts = getRelatedPosts(slug);
   const seriesPosts = getSeriesPosts(slug);
+  const seriesIndex = seriesPosts.findIndex((item) => item.slug === slug);
+  const nextInSeriesSlug =
+    seriesIndex >= 0 ? seriesPosts[seriesIndex + 1]?.slug : undefined;
   const category = post.category ?? inferCategory(post.tags);
   const nonce = await getCspNonce();
 
@@ -75,7 +78,7 @@ async function BlogPostContent({ post }: { post: PostFull }) {
 
               <ArticleSeriesPath post={post} posts={seriesPosts} />
 
-              <ArticleRelated posts={relatedPosts} />
+              <ArticleRelated posts={relatedPosts} nextInSeriesSlug={nextInSeriesSlug} />
 
               <ArticleNav prev={prev} next={next} />
             </article>

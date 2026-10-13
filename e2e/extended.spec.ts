@@ -40,6 +40,25 @@ test.describe('作品详情页', () => {
     const bodyText = await page.locator('body').textContent();
     expect(bodyText?.trim().length).toBeGreaterThan(0);
   });
+
+  test('作品详情页按问题/取舍/证据分组呈现', async ({ page }) => {
+    await page.goto('/projects/chronicle', { waitUntil: 'domcontentloaded' });
+
+    // 三个语义分组的标题与列表项都应渲染
+    await expect(page.getByRole('heading', { name: '要解决的问题' })).toBeVisible({
+      timeout: 10000,
+    });
+    await expect(page.getByRole('heading', { name: '实现取舍' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: '可验证证据' })).toBeVisible();
+
+    const approach = page.locator('[aria-labelledby="project-approach-title"] li');
+    await expect(approach.first()).toBeVisible();
+    expect(await approach.count()).toBeGreaterThan(0);
+
+    const evidence = page.locator('[aria-labelledby="project-evidence-title"] li');
+    await expect(evidence.first()).toBeVisible();
+    expect(await evidence.count()).toBeGreaterThan(0);
+  });
 });
 
 test.describe('标签详情页', () => {

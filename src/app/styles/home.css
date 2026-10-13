@@ -249,6 +249,25 @@ body:has(.workspace-home) .site-backdrop__stage {
   font-size: 0.75rem;
 }
 
+/* ---------- 阅读路径 ---------- */
+.ws-series {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ws-series__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 767px) {
+  .ws-series__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ---------- 轻量文章列表 ---------- */
 .ws-articles__list {
   display: flex;

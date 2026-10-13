@@ -108,3 +108,6 @@ stryker-report
 # 会话过程态 —— 不进版本控制（见 docs/session/README.md）
 docs/session/*
 !docs/session/README.md
+
+# agent 规划过程态（与根目录 task_plan/findings/progress 同类）
+.planning/

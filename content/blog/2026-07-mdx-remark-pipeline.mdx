@@ -2,16 +2,16 @@
 title: 'MDX 渲染管线与 remark 插件：从 frontmatter 到 wikilink'
 description: '个人博客 MDX 链路拆解：frontmatter schema、仓库层、next-mdx-remote、remark-wikilink，以及组件映射的边界。'
 date: '2026-07-21'
-updatedAt: '2026-10-10'
+updatedAt: '2026-10-11'
 tags: ['Next.js', 'TypeScript', '前端']
 published: true
 featured: false
 license: 'CC-BY-4.0'
 ---
 
-> 结论先说：MDX 管线要**分层**——解析 / 校验 / 查询 / 渲染各管一段。wikilink 属于编译期链接改写；popover 属于客户端增强。把两层揉进一个「万能 MDX 组件」会让测试与 CSP 边界一起糊掉。
+> 结论先说：MDX 管线要**分层**——解析 / 校验 / 查询 / 渲染各管一段。wikilink 属于编译期链接改写；交互增强属于客户端层。把两层揉进一个「万能 MDX 组件」会让测试与 CSP 边界一起糊掉。
 
-> **时效注（2026-10）**：编译期的 `remark-wikilink` 转换**本仓仍在用**（`src/lib/posts/remark-wikilink.ts`）；但客户端的 wikilink popover 与预览接口 `/api/preview` 已在 2026-10-07 重构中移除。文中涉及 popover / 预览 API 的部分按编写时（2026-07）理解。删除决策见 `docs/adr/0007-workspace-rebuild-baseline.md`。
+> **时效注（2026-10）**：当前管线以仓库实现为准：`remark-wikilink` 只把语法转换成普通站内链接；客户端 wikilink popover 与 `/api/preview` 已在 2026-10-07 重构中移除。删除决策见 `docs/adr/0007-workspace-rebuild-baseline.md`。
 
 类型与 schema 纪律见 [[typescript-advanced-types|TypeScript 高级类型实战]]；页面渲染模型见 [[nextjs-app-router|Next.js App Router 实战]]。
 
@@ -25,7 +25,7 @@ content/blog/*.mdx
   → PostRepository 缓存 / 可见性过滤
   → 页面 getPostBySlug / 列表 getAllPosts
   → next-mdx-remote + remark/rehype
-  → MdxContent 组件映射 (a → WikilinkPopover, …)
+  → MdxContent 组件映射 (pre → CodeBlock, img → ImageZoom, …)
 ```
 
 每一层只依赖下一层的稳定接口。页面组件**不**直接 `fs.readFile`。
@@ -55,27 +55,21 @@ content/blog/*.mdx
 
 1. 解析 wiki 目标与可选 label
 2. 生成 `href=/blog/{slug}`
-3. 打上 `data-wikilink={slug}`，供客户端识别
-4. **不**在 remark 阶段发网络请求或读数据库
+3. **不**在 remark 阶段发网络请求或读数据库
 
-坏链策略放在构图 / 反链索引：可见集合内找不到目标则失败，避免花园图出现悬空边。正文渲染期是否 fail-closed 取决于产品选择；本站构图路径选择严格。
+插件本身不校验目标是否存在。失效目标由内容图审计和内容校验发现；渲染时仍输出普通链接。
 
 ## 组件映射
 
 ```tsx
-// 示意：MdxContent
+// MdxContent 中的实际映射
 const components = {
-  a: WikilinkPopover,
-  // pre/code → CodeBlock …
+  pre: CodeBlock,
+  img: ImageZoom,
 };
 ```
 
-`WikilinkPopover`：
-
-- 有 `data-wikilink` → 可 hover 拉 `/api/preview/{slug}`
-- 无该属性 → 普通 `<a>`（外链、手动 markdown 链接）
-
-这保证 remark 只产声明式 HTML 语义，交互增强可测试、可关掉。
+`remark-wikilink` 只生成普通的站内 `<a href="/blog/{slug}">`。它不校验目标是否存在，也不生成 `data-wikilink`；链接完整性由内容图审计和内容校验脚本负责。这样 remark 保持声明式、无 IO，客户端组件也不会被迫参与正文链接解析。
 
 ## 代码高亮与 prose
 
@@ -87,19 +81,18 @@ rehype-pretty-code + Shiki 在服务端出 HTML。注意：
 
 ## 测试策略
 
-| 层 | 测什么 |
-| --- | --- |
-| schema | 合法 / 非法 frontmatter |
-| repository | slug、published 过滤、缓存引用 |
-| remark-wikilink | AST/HTML 中的 href 与 data 属性 |
-| preview route | 投影字段、404、无 content 泄露 |
-| WikilinkPopover | 不请求的外链、缓存、XSS 文本转义 |
+| 层              | 测什么                         |
+| --------------- | ------------------------------ |
+| schema          | 合法 / 非法 frontmatter        |
+| repository      | slug、published 过滤、缓存引用 |
+| remark-wikilink | AST/HTML 中的 href 与 label    |
+| MdxContent      | 代码块、图片组件与正文渲染     |
 
 不要用「启动整站点一下」替代层测；e2e 留给导航与 CSP 冒烟。
 
-## 与安全 / 花园
+## 与安全边界
 
-- 预览 API 与正文渲染分离 → 见 [[csp-nonce-and-sri|CSP Nonce 与 SRI]]、[[digital-garden-force-layout|数字花园]]
+- 正文渲染与安全边界 → 见 [[csp-nonce-and-sri|CSP Nonce 与 SRI]]
 - 作者内容默认不可信：即使是自己的 MDX，渲染路径也不应 `eval` 或裸 `dangerouslySetInnerHTML` 拼用户字符串
 - 图片路径校验在 schema（http(s) 或 `/` 开头）
 
@@ -107,8 +100,8 @@ rehype-pretty-code + Shiki 在服务端出 HTML。注意：
 
 - [ ] frontmatter 只经 Zod strict schema
 - [ ] 页面只打 server facade，不直读 fs
-- [ ] wikilink 与外链语义分离（`data-wikilink`）
-- [ ] preview 与 MDX body 字段分离
+- [ ] wikilink 只生成普通站内链接，并由内容审计检查目标
+- [ ] 仅测试当前保留的渲染路径，不依赖已删除的 preview route 或客户端 popover
 - [ ] 关键层有单测，不靠手工点
 - [ ] 新增文章文件名与 slug 规则一致
 
@@ -116,6 +109,5 @@ rehype-pretty-code + Shiki 在服务端出 HTML。注意：
 
 - [[nextjs-app-router|Next.js App Router 实战]]
 - [[typescript-advanced-types|TypeScript 高级类型实战]]
-- [[digital-garden-force-layout|数字花园：力导向与 wikilink]]
 - [[csp-nonce-and-sri|CSP Nonce 与 SRI]]
 - [[react-compiler-in-practice|React Compiler 生产笔记]]

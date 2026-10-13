@@ -148,6 +148,40 @@ test.describe('专题页面', () => {
       timeout: 10000,
     });
   });
+
+  test('专题详情按 seriesOrder 顺序列出文章', async ({ page }) => {
+    // 直接进入已确认的“个人服务部署路线”（slug 含中文，需 URL 编码）
+    await page.goto(`/series/${encodeURIComponent('个人服务部署路线')}`, {
+      waitUntil: 'domcontentloaded',
+    });
+    await expect(page.getByRole('heading', { name: /专题：/ })).toBeVisible({
+      timeout: 10000,
+    });
+
+    const items = page.locator('ol.archive-list > li');
+    await expect(items).toHaveCount(5);
+
+    // 顺序来自 frontmatter 的 seriesOrder，不是日期：这条序列的日期非单调
+    // （order1=06-23、order2=06-22、order3=06-24），若哪天回归成按日期排序，
+    // 下面两个断言会同时失败。
+    const expected = [
+      '/blog/vps-initial-setup',
+      '/blog/docker-deploy-guide',
+      '/blog/nginx-reverse-proxy',
+      '/blog/git-hooks-github-actions',
+      '/blog/cicd-pipeline-design',
+    ];
+    const hrefs = await items
+      .locator('a.archive-list__title')
+      .evaluateAll((els) => els.map((el) => el.getAttribute('href')));
+    expect(hrefs).toEqual(expected);
+
+    // 序号、阅读时间、语义日期都在每一项里
+    await expect(items.nth(0).locator('.archive-list__index')).toHaveText('1');
+    await expect(items.nth(4).locator('.archive-list__index')).toHaveText('5');
+    await expect(items.nth(0).locator('.archive-list__reading-time')).not.toBeEmpty();
+    await expect(items.nth(0).locator('time')).toHaveAttribute('datetime', '2026-06-23');
+  });
 });
 
 test.describe('关于页面', () => {

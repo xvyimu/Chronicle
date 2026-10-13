@@ -3,6 +3,7 @@ import { render, screen, cleanup } from '@testing-library/react';
 import { getAllPosts } from '@/lib/posts';
 import { getAllProjects } from '@/lib/projects';
 import { getAllTags } from '@/lib/tags';
+import { getAllSeries } from '@/lib/series';
 
 vi.mock('next/link', () => ({
   default: ({
@@ -79,14 +80,28 @@ describe('HomePage (workspace)', () => {
       ...posts.filter((p) => !p.featured),
     ].slice(0, 6);
     for (const post of recent) {
-      expect(screen.getByText(post.title)).toBeInTheDocument();
+      expect(screen.getAllByText(post.title).length).toBeGreaterThan(0);
     }
+  });
+
+  it('renders existing reading paths with ordered links', async () => {
+    await renderHomePage();
+    const seriesList = getAllSeries();
+    if (seriesList.length === 0) return;
+
+    expect(screen.getByRole('heading', { name: '阅读路径' })).toBeInTheDocument();
+    const series = seriesList[0]!;
+    const link = document.querySelector(
+      `a[href="/series/${encodeURIComponent(series.slug)}"]`,
+    );
+    expect(link).not.toBeNull();
+    expect(link).toHaveAttribute('href', `/series/${encodeURIComponent(series.slug)}`);
+    expect(link!.textContent).toContain(series.posts[0]!.title);
   });
 
   it('does not render the legacy Paper Gallery sections', async () => {
     await renderHomePage();
     expect(screen.queryByText('Paper Gallery')).not.toBeInTheDocument();
     expect(screen.queryByText('从这里进入')).not.toBeInTheDocument();
-    expect(screen.queryByText('阅读路径')).not.toBeInTheDocument();
   });
 });

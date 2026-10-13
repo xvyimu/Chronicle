@@ -2,7 +2,7 @@
 title: 'CI/CD 流水线设计：从单脚本到 GitHub Actions 多阶段流水线'
 description: 'GitHub Actions 多阶段流水线：阶段划分、并行与缓存、制品管理与部署策略，从单脚本演进到可回滚发布。'
 date: '2026-06-25'
-updatedAt: '2026-07-13'
+updatedAt: '2026-10-12'
 tags: ['CI/CD', 'GitHub Actions', 'DevOps']
 series: '个人服务部署路线'
 seriesSlug: '个人服务部署路线'
@@ -12,7 +12,9 @@ featured: false
 license: 'CC-BY-4.0'
 ---
 
-> 结论先说：流水线按 lint → test → build → deploy 快速失败；能并行就并行，依赖与镜像必须缓存，制品用 commit SHA 标识。
+> 结论先说：流水线按 lint → test → build → deploy 快速失败；能并行就并行，依赖与镜像必须缓存，制品用 commit SHA 关联源码，部署时锁定镜像 digest。
+
+本文是通用流水线设计示例，尚未执行其中的部署。Chronicle 实际使用 Node 24、pnpm（版本由 `package.json` 的 `packageManager` 锁定）和 Vercel；下文的 `dist/` 是静态应用示例，不能直接作为 Next.js 服务端部署产物。Action 主版本沿用仓库已有配置或示例；上线前核对维护状态，并按团队策略固定到审阅过的完整 commit SHA。
 
 ## 为什么要设计流水线
 
@@ -36,15 +38,15 @@ lint → type-check → test → build → deploy
 
 每个阶段的设计原则：
 
-| 阶段 | 作用 | 失败策略 | 执行速度 |
-|------|------|----------|----------|
-| lint | 代码风格检查 | 阻断 | 极快（< 30s） |
-| type-check | 类型检查 | 阻断 | 快（< 1min） |
-| test | 单元测试 + 集成测试 | 阻断 | 中（1-5min） |
-| build | 构建制品 | 阻断 | 中（1-5min） |
-| deploy | 部署到环境 | 阻断/通知 | 慢（视环境） |
+| 阶段       | 作用                | 失败策略  | 执行速度                  |
+| ---------- | ------------------- | --------- | ------------------------- |
+| lint       | 代码风格检查        | 阻断      | 取决于文件数量与规则      |
+| type-check | 类型检查            | 阻断      | 取决于类型复杂度与缓存    |
+| test       | 单元测试 + 集成测试 | 阻断      | 取决于套件规模与外部依赖  |
+| build      | 构建制品            | 阻断      | 取决于框架、缓存与 runner |
+| deploy     | 部署到环境          | 阻断/通知 | 慢（视环境）              |
 
-**核心原则：快速失败**。把快的检查放前面，慢的放后面。lint 失败就没必要跑测试了——尽早暴露问题，节省 CI 资源。
+**核心原则：快速失败**。把快的检查放前面，慢的放后面。需要节省资源时可串行设置依赖；下面选择独立检查并行，因此 lint 失败不会自动停止已启动的测试，但会阻止 build。
 
 ### 基础流水线骨架
 
@@ -58,6 +60,10 @@ on:
   pull_request:
     branches: [main]
 
+# 默认收紧令牌权限；发布 job 再单独声明 packages: write 等额外权限
+permissions:
+  contents: read
+
 # 同一分支新推送时取消旧的运行
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -68,13 +74,11 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
-          version: 9
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
+          node-version: 24
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
@@ -83,28 +87,24 @@ jobs:
   type-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
-          version: 9
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
+          node-version: 24
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: pnpm type-check
+      - run: pnpm typecheck
 
   # 阶段 3：测试
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
-          version: 9
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
+          node-version: 24
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - run: pnpm test --coverage
@@ -114,17 +114,15 @@ jobs:
     needs: [lint, type-check, test]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
-          version: 9
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
+          node-version: 24
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: build-output
           path: dist/
@@ -159,9 +157,11 @@ build:
   # ...
 ```
 
-并行的好处是总耗时等于最慢的那个 job，而不是所有 job 之和。如果 lint 30s、type-check 60s、test 120s，串行要 210s，并行只要 120s。
+理想情况下，并行阶段的执行时间由最慢 job 决定。例如假设 lint、typecheck、test 分别耗时 30s、60s、120s，且 runner 同时可用，执行部分从 210s 降至 120s；真实流水线还包含排队和每个 job 的重复初始化。
 
 ### 串行执行有依赖的任务
+
+下面只演示 job 依赖；`rsync` 和服务重启需提前配置 SSH 凭证、host key 和最小权限，且缺少原子切换与健康检查，不构成生产发布方案。
 
 部署有环境顺序要求——先部署到预发，验证通过再部署到生产：
 
@@ -172,7 +172,7 @@ deploy-staging:
   if: github.ref == 'refs/heads/main'
   environment: staging
   steps:
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v7
       with:
         name: build-output
         path: dist/
@@ -189,7 +189,7 @@ deploy-production:
     name: production
     url: https://app.example.com
   steps:
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v7
       with:
         name: build-output
         path: dist/
@@ -199,7 +199,7 @@ deploy-production:
         ssh user@prod 'systemctl restart app'
 ```
 
-`environment` 关键字不只是注释——它会触发 GitHub 的环境保护规则，可以配置必需的审批人、等待时间、部署分支限制。生产环境的部署必须有人工审批，这是最后一道防线。
+`environment` 将 job 关联到 GitHub Environment。只有在仓库 Settings → Environments 中配置了可用的 required reviewers、等待时间或分支限制，才会执行相应保护；仅写 `environment: production` 不会自动产生审批。是否支持这些保护也取决于仓库可见性和 GitHub 套餐。
 
 ### 并行测试分片
 
@@ -212,19 +212,17 @@ test:
     matrix:
       shard: [1, 2, 3, 4]
   steps:
-    - uses: actions/checkout@v4
-    - uses: pnpm/action-setup@v3
+    - uses: actions/checkout@v7
+    - uses: pnpm/action-setup@v6
+    - uses: actions/setup-node@v7
       with:
-        version: 9
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 20
+        node-version: 24
         cache: 'pnpm'
     - run: pnpm install --frozen-lockfile
     - run: pnpm test --shard=${{ matrix.shard }}/4
 ```
 
-Vitest 原生支持分片：`vitest --shard=1/4` 会只运行 1/4 的测试。4 个分片并行，测试时间缩短到原来的 1/4。
+Vitest 支持 `vitest run --shard=1/4`，按测试文件分配分片，不保证每片恰好有 1/4 的测试用例或耗时。总时间还包括排队、安装和最慢分片；以实测耗时判断收益。覆盖率需收集各分片报告后合并，不能把单个分片覆盖率当成全套结果。
 
 ## 缓存优化
 
@@ -235,13 +233,11 @@ Vitest 原生支持分片：`vitest --shard=1/4` 会只运行 1/4 的测试。4 
 `actions/setup-node` 内置了 pnpm 缓存支持，但配置要对：
 
 ```yaml
-- uses: pnpm/action-setup@v3
+- uses: pnpm/action-setup@v6
+- uses: actions/setup-node@v7
   with:
-    version: 9
-- uses: actions/setup-node@v4
-  with:
-    node-version: 20
-    cache: 'pnpm'  # 关键：指定缓存 pnpm store
+    node-version: 24
+    cache: 'pnpm' # 关键：指定缓存 pnpm store
 ```
 
 如果需要更精细的控制，手动缓存：
@@ -253,6 +249,7 @@ Vitest 原生支持分片：`vitest --shard=1/4` 会只运行 1/4 的测试。4 
   run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
 
 - name: Setup pnpm cache
+  id: pnpm-store-cache
   uses: actions/cache@v4
   with:
     path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
@@ -265,7 +262,7 @@ Vitest 原生支持分片：`vitest --shard=1/4` 会只运行 1/4 的测试。4 
 
 ### 构建缓存
 
-构建产物也可以缓存。Next.js、Vite 等工具的构建缓存目录：
+框架构建缓存可以复用，但缓存不同于最终发布制品。目录取决于工具；下面的 `.next/cache` 用于 Next.js，不表示 Vite 默认也使用此路径。多运行时项目应把 Node 版本、构建配置等纳入 key：
 
 ```yaml
 - name: Cache build
@@ -285,16 +282,16 @@ Docker 构建用 BuildKit 的缓存挂载：
 
 ```yaml
 - name: Build Docker image
-  uses: docker/build-push-action@v5
+  uses: docker/build-push-action@v7
   with:
     context: .
     push: true
-    tags: app:${{ github.sha }}
+    tags: ghcr.io/example/app:${{ github.sha }}
     cache-from: type=gha
     cache-to: type=gha,mode=max
 ```
 
-`type=gha` 是 GitHub Actions 的缓存后端，`mode=max` 缓存所有层（包括中间层），下次构建直接复用。
+这个片段需放在已配置 Buildx 和 registry 登录的 job 中；Action 与 Buildx/BuildKit 版本需满足当前 GHA 缓存 API 要求。`type=gha` 是 GitHub Actions 的缓存后端，`mode=max` 缓存所有层（包括中间层），下次构建直接复用。
 
 ### 缓存命中率检查
 
@@ -302,7 +299,7 @@ Docker 构建用 BuildKit 的缓存挂载：
 
 ```yaml
 - name: Cache hit check
-  if: steps.pnpm-cache.outputs.cache-hit == 'true'
+  if: steps.pnpm-store-cache.outputs.cache-hit == 'true'
   run: echo "Cache hit!"
   # 如果总是 miss，检查 key 是否过于严格
 ```
@@ -317,15 +314,13 @@ Docker 构建用 BuildKit 的缓存挂载：
 test:
   runs-on: ubuntu-latest
   strategy:
-    fail-fast: false  # 一个失败不取消其他
+    fail-fast: false # 一个失败不取消其他
     matrix:
-      node-version: [18, 20, 22]
+      node-version: [24]
   steps:
-    - uses: actions/checkout@v4
-    - uses: pnpm/action-setup@v3
-      with:
-        version: 9
-    - uses: actions/setup-node@v4
+    - uses: actions/checkout@v7
+    - uses: pnpm/action-setup@v6
+    - uses: actions/setup-node@v7
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'pnpm'
@@ -343,14 +338,12 @@ test:
     fail-fast: false
     matrix:
       os: [ubuntu-latest, macos-latest, windows-latest]
-      node-version: [18, 20, 22]
+      node-version: [24]
   runs-on: ${{ matrix.os }}
   steps:
-    - uses: actions/checkout@v4
-    - uses: pnpm/action-setup@v3
-      with:
-        version: 9
-    - uses: actions/setup-node@v4
+    - uses: actions/checkout@v7
+    - uses: pnpm/action-setup@v6
+    - uses: actions/setup-node@v7
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'pnpm'
@@ -358,25 +351,11 @@ test:
     - run: pnpm test
 ```
 
-这会生成 9 个 job（3 OS × 3 Node）。注意 Windows 上 pnpm 的路径处理可能有问题，需要测试。
+这会生成 3 个 job（3 OS × 1 Node）。增加版本前，先确认应用、pnpm 和依赖共同支持该版本；不要为了矩阵数量测试已不受支持的运行时。
 
 ### 矩阵的排除和包含
 
-```yaml
-strategy:
-  matrix:
-    os: [ubuntu-latest, macos-latest]
-    node-version: [18, 20, 22]
-    exclude:
-      # macOS 上不测 Node 18
-      - os: macos-latest
-        node-version: 18
-    include:
-      # 额外加一个 Linux + Node 22 的 lint job
-      - os: ubuntu-latest
-        node-version: 22
-        lint: true
-```
+需要排除某个已知不支持的组合时用 `exclude`；增加特殊配置时用 `include`。新增条目也必须符合应用和包管理器的运行时要求，避免用失败组合来增加覆盖数字。
 
 ## 制品管理
 
@@ -384,23 +363,23 @@ strategy:
 
 ### 上传和下载制品
 
+以下以产生 `dist/` 的静态应用为例。复制到现有目录的步骤只演示传输：生产发布需使用独立 release 目录、校验制品、原子切换和健康检查，并预先固定 SSH host key；不能依靠覆盖解压保证回滚或删除旧文件。
+
 ```yaml
 build:
   runs-on: ubuntu-latest
   steps:
-    - uses: actions/checkout@v4
-    - uses: pnpm/action-setup@v3
+    - uses: actions/checkout@v7
+    - uses: pnpm/action-setup@v6
+    - uses: actions/setup-node@v7
       with:
-        version: 9
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 20
+        node-version: 24
         cache: 'pnpm'
     - run: pnpm install --frozen-lockfile
     - run: pnpm build
 
     # 上传构建产物
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         name: dist-${{ github.sha }}
         path: |
@@ -415,7 +394,7 @@ deploy-staging:
   runs-on: ubuntu-latest
   steps:
     # 下载构建产物——不重新构建
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v7
       with:
         name: dist-${{ github.sha }}
         path: ./
@@ -428,29 +407,39 @@ deploy-staging:
 
 ### Docker 镜像作为制品
 
-对于容器化部署，Docker 镜像就是制品。推送到镜像仓库后，各环境拉取即可：
+容器化部署应在质量门禁通过后构建并推送镜像。下面片段假定已有 `lint`、`type-check`、`test` job、可用 Dockerfile 和已授权的 GHCR 包发布权限：
 
 ```yaml
 build-and-push:
-  needs: [lint, test]
+  needs: [lint, type-check, test]
   runs-on: ubuntu-latest
+  permissions:
+    contents: read
+    packages: write
+  outputs:
+    image: ${{ steps.image.outputs.name }}
+    digest: ${{ steps.push.outputs.digest }}
   steps:
-    - uses: actions/checkout@v4
-    - uses: docker/setup-buildx-action@v3
-    - uses: docker/login-action@v3
+    - uses: actions/checkout@v7
+    - name: Normalize image name
+      id: image
+      shell: bash
+      env:
+        REPOSITORY: ${{ github.repository }}
+      run: echo "name=ghcr.io/${REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+    - uses: docker/setup-buildx-action@v4
+    - uses: docker/login-action@v4
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-
     - name: Build and push
-      uses: docker/build-push-action@v5
+      id: push
+      uses: docker/build-push-action@v7
       with:
         context: .
         push: true
-        tags: |
-          ghcr.io/${{ github.repository }}:${{ github.sha }}
-          ghcr.io/${{ github.repository }}:latest
+        tags: ${{ steps.image.outputs.name }}:${{ github.sha }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
         labels: |
@@ -458,168 +447,49 @@ build-and-push:
           org.opencontainers.image.revision=${{ github.sha }}
 ```
 
-用 commit SHA 作为镜像 tag——每次构建唯一标识，方便回滚到任意版本。
+镜像名称必须小写。commit SHA 标签便于定位源码，但标签仍可被覆盖；部署 job 应用 `needs.build-and-push.outputs.image` 和 `needs.build-and-push.outputs.digest` 组成 `image@sha256:...`，让预发和生产使用同一内容。私有镜像还需要部署环境自己的只读拉取凭证。缓存是否命中取决于层、输入和缓存后端权限，不保证每次复用。
 
 ## 部署策略
 
+以下是实施步骤，不能直接复制为生产部署脚本。真实脚本需要匹配平台、网络、身份校验、数据库兼容性和故障恢复机制，并先在预发演练。
+
 ### 蓝绿部署
 
-蓝绿部署维护两套完全相同的环境（蓝和绿），切换流量实现零停机部署。
+蓝绿部署维护两套服务，先验证非活跃环境，再切换流量：
 
-```yaml
-deploy-blue-green:
-  needs: build-and-push
-  runs-on: ubuntu-latest
-  environment: production
-  steps:
-    - uses: actions/checkout@v4
+1. 读取并校验当前活跃环境，只接受已知的 blue/green 值；记录旧镜像 digest 和流量配置。
+2. 在非活跃环境部署目标 digest，保持旧环境可用。
+3. 检查 readiness、依赖和关键业务路径；超时或失败立即终止，不切流量。
+4. 通过负载均衡器实际支持的监听器或路由 API 切换，并读取配置确认生效。修改 target group attributes 本身不等于切换监听器目标。
+5. 从公开入口复测并观察错误率；异常时恢复旧路由，再验证恢复结果。
 
-    - name: Determine active environment
-      id: active
-      run: |
-        # 查询当前活跃环境（通过负载均衡器或 DNS）
-        ACTIVE=$(curl -s https://api.example.com/health/env)
-        echo "active=$ACTIVE" >> $GITHUB_OUTPUT
-        if [ "$ACTIVE" = "blue" ]; then
-          echo "target=green" >> $GITHUB_OUTPUT
-        else
-          echo "target=blue" >> $GITHUB_OUTPUT
-        fi
-
-    - name: Deploy to inactive environment
-      run: |
-        TARGET=${{ steps.active.outputs.target }}
-        IMAGE=ghcr.io/${{ github.repository }}:${{ github.sha }}
-
-        # 部署到非活跃环境
-        ssh deploy@$TARGET.example.com "
-          docker pull $IMAGE
-          docker stop app || true
-          docker rm app || true
-          docker run -d --name app --restart always -p 3000:3000 $IMAGE
-        "
-
-    - name: Health check
-      run: |
-        TARGET=${{ steps.active.outputs.target }}
-        for i in {1..10}; do
-          if curl -f https://$TARGET.example.com/health; then
-            echo "Health check passed"
-            exit 0
-          fi
-          sleep 5
-        done
-        echo "Health check failed"
-        exit 1
-
-    - name: Switch traffic
-      run: |
-        TARGET=${{ steps.active.outputs.target }}
-        # 切换负载均衡器或 DNS 指向新环境
-        aws elbv2 modify-target-group-attributes \
-          --target-group-arn $TARGET_ARN \
-          # ... 切换逻辑
-        echo "Traffic switched to $TARGET"
-```
-
-蓝绿部署的优点是**秒级回滚**——出问题直接切回旧环境。缺点是需要双倍资源。
+回滚速度取决于路由、连接排空和检查时间，DNS 还有 TTL 与客户端缓存；不能承诺秒级回滚或绝对零停机。旧环境必须保持可用，且共享数据库变更不能破坏旧版本。
 
 ### 滚动部署
 
-滚动部署逐步替换实例，不需要双倍资源，但回滚较慢。
+滚动部署逐批替换实例，批次大小由可用容量决定：
 
-```yaml
-deploy-rolling:
-  needs: build-and-push
-  runs-on: ubuntu-latest
-  environment: production
-  steps:
-    - name: Rolling update
-      run: |
-        IMAGE=ghcr.io/${{ github.repository }}:${{ github.sha }}
+1. 根据目标组类型获取合法的 instance ID 或 IP；不能把任意私网 IP 当成所有目标组的目标 ID。
+2. 摘除当前批次，等待负载均衡器确认连接排空，不以固定 `sleep` 代替状态检查。
+3. 部署锁定的 digest，运行限时健康检查并记录成功状态。
+4. 只有检查成功才重新注册；检查次数耗尽时退出失败，停止后续批次并执行已演练的恢复步骤。
+5. 等待目标组确认健康，再开始下一批；从公开入口检查整个服务。
 
-        # 获取所有实例
-        INSTANCES=$(aws ec2 describe-instances \
-          --filters "Name=tag:Role,Values=app" \
-          --query 'Reservations[].Instances[].PrivateIpAddress' \
-          --output text)
-
-        # 逐个更新——每次只更新一个，等健康检查通过再更新下一个
-        for INSTANCE in $INSTANCES; do
-          echo "Updating $INSTANCE..."
-
-          # 从负载均衡器摘除
-          aws elbv2 deregister-targets \
-            --target-group-arn $TG_ARN \
-            --targets Id=$INSTANCE
-
-          # 等待连接排空
-          sleep 10
-
-          # 更新实例
-          ssh deploy@$INSTANCE "
-            docker pull $IMAGE
-            docker stop app && docker rm app
-            docker run -d --name app --restart always -p 3000:3000 $IMAGE
-          "
-
-          # 健康检查
-          for i in {1..12}; do
-            if ssh deploy@$INSTANCE 'curl -f http://localhost:3000/health'; then
-              break
-            fi
-            sleep 5
-          done
-
-          # 重新加入负载均衡器
-          aws elbv2 register-targets \
-            --target-group-arn $TG_ARN \
-            --targets Id=$INSTANCE
-        done
-```
+健康检查循环中的 `break` 只表示退出循环；如果重试耗尽后不显式退出失败，脚本可能把不健康实例重新加入流量。
 
 ### Kubernetes 部署
 
-K8s 环境下部署更简单——更新镜像 tag，K8s 自动处理滚动更新和回滚：
+更新镜像后，Kubernetes 按 Deployment 策略执行 rollout。它不会仅因应用异常自动回滚；readiness、资源配额、滚动策略和发布验证都需要预先配置。
 
-```yaml
-deploy-k8s:
-  needs: build-and-push
-  runs-on: ubuntu-latest
-  environment: production
-  steps:
-    - uses: actions/checkout@v4
-
-    - name: Configure kubectl
-      uses: azure/setup-kubectl@v3
-      with:
-        version: 'latest'
-
-    - name: Set K8s context
-      uses: azure/k8s-set-context@v3
-      with:
-        kubeconfig: ${{ secrets.KUBE_CONFIG }}
-
-    - name: Deploy
-      run: |
-        # 滚动更新——只需更新镜像 tag
-        kubectl set image deployment/app \
-          app=ghcr.io/${{ github.repository }}:${{ github.sha }} \
-          -n production
-
-        # 等待 rollout 完成
-        kubectl rollout status deployment/app \
-          -n production \
-          --timeout=300s
-
-    - name: Rollback on failure
-      if: failure()
-      run: |
-        kubectl rollout undo deployment/app -n production
-        echo "Deployment failed, rolled back"
+```bash
+# 操作示例：先确认 context、namespace、容器名和 digest；不是完整发布脚本。
+kubectl --context "$KUBE_CONTEXT" -n production set image deployment/app app="$IMAGE_REF"
+kubectl --context "$KUBE_CONTEXT" -n production rollout status deployment/app --timeout=300s
 ```
 
-`kubectl rollout status` 会等待所有 Pod 更新完成。如果超时或失败，`if: failure()` 触发自动回滚。
+`IMAGE_REF` 必须是从受信任构建 job 取得并校验的 digest 引用。发布前记录旧 revision/digest；只有确认本次发布已修改目标 Deployment 且验证失败，才恢复记录的版本。避免在宽泛的 `if: failure()` 中无条件 `rollout undo`：凭证配置失败也会触发它，可能撤销一次无关发布。
+
+回滚后仍需等待 rollout、检查业务和监控，并保留发布失败状态。镜像回滚不恢复数据库或外部副作用；迁移采用向后兼容的 expand/contract 流程，破坏性迁移另行审批和备份。
 
 ## 密钥管理
 
@@ -627,28 +497,20 @@ CI/CD 里的密钥管理是安全重点。**永远不要把密钥写在 YAML 里
 
 ### GitHub Secrets 配置
 
-在仓库的 Settings → Secrets and variables → Actions 中配置：
+在仓库或 Environment 的 Secrets 中保存部署凭证，并只提供给实际使用它的步骤：
 
 ```yaml
-deploy:
-  runs-on: ubuntu-latest
-  steps:
-    - name: Deploy with secrets
-      env:
-        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        API_KEY: ${{ secrets.API_KEY }}
-        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-      run: |
-        # 配置 SSH
-        mkdir -p ~/.ssh
-        echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-
-        # 使用密钥（不会在日志中打印）
-        ssh deploy@server "DATABASE_PASSWORD=${DB_PASSWORD} ./deploy.sh"
+- name: Check credential availability
+  shell: bash
+  env:
+    API_KEY: ${{ secrets.API_KEY }}
+  run: |
+    test -n "$API_KEY" || { echo 'API_KEY is missing'; exit 1; }
 ```
 
-GitHub 会自动遮蔽 secret 的值——即使脚本里 `echo $DB_PASSWORD`，日志里也只显示 `***`。
+不要输出密钥，不开启 `set -x`，也不要把密钥拼接到远程 shell 命令中。`ssh ... "DATABASE_PASSWORD=${DB_PASSWORD} ..."` 会把值带入远程命令行，并可能因引号、换行或命令替换产生注入和泄漏。数据库密码应由服务器受限权限配置或密钥管理服务读取，CI 只传制品标识。
+
+SSH 还需要预先校验并固定服务器 host key；不要关闭 `StrictHostKeyChecking`。密钥文件应限制权限，并在 job 结束后清理。GitHub 的 masking 是补充措施，变形、编码、分段或结构化输出未必被遮蔽，不能以 `echo` 测试秘密是否安全。
 
 ### 环境级密钥
 
@@ -662,13 +524,13 @@ deploy-staging:
   # ...
 
 deploy-production:
-  environment: production  # 需要审批
+  environment: production # 保护规则需在 Settings 中配置
   env:
     DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
   # ...
 ```
 
-生产环境的 `environment` 配置审批规则——必须有人工确认才能运行，防止误部署。
+在 Settings → Environments 为生产配置 required reviewers 和部署分支规则，再验证测试发布确实等待审批。Environment 同名 Secrets 可隔离不同环境的值；不要把生产凭证提供给 PR 或未经审核的工作流。
 
 ### 短期密钥（OIDC）
 
@@ -676,11 +538,12 @@ deploy-production:
 
 ```yaml
 permissions:
-  id-token: write  # 必须开启 OIDC
+  id-token: write # 必须开启 OIDC
   contents: read
 
 deploy-aws:
   runs-on: ubuntu-latest
+  environment: production
   steps:
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -691,171 +554,36 @@ deploy-aws:
     - run: aws s3 sync dist/ s3://my-bucket/
 ```
 
-OIDC 方式不需要在 GitHub 存 AWS 密钥——每次运行时通过角色扮演获取临时凭证，用完即弃。
+OIDC 不需要在 GitHub 保存长期 AWS access key，但必须在 AWS 角色信任策略中限制 `token.actions.githubusercontent.com:aud` 为 `sts.amazonaws.com`，并把 `sub` 限定到明确仓库及分支或 Environment。使用 `environment: production` 时，subject 形态为 `repo:OWNER/REPO:environment:production`，还需 Environment 的分支保护来限制来源。不要仅信任整个组织或任意仓库；角色自身权限也应限制到发布所需资源。
 
-## 完整流水线示例
+## 串联整条发布流程
 
-把前面的内容组合成一条完整的多阶段流水线：
-
-```yaml
-# .github/workflows/deploy.yml
-name: Deploy
-
-on:
-  push:
-    branches: [main]
-
-concurrency:
-  group: deploy-${{ github.ref }}
-  cancel-in-progress: false  # 部署不取消，避免中断
-
-jobs:
-  # === 质量门禁阶段（并行） ===
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 9
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm lint
-
-  type-check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 9
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm type-check
-
-  test:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        shard: [1, 2]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 9
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm test --shard=${{ matrix.shard }}/2 --coverage
-
-  # === 构建阶段 ===
-  build:
-    needs: [lint, type-check, test]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
-            ghcr.io/${{ github.repository }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  # === 部署预发 ===
-  deploy-staging:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: staging
-      url: https://staging.example.com
-    steps:
-      - uses: actions/checkout@v4
-      - uses: azure/setup-kubectl@v3
-      - uses: azure/k8s-set-context@v3
-        with:
-          kubeconfig: ${{ secrets.STAGING_KUBE_CONFIG }}
-      - run: |
-          kubectl set image deployment/app \
-            app=ghcr.io/${{ github.repository }}:${{ github.sha }} \
-            -n staging
-          kubectl rollout status deployment/app -n staging --timeout=180s
-
-  # === 集成测试（预发环境） ===
-  e2e-test:
-    needs: deploy-staging
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 9
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm e2e --base-url=https://staging.example.com
-        env:
-          E2E_TOKEN: ${{ secrets.E2E_TOKEN }}
-
-  # === 部署生产（需要审批） ===
-  deploy-production:
-    needs: e2e-test
-    runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: https://example.com
-    steps:
-      - uses: actions/checkout@v4
-      - uses: azure/setup-kubectl@v3
-      - uses: azure/k8s-set-context@v3
-        with:
-          kubeconfig: ${{ secrets.PRODUCTION_KUBE_CONFIG }}
-      - run: |
-          kubectl set image deployment/app \
-            app=ghcr.io/${{ github.repository }}:${{ github.sha }} \
-            -n production
-          kubectl rollout status deployment/app -n production --timeout=300s
-      - name: Rollback on failure
-        if: failure()
-        run: kubectl rollout undo deployment/app -n production
-```
-
-这条流水线的执行流程：
+前面的 CI 与镜像构建片段可组成质量门禁和制品生产流程。部署部分必须接入已验证的团队发布脚本，不能靠占位 SSH、空切流量命令或通用回滚命令凑成“完整可部署”配置。
 
 ```text
-lint ─┐
-type-check ─┤
-test (shard 1) ─┼─→ build → deploy-staging → e2e-test → deploy-production
-test (shard 2) ─┘                                        (需审批)
+lint ──────┐
+typecheck ─┼→ build-and-push → deploy-staging → e2e-test → deploy-production
+test ──────┘                     同一 digest                环境保护规则
 ```
 
-总耗时约 8-12 分钟，其中质量门禁阶段 2-3 分钟（并行），构建 2-3 分钟，预发部署 + E2E 测试 3-4 分钟，生产部署 1-2 分钟。
+每个箭头对应 `needs`：生产部署需同时声明 `needs: [build-and-push, e2e-test]`，这样才能直接读取构建的 image/digest 输出；仅依赖 E2E 不会自动取得间接依赖的输出。发布流程还需要：
+
+- workflow 默认 `permissions: contents: read`；仅构建 job 提升 `packages: write`，仅 OIDC job 提升 `id-token: write`。
+- 发布 job 明确 `environment`，并在 Settings 配置审核人与允许发布分支；E2E 使用预发测试身份。
+- 同一生产目标用固定 concurrency group，`cancel-in-progress: false`，避免取消正在修改服务的发布；审批等待和并发队列也计入交付耗时。
+- 将 digest 输出传入步骤的 `env`，校验格式后再使用；服务器配置、SSH 身份、Kubernetes context 和 namespace 均提前固定。
+- 回滚只处理本次发布修改的对象，恢复记录的旧版本后再次验证；失败通知不把 job 改写成成功。
+
+耗时取决于 runner 排队、套件规模、缓存、部署和审批。记录各阶段实际耗时后再优化；本文没有可支撑固定分钟数或加速比例的实测数据。
 
 ## 流水线设计要点
 
 ### 1. 快速反馈
 
-PR 阶段只跑 lint + type-check + unit test，不跑构建和部署。让开发者在 2 分钟内得到反馈。
+PR 阶段优先运行 lint、typecheck 和 unit test；框架编译错误、内容产物或打包边界需要构建才能发现时，也应保留 build。部署和生产凭证只提供给受保护的发布流程。用实际反馈时间设定预算。
 
 ```yaml
+# 以下是流程示意片段，不能直接作为完整 workflow 运行；需补齐每个 job 的 steps。
 on:
   pull_request:
     branches: [main]
@@ -867,15 +595,15 @@ jobs:
 
 ### 2. 构建一次，部署多次
 
-不要在每个环境重新构建。构建产物用 commit SHA 标识，各环境拉取同一个制品。这保证了"测试通过的就是上线的"。
+不要在每个环境重新构建。构建产物关联 commit SHA，镜像部署锁定 digest，并记录预发验证的 digest。不同环境的配置仍可能改变行为，例如构建期公开变量会写入前端产物；只有产物与配置边界明确，才能验证预发和生产的一致性。
 
 ### 3. 失败要可追溯
 
 每个步骤都要有清晰的日志。测试失败要上传报告：
 
 ```yaml
-- uses: actions/upload-artifact@v4
-  if: always()  # 即使失败也上传
+- uses: actions/upload-artifact@v7
+  if: always() # 即使失败也上传
   with:
     name: test-report
     path: coverage/
@@ -884,7 +612,7 @@ jobs:
 
 ### 4. 部署要可回滚
 
-生产部署必须配回滚机制。K8s 用 `kubectl rollout undo`，蓝绿部署切回旧环境，Docker 切回旧 tag。回滚应该是自动的——部署失败立即回滚，不等人工介入。
+生产部署需要明确恢复机制：K8s 恢复记录的 revision/digest，蓝绿恢复旧路由，Docker 恢复旧 digest。只有回滚作用域、数据库兼容性和验证步骤已经演练，才启用自动恢复；涉及不可逆数据变更时应停止并交给负责人员处理。
 
 ### 5. 监控流水线本身
 
@@ -895,7 +623,7 @@ jobs:
   if: failure()
   uses: slackapi/slack-github-action@v1
   with:
-    slack-message: "Deploy failed: ${{ github.run_id }}"
+    slack-message: 'Deploy failed: ${{ github.run_id }}'
   env:
     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 ```
@@ -908,14 +636,14 @@ jobs:
 - **并行优先**——独立任务并行，有依赖才串行
 - **缓存必备**——依赖缓存、构建缓存、Docker 缓存，能省则省
 - **矩阵测试**——多版本多平台，保证兼容性
-- **制品管理**——构建一次部署多次，用 SHA 标识版本
-- **部署策略**——蓝绿秒级回滚，滚动节省资源，K8s 自动化
+- **制品管理**——构建一次部署多次，SHA 关联源码、digest 锁定镜像
+- **部署策略**——按容量、路由和健康检查选择蓝绿、滚动或 K8s
 - **密钥安全**——Secrets 管理，环境隔离，OIDC 短期凭证
-- **自动回滚**——部署失败自动回滚，不等人工
+- **恢复机制**——记录旧版本，限制回滚作用域，恢复后再验证
 
 流水线是演进的。从最简单的 lint + test 开始，逐步加构建、部署、缓存、矩阵。不要一开始就设计完美流水线——先跑起来，再优化。
 
-参考：[GitHub Actions 文档](https://docs.github.com/en/actions)、[Docker Build Push Action](https://github.com/docker/build-push-action)、[Kubernetes 部署文档](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)
+参考：[Docker GHA 缓存版本要求](https://docs.docker.com/build/ci/github-actions/cache/)、[GitHub Actions 文档](https://docs.github.com/en/actions)、[Docker Build Push Action](https://github.com/docker/build-push-action)、[Kubernetes 部署文档](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)
 
 ## 延伸阅读
 

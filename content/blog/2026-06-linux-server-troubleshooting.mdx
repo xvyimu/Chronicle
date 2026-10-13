@@ -2,14 +2,14 @@
 title: 'Linux 服务器排查手册：CPU、内存、磁盘、网络'
 description: '服务异常时按 CPU → 内存 → 磁盘 → 网络四维排查：常用命令、定位顺序与日常预防清单。'
 date: '2026-06-26'
-updatedAt: '2026-07-13'
+updatedAt: '2026-10-11'
 tags: ['Linux', '运维', '排查']
 published: true
 featured: false
 license: 'CC-BY-4.0'
 ---
 
-> 结论先说：别凭感觉乱扫日志。固定顺序 CPU → 内存 → 磁盘 → 网络，配合 top/free/df/ss，多数线上故障能在几分钟内落到根因。
+> 结论先说：别凭感觉乱扫日志。固定顺序 CPU → 内存 → 磁盘 → 网络，配合 top/free/df/ss，逐步缩小故障范围；实际定位时间取决于影响面与监控资料。
 
 ## 排查前的心态
 
@@ -56,12 +56,12 @@ strace -p <PID> -e trace=network  # 只看网络相关调用
 
 ### 常见原因
 
-| 现象 | 可能原因 | 临时方案 |
-|------|----------|----------|
-| 单个进程 100% | 死循环 / 计算密集型任务 | `kill -9` 或重启 |
-| CPU 用户态高 | 应用层问题 | 检查应用日志 |
-| CPU 内核态高 | 磁盘 IO / 系统调用频繁 | `iostat -x 1` 看 IO 等待 |
-| 挖矿病毒 | 不认识的进程名 | 查 crontab，杀进程删文件 |
+| 现象                 | 可能原因                | 临时方案                                                                                       |
+| -------------------- | ----------------------- | ---------------------------------------------------------------------------------------------- |
+| 单个进程持续占满 CPU | 死循环 / 计算密集型任务 | 先记录进程和影响范围，优先正常停止或重启；只有确认无法退出且允许丢失未写入状态时才考虑强制终止 |
+| CPU 用户态高         | 应用层问题              | 检查应用日志                                                                                   |
+| CPU 内核态高         | 磁盘 IO / 系统调用频繁  | `iostat -x 1` 看 IO 等待                                                                       |
+| 挖矿病毒             | 不认识的进程名          | 先隔离主机、保留进程和文件证据，再按应急响应流程处理；不要直接杀进程或删文件                   |
 
 ## 二、内存不足
 
@@ -104,6 +104,7 @@ smem -t -p   # 按 RSS/USS/PSS 查看
 ```
 
 常见内存泄漏来源：
+
 - Node.js 应用的闭包引用未释放
 - Python 列表 / dict 无限增长
 - Java 堆设置过大或未回收
@@ -127,7 +128,7 @@ sudo swapon /swapfile
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 ```
 
-但也别太依赖 Swap——Swap 使用率超过 10-20% 说明物理内存确实不够了，该升级机器了。
+Swap 持续活动会增加延迟，但不存在适用于所有工作负载的统一百分比阈值；结合 `vmstat`、应用延迟和 OOM 日志判断是否需要扩容。
 
 ## 三、磁盘占满
 
@@ -163,8 +164,11 @@ ncdu          # 交互式，推荐装
 # 检查 Docker 日志文件大小
 ls -lh /var/lib/docker/containers/*/*-json.log
 
-# 清理（注意：这是全局清理，确认没有正在调试的容器）
-sudo sh -c 'truncate -s 0 /var/lib/docker/containers/*/*-json.log'
+# 先定位日志占用；清空日志前确认容器、保留要求和备份策略
+docker system df
+sudo du -ah /var/lib/docker/containers | sort -h | tail -20
+
+# 不要直接对通配路径执行清空；确认目标容器和保留要求后再按运维流程处理
 
 # 更好的方式：配置日志轮转（/etc/docker/daemon.json）
 {
@@ -175,13 +179,14 @@ sudo sh -c 'truncate -s 0 /var/lib/docker/containers/*/*-json.log'
   }
 }
 
-# 清理已停止的容器 / 未使用的镜像 / 构建缓存
-docker system prune -a
+# 清理已停止的容器 / 未使用的网络和构建缓存；`-a` 会扩大镜像删除范围，执行前人工确认
+docker system prune
 
 # apt 缓存
 sudo apt clean
 
-# journal 日志
+# 先查看占用，再按已确认的保留要求清理 journal
+sudo journalctl --disk-usage
 sudo journalctl --vacuum-size=200M
 
 # npm/pnpm 缓存
@@ -232,12 +237,12 @@ ss -tan | grep ESTAB | awk '{print $4}' | cut -d: -f1 | sort | uniq -c | sort -r
 
 `ss -tan` 输出的状态解读：
 
-| 状态 | 含义 |
-|------|------|
-| LISTEN | 服务在监听端口 |
-| ESTABLISHED | 已建立的连接 |
-| TIME_WAIT | 主动关闭后的等待状态（大量正常） |
-| CLOSE_WAIT | 被动关闭但未关闭（需排查应用层） |
+| 状态        | 含义                             |
+| ----------- | -------------------------------- |
+| LISTEN      | 服务在监听端口                   |
+| ESTABLISHED | 已建立的连接                     |
+| TIME_WAIT   | 主动关闭后的等待状态（大量正常） |
+| CLOSE_WAIT  | 被动关闭但未关闭（需排查应用层） |
 
 大量 `CLOSE_WAIT` 说明应用没有正确关闭连接——通常是 HTTP 客户端或数据库连接池的问题。
 
@@ -300,9 +305,10 @@ ps aux --sort=-%mem | head -6
 
 ## 总结
 
-排查问题的核心是**系统化**——不要凭感觉从一个方向跳到另一个方向。按 CPU → 内存 → 磁盘 → 网络的顺序逐个排除，大部分问题可以在 5 分钟内定位到根因。
+排查问题的核心是**系统化**——不要凭感觉从一个方向跳到另一个方向。按 CPU → 内存 → 磁盘 → 网络的顺序逐个排除，逐步缩小根因范围；实际定位时间取决于故障影响面和可用证据。
 
 日常预防更重要：
+
 - 装好监控（netdata / prometheus）
 - 配置日志轮转
 - 给关键指标设告警（磁盘 > 80%、内存 < 20%）

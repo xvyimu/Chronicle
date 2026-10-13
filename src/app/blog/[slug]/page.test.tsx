@@ -105,15 +105,15 @@ describe('BlogPostPage', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('renders related posts from shared series and tags', async () => {
+  it('renders the next series post as the continuation before related posts', async () => {
     const jsx = await BlogPostPage({
       params: Promise.resolve({ slug: 'docker-deploy-guide' }),
     });
     render(jsx);
 
-    const section = screen.getByRole('region', { name: '相关文章' });
+    const section = screen.getByRole('region', { name: '继续阅读' });
     expect(
-      within(section).getByRole('link', { name: /Nginx 反向代理与负载均衡实战/ }),
+      within(section).getByRole('link', { name: /Nginx 反向代理与负载均衡实战.*下一篇/ }),
     ).toHaveAttribute('href', '/blog/nginx-reverse-proxy');
     expect(within(section).getByText('Nginx')).toHaveAttribute('data-slot', 'badge');
     expect(

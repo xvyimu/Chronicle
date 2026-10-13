@@ -2,7 +2,18 @@
   {
     "id": "chronicle",
     "title": "个人博客",
-    "description": "基于 Next.js 16 App Router + Tailwind v4 + MDX 的技术博客兼作品集，支持明暗主题、全文 RSS、客户端站内搜索。",
+    "description": "面向长文阅读、站内检索与主题探索的个人博客和作品集。采用本地 MDX/JSON 内容、Next.js App Router 与客户端 Fuse 搜索。",
+    "problem": "个人内容站需要同时承载长文阅读、按主题发现文章和展示作品，并保持内容发布与部署链路轻量。",
+    "approach": [
+      "使用本地 MDX 与 JSON 作为内容源，通过 schema 校验和构建期快照供生产读取。",
+      "以 Next.js App Router 实现文章、专题、分类、标签、归档和作品页面。",
+      "使用客户端 Fuse 按标题、摘要、标签和分类检索，不增加搜索服务或运行时数据库。",
+      "通过 CSP nonce、响应安全头和本地静态素材维持站点安全与部署边界。"
+    ],
+    "evidence": [
+      "仓库包含 Vitest、Playwright、SEO 与生产内容检查脚本。",
+      "公开源码仓库可审阅实现与测试：GitHub 项目链接。"
+    ],
     "tags": ["Next.js", "Tailwind CSS", "MDX", "TypeScript"],
     "url": "https://incca.ccwu.cc",
     "github": "https://github.com/xvyimu/Chronicle",

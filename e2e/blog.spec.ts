@@ -118,6 +118,33 @@ test.describe('博客文章详情页', () => {
     const copyBtn = toolbar.locator('button:has-text("复制")');
     await expect(copyBtn).toBeVisible();
   });
+
+  test('系列文章的继续阅读指向专题下一篇并排在首位', async ({ page }) => {
+    await page.goto('/blog/docker-deploy-guide', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('article h1')).toBeVisible({ timeout: 15000 });
+
+    const section = page.getByRole('region', { name: '继续阅读' });
+    await expect(section).toBeVisible({ timeout: 10000 });
+    await expect(section.getByText('专题下一篇')).toBeVisible();
+
+    // 头部直达入口
+    await expect(section.locator('a.article-related__continue')).toHaveAttribute(
+      'href',
+      '/blog/nginx-reverse-proxy',
+    );
+    // 卡片列表第一张就是专题下一篇，且带「下一篇」标记
+    await expect(section.locator('.article-related__card').first()).toHaveAttribute(
+      'href',
+      '/blog/nginx-reverse-proxy',
+    );
+    await expect(section.locator('.article-related__sequence')).toHaveText('下一篇');
+  });
+
+  test('非系列文章不出现继续阅读语义', async ({ page }) => {
+    await page.goto('/blog/redis-caching-strategies', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('article h1')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('region', { name: '继续阅读' })).toHaveCount(0);
+  });
 });
 
 test.describe('CSP 违规上报 (T3)', () => {

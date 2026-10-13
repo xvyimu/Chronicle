@@ -1,8 +1,8 @@
 ---
 title: 'Turbopack 文件系统缓存与本地 DX'
-description: 'Next 16.2 的 turbopackFileSystemCacheForDev 解决什么、不解决什么，以及如何避免把 dev 缓存问题误判成业务 bug。'
+description: 'Next 16 的 turbopackFileSystemCacheForDev 解决什么、不解决什么，以及如何避免把 dev 缓存问题误判成业务 bug。'
 date: '2026-07-21'
-updatedAt: '2026-10-10'
+updatedAt: '2026-10-11'
 tags: ['Next.js', 'DevOps', '性能优化']
 published: true
 featured: false
@@ -18,15 +18,20 @@ license: 'CC-BY-4.0'
 ```ts
 // next.config.ts
 experimental: {
-  // 仅 dev；名称里的 ForDev 不是装饰
+  // 仅 next dev；名称里的 ForDev 不是装饰。
+  // Next 16 默认开启，也可以显式写出当前策略。
   turbopackFileSystemCacheForDev: true,
 }
 ```
 
+Next 16.3.8 中该选项仍位于 `experimental`，默认值为 `true`。它只控制
+`next dev` 的磁盘缓存；生产构建缓存由独立的
+`experimental.turbopackFileSystemCacheForBuild` 选项控制，不能把两者混为一谈。
+
 同时本站启用了：
 
 - `reactCompiler: true`（见 [[react-compiler-in-practice|React Compiler]]）
-- `experimental.viewTransition: true`（见 [[nextjs-view-transitions|View Transitions]]）
+- App Router 的 View Transitions 不再需要 `experimental.viewTransition` 配置（见 [[nextjs-view-transitions|View Transitions]]）
 
 三者正交：Compiler/VT 影响产物与运行时；FS cache 影响**你等待编译的时间**。
 
@@ -35,11 +40,12 @@ experimental: {
 典型包括：
 
 - Turbopack 的模块图与编译中间态
-- 跨 `pnpm dev` 会话可复用的文件系统快照
+- 跨 `pnpm dev` 会话可复用的文件系统快照（默认位于 `.next/dev/cache/turbopack`）
 
 它不缓存：
 
 - 生产 `.next` 的完整发布语义（那是 `pnpm build` 的职责）
+- `next build` 的构建缓存（由另一个 `turbopackFileSystemCacheForBuild` 开关控制）
 - 远程 CI 的机器状态（CI 每次干净环境，本身就没有你的 dev 缓存）
 - 浏览器 Cache Storage / CDN
 
@@ -47,17 +53,17 @@ experimental: {
 
 ## 何时值得开
 
-| 情况 | 建议 |
-| --- | --- |
-| 冷启动经常 > 数秒，且项目中等以上 | 开 |
-| 极小仓库，冷启动本就可忽略 | 可关，减少「缓存脏了」变量 |
-| 正在排查「只在 dev 复现」的诡异 UI | 临时关或清缓存对比 |
-| CI | 无关；CI 跑 build/test 不依赖该旗标 |
+| 情况                               | 建议                                |
+| ---------------------------------- | ----------------------------------- |
+| 冷启动经常 > 数秒，且项目中等以上  | 开                                  |
+| 极小仓库，冷启动本就可忽略         | 可关，减少「缓存脏了」变量          |
+| 正在排查「只在 dev 复现」的诡异 UI | 临时关或清缓存对比                  |
+| CI                                 | 无关；CI 跑 build/test 不依赖该旗标 |
 
 ## 故障排查顺序
 
 1. **复现是否仅 dev？** 若 `pnpm build && pnpm start` 正常 → 优先缓存 / HMR / 懒编译路径。
-2. **清 Next 缓存再试**：删除 `.next` 后 `pnpm dev`（不要顺手 `git clean -fdx` 清掉有用本地文件）。
+2. **清 Next 缓存再试**：停止服务后删除 `.next`，再运行 `pnpm dev`（不要顺手 `git clean -fdx` 清掉有用本地文件）。
 3. **对比关闭旗标**：`turbopackFileSystemCacheForDev: false` 是否消失。
 4. **仍存在则当业务 bug**：用测试与生产构建钉死。
 
@@ -87,7 +93,7 @@ Hooks 与远程流水线分工见 [[git-hooks-github-actions|Git Hooks 文]]：�
 
 ## 检查清单
 
-- [ ] 知悉旗标仅 dev
+- [ ] 知悉 `turbopackFileSystemCacheForDev` 仅影响 dev，且默认已开启
 - [ ] 生产验收始终走 `pnpm build`
 - [ ] 记录清缓存步骤，而不只说「重启试试」
 - [ ] 与 Compiler / VT 变更分开评估回归

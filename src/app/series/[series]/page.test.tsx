@@ -23,6 +23,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 import SeriesDetailPage, { generateMetadata } from './page';
+import { getSeriesBySlug } from '@/server/content';
 
 describe('SeriesDetailPage', () => {
   it('returns metadata for a known series', async () => {
@@ -48,5 +49,14 @@ describe('SeriesDetailPage', () => {
     expect(links[0]).toHaveAttribute('href', '/blog/vps-initial-setup');
     expect(links[1]).toHaveAttribute('href', '/blog/docker-deploy-guide');
     expect(links[2]).toHaveAttribute('href', '/blog/nginx-reverse-proxy');
+    expect(links[0]).toHaveTextContent('VPS 初始化安全与运维配置清单');
+    expect(links[0].closest('li')).toHaveTextContent('新 VPS 上线前');
+    const series = getSeriesBySlug('个人服务部署路线');
+    expect(series?.posts[0].readingTime).toBeTruthy();
+    expect(links[0].closest('li')).toHaveTextContent(series!.posts[0].readingTime);
+    expect(within(links[0].closest('li')!).getByRole('time')).toHaveAttribute(
+      'datetime',
+      '2026-06-23',
+    );
   });
 });
