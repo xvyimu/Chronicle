@@ -70,6 +70,11 @@ jobs:
 
       - run: pnpm check:blur
 
+      # Wikilink integrity: fail if any [[slug]] points at a missing post.
+      # The link-graph fail-closed check that once ran during snapshot build
+      # was dropped in the workspace refactor; this restores it as a gate.
+      - run: pnpm check:content-graph
+
       - run: pnpm build
 
       - name: Verify RSS artifacts are committed

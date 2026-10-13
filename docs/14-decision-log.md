@@ -453,3 +453,14 @@
 - **R13 qs**：override 从精确钉 `6.15.2` 改范围 `>=6.16.0 <7`（6.16.0 已发布，typed-rest-client 新版已声明 `^6.16.0`），audit 3 条 → 1 条（余 braces high 上游无解）。顺手对齐 `@vitest/ui` `^4.1.9` → `^4.1.11`，消掉 master 既有的 vitest peer 错位警告。
 - **影响**：`src/lib/search/`（engine/highlight/index）、`SearchPanel.tsx`、`home.css`、`pnpm-workspace.yaml`、`package.json` + lockfile、PRD 实施现状表定案、R13/R14 登记册闭环。
 - **复查**：`pnpm typecheck` exit 0；`pnpm lint` exit 0；`pnpm test` 79 files / 642 tests exit 0（新增 1 文件 14 条）；`pnpm format:check` exit 0；`NEXT_PUBLIC_SITE_URL=… pnpm build` exit 0；`pnpm audit` 3→1。
+
+## 2026-10-13 · D-046 · 全 61 PR 审核处置（TS6 mock 修复 + wikilink 门禁补位 + 降级门叠加记账）
+
+- **背景**：全 61 个 PR（1–62，缺 43）审核后，三处待处置：（1）OPEN 的 #58 `typescript 5.9.3→6.0.3` CI 红，`quality`/`bundle-analyze` 双双失败；（2）R17 wikilink 坏链自动门禁在 workspace 重构（PR #37）时随 link-graph 一并删除，`remark-wikilink.ts:11` 自认不做存在性校验，`audit-content-graph.ts` 虽已 `process.exitCode=1` 但未挂 CI；（3）R16 三处 fail-open 降级门（#41/#44/#49 引入）无叠加评估。
+- **TS6 根因**：TS 6.0 给 `IntersectionObserver` 接口新增 `scrollMargin` 成员，`vitest.setup.ts:25` 与 `TableOfContents.test.tsx:82` 两处手写 mock 类缺它 → `TS2420: Class ... incorrectly implements interface`。TS5 下接口只有 root/rootMargin/thresholds 等，故此前不报。
+- **TS6 修法**：两处 mock 各补一行 `readonly scrollMargin = '0px'`。对照实验（TS6 独立编译缺/含该成员的类）确认方向：缺 → `TS2420 Property 'scrollMargin' is missing`，含 → 通过。
+- **wikilink 门禁**：`package.json` 加 `check:content-graph`，`ci.yml` quality job 在 `pnpm build` 前加 `pnpm check:content-graph`（`audit-content-graph.ts` 本就 `exitCode=1`，缺的只是入口）。实测：无坏链 exit 0；临时塞 `[[this-slug-does-not-exist-xyz]]` → exit 1；撤除后 `git status` 干净。
+- **测试补位**：`repository.test.ts` 给 `filenameToSlug` 补 5 条用例（正路径 + 多连字符 + 二次日期前缀 + 无前缀 + 无后缀）。PR #1 曾删掉它的 `describe` 且无承接，全仓无测试引用该函数。
+- **未做（记入 R16，非本 PR）**：三处降级门的根治——`wait-for-deployment` degraded 分支未查 deployments、`check-production-content` 全 403 无区分能力、`check-bundle-budget` 缺文件静默 continue——需允许清单探针身份或 zone 内探测，属 `docs/ops-deferred-work-plan.md` 范围。本 PR 只把叠加效应记入 R16。
+- **影响**：`package.json`（+`check:content-graph`, typescript `^6.0.3`）、`pnpm-lock.yaml`、`vitest.setup.ts`、`TableOfContents.test.tsx`、`repository.test.ts`、`ci.yml`、`docs/13-risk-register.md`（R16/R17）。
+- **复查**：TS6 下 `pnpm exec tsc --noEmit` exit 0、`pnpm lint` exit 0、`pnpm test` 80 files / 648 tests exit 0。

@@ -82,6 +82,7 @@ describe('TableOfContents', () => {
     class MockObserver implements IntersectionObserver {
       readonly root: Element | null = null;
       readonly rootMargin: string = '0px';
+      readonly scrollMargin: string = '0px';
       readonly thresholds: ReadonlyArray<number> = [];
       observe = mockObserve;
       unobserve = vi.fn();
