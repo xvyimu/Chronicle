@@ -85,7 +85,7 @@ export function createProjectsRepository(source: ContentSource): ProjectsReposit
 }
 
 /** 默认 ProjectsRepository 实例 (基于 filesystemSource). */
-export const projectsRepository = createProjectsRepository(filesystemSource);
+const projectsRepository = createProjectsRepository(filesystemSource);
 
 /**
  * 向后兼容便捷函数 — 委托给默认 projectsRepository.
@@ -93,10 +93,6 @@ export const projectsRepository = createProjectsRepository(filesystemSource);
  */
 export function getAllProjects(): Project[] {
   return projectsRepository.getAll();
-}
-
-export function getFeaturedProjects(): Project[] {
-  return projectsRepository.getFeatured();
 }
 
 export function getProjectById(id: string): Project | null {

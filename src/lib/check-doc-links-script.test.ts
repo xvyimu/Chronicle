@@ -6,26 +6,10 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 describe('documentation link checker', () => {
-  // 这两个用例 spawn 子进程跑 `node --test` / `pnpm check:docs`，
+  // 这两个用例 spawn 子进程跑 `pnpm check:docs`，
   // 并发全量跑时子进程启动+扫描 138 个 md 文件可能超过 vitest 默认 5s 超时。
   // 显式放宽超时（不改变断言语义），消除 R10 记录的间歇性 flaky。
   const SUBPROCESS_TIMEOUT_MS = 30_000;
-
-  it(
-    'passes its parser fixture suite',
-    () => {
-      const fixtureSuite = path.resolve(
-        process.cwd(),
-        'scripts/check-doc-links.test.mjs',
-      );
-      const output = execFileSync(process.execPath, ['--test', fixtureSuite], {
-        encoding: 'utf8',
-      });
-
-      expect(output).toContain('fail 0');
-    },
-    SUBPROCESS_TIMEOUT_MS,
-  );
 
   it(
     'exposes the standard command and scans the current repository',

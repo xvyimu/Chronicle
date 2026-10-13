@@ -28,14 +28,13 @@ describe('ArchivePage', () => {
     expect(screen.getByRole('heading', { level: 1, name: '归档' })).toBeInTheDocument();
 
     const posts = getAllPosts();
-    if (posts.length > 0) {
-      expect(screen.getByText(new RegExp(`${posts.length} 篇文章`))).toBeInTheDocument();
-    }
+    expect(posts.length).toBeGreaterThan(0);
+    expect(screen.getByText(new RegExp(`${posts.length} 篇文章`))).toBeInTheDocument();
   });
 
   it('groups posts by year and lists years in descending order', () => {
     const posts = getAllPosts();
-    if (posts.length === 0) return;
+    expect(posts.length).toBeGreaterThan(0);
 
     render(<ArchivePage />);
 

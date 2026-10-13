@@ -82,7 +82,7 @@ export interface BudgetResult {
   byPrefix: Map<string, { files: StaticAsset[]; maxKB: number; desc: string }>;
 }
 
-export function formatKB(kb: number): string {
+function formatKB(kb: number): string {
   return kb >= 1024 ? `${(kb / 1024).toFixed(2)} MB` : `${kb.toFixed(1)} KB`;
 }
 
@@ -167,7 +167,7 @@ export function evaluateBudgets(
 }
 
 /** Collect assets from `.next/static` on disk (CLI-only path). */
-export function collectStaticAssets(staticDir: string = STATIC_DIR): StaticAsset[] {
+function collectStaticAssets(staticDir: string = STATIC_DIR): StaticAsset[] {
   return walkDir(staticDir).map((file) => ({
     name: getRelativePath(file),
     kb: statSync(file).size / 1024,
@@ -260,7 +260,7 @@ function gzipKbFor(relPaths: Iterable<string>, staticDir: string): number {
  * Verified 2026-10-08 against a served production page: the union computed here
  * matched the HTML's asset list exactly (14 JS + 5 CSS for `/blog/[slug]`).
  */
-export function collectRouteAssets(
+function collectRouteAssets(
   nextDir: string = join(process.cwd(), '.next'),
 ): RouteAssets[] {
   const staticDir = join(nextDir, 'static');

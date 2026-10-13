@@ -65,10 +65,9 @@ describe('HomePage (workspace)', () => {
     await renderHomePage();
     expect(screen.getByText('热门主题')).toBeInTheDocument();
     const tags = getAllTags();
-    if (tags.length > 0) {
-      const top = [...tags].sort((a, b) => b.count - a.count)[0];
-      expect(screen.getAllByText(top.tag).length).toBeGreaterThan(0);
-    }
+    expect(tags.length).toBeGreaterThan(0);
+    const top = [...tags].sort((a, b) => b.count - a.count)[0];
+    expect(screen.getAllByText(top.tag).length).toBeGreaterThan(0);
   });
 
   it('renders the recent articles list', async () => {

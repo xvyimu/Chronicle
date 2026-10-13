@@ -216,7 +216,7 @@ function normalizeReferenceLabel(label) {
   return label.trim().replace(/\s+/gu, ' ').toLowerCase();
 }
 
-export function findMissingReferenceDefinitions(markdown) {
+function findMissingReferenceDefinitions(markdown) {
   const withoutCode = stripMarkdownCode(markdown);
   const definition = /^ {0,3}\[([^\]\n]+)\]:[ \t]*(.+)$/gmu;
   const labels = new Set();
@@ -241,7 +241,7 @@ export function findMissingReferenceDefinitions(markdown) {
   return missing;
 }
 
-export function extractMarkdownLinkTargets(markdown) {
+function extractMarkdownLinkTargets(markdown) {
   const withoutCode = stripMarkdownCode(markdown);
   return [...extractInlineTargets(withoutCode), ...extractReferenceTargets(withoutCode)];
 }

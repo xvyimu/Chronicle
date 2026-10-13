@@ -29,10 +29,9 @@ describe('getAllTags', () => {
 describe('getTagNameBySlug', () => {
   it('resolves a known slug to its original tag name', () => {
     const tags = getAllTags();
-    if (tags.length > 0) {
-      const tagName = getTagNameBySlug(tags[0].slug);
-      expect(tagName).toBe(tags[0].tag);
-    }
+    expect(tags.length).toBeGreaterThan(0);
+    const tagName = getTagNameBySlug(tags[0].slug);
+    expect(tagName).toBe(tags[0].tag);
   });
 
   it('resolves URL-encoded Chinese slugs', () => {

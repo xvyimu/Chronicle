@@ -1,7 +1,7 @@
 import { createCache } from './cache';
 import type { ContentSource } from './content-source';
 
-export interface JsonContentRepository<T> {
+interface JsonContentRepository<T> {
   /** 获取解析后的 JSON 内容，带缓存。 */
   getAll(): T;
 }

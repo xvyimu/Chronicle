@@ -7,7 +7,7 @@
  * 否则会以字面量显示给读者（20 篇文章共 131 处）。
  */
 
-export type WikilinkMatch = {
+type WikilinkMatch = {
   /** Target post slug (filenameToSlug form), trimmed */
   slug: string;
   /** Display label; equals slug when no `|label` */

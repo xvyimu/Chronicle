@@ -89,18 +89,15 @@ describe('BlogPage', () => {
     await renderBlogPage();
 
     const { totalPosts } = getPaginatedPosts(1, PAGE_SIZE);
-    if (totalPosts > 0) {
-      expect(screen.getByText(new RegExp(`共 ${totalPosts} 篇`))).toBeInTheDocument();
-    }
+    expect(totalPosts).toBeGreaterThan(0);
+    expect(screen.getByText(new RegExp(`共 ${totalPosts} 篇`))).toBeInTheDocument();
   });
 
   it('renders pagination when multiple pages exist', async () => {
     const { totalPages } = getPaginatedPosts(1, PAGE_SIZE);
+    expect(totalPages).toBeGreaterThan(1);
     await renderBlogPage();
-
-    if (totalPages > 1) {
-      const nav = screen.getByRole('navigation', { hidden: true });
-      expect(nav).toBeInTheDocument();
-    }
+    const nav = screen.getByRole('navigation', { hidden: true });
+    expect(nav).toBeInTheDocument();
   });
 });
