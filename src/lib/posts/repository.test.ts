@@ -329,6 +329,17 @@ describe('filenameToSlug', () => {
     expect(filenameToSlug('draft-notes.mdx')).toBe('draft-notes');
   });
 
+  it('only strips a date prefix, not a date-shaped run mid-name', () => {
+    // Kills a regex mutated to drop the ^ anchor: without it, `2026-06-`
+    // embedded after `prefixed-` would also be removed.
+    expect(filenameToSlug('prefixed-2026-06-name.mdx')).toBe('prefixed-2026-06-name');
+  });
+
+  it('only strips a trailing .mdx, not a mid-name .mdx run', () => {
+    // Kills a regex mutated to drop the $ anchor.
+    expect(filenameToSlug('2026-06-name.mdx.old')).toBe('name.mdx.old');
+  });
+
   it('leaves a filename without .mdx suffix otherwise untouched', () => {
     expect(filenameToSlug('2026-06-plain')).toBe('plain');
   });
