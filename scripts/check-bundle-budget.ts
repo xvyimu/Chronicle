@@ -371,12 +371,29 @@ function printAll(
   process.exitCode = 1;
 }
 
+/**
+ * True when the collected asset list is empty or every route measured 0 KB.
+ *
+ * Either means the gate verified nothing: `collectStaticAssets` walks
+ * `.next/static`, and `gzipKbFor` silently skips files it cannot find, so a
+ * renamed dir or a changed manifest shape yields an empty/zero measurement
+ * that would otherwise pass. Exported so the guard is testable, not only
+ * reachable from the CLI entry point.
+ */
+export function gateWouldMeasureNothing(
+  assets: StaticAsset[],
+  routes: RouteAssets[],
+): boolean {
+  if (assets.length === 0 || routes.length === 0) return true;
+  return routes.every((route) => route.kb === 0);
+}
+
 function main(): void {
   const assets = collectStaticAssets();
   const routes = collectRouteAssets();
-  if (assets.length === 0 || routes.length === 0) {
+  if (gateWouldMeasureNothing(assets, routes)) {
     console.error(
-      'WARNING: no .next/static assets or route manifests found — did the build run?',
+      'WARNING: bundle gate measured nothing — no .next/static assets, no route manifests, or every route at 0 KB. Check the build ran and the Next manifest shape is unchanged.',
     );
     process.exitCode = 1;
     return;

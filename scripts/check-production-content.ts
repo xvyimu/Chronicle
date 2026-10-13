@@ -20,6 +20,13 @@ export type PageExpectation = {
 export type CheckFailure = {
   label: string;
   message: string;
+  /**
+   * True only when a 403 was served by Cloudflare's edge before the request
+   * reached the Vercel origin. Distinguishes "CF blocked this CI runner's IP"
+   * (degradable) from "the origin itself returned 403" (a real access
+   * regression that must fail). Absent for every non-403 failure.
+   */
+  wafBlocked?: boolean;
 };
 
 const DEFAULT_ATTEMPTS = 5;
@@ -285,18 +292,27 @@ export async function checkPage(
   try {
     const response = await fetchResponseWithRetry(url, options);
 
-    // A 403 here is almost certainly a Cloudflare WAF/bot-protection challenge
-    // on the CI runner's datacenter IP (see main() for the exit-code handling).
-    // Its body is a challenge page, not our HTML, so every content/header
-    // assertion below would fail with a misleading "Missing expected content".
-    // Short-circuit so the report points at the real cause instead of listing
-    // a phantom content regression for every page.
+    // A 403 here is either a Cloudflare WAF/bot-protection challenge on the CI
+    // runner's datacenter IP, or the origin itself refusing the request. The two
+    // need opposite handling, and the response tells them apart: Vercel stamps
+    // `x-vercel-id` on every response the request reaches it for (verified
+    // 2026-10-13 against production — a 200 carried
+    // `x-vercel-id: cdg1::hkg1::…`). A CF edge block never reaches Vercel, so it
+    // has no such header. Only the header-absent case is degradable; a 403 that
+    // did reach the origin is a real access regression.
     if (response.status === 403) {
+      const reachedOrigin = response.headers.get('x-vercel-id') !== null;
       return [
-        {
-          label: expectation.label,
-          message: `HTTP 403 at ${url} — blocked before content could be read (likely Cloudflare WAF on the CI IP).`,
-        },
+        reachedOrigin
+          ? {
+              label: expectation.label,
+              message: `HTTP 403 at ${url} — the origin returned 403 (reached Vercel, so this is NOT a WAF block on the CI IP).`,
+            }
+          : {
+              label: expectation.label,
+              message: `HTTP 403 at ${url} — blocked before content could be read (Cloudflare WAF edge block on the CI IP; no x-vercel-id).`,
+              wafBlocked: true,
+            },
       ];
     }
 
@@ -356,13 +372,15 @@ export async function checkExpectations(
  * rather than "the content regressed".
  *
  * Exported and pure so the distinction actually holds — the difference between
- * "every failure is a 403" and "every *expectation* was blocked" is invisible
- * in a green run and only matters on the day it is wrong.
+ * "every failure is a CF edge block" and "every *expectation* was blocked" is
+ * invisible in a green run and only matters on the day it is wrong.
  *
  * A blocked page short-circuits to exactly one failure, so a fully-blocked run
- * has exactly one failure per expectation, all 403, with no repeated labels.
- * A partial block (say the home page loads and the rest are challenged) has
- * fewer failures and must NOT degrade — that is a real regression to report.
+ * has exactly one failure per expectation, all CF edge blocks (`wafBlocked`),
+ * with no repeated labels. A partial block (say the home page loads and the
+ * rest are challenged) has fewer failures and must NOT degrade — that is a
+ * real regression to report. A 403 that reached the origin (`wafBlocked`
+ * unset) is an access regression, not a WAF block, and does not degrade.
  */
 export function isEveryPageBlocked(
   expectations: PageExpectation[],
@@ -371,7 +389,7 @@ export function isEveryPageBlocked(
   if (expectations.length === 0) return false;
   if (failures.length !== expectations.length) return false;
   if (new Set(failures.map((f) => f.label)).size !== expectations.length) return false;
-  return failures.every((f) => f.message.includes('HTTP 403'));
+  return failures.every((f) => f.wafBlocked === true);
 }
 
 async function main(): Promise<void> {
@@ -384,22 +402,24 @@ async function main(): Promise<void> {
     return;
   }
 
-  // Every page 403'd before its content could be read: a WAF/bot-protection
-  // block on the CI runner's IP (GitHub Actions egress is a datacenter range),
-  // not a content regression. Report it loudly but exit 0, so a Cloudflare
-  // policy change does not red-light every master push forever.
+  // Every page was blocked at Cloudflare's edge before reaching Vercel (each
+  // failure carries `wafBlocked`): a bot-protection block on the CI runner's
+  // IP (GitHub Actions egress is a datacenter range), not a content regression.
+  // Report it loudly but exit 0, so a Cloudflare policy change does not
+  // red-light every master push forever.
   //
-  // This is a known blind spot and is stated as one: while it holds, content
-  // correctness after a deploy is NOT verified by this script. Leaving it
-  // unverified is a deliberate trade-off — the alternative is a red CI every
-  // push. Restoring real verification needs either an allowlisted probe
+  // The remaining blind spot is narrower than it was: a 403 served by the
+  // origin itself (header present, `wafBlocked` unset) no longer degrades — it
+  // fails as the access regression it is. So content correctness IS still
+  // unverified for the edge-block case only; a real origin-level break is
+  // caught. Restoring full verification needs either an allowlisted probe
   // identity or a check that runs from inside the Cloudflare zone — see
   // docs/ops-deferred-work-plan.md.
   if (isEveryPageBlocked(expectations, failures)) {
     console.warn(
       [
-        `[production-content] all ${expectations.length} checks returned HTTP 403 for ${baseUrl}.`,
-        '  Cloudflare WAF/bot-protection blocked the CI runner IP before content could be read.',
+        `[production-content] all ${expectations.length} checks were blocked at the Cloudflare edge for ${baseUrl}.`,
+        '  The CI runner IP is challenge-blocked before reaching Vercel (no x-vercel-id on the responses).',
         '  Content CORRECTNESS was NOT verified this run (reachability only). Exiting 0.',
       ].join('\n'),
     );

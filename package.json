@@ -37,6 +37,7 @@
     "test:sri": "node --test scripts/check-sri.test.mjs",
     "gen:blur": "node scripts/generate-blur-data.mjs",
     "check:blur": "tsx scripts/check-project-blur-coverage.ts",
+    "check:content-graph": "tsx scripts/audit-content-graph.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:mutation": "stryker run",
@@ -100,7 +101,7 @@
     "prettier": "^3.9.3",
     "tailwindcss": "^4.3.3",
     "tsx": "^4",
-    "typescript": "^5",
+    "typescript": "^6.0.3",
     "unified": "^11.0.5",
     "vitest": "^4.1.11"
   },

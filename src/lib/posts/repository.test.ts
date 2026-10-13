@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { createPostRepository } from './repository';
+import { createPostRepository, filenameToSlug } from './repository';
 import { resetAllCaches } from '@/lib/cache';
 import { createInMemorySource } from '@/lib/test-utils/in-memory-source';
 import { CONTENT_DIR } from '@/lib/content-dirs';
@@ -309,5 +309,38 @@ Body`,
       expect(repo1.getAllPosts().map((p) => p.title)).not.toContain('Other');
       expect(repo2.getAllPosts().map((p) => p.title)).toContain('Other');
     });
+  });
+});
+
+describe('filenameToSlug', () => {
+  it('drops the YYYY-MM- prefix and the .mdx suffix', () => {
+    expect(filenameToSlug('2026-06-vps-initial-setup.mdx')).toBe('vps-initial-setup');
+  });
+
+  it('keeps single-character and hyphenated middle segments intact', () => {
+    expect(filenameToSlug('2026-10-a-b-c.mdx')).toBe('a-b-c');
+  });
+
+  it('strips only the first date prefix, leaving later numbers in the slug', () => {
+    expect(filenameToSlug('2026-06-2026-recap.mdx')).toBe('2026-recap');
+  });
+
+  it('does not strip a non YYYY-MM prefix', () => {
+    expect(filenameToSlug('draft-notes.mdx')).toBe('draft-notes');
+  });
+
+  it('only strips a date prefix, not a date-shaped run mid-name', () => {
+    // Kills a regex mutated to drop the ^ anchor: without it, `2026-06-`
+    // embedded after `prefixed-` would also be removed.
+    expect(filenameToSlug('prefixed-2026-06-name.mdx')).toBe('prefixed-2026-06-name');
+  });
+
+  it('only strips a trailing .mdx, not a mid-name .mdx run', () => {
+    // Kills a regex mutated to drop the $ anchor.
+    expect(filenameToSlug('2026-06-name.mdx.old')).toBe('name.mdx.old');
+  });
+
+  it('leaves a filename without .mdx suffix otherwise untouched', () => {
+    expect(filenameToSlug('2026-06-plain')).toBe('plain');
   });
 });

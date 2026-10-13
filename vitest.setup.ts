@@ -25,6 +25,7 @@ if (!window.IntersectionObserver) {
   class MockIntersectionObserver implements IntersectionObserver {
     readonly root: IntersectionObserver['root'] = null;
     readonly rootMargin: IntersectionObserver['rootMargin'] = '0px';
+    readonly scrollMargin: IntersectionObserver['scrollMargin'] = '0px';
     readonly thresholds: IntersectionObserver['thresholds'] = [];
     observe = vi.fn<IntersectionObserver['observe']>();
     unobserve = vi.fn<IntersectionObserver['unobserve']>();

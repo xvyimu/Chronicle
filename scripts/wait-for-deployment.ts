@@ -168,6 +168,7 @@ export async function waitForProductionDeployment({
   fetchImpl = fetch,
   log = console.log,
   sleep = delay,
+  now = Date.now,
 }: {
   repo: string;
   sha: string;
@@ -177,19 +178,26 @@ export async function waitForProductionDeployment({
   fetchImpl?: FetchLike;
   log?: (message: string) => void;
   sleep?: (ms: number) => Promise<void>;
+  now?: () => number;
 }): Promise<WaitOutcome> {
-  const deadline = Date.now() + timeoutMs;
+  const deadline = now() + timeoutMs;
   const shortSha = sha.slice(0, 7);
   let attempts = 0;
   let lastReason = `no Production deployment registered for ${shortSha}`;
   let consecutiveApiFailures = 0;
+  // Whether the Deployments API answered at least once this run. Set so the
+  // degrade path can tell "the API is unusable" (safe to degrade) from "the API
+  // worked, told us the commit is not deployed, then broke" (not safe — the
+  // deploy really is missing, so exit non-zero instead of green-lighting).
+  let apiEverSucceeded = false;
 
-  while (Date.now() < deadline) {
+  while (now() < deadline) {
     attempts += 1;
 
     try {
       const deployment = await findProductionDeployment(repo, sha, fetchImpl);
       consecutiveApiFailures = 0;
+      apiEverSucceeded = true;
 
       if (deployment) {
         const state = await latestDeploymentState(repo, deployment.id, fetchImpl);
@@ -219,6 +227,17 @@ export async function waitForProductionDeployment({
       // decide based on whether the site itself is up.
       consecutiveApiFailures += 1;
       if (consecutiveApiFailures >= API_FAILURE_TOLERANCE) {
+        // If the API answered earlier this run, it already told us the commit
+        // is not in Production — the later breakage does not make that unknown.
+        // Degrading here would turn "the deploy never landed" into a green run,
+        // which is exactly the signal this step exists to surface. Only degrade
+        // when the API was never readable, so its verdict is genuinely unknown.
+        if (apiEverSucceeded) {
+          return {
+            kind: 'timeout',
+            reason: `${lastReason} (API worked earlier this run, so the commit is not deployed)`,
+          };
+        }
         const reachable = await probeHttpReachable(siteUrl, fetchImpl);
         if (!reachable) {
           return {

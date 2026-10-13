@@ -7,6 +7,7 @@ import {
   TOTAL_BUDGET_KB,
   evaluateBudgets,
   evaluateRouteBudgets,
+  gateWouldMeasureNothing,
   isFontAsset,
   parseClientReferenceManifest,
   type RouteAssets,
@@ -119,6 +120,37 @@ describe('per-route bundle budget', () => {
 
   it('keeps the documented route budget stable', () => {
     expect(ROUTE_BUDGET_KB).toBe(285);
+  });
+});
+
+describe('gateWouldMeasureNothing', () => {
+  const asset = (kb: number): StaticAsset => ({ name: '.next/static/chunks/a.js', kb });
+  const route = (kb: number): RouteAssets => ({
+    routePath: '/x',
+    manifestKey: '/x/page',
+    kb,
+  });
+
+  it('flags an empty asset list (build never ran)', () => {
+    expect(gateWouldMeasureNothing([], [route(100)])).toBe(true);
+  });
+
+  it('flags an empty route list (manifest walk found nothing)', () => {
+    expect(gateWouldMeasureNothing([asset(100)], [])).toBe(true);
+  });
+
+  it('flags every route at 0 KB (asset paths no longer resolve)', () => {
+    // This is the case the old gate missed: routes exist, so the list is
+    // non-empty, but gzipKbFor skipped every file it could not find.
+    expect(gateWouldMeasureNothing([asset(0)], [route(0), route(0)])).toBe(true);
+  });
+
+  it('passes a normal measurement', () => {
+    expect(gateWouldMeasureNothing([asset(200)], [route(248), route(230)])).toBe(false);
+  });
+
+  it('passes when only one route is 0 but others resolved', () => {
+    expect(gateWouldMeasureNothing([asset(200)], [route(0), route(230)])).toBe(false);
   });
 });
 

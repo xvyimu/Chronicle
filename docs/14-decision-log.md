@@ -453,3 +453,18 @@
 - **R13 qs**：override 从精确钉 `6.15.2` 改范围 `>=6.16.0 <7`（6.16.0 已发布，typed-rest-client 新版已声明 `^6.16.0`），audit 3 条 → 1 条（余 braces high 上游无解）。顺手对齐 `@vitest/ui` `^4.1.9` → `^4.1.11`，消掉 master 既有的 vitest peer 错位警告。
 - **影响**：`src/lib/search/`（engine/highlight/index）、`SearchPanel.tsx`、`home.css`、`pnpm-workspace.yaml`、`package.json` + lockfile、PRD 实施现状表定案、R13/R14 登记册闭环。
 - **复查**：`pnpm typecheck` exit 0；`pnpm lint` exit 0；`pnpm test` 79 files / 642 tests exit 0（新增 1 文件 14 条）；`pnpm format:check` exit 0；`NEXT_PUBLIC_SITE_URL=… pnpm build` exit 0；`pnpm audit` 3→1。
+
+## 2026-10-13 · D-046 · 全 61 PR 审核处置（TS6 mock 修复 + wikilink 门禁补位 + 降级门叠加记账）
+
+- **背景**：全 61 个 PR（1–62，缺 43）审核后，三处待处置：（1）OPEN 的 #58 `typescript 5.9.3→6.0.3` CI 红，`quality`/`bundle-analyze` 双双失败；（2）R17 wikilink 坏链自动门禁在 workspace 重构（PR #37）时随 link-graph 一并删除，`remark-wikilink.ts:11` 自认不做存在性校验，`audit-content-graph.ts` 虽已 `process.exitCode=1` 但未挂 CI；（3）R16 三处 fail-open 降级门（#41/#44/#49 引入）无叠加评估。
+- **TS6 根因**：TS 6.0 给 `IntersectionObserver` 接口新增 `scrollMargin` 成员，`vitest.setup.ts:25` 与 `TableOfContents.test.tsx:82` 两处手写 mock 类缺它 → `TS2420: Class ... incorrectly implements interface`。TS5 下接口只有 root/rootMargin/thresholds 等，故此前不报。
+- **TS6 修法**：两处 mock 各补一行 `readonly scrollMargin = '0px'`。对照实验（TS6 独立编译缺/含该成员的类）确认方向：缺 → `TS2420 Property 'scrollMargin' is missing`，含 → 通过。
+- **wikilink 门禁**：`package.json` 加 `check:content-graph`，`ci.yml` quality job 在 `pnpm build` 前加 `pnpm check:content-graph`（`audit-content-graph.ts` 本就 `exitCode=1`，缺的只是入口）。实测：无坏链 exit 0；临时塞 `[[this-slug-does-not-exist-xyz]]` → exit 1；撤除后 `git status` 干净。
+- **测试补位**：`repository.test.ts` 给 `filenameToSlug` 补 5 条用例（正路径 + 多连字符 + 二次日期前缀 + 无前缀 + 无后缀）。PR #1 曾删掉它的 `describe` 且无承接，全仓无测试引用该函数。
+- **降级门（R16）**：审核把三处 fail-open 降级记为「叠加后产线健康无人验证」。本 PR 修掉其中两处可无外部依赖处理的：
+  - `check-production-content`：403 分支此前一律视为「CF 拦了 CI」并降级 exit 0。现按响应是否带 `x-vercel-id` 区分——该头由 Vercel 注入（2026-10-13 curl 生产站实测：200 响应带 `x-vercel-id: cdg1::hkg1::…`），CF 边缘拦截到不了 Vercel、无此头。故「有头 → 源站 403 → 真回归，不降级」；「无头 → CF 边缘拦截 → 可降级」。`CheckFailure` 加 `wafBlocked` 字段，`isEveryPageBlocked` 改为要求每条失败都带该标记。
+  - `wait-for-deployment`：degraded 分支此前只要 API 连续失败 2 次且站点 200 就放行，未区分「API 整个 run 不可用」与「API 成功过、告诉过我们 commit 没部署、之后才抖」。加 `apiEverSucceeded` 标志，仅前者降级；后者判 `timeout`（保住「部署没上线」这个本步存在的意义）。顺带给函数加可注入的 `now` 以测这条。
+  - `check-bundle-budget`：`gzipKbFor` 对找不到的文件静默 skip，若 Next 改了 manifest 形状则全路由 0 KB、门禁照绿。抽出纯函数 `gateWouldMeasureNothing`（空资产/空路由/全 0 KB）并 fail-closed。
+- **未做（记入 R16）**：仅剩「CF 拦 CI」时内容正确性未验证这一条盲区——根治需允许清单探针身份或 zone 内探测，属 `docs/ops-deferred-work-plan.md` 范围。另两处审核提及项经判断不改：`rate-limit` 的 `anonymous` 回退桶（Vercel 平台总注入 `x-vercel-forwarded-for`，该回退仅本地/dev 可达，生产触发不到）、`csp-report` 的 body 上限先读后判（Vercel 有 4.5 MB 硬顶，非无界）。
+- **影响**：`package.json`（+`check:content-graph`, typescript `^6.0.3`）、`pnpm-lock.yaml`、`vitest.setup.ts`、`TableOfContents.test.tsx`、`repository.test.ts`、`ci.yml`、`docs/13-risk-register.md`（R16/R17）。
+- **复查**：TS6 下 `pnpm exec tsc --noEmit` exit 0、`pnpm lint` exit 0、`pnpm test` 80 files / 648 tests exit 0。
