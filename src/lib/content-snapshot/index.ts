@@ -6,7 +6,6 @@ export type {
 } from './types';
 
 export {
-  CONTENT_SNAPSHOT_DIR,
   CONTENT_SNAPSHOT_FILES,
   getContentSnapshotRoot,
   resolveContentBackend,

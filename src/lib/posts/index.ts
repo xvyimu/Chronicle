@@ -13,7 +13,7 @@ import type { PostMeta, PostFull } from '@/types';
 import { filterByTag, getAdjacent, getRelated, getSeries, paginate } from './query';
 
 // repository (工厂 + 默认实例, 测试可用 createPostRepository 注入)
-export { createPostRepository, filenameToSlug, postRepository } from './repository';
+export { createPostRepository, filenameToSlug } from './repository';
 export type { PostRepository } from './repository';
 
 /**

@@ -11,7 +11,6 @@ import {
 import {
   getAllProjectIds as readAllProjectIds,
   getAllProjects as readAllProjects,
-  getFeaturedProjects as readFeaturedProjects,
   getProjectById as readProjectById,
 } from '@/lib/projects';
 import { getAboutContent as readAboutContent } from '@/lib/about';
@@ -58,9 +57,6 @@ export const getPaginatedPosts = readPaginatedPosts;
 
 /** 读取全部项目；保留按年份倒序和底层缓存错误语义。 */
 export const getAllProjects = readAllProjects;
-
-/** 读取精选项目；没有精选项时返回空数组。 */
-export const getFeaturedProjects = readFeaturedProjects;
 
 /** 按项目 id 读取详情；未找到时返回 null。 */
 export const getProjectById = readProjectById;

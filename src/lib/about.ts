@@ -23,7 +23,7 @@ export function createAboutReader(source: ContentSource): AboutReader {
 }
 
 /** 默认 AboutReader 实例 (基于 filesystemSource). */
-export const aboutReader = createAboutReader(filesystemSource);
+const aboutReader = createAboutReader(filesystemSource);
 
 /**
  * 向后兼容便捷函数 — 委托给默认 aboutReader.
