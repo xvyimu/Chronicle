@@ -229,6 +229,45 @@ describe('waitForProductionDeployment', () => {
     );
   });
 
+  it('does NOT degrade when the API worked earlier and only then broke', async () => {
+    // First poll: API answers (commit not deployed yet). Then it starts failing.
+    // The earlier answer already proved the commit is not in Production, so a
+    // later API breakage must not turn "the deploy never landed" into green.
+    let apiCalls = 0;
+    const fetchImpl = routedFetch((url) => {
+      if (!url.startsWith('https://api.github.com')) {
+        return new Response('ok', { status: 200 });
+      }
+      apiCalls += 1;
+      return apiCalls === 1
+        ? jsonResponse([]) // API works: no deployment for this sha
+        : jsonResponse({ message: 'boom' }, 500);
+    });
+    const log = vi.fn();
+    // A sleep that advances the injected clock past the deadline after a few
+    // polls, so the loop exits instead of spinning on a frozen Date.now().
+    let now = 0;
+    const advancingSleep = async (ms: number): Promise<void> => {
+      now += ms;
+    };
+    const outcome = await waitForProductionDeployment({
+      repo: REPO,
+      sha: SHA,
+      siteUrl: 'https://example.test',
+      timeoutMs: 30_000,
+      pollMs: 10_000,
+      now: () => now,
+      fetchImpl,
+      sleep: advancingSleep,
+      log,
+    });
+
+    expect(outcome.kind).toBe('timeout');
+    expect(log).not.toHaveBeenCalledWith(
+      expect.stringContaining('Deployment revision NOT verified'),
+    );
+  });
+
   it('fails as misconfigured on a 4xx instead of degrading (retrying cannot fix it)', async () => {
     vi.stubEnv('GITHUB_TOKEN', '');
     const fetchImpl = routedFetch((url) =>

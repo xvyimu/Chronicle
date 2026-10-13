@@ -461,6 +461,10 @@
 - **TS6 修法**：两处 mock 各补一行 `readonly scrollMargin = '0px'`。对照实验（TS6 独立编译缺/含该成员的类）确认方向：缺 → `TS2420 Property 'scrollMargin' is missing`，含 → 通过。
 - **wikilink 门禁**：`package.json` 加 `check:content-graph`，`ci.yml` quality job 在 `pnpm build` 前加 `pnpm check:content-graph`（`audit-content-graph.ts` 本就 `exitCode=1`，缺的只是入口）。实测：无坏链 exit 0；临时塞 `[[this-slug-does-not-exist-xyz]]` → exit 1；撤除后 `git status` 干净。
 - **测试补位**：`repository.test.ts` 给 `filenameToSlug` 补 5 条用例（正路径 + 多连字符 + 二次日期前缀 + 无前缀 + 无后缀）。PR #1 曾删掉它的 `describe` 且无承接，全仓无测试引用该函数。
-- **未做（记入 R16，非本 PR）**：三处降级门的根治——`wait-for-deployment` degraded 分支未查 deployments、`check-production-content` 全 403 无区分能力、`check-bundle-budget` 缺文件静默 continue——需允许清单探针身份或 zone 内探测，属 `docs/ops-deferred-work-plan.md` 范围。本 PR 只把叠加效应记入 R16。
+- **降级门（R16）**：审核把三处 fail-open 降级记为「叠加后产线健康无人验证」。本 PR 修掉其中两处可无外部依赖处理的：
+  - `check-production-content`：403 分支此前一律视为「CF 拦了 CI」并降级 exit 0。现按响应是否带 `x-vercel-id` 区分——该头由 Vercel 注入（2026-10-13 curl 生产站实测：200 响应带 `x-vercel-id: cdg1::hkg1::…`），CF 边缘拦截到不了 Vercel、无此头。故「有头 → 源站 403 → 真回归，不降级」；「无头 → CF 边缘拦截 → 可降级」。`CheckFailure` 加 `wafBlocked` 字段，`isEveryPageBlocked` 改为要求每条失败都带该标记。
+  - `wait-for-deployment`：degraded 分支此前只要 API 连续失败 2 次且站点 200 就放行，未区分「API 整个 run 不可用」与「API 成功过、告诉过我们 commit 没部署、之后才抖」。加 `apiEverSucceeded` 标志，仅前者降级；后者判 `timeout`（保住「部署没上线」这个本步存在的意义）。顺带给函数加可注入的 `now` 以测这条。
+  - `check-bundle-budget`：`gzipKbFor` 对找不到的文件静默 skip，若 Next 改了 manifest 形状则全路由 0 KB、门禁照绿。抽出纯函数 `gateWouldMeasureNothing`（空资产/空路由/全 0 KB）并 fail-closed。
+- **未做（记入 R16）**：仅剩「CF 拦 CI」时内容正确性未验证这一条盲区——根治需允许清单探针身份或 zone 内探测，属 `docs/ops-deferred-work-plan.md` 范围。另两处审核提及项经判断不改：`rate-limit` 的 `anonymous` 回退桶（Vercel 平台总注入 `x-vercel-forwarded-for`，该回退仅本地/dev 可达，生产触发不到）、`csp-report` 的 body 上限先读后判（Vercel 有 4.5 MB 硬顶，非无界）。
 - **影响**：`package.json`（+`check:content-graph`, typescript `^6.0.3`）、`pnpm-lock.yaml`、`vitest.setup.ts`、`TableOfContents.test.tsx`、`repository.test.ts`、`ci.yml`、`docs/13-risk-register.md`（R16/R17）。
 - **复查**：TS6 下 `pnpm exec tsc --noEmit` exit 0、`pnpm lint` exit 0、`pnpm test` 80 files / 648 tests exit 0。

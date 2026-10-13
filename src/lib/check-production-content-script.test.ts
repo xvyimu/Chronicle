@@ -176,6 +176,35 @@ describe('production content smoke script', () => {
     expect(failures).toHaveLength(1);
     expect(failures[0]?.message).toContain('HTTP 403');
   });
+
+  it('flags an edge 403 as wafBlocked and an origin 403 as not', async () => {
+    const expectation: PageExpectation = {
+      label: 'home',
+      path: '/',
+      contentTypeIncludes: 'text/html',
+      mustContain: ['some article title'],
+    };
+
+    // Edge block: CF never reaches Vercel, so no x-vercel-id.
+    const edge = await checkPage(BASE_URL, expectation, {
+      attempts: 1,
+      fetchImpl: async () => new Response('blocked', { status: 403 }),
+    });
+    expect(edge[0]?.wafBlocked).toBe(true);
+
+    // Origin 403: Vercel stamped the response, so it is not a WAF block and
+    // must not be degradable.
+    const origin = await checkPage(BASE_URL, expectation, {
+      attempts: 1,
+      fetchImpl: async () =>
+        new Response('forbidden', {
+          status: 403,
+          headers: { 'x-vercel-id': 'hkg1::abc-123' },
+        }),
+    });
+    expect(origin[0]?.wafBlocked).toBeUndefined();
+    expect(origin[0]?.message).toContain('origin returned 403');
+  });
 });
 
 describe('isEveryPageBlocked', () => {
@@ -186,6 +215,7 @@ describe('isEveryPageBlocked', () => {
   const blocked = (label: string): CheckFailure => ({
     label,
     message: `HTTP 403 at ${BASE_URL}/ — blocked before content could be read.`,
+    wafBlocked: true,
   });
 
   it('is true only when every expectation was blocked', () => {
@@ -205,6 +235,21 @@ describe('isEveryPageBlocked', () => {
       isEveryPageBlocked(expectations, [
         blocked('home'),
         { label: 'blog', message: 'Missing expected content "x" at /blog.' },
+      ]),
+    ).toBe(false);
+  });
+
+  it('is false when a 403 reached the origin (no wafBlocked flag)', () => {
+    // A 403 served by Vercel itself (header present) is an access regression,
+    // not a CF edge block — even if every page looks the same, it must fail.
+    const originForbidden = (label: string): CheckFailure => ({
+      label,
+      message: `HTTP 403 at ${BASE_URL}/ — the origin returned 403 (reached Vercel…).`,
+    });
+    expect(
+      isEveryPageBlocked(expectations, [
+        originForbidden('home'),
+        originForbidden('blog'),
       ]),
     ).toBe(false);
   });
