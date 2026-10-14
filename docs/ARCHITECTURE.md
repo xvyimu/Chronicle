@@ -312,8 +312,8 @@ push master
 
 | 层         | 基线                                                                                                                                                                                                                                            |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Vitest     | **78 files / 628 tests**（2026-10-10 本机实测 `pnpm test` exit 0）                                                                                                                                                                              |
-| Playwright | 5 spec files / 46 tests                                                                                                                                                                                                                         |
+| Vitest     | **81 files / 684 tests**（2026-10-14 本机实测 `pnpm test` exit 0）                                                                                                                                                                              |
+| Playwright | 6 spec files / 55 tests                                                                                                                                                                                                                         |
 | Build      | production build succeeds（103 静态页）；document routes remain dynamic                                                                                                                                                                         |
 | CI         | **master 主 CI 的 `quality` / `e2e` / `bundle-analyze` 均 pass；`post-deploy` 只做生产烟测**（原 `deploy` job 的显式 `vercel deploy` 因 token 无效从未成功、且与 Vercel Git 集成重复，2026-10-08 移除，见 D-037）。CI Node 已对齐 24（R8 闭环） |
 

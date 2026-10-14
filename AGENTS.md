@@ -31,7 +31,7 @@ A personal blog built with Next.js 16.4.0 (App Router), React 19.3, and Tailwind
 - **Content**: MDX with custom frontmatter parser (`lib/parse-frontmatter.ts`, js-yaml 4.x), next-mdx-remote
 - **Syntax Highlighting**: Shiki via rehype-pretty-code
 - **Search**: fuse.js, **client-side only** (`src/lib/search/` + `src/components/search/SearchPanel.tsx`); no `/api/search` since the 2026-10-07 rebuild
-- **Testing**: Vitest (unit/integration), Playwright (E2E, 5 spec files) — 计数以实跑为准（`find src -name '*.test.ts*' | wc -l` · `find e2e -name '*.spec.ts' | wc -l`）；数字会漂，本行不写死
+- **Testing**: Vitest (unit/integration), Playwright (E2E, 6 spec files) — 计数以实跑为准（`find src -name '*.test.ts*' | wc -l` · `find e2e -name '*.spec.ts' | wc -l`）；数字会漂，本行不写死
 - **CI**: GitHub Actions (audit / format / lint / tsc / test / seo / build / bundle-budget / e2e); Node 24
 - **Deployment**: Vercel
 
@@ -132,7 +132,7 @@ src/
 pnpm dev          # Start dev server (port 3000; Turbopack)
 pnpm build        # Generate RSS + production build; document routes are dynamic due CSP nonce
 pnpm test         # Run unit/integration tests (测试数以实跑为准，不写死)
-pnpm test:e2e     # Run E2E tests (5 spec files; auto-starts server on port 3001)
+pnpm test:e2e     # Run E2E tests (6 spec files; auto-starts server on port 3001)
 pnpm test:e2e:raw # Playwright raw (pass-through flags, e.g. --ui)
 pnpm lint         # ESLint
 pnpm check:docs   # Internal Markdown link check

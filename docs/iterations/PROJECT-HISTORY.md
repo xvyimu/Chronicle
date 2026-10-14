@@ -144,14 +144,14 @@ R14 处置（词高亮补齐，正文索引/范围筛选定案不做）；R13 qs
 
 > **注意**：wikilink（`[[slug]]`）**保留**——只删了花园图谱链路，行内渲染在 D-01 恢复。
 
-## 5. 当前基线（2026-10-13，HEAD `d792c21`）
+## 5. 当前基线（2026-10-14，HEAD `5422aab`）
 
 | 项            | 值                                                                                    | 出处                          |
 | ------------- | ------------------------------------------------------------------------------------- | ----------------------------- |
 | 生产域名      | `https://incca.ccwu.cc`                                                               | HANDOFF §2                    |
-| origin/master | `d792c21`                                                                             | `git rev-parse` + HANDOFF §2  |
-| Vitest        | **80 files / 662 tests**                                                              | 本机实测 + CI run 38424660803 |
-| Playwright    | 5 spec files / **51 tests**                                                           | `playwright test --list` 实测 |
+| origin/master | `c09d9cf`                                                                             | `git rev-parse` + HANDOFF §2  |
+| Vitest        | **81 files / 684 tests**                                                              | 本机实测（2026-10-14）        |
+| Playwright    | 6 spec files / **55 tests**                                                           | `playwright test --list` 实测 |
 | 内容规模      | 20 篇文章、1 个项目                                                                   | HANDOFF §2                    |
 | Node / pnpm   | Node ≥24 · pnpm 11.8.0                                                                | `package.json`                |
 | CI            | 4 job：quality / bundle-analyze / e2e / post-deploy（Node 24）                        | `.github/workflows/ci.yml`    |
