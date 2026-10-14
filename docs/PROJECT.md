@@ -47,7 +47,7 @@
 | 语言   | **TypeScript** strict · **Node ≥24** · **pnpm**                                  |                                                                |
 | 内容   | MDX · `next-mdx-remote` · `js-yaml` · local JSON                                 | 改 MDX 后 `pnpm content:build` 并提交快照                      |
 | 校验   | Zod + frontmatter 解析                                                           |                                                                |
-| 搜索   | **fuse.js**（纯客户端：`src/lib/search/` + `SearchPanel`；**无** `/api/search`） | 22 篇规模不起服务端引擎（ADR-0006）                            |
+| 搜索   | **fuse.js**（纯客户端：`src/lib/search/` + `SearchPanel`；**无** `/api/search`） | 24 篇规模不起服务端引擎（ADR-0006）                            |
 | 测试   | Vitest · Playwright                                                              |                                                                |
 | 部署   | **Vercel** + GitHub Actions                                                      |                                                                |
 | 包管理 | **pnpm**                                                                         | 不用 npm/yarn 当主路径                                         |

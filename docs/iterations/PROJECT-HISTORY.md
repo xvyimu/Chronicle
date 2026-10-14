@@ -152,7 +152,7 @@ R14 处置（词高亮补齐，正文索引/范围筛选定案不做）；R13 qs
 | origin/master | `c09d9cf`                                                                             | `git rev-parse` + HANDOFF §2  |
 | Vitest        | **81 files / 684 tests**                                                              | 本机实测（2026-10-14）        |
 | Playwright    | 6 spec files / **55 tests**                                                           | `playwright test --list` 实测 |
-| 内容规模      | 22 篇文章、1 个项目                                                                   | HANDOFF §2                    |
+| 内容规模      | 24 篇文章、1 个项目                                                                   | HANDOFF §2                    |
 | Node / pnpm   | Node ≥24 · pnpm 11.8.0                                                                | `package.json`                |
 | CI            | 4 job：quality / bundle-analyze / e2e / post-deploy（Node 24）                        | `.github/workflows/ci.yml`    |
 | bundle 预算   | max JS ≤300KB · max CSS ≤300KB · 总 ≤2MB · 每路由首屏 ≤285KB gz                       | `performance-baseline.md`     |
