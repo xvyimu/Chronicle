@@ -147,7 +147,7 @@ data/projects.json
 
 作品数据适合放结构化摘要、链接、标签、年份、封面与精选状态。若后续项目需要长篇复盘，建议新增 `content/projects/`，让 JSON 继续只承担索引职责。
 
-> **收藏链接已删（2026-10-07）**：`/links` 路由、`lib/links.ts`、`LinksDirectory`、`CuratedLinksPreview` 与 `links.css` 均已移除。`data/links.json` 物理文件保留但**无消费方**（`content-dirs.ts` 仍列出路径，属残留）。
+> **收藏链接已删（2026-10-07）**：`/links` 路由、`lib/links.ts`、`LinksDirectory`、`CuratedLinksPreview` 与 `links.css` 均已移除。`data/links.json` 当时物理保留、无消费方；该文件与 `content-dirs.ts` 的 `links` 键已于 **2026-10-13（`d792c21`）** 删除。
 
 ## 4. 路由与页面组合
 
@@ -373,14 +373,14 @@ pnpm check:production-content
 
 ## 14. 已知技术债与风险
 
-| 项                                | 影响                         | 现状                                                 | 触发条件 / 缓解                                                                        |
-| --------------------------------- | ---------------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| HTML 动态渲染换 CSP nonce         | 无法全站 SSG，缓存策略受限   | **有意为之**（安全优先于缓存）                       | 见 ADR-0003；不为 SSG 放宽 `unsafe-inline`                                             |
-| CI Node 版本与 `engines` 不符     | CI 出现 engine warning       | **已修（2026-10-07）**：CI 4 处改 `node-version: 24` | 见 [HANDOFF §6](./HANDOFF.md) R8                                                       |
-| `data/links.json` 无消费方        | 残留数据文件                 | 物理保留；功能已删                                   | 属内容决策，未删文件                                                                   |
-| `pnpm build` 重写 `public/feed.*` | 工作区常脏                   | 已知；构建后检查无意外 diff                          | 生产构建须提供非 localhost 的 `NEXT_PUBLIC_SITE_URL`（否则会把生产域名写成 localhost） |
-| GSC/Bing/RUM 未接入               | 无真实搜索与真实用户性能数据 | 需账号授权                                           | 见 `docs/ops-deferred-work-plan.md`；禁止用实验室分替代真实 p75                        |
-| 日期型报告与 spec 中的旧测试数    | 易被误当现状                 | 全部带日期，`docs/README.md` 有分层纪律              | 引用前先看 `docs/README.md` 的「一条纪律」                                             |
+| 项                                | 影响                         | 现状                                                                             | 触发条件 / 缓解                                                                        |
+| --------------------------------- | ---------------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| HTML 动态渲染换 CSP nonce         | 无法全站 SSG，缓存策略受限   | **有意为之**（安全优先于缓存）                                                   | 见 ADR-0003；不为 SSG 放宽 `unsafe-inline`                                             |
+| CI Node 版本与 `engines` 不符     | CI 出现 engine warning       | **已修（2026-10-07）**：CI 4 处改 `node-version: 24`                             | 见 [HANDOFF §6](./HANDOFF.md) R8                                                       |
+| ~~`data/links.json` 无消费方~~    | ~~残留数据文件~~             | **已清（2026-10-13 `d792c21`）**：文件与 `content-dirs.ts` 的 `links` 键一并删除 | 功能 2026-10-07 删，文件 2026-10-13 删                                                 |
+| `pnpm build` 重写 `public/feed.*` | 工作区常脏                   | 已知；构建后检查无意外 diff                                                      | 生产构建须提供非 localhost 的 `NEXT_PUBLIC_SITE_URL`（否则会把生产域名写成 localhost） |
+| GSC/Bing/RUM 未接入               | 无真实搜索与真实用户性能数据 | 需账号授权                                                                       | 见 `docs/ops-deferred-work-plan.md`；禁止用实验室分替代真实 p75                        |
+| 日期型报告与 spec 中的旧测试数    | 易被误当现状                 | 全部带日期，`docs/README.md` 有分层纪律                                          | 引用前先看 `docs/README.md` 的「一条纪律」                                             |
 
 ---
 

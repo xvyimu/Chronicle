@@ -96,8 +96,7 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 │  ├─ about.mdx
 │  └─ blog/*.mdx
 ├─ data/
-│  ├─ projects.json             # 作品集
-│  └─ links.json                # 收藏数据（已退出路由，物理保留）
+│  └─ projects.json             # 作品集（links.json 已于 2026-10-13 删除）
 ├─ generated/content-snapshot/  # T2 构建期快照（生产默认读取；需提交）
 ├─ docs/                        # 架构 / ADR / 工作流
 ├─ e2e/                         # Playwright

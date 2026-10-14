@@ -89,17 +89,19 @@
 
 ## 6. 验收结果
 
-| 提交      | 命令/指标         | 结果                                                                  | 出处                     |
-| --------- | ----------------- | --------------------------------------------------------------------- | ------------------------ |
-| `d87050b` | `pnpm test`       | 75 files / 564 tests, exit 0                                          | commit body              |
-| `d8c2ff8` | `pnpm test`       | 76 files / 588 tests, exit 0                                          | commit body              |
-| `05d889c` | `pnpm test`       | 79 files / 629 tests, exit 0                                          | commit body              |
-| `1bd250e` | `pnpm test`       | 78 files / 616 tests, exit 0（退役净删 875 行）                       | commit body              |
-| `0efc7c8` | `pnpm test`       | 78 files / 628 tests, exit 0                                          | commit body              |
-| `0efc7c8` | `pnpm build`      | 103/103 静态页, exit 0                                                | commit body              |
-| `0efc7c8` | `pnpm test:e2e`   | 45 passed / 1 skipped, exit 0                                         | commit body              |
-| `0efc7c8` | 本机 `next start` | 5 个旧 id 全 307 → `/projects`；`chronicle` 200；sitemap 旧 id 命中 0 | commit body              |
-| `736e601` | CI e2e Lighthouse | run `37751354760` 首次通过（R12 闭环）                                | `13-risk-register.md:39` |
+| 提交      | 命令/指标         | 结果                                                                  | 出处                      |
+| --------- | ----------------- | --------------------------------------------------------------------- | ------------------------- |
+| `d87050b` | `pnpm test`       | 75 files / 564 tests, exit 0                                          | commit body               |
+| `d8c2ff8` | `pnpm test`       | 76 files / 588 tests, exit 0                                          | commit body               |
+| `05d889c` | `pnpm test`       | 79 files / 629 tests, exit 0                                          | commit body               |
+| `1bd250e` | `pnpm test`       | 78 files / 616 tests, exit 0（退役净删 875 行）                       | commit body               |
+| `0efc7c8` | `pnpm test`       | 78 files / 628 tests, exit 0                                          | commit body               |
+| `0efc7c8` | `pnpm build`      | 103/103 静态页, exit 0                                                | commit body               |
+| `0efc7c8` | `pnpm test:e2e`   | 45 passed / 1 skipped, exit 0                                         | commit body               |
+| `0efc7c8` | 本机 `next start` | 5 个旧 id 全 307 → `/projects`；`chronicle` 200；sitemap 旧 id 命中 0 | commit body               |
+| `736e601` | CI e2e Lighthouse | run `37646463020` 首次通过（R12 闭环）                                | GitHub API 实查（见下注） |
+
+> **2026-10-14 订正**：原写 run `37751354760` 有误。该 run 的 head 是**下一个** commit `d87050b`（2026-10-08），不是 R12 修法提交 `736e601`。`736e601` 自己的 run 是 `37646463020`（2026-10-07），其 `e2e` job（含 `Run Lighthouse CI audit` 步骤）`success`、日志 `All results processed!` 无 `✘`——**这才是「首次通过」**。原 ID 系从 `13-risk-register.md:39` 抄录未独立核验，该处已同步订正。另注：两个 run 的**整体** conclusion 均为 `failure`，因 `deploy` job（当时那个从未成功过的 `vercel deploy`）失败；「Lighthouse 通过」仅指 `e2e` job。
 
 **未验**：`d87050b` 未跑 `pnpm build`（需 `NEXT_PUBLIC_SITE_URL`）、未做 Lighthouse 视觉回归。
 
