@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { contrastRatioRgb, AA_NORMAL } from '../src/lib/contrast';
 
 /**
  * 可访问性回归门禁（16-audit P1-3 / F9 的零依赖落点）。
@@ -21,35 +22,35 @@ async function waitForHydration(page: Page) {
 }
 
 /**
- * 在页面内计算某元素前景/背景的 WCAG 对比度。
- * 背景向上回溯到第一个非透明祖先（CSS 里背景常挂在父容器上）。
+ * 取某元素渲染后的前景/背景 RGB 分量（在浏览器里跑）。
+ * 背景向上回溯到第一个非透明祖先（CSS 背景常挂在父容器上）。
+ *
+ * 只做「解析 computed style」这件事；WCAG 数学复用 `src/lib/contrast.ts`，
+ * 不在 e2e 里重写一份（page.evaluate 无法 import，故返回分量交 Node 侧算）。
  */
-async function computedContrast(
+async function renderedRgb(
   page: Page,
   selector: string,
-): Promise<{ ratio: number; fg: string; bg: string }> {
+): Promise<{
+  fg: { r: number; g: number; b: number };
+  bg: { r: number; g: number; b: number };
+}> {
   return page.evaluate((sel) => {
     const el = document.querySelector(sel);
     if (!el) throw new Error(`找不到元素 ${sel}`);
 
-    const parseRgb = (s: string): [number, number, number] => {
+    const toRgb = (s: string) => {
       const m = s.match(/rgba?\(([^)]+)\)/);
       if (!m) throw new Error(`无法解析颜色 "${s}"`);
       const [r, g, b] = m[1].split(',').map((x) => parseFloat(x));
-      return [r, g, b];
+      return { r, g, b };
     };
-    const lin = (c: number) => {
-      const x = c / 255;
-      return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
-    };
-    const lum = ([r, g, b]: [number, number, number]) =>
-      0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
 
-    const fg = parseRgb(getComputedStyle(el).color);
+    const fg = toRgb(getComputedStyle(el).color);
 
     // 背景：回溯到第一个非完全透明的祖先
     let node: Element | null = el;
-    let bg: [number, number, number] | null = null;
+    let bg: { r: number; g: number; b: number } | null = null;
     while (node) {
       const raw = getComputedStyle(node).backgroundColor;
       const m = raw.match(/rgba?\(([^)]+)\)/);
@@ -57,7 +58,7 @@ async function computedContrast(
         const parts = m[1].split(',').map((x) => parseFloat(x));
         const alpha = parts.length === 4 ? parts[3] : 1;
         if (alpha > 0) {
-          bg = [parts[0], parts[1], parts[2]];
+          bg = { r: parts[0], g: parts[1], b: parts[2] };
           break;
         }
       }
@@ -65,19 +66,15 @@ async function computedContrast(
     }
     if (!bg) throw new Error(`${sel} 找不到不透明背景`);
 
-    const lf = lum(fg);
-    const lb = lum(bg);
-    const ratio =
-      Math.round(((Math.max(lf, lb) + 0.05) / (Math.min(lf, lb) + 0.05)) * 100) / 100;
-    return {
-      ratio,
-      fg: `rgb(${fg.join(',')})`,
-      bg: `rgb(${bg.join(',')})`,
-    };
+    return { fg, bg };
   }, selector);
 }
 
-const AA_NORMAL = 4.5;
+/** 便捷封装：取渲染后的 RGB 并算对比度。 */
+async function computedContrast(page: Page, selector: string): Promise<number> {
+  const { fg, bg } = await renderedRgb(page, selector);
+  return contrastRatioRgb(fg, bg);
+}
 
 test.describe('对比度 · 浅色主题', () => {
   test.use({ colorScheme: 'light' });
@@ -87,8 +84,8 @@ test.describe('对比度 · 浅色主题', () => {
     await expect(page.locator('main')).toBeVisible({ timeout: 10000 });
 
     // 正文（文章标题链）
-    const body = await computedContrast(page, 'main h1, main h2, main p');
-    expect(body.ratio, `正文 ${body.fg} on ${body.bg}`).toBeGreaterThanOrEqual(AA_NORMAL);
+    const ratio = await computedContrast(page, 'main h1, main h2, main p');
+    expect(ratio, '正文对比度').toBeGreaterThanOrEqual(AA_NORMAL);
   });
 });
 
@@ -100,8 +97,8 @@ test.describe('对比度 · 深色主题', () => {
     await waitForHydration(page);
     await expect(page.locator('main')).toBeVisible({ timeout: 10000 });
 
-    const body = await computedContrast(page, 'main h1, main h2, main p');
-    expect(body.ratio, `正文 ${body.fg} on ${body.bg}`).toBeGreaterThanOrEqual(AA_NORMAL);
+    const ratio = await computedContrast(page, 'main h1, main h2, main p');
+    expect(ratio, '深色正文对比度').toBeGreaterThanOrEqual(AA_NORMAL);
   });
 });
 

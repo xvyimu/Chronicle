@@ -51,16 +51,25 @@ export function parseHex(hex: string): Rgb {
   };
 }
 
-/** 两色对比度，返回值域 [1, 21]，保留 2 位小数便于断言。 */
-export function contrastRatio(fg: string, bg: string): number {
-  const f = parseHex(fg);
-  const b = parseHex(bg);
-  const lf = relativeLuminance(f.r, f.g, f.b);
-  const lb = relativeLuminance(b.r, b.g, b.b);
+/**
+ * 两个 RGB 分量的对比度，返回值域 [1, 21]，保留 2 位小数便于断言。
+ *
+ * 供**浏览器侧**解析 `getComputedStyle().color`（返回 `rgb(r, g, b)`）后调用：
+ * e2e 在 `page.evaluate` 里只能拿到 rgb 分量，无法 import 本模块，
+ * 故由它返回分量、Node 侧调本函数，避免在 e2e 里重写一份亮度数学。
+ */
+export function contrastRatioRgb(fg: Rgb, bg: Rgb): number {
+  const lf = relativeLuminance(fg.r, fg.g, fg.b);
+  const lb = relativeLuminance(bg.r, bg.g, bg.b);
   const lighter = Math.max(lf, lb);
   const darker = Math.min(lf, lb);
   const ratio = (lighter + 0.05) / (darker + 0.05);
   return Math.round(ratio * 100) / 100;
+}
+
+/** 两色对比度（十六进制入参），返回值域 [1, 21]，保留 2 位小数便于断言。 */
+export function contrastRatio(fg: string, bg: string): number {
+  return contrastRatioRgb(parseHex(fg), parseHex(bg));
 }
 
 /** WCAG AA 正文阈值。 */
