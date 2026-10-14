@@ -14,6 +14,34 @@
     "excerpt": "在一个真实 Next.js 16 仓库上实测 Biome 2.5 替代 ESLint + Prettier：格式化逐字一致、check 快 5.4 倍，但默认规则集报出 35 个 ESLint 没报的 error——迁移不是换个命令。"
   },
   {
+    "title": "CI post-deploy 实战：从不成功的 vercel deploy 到 Deployments API 核对",
+    "description": "一个真实 Vercel + GitHub Actions 仓库如何修掉「15 次全红」的 deploy job：改查 Deployments API 核对 revision、用 x-vercel-id 区分 CF WAF 拦截与源站真 403、探活上线又退役的完整取舍链。",
+    "date": "2026-10-14",
+    "tags": ["CI/CD", "DevOps", "Vercel"],
+    "published": true,
+    "featured": false,
+    "license": "CC-BY-4.0",
+    "category": "CI/CD",
+    "slug": "ci-post-deploy-deep-dive",
+    "readingTime": "9 min read",
+    "wordCount": 1642,
+    "excerpt": "一个真实 Vercel + GitHub Actions 仓库如何修掉「15 次全红」的 deploy job：改查 Deployments API 核对 revision、用 x-vercel-id 区分 CF WAF 拦截与源站真 403、探活上线又退役的完整取舍链。"
+  },
+  {
+    "title": "客户端错误上报：不引 Sentry 的同源方案",
+    "description": "个人站点如何用 Next.js Route Handler + sendBeacon 做生产环境客户端错误收集：同源、collect-only、字段白名单、限流，不引第三方 SDK、不放宽 CSP、不收隐私。",
+    "date": "2026-10-14",
+    "tags": ["可观测性", "安全", "Next.js"],
+    "published": true,
+    "featured": false,
+    "license": "CC-BY-4.0",
+    "category": "DevOps",
+    "slug": "client-error-reporting",
+    "readingTime": "8 min read",
+    "wordCount": 1538,
+    "excerpt": "个人站点如何用 Next.js Route Handler + sendBeacon 做生产环境客户端错误收集：同源、collect-only、字段白名单、限流，不引第三方 SDK、不放宽 CSP、不收隐私。"
+  },
+  {
     "title": "TypeScript 6.0 迁移笔记：一个 mock 暴露的接口变更与默认值地震",
     "description": "真实 Next.js 16 仓库升级 TS 5.9 → 6.0.3 的踩坑记录：IntersectionObserver 新增 scrollMargin 成员让测试 mock 报 TS2420、默认值三连变（strict/module/target）、为 TS 7.0 做的弃用清单。",
     "date": "2026-10-14",

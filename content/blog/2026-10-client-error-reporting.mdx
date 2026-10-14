@@ -1,0 +1,171 @@
+---
+title: '客户端错误上报：不引 Sentry 的同源方案'
+description: '个人站点如何用 Next.js Route Handler + sendBeacon 做生产环境客户端错误收集：同源、collect-only、字段白名单、限流，不引第三方 SDK、不放宽 CSP、不收隐私。'
+date: '2026-10-14'
+tags: ['可观测性', '安全', 'Next.js']
+published: true
+featured: false
+license: 'CC-BY-4.0'
+---
+
+> 结论先说：一个无后端、无账号系统的个人内容站，不需要 Sentry。同源 Route Handler + `sendBeacon` 就能让你在生产里**看见**用户撞到的错误——前提是你守住三条线：collect-only（不落库不外发）、字段白名单（不收隐私）、限流（不当公共日志口子）。本站的 `/api/client-error` 就是这么做的，本文记录它的设计与取舍。
+
+安全面的 CSP nonce 与 SRI 见 [[csp-nonce-and-sri|CSP Nonce 与 SRI]]；CI 里的可观测性门禁见 [[cicd-pipeline-design|CI/CD 流水线设计]]。
+
+## 为什么不用 Sentry
+
+Sentry 是成熟的错误监控方案，但它对这个站来说代价与收益不成比例：
+
+| 代价                            | 对本站的影响                              |
+| ------------------------------- | ----------------------------------------- |
+| 把用户错误消息与堆栈发给第三方  | 隐私面扩大                                |
+| 需要在 CSP 加 `sentry.io` 白名单 | 放宽 `connect-src`                        |
+| 引入一个常驻依赖                | 包体增大                                  |
+| 需要配 DSN、组织、项目          | 一个 22 篇的静态内容站不值得这层运维      |
+
+而同源方案的核心优势：**CSP 的 `connect-src 'self'` 已经允许同源 POST**，不需要为上报放宽任何指令。
+
+## 三层结构
+
+```
+error.tsx (React 错误边界)
+  → reportError() (src/lib/error-report.ts，客户端)
+    → POST /api/client-error (src/app/api/client-error/route.ts，服务端)
+      → console.warn (写日志，不落库)
+```
+
+### 第一层：错误边界捕获
+
+Next.js App Router 的 `error.tsx` 是一个 `"use client"` 组件，接住渲染异常：
+
+```tsx
+'use client';
+import { useEffect } from 'react';
+import { reportError } from '@/lib/error-report';
+
+export default function ErrorBoundary({ error, reset }) {
+  useEffect(() => {
+    console.error('Page error:', error);
+    reportError(error);
+  }, [error]);
+  // ...
+}
+```
+
+关键点：`reportError` 包在 `useEffect` 里，不在渲染路径上——即使上报逻辑本身有 bug，也不会变成二次崩溃。
+
+### 第二层：客户端组装与发送
+
+`src/lib/error-report.ts` 做三件事：
+
+**1. 判断该不该发**——只在生产环境、有 `window` 时发：
+
+```ts
+export function shouldReport(env, win) {
+  return env.NODE_ENV === 'production' && win !== null;
+}
+```
+
+开发环境的错误应该看终端，不该污染生产日志。
+
+**2. 组装白名单字段**——只发五样东西，其余一律丢弃：
+
+| 字段       | 来源              | 处理                           |
+| ---------- | ----------------- | ------------------------------ |
+| `message`  | `error.message`   | 截断 512 字符                  |
+| `digest`   | `error.digest`    | Next.js 生成的错误 ID          |
+| `path`     | `location.pathname` | **去掉查询串**（可能有用户输入） |
+| `stack`    | `error.stack`     | 截断 512 字符                  |
+| `userAgent`| `navigator.userAgent` | 原样                       |
+
+**不发** cookie、referrer、查询串、任何用户输入。`path` 只留 pathname——查询串里可能有 token 或用户填的内容。
+
+**3. 发送——失败即静默**：
+
+```ts
+// sendBeacon 优先：浏览器负责送达，页面卸载也不丢
+if (navigator.sendBeacon(CLIENT_ERROR_PATH, blob)) return true;
+
+// 退回 fetch({keepalive:true})：页面卸载后仍能完成
+void fetch(CLIENT_ERROR_PATH, {
+  method: 'POST', body, keepalive: true,
+}).catch(() => {});
+```
+
+两条路径都包在 `try/catch` 里。上报本身崩了**绝不能**影响错误页渲染——用 `sendBeacon` 优先（浏览器保证送达），退回 `keepalive: true` 的 `fetch`。
+
+### 第三层：服务端收集
+
+`POST /api/client-error` 做的事与 `/api/csp-report` 一致——collect-only：
+
+- **限流**：20 次/60s/origin（`src/server/rate-limit.ts`，key 前缀 `client-error:`），超配额直接 429。
+- **体积上限**：`Content-Length > 8192` 直接丢弃，不解析。
+- **字段二次截断**：即使客户端没截，服务端再截一次到 512 字符。
+- **无论成败返回 204**：不向潜在滥用者暴露解析细节。
+- **畸形 JSON 吞掉**：端点不因上报内容而报错。
+
+```ts
+// 端点的核心：规范化后只写日志
+const report = normalizeReport(raw);
+if (report) {
+  console.warn('[client-error]', JSON.stringify(report));
+}
+return noContent(); // 204
+```
+
+## 威胁模型
+
+这个端点是**公开、无鉴权**的——任何人都能 POST。因此它的设计按"公共日志口子"来防：
+
+| 威胁                     | 防御                                    |
+| ------------------------ | --------------------------------------- |
+| 塞超大 body 撑爆日志     | `Content-Length` + 读后双重大小检查     |
+| 注入任意内容到日志       | 字段白名单 + 强制为字符串 + 截断        |
+| 高频刷端点               | 固定窗口限流（20/60s/origin）           |
+| 从响应推断解析结果       | 统一 204 无 body                        |
+| 查询串泄露用户输入       | 客户端只取 pathname，丢弃 `search`      |
+| 堆栈含文件路径等内部信息 | 截断 512 字符；生产 `error.tsx` 不显示原始消息给用户 |
+
+最后一行值得展开：`error.tsx` 在生产环境**不向用户显示原始错误消息**（可能含文件路径、堆栈片段），只显示 `error.digest`（Next.js 生成的 ID）。原始消息只走上报管道。
+
+## 盲区（诚实记录）
+
+这个方案的盲区写在这里，不藏：
+
+1. **只覆盖客户端错误边界**。服务端渲染错误、Route Handler 异常、构建期问题不经这里。
+2. **没有聚合与告警**。日志写进 `console.warn`，需要人去看 Vercel 的 runtime logs。没有 Slack/邮件通知。
+3. **没有 source map 还原**。生产构建的堆栈是压缩过的，要手动对照 source map。
+4. **限流是进程级固定窗口**。Vercel 的 serverless 多实例下，每个 isolate 独立计数——实际配额可能高于标称。
+
+这些盲区是有意的取舍：用一个 0 依赖、0 隐私面、0 CSP 改动的方案，换来"至少看得见"的能力。要消除这些盲区，就得引入 Sentry 或自建聚合层——那时隐私面和运维成本都变了。
+
+## 与 CSP 上报的对称
+
+本站有两个 collect-only 端点，设计完全对称：
+
+| 维度     | `/api/csp-report`         | `/api/client-error`       |
+| -------- | ------------------------- | ------------------------- |
+| 收集什么 | CSP 违规                  | 客户端 JS 异常            |
+| 触发方   | 浏览器（Reporting API）   | `error.tsx` + `sendBeacon` |
+| 限流     | 30/60s（`csp-report:` 前缀）| 20/60s（`client-error:` 前缀）|
+| 存储     | 不落库，只写日志          | 同                        |
+| 响应     | 204 无 body               | 同                        |
+
+两个端点共用 `src/server/rate-limit.ts` 的固定窗口实现，只是 key 前缀隔离配额。这种对称不是巧合——它们的威胁模型一样（公开无鉴权端点 + 只写日志），所以防御措施也一样。
+
+## 检查清单
+
+- [ ] 端点统一 204 无 body，不泄露解析结果
+- [ ] 字段白名单 + 截断，不收 cookie/referrer/查询串
+- [ ] 限流挂上，按 origin key 隔离
+- [ ] `sendBeacon` 优先，退回 `keepalive: true` fetch
+- [ ] 生产 `error.tsx` 不向用户显示原始错误消息
+- [ ] 上报逻辑包在 `useEffect` + try/catch 里，不制造二次崩溃
+- [ ] CSP 未为此端点放宽任何指令（`connect-src 'self'` 已覆盖）
+
+## 延伸阅读
+
+- [[csp-nonce-and-sri|CSP Nonce 与 SRI]]
+- [[cicd-pipeline-design|CI/CD 流水线设计]]
+- [[nextjs-app-router|Next.js App Router 实战]]
+- [[web-performance-optimization|Web 性能优化实战]]

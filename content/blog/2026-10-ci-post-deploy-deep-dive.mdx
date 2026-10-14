@@ -1,0 +1,135 @@
+---
+title: 'CI post-deploy 实战：从不成功的 vercel deploy 到 Deployments API 核对'
+description: '一个真实 Vercel + GitHub Actions 仓库如何修掉「15 次全红」的 deploy job：改查 Deployments API 核对 revision、用 x-vercel-id 区分 CF WAF 拦截与源站真 403、探活上线又退役的完整取舍链。'
+date: '2026-10-14'
+tags: ['CI/CD', 'DevOps', 'Vercel']
+published: true
+featured: false
+license: 'CC-BY-4.0'
+---
+
+> 结论先说：一个 `npx vercel deploy --prod` 步骤在 CI 里**连续失败 15 次**、每次 master push 都红，而生产站点其实一直正常——因为 Vercel 的 Git 集成早就部署完了。这条死路径不只浪费 CI 时间，还**掩盖了真问题**：你不知道部署到底成功没有。本文记录本仓的修复链：删掉死路径 → 改查 GitHub Deployments API 核对 revision → 处理 Cloudflare WAF 拦 CI runner → 探活上线又退役。四件事，一篇文章。
+
+CI 流水线的整体设计见 [[cicd-pipeline-design|CI/CD 流水线设计]]；部署链路的反代加固见 [[nginx-reverse-proxy|Nginx 反向代理]]。
+
+## 问题：一个永远红灯的 deploy job
+
+本仓的 `.github/workflows/ci.yml` 原有一个 `deploy` job，跑 `npx vercel deploy --prod`。它的失败原文是：
+
+```
+Error: The token provided via --token argument is not valid
+```
+
+**15 次 master push，15 次全红**。但同期生产站点 HTTP 200 且跑的是最新版本（首页命中最新组件名）。
+
+这说明：生产部署**不靠这条 CI 步骤**——Vercel 的 Git 集成在 push 到 master 时自动触发部署，通常在 CI 的 `deploy` job 启动前就已经成功。`npx vercel deploy` 是一条**既非生产来源、又永远红灯**的死路径。
+
+## 第一步：删掉死路径（D-037）
+
+**决策**：删 `vercel deploy` 步，`deploy` job 改名 `post-deploy`，只做两件事：
+
+1. 等生产部署完成
+2. 跑生产内容烟测（`check:production-content`）
+
+**不选**修 `VERCEL_TOKEN`——那会在 GitHub Settings 配一个与 Git 集成功能重复的部署通道，且显式 deploy 会绕过 Git 集成的构建缓存与预览流程。
+
+**不选**删整个 job——那会丢掉 CI 里唯一的生产内容断言（首页标题、CSP 头、sitemap/RSS 等）。
+
+## 第二步：等部署不能只看 HTTP 200
+
+初版的 `post-deploy` 只轮询生产域名 HTTP 200。这**证明不了新 commit 已上线**——Vercel 在新部署构建期间仍服务上一版，200 恒定成立，smoke test 可能对着**旧构建**跑绿、新构建带病上线。
+
+改为查 **GitHub Deployments API**：
+
+```
+GET /repos/{owner}/{repo}/deployments?environment=Production
+```
+
+找 `sha === GITHUB_SHA` 且 `state=success` 才放行。`vercel[bot]` 创建的部署记录带 commit SHA——**这是可靠的 revision 证据**。
+
+实测：repo 是 public，**匿名可读** Deployments API。workflow 的 `permissions: contents: read` 不含 `deployments: read`，带 `GITHUB_TOKEN` 反而 403——所以脚本改为**带 token 收到 403 时自动改用匿名重试一次**。
+
+## 第三步：失败要分类，不能一律降级
+
+GitHub API 的非 200 响应有三种原因，处理方式相反：
+
+| 状态码 | 原因 | 处理 |
+| ------ | ---- | ---- |
+| 5xx / 429 | 瞬时故障 | 重试 |
+| 403 | 限流（主/次都报 403） | 重试 |
+| 401 / 404 | **配置错误**（repo 名错、凭据撤销） | **直接 exit 1，不降级** |
+
+最后一条是关键：**配置错误不能降级**——一个写错的 `GITHUB_REPOSITORY` 会让整步静默放行。瞬时故障连犯两次且站点在线才降级（日志标 `revision NOT verified`）；站点也不可达才算真失败。
+
+一个 Windows 坑：脚本末尾用 `process.exitCode = 1` 而非 `process.exit(1)`——后者在 Windows 上会在 undici keep-alive 句柄关闭途中触发 libuv 断言（`UV_HANDLE_CLOSING`），以 `0xC0000409` 异常退出而非 1。
+
+## 第四步：CI runner 被 Cloudflare 拦
+
+`post-deploy` 的 `check:production-content` 从 GitHub Actions runner（Azure datacenter IP）访问生产站点，8 个用例**全部 403**。
+
+查 Cloudflare zone 的 `firewallEventsAdaptive`：`action=managed_challenge · ruleId=bot_fight_mode`。**CF 按 IP 评分，不看 UA**——伪装 Chrome 无效。
+
+Free plan 的 Bot Fight Mode **不可被 WAF custom rule 豁免**（不在 Ruleset Engine 上），唯一逃生口 IP Access Rules 只按 IP/ASN/国家匹配、不支持 UA，而 GHA runner 是 Azure 动态 IP——覆盖整个 ASN 等于关掉 BFM。想按 UA 豁免需升 Pro。
+
+## 第五步：用 `x-vercel-id` 区分「CF 拦了」与「源站真 403」
+
+这是整个链里最精巧的一步。同样的 HTTP 403 有两种完全不同的含义：
+
+| 场景 | 响应头 | 含义 | 处理 |
+| ---- | ------ | ---- | ---- |
+| CF 边缘拦截 | **无** `x-vercel-id` | 请求没到 Vercel | 降级为 warn，exit 0 |
+| 源站返回 403 | **有** `x-vercel-id` | 请求到了 Vercel，Vercel 自己返 403 | **真回归，exit 1** |
+
+`x-vercel-id` 由 Vercel 注入（实测 `x-vercel-id: cdg1::hkg1::…`）。CF 边缘拦截到不了 Vercel，所以**没有这个头**。用这一个头区分了「CF 拦了 CI」与「源站真回归」。
+
+```ts
+if (response.status === 403) {
+  const reachedOrigin = response.headers.get('x-vercel-id') !== null;
+  // 有头 → 源站 403 → 真回归，不降级
+  // 无头 → CF 边缘拦截 → 可降级
+}
+```
+
+## 第六步：探活上线又退役（D-042）
+
+为了持续监控，先后试了两条路：
+
+1. **GitHub Actions cron**（每 10 分钟探活）——合入 master 后**从未触发**（GitHub 平台侧已知问题，推 resync commit 仍 0 触发）。
+2. **Cloudflare Worker Cron Trigger**——跑在 CF 自己的机器、同 zone 子请求绕过 BFM、不需 `pnpm install`。
+
+然后用户指示「不用探活」——**整体退役**，删 `.github/workflows/uptime.yml`、`scripts/probe-health.ts`、`workers/uptime/`。
+
+**诚实记账**（写进决策日志 D-042）：删除后**没有任何自动化在监控站点持续可用性**——站点若在两次部署之间挂掉，不会被自动发现。这是有意接受的取舍，不是遗漏。
+
+保留的：`check:production-content` 的 WAF 403 降级（修 CI 误报，不是探活）+ `post-deploy` 的 Deployments API 核对（修死路径）。
+
+## 教训汇总
+
+| # | 教训 | 出处 |
+| - | ---- | ---- |
+| 1 | 永远红灯的 CI 步是**死路径**，不只浪费时间——它掩盖了「你不知道部署成功没有」 | D-037 |
+| 2 | HTTP 200 证明不了 revision——Vercel 构建期间服务旧版 | D-037 修订 |
+| 3 | 配置错误（401/404）**不能降级**，否则写错的配置会静默放行 | D-037 |
+| 4 | `process.exit(1)` 在 Windows + undici 下异常退出，用 `process.exitCode` | D-037 |
+| 5 | CF Free 的 BFM 不可被 WAF rule 豁免，按 IP 不按 UA | D-039 |
+| 6 | 一个响应头（`x-vercel-id`）区分两种 403 | D-039 |
+| 7 | GitHub Actions `schedule` 不可靠，Worker Cron 更可靠但需额外维护 | D-042 |
+| 8 | 删功能后诚实写清盲区，不藏 | D-042 |
+
+## 检查清单
+
+- [ ] CI 没有「永远红灯」的步骤——如果有，先查它是不是死路径
+- [ ] 等 revision 用 Deployments API（`sha === GITHUB_SHA` + `state=success`），不只看 HTTP 200
+- [ ] API 失败分三类：瞬时重试 / 配置错误硬失败 / 站点不可达真失败
+- [ ] Windows 下用 `process.exitCode`，不用 `process.exit`
+- [ ] 403 用 `x-vercel-id`（或等价头）区分边缘拦截与源站返回
+- [ ] Free plan BFM 不可豁免——别在 WAF rule 上白费功夫
+- [ ] 探活退役后写清「无持续可用性监控」，诚实记账
+
+## 延伸阅读
+
+- [[cicd-pipeline-design|CI/CD 流水线设计：从单脚本到多阶段流水线]]
+- [[git-hooks-github-actions|用 Git Hooks 和 GitHub Actions 打造自动化代码工作流]]
+- [[csp-nonce-and-sri|CSP Nonce 与 SRI]]
+- [[docker-deploy-guide|Docker 容器部署实战]]
+- [[vps-initial-setup|VPS 初始化安全与运维配置清单]]
