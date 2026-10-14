@@ -36,11 +36,14 @@
 ## 验证方式
 
 - 手工：Tab 遍历全站导航 + 搜索 + 文章。
-- 工具：迭代 06 评估引入 `@axe-core/playwright` 或 `eslint-plugin-jsx-a11y`（已装）。
-- 对比度：中性灰 token 落地后用工具核（迭代 01/06）。
+- **自动化（2026-10-14 落地，16-audit P1-3 / F9）**：
+  - `src/lib/contrast.test.ts` — 纯函数算 WCAG 对比度，断言 `tokens.css` 的 token 值达 AA（读文件实际值，改 CSS 即生效）。
+  - `e2e/a11y.spec.ts` — 浏览器渲染后 `getComputedStyle` 实测正文对比度（浅/深两主题）+ 移动端点击区 ≥40px。
+  - 两层互补：前者守 token 定义，后者守渲染结果。
+- 对比度：中性灰 token 落地后用工具核（迭代 01/06）——**已由上述自动化替代**。
 
 ## 现有基础
 
-- `eslint-plugin-jsx-a11y` 已在 devDependencies。
+- `eslint-plugin-jsx-a11y` 已在 devDependencies（四条规则于 2026-08-22 补全）。
 - `prefers-reduced-motion` 已支持。
 - skip-link 已存在。
