@@ -1,5 +1,19 @@
 [
   {
+    "title": "Biome 2.x 迁移评估：快 5 倍的代价是规则集不对齐",
+    "description": "在一个真实 Next.js 16 仓库上实测 Biome 2.5 替代 ESLint + Prettier：格式化逐字一致、check 快 5.4 倍，但默认规则集报出 35 个 ESLint 没报的 error——迁移不是换个命令。",
+    "date": "2026-10-14",
+    "tags": ["工程化", "ESLint", "性能优化"],
+    "published": true,
+    "featured": false,
+    "license": "CC-BY-4.0",
+    "category": "前端开发",
+    "slug": "biome-migration-evaluation",
+    "readingTime": "7 min read",
+    "wordCount": 1322,
+    "excerpt": "在一个真实 Next.js 16 仓库上实测 Biome 2.5 替代 ESLint + Prettier：格式化逐字一致、check 快 5.4 倍，但默认规则集报出 35 个 ESLint 没报的 error——迁移不是换个命令。"
+  },
+  {
     "title": "CSP Nonce 与 SRI：互补而不是互相替换",
     "description": "个人站点如何同时理解 per-request CSP nonce 与 Subresource Integrity：各自守什么、何时评估 SRI、绝不能用 unsafe-inline 换 SSG。",
     "date": "2026-07-21",
