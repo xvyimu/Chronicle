@@ -97,7 +97,7 @@ P4 条件触发项：仅当门槛命中再开 ADR
 
 ### 6.1 外部搜索（≥200 文或 p95）
 
-当前：20 篇，客户端 Fuse（`src/lib/search/` + `components/search/SearchPanel.tsx`）；`/api/search` 已于 2026-10-07 删除。
+当前：22 篇，客户端 Fuse（`src/lib/search/` + `components/search/SearchPanel.tsx`）；`/api/search` 已于 2026-10-07 删除。
 
 触发后最小评估清单：
 
