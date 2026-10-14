@@ -14,6 +14,20 @@
     "excerpt": "在一个真实 Next.js 16 仓库上实测 Biome 2.5 替代 ESLint + Prettier：格式化逐字一致、check 快 5.4 倍，但默认规则集报出 35 个 ESLint 没报的 error——迁移不是换个命令。"
   },
   {
+    "title": "TypeScript 6.0 迁移笔记：一个 mock 暴露的接口变更与默认值地震",
+    "description": "真实 Next.js 16 仓库升级 TS 5.9 → 6.0.3 的踩坑记录：IntersectionObserver 新增 scrollMargin 成员让测试 mock 报 TS2420、默认值三连变（strict/module/target）、为 TS 7.0 做的弃用清单。",
+    "date": "2026-10-14",
+    "tags": ["TypeScript", "类型系统", "工程化"],
+    "published": true,
+    "featured": false,
+    "license": "CC-BY-4.0",
+    "category": "前端开发",
+    "slug": "typescript-6-migration",
+    "readingTime": "7 min read",
+    "wordCount": 1256,
+    "excerpt": "真实 Next.js 16 仓库升级 TS 5.9 → 6.0.3 的踩坑记录：IntersectionObserver 新增 scrollMargin 成员让测试 mock 报 TS2420、默认值三连变（strict/module/target）、为 TS 7.0 做的弃用清单。"
+  },
+  {
     "title": "CSP Nonce 与 SRI：互补而不是互相替换",
     "description": "个人站点如何同时理解 per-request CSP nonce 与 Subresource Integrity：各自守什么、何时评估 SRI、绝不能用 unsafe-inline 换 SSG。",
     "date": "2026-07-21",

@@ -9,13 +9,14 @@
         <generator>https://github.com/jpmonette/feed</generator>
         <language>zh-CN</language>
         <copyright>All rights reserved 2026</copyright>
+        <category>TypeScript</category>
+        <category>类型系统</category>
         <category>工程化</category>
         <category>ESLint</category>
         <category>性能优化</category>
         <category>Next.js</category>
         <category>DevOps</category>
         <category>React</category>
-        <category>TypeScript</category>
         <category>前端</category>
         <category>安全</category>
         <category>Core Web Vitals</category>
@@ -24,7 +25,6 @@
         <category>VPS</category>
         <category>Linux</category>
         <category>SSH</category>
-        <category>类型系统</category>
         <category>泛型</category>
         <category>Supabase</category>
         <category>PostgreSQL</category>
@@ -46,10 +46,128 @@
         <category>Docker</category>
         <category>Node.js</category>
         <category>部署</category>
-        <category>Cloudflare</category>
-        <category>Workers</category>
-        <category>Serverless</category>
         <atom:link href="https://incca.ccwu.cc/feed.xml" rel="self" type="application/rss+xml"/>
+        <item>
+            <title><![CDATA[TypeScript 6.0 迁移笔记：一个 mock 暴露的接口变更与默认值地震]]></title>
+            <link>https://incca.ccwu.cc/blog/typescript-6-migration</link>
+            <guid isPermaLink="false">https://incca.ccwu.cc/blog/typescript-6-migration</guid>
+            <pubDate>Wed, 14 Oct 2026 00:00:00 GMT</pubDate>
+            <description><![CDATA[真实 Next.js 16 仓库升级 TS 5.9 → 6.0.3 的踩坑记录：IntersectionObserver 新增 scrollMargin 成员让测试 mock 报 TS2420、默认值三连变（strict/module/target）、为 TS 7.0 做的弃用清单。]]></description>
+            <content:encoded><![CDATA[
+> 结论先说：TS 6.0 不是「加了几个类型工具」的小版本——它是**通往 TS 7.0（原生编译器重写）的过渡版**，改了一堆默认值，还弃用了 12 个旧选项。本仓升级时只踩了一个坑（测试 mock 缺 `scrollMargin`），但排查过程中把 6.0 的破坏性变更清单过了一遍，记在这里。类型系统的既有纪律见 [[typescript-advanced-types|TypeScript 高级类型实战]]。
+
+## 那个坑：`TS2420`
+
+升级 `typescript ^5 → ^6.0.3` 后，`pnpm exec tsc --noEmit` 报了两个错：
+
+```
+vitest.setup.ts(25,9): error TS2420: Class 'MockIntersectionObserver' incorrectly
+  implements interface 'IntersectionObserver'.
+  Property 'scrollMargin' is missing in type 'MockIntersectionObserver'
+  but required in type 'IntersectionObserver'.
+
+vitest.setup.ts(35,3): error TS2322: Type 'typeof MockIntersectionObserver'
+  is not assignable to type '{ new (...): IntersectionObserver; ... }'.
+  Property 'scrollMargin' is missing ...
+```
+
+**根因**：TS 6.0 的 DOM lib 给 `IntersectionObserver` 接口**新增了 `scrollMargin` 成员**。本仓的 `vitest.setup.ts` 手写了一个 `MockIntersectionObserver` 类（jsdom 不实现 IntersectionObserver），TS 5 下接口只有 `root` / `rootMargin` / `thresholds`，mock 类全实现了；TS 6 下缺一个 `scrollMargin`，`implements` 就过不了。
+
+同样的坑出现在 `TableOfContents.test.tsx` 的第二处 mock。**修法简单**——两处各补一行：
+
+```ts
+// vitest.setup.ts — MockIntersectionObserver 类内
+readonly scrollMargin: IntersectionObserver['scrollMargin'] = '0px';
+
+// TableOfContents.test.tsx — 手写 mock 类内
+readonly scrollMargin: string = '0px';
+```
+
+**这个坑的教训**：凡是你 `implements` 了某个 DOM 接口的手写 mock，TS 升大版本时都要扫一遍——接口成员只会增不会减，而 `implements` 是强制的。
+
+## 默认值三连变
+
+TS 6.0 改了三个核心默认值。本仓的 `tsconfig.json` 恰好都显式设置了，所以没踩到——但**没显式设置的项目会被静默改变**。
+
+| 配置       | TS 5 默认 | TS 6 默 | 本仓实际值   | 风险                                 |
+| ---------- | --------- | -------- | ------------ | ------------------------------------ |
+| `strict`   | `false`   | `true`   | `true`（显式）| 原来没开 strict 的项目突然多一堆报错 |
+| `module`   | `commonjs`| `esnext` | `esnext`（显式）| CJS 项目输出格式变了                |
+| `target`   | `es3`/`es5`| `es2025` | `ES2017`（显式）| 降级编译范围变了                    |
+
+本仓 `target: "ES2017"` 是 Next.js 生成的默认值——**低于 TS6 新默认 `es2025`**，但因为显式写了，不受新默认影响。这正好说明一个纪律：**显式写比依赖默认安全**。
+
+还有一个容易被忽略的：`types` 默认值从「自动包含 `node_modules/@types/* 下所有包」变成了 `[]`（空数组）。本仓没显式设 `types`，走新默认后理论上不再自动加载 `@types/node`——但 Next.js 的 plugin 配置间接拉入了需要的类型，所以没报错。如果你的项目依赖自动加载 `@types/*` 但没用 Next plugin，升级后可能突然报「找不到 Node 类型」。修法：显式写 `"types": ["node"]` 或 `"types": ["*"]`（后者恢复 5.9 行为）。
+
+## 弃用清单（通往 7.0 的预告）
+
+TS 6.0 **弃用**（不报错，但有警告，设 `"ignoreDeprecations": "6.0"` 可静默）了 12 个选项——这些在 **TS 7.0 会被移除**：
+
+| 弃用项                              | 替代                      |
+| ----------------------------------- | ------------------------- |
+| `target: "es5"`                     | 用更高 target             |
+| `--downlevelIteration`              | 升 target                 |
+| `--moduleResolution: "node"` (node10) | `"bundler"` 或 `"nodenext"` |
+| `module: "amd" / "umd" / "systemjs"` | `"esnext"` 等            |
+| `--baseUrl`                         | 用 `paths` 相对解析       |
+| `--esModuleInterop: false`          | 默认已是 `true`           |
+| `--alwaysStrict: false`             | `strict` 已含             |
+| `outFile`                           | 用打包工具                |
+| namespace 的 legacy module 语法     | 用 ESM                    |
+
+本仓的 `tsconfig.json`：`moduleResolution: "bundler"`（已正确）、`esModuleInterop: true`（已正确）、`strict: true`（已含 alwaysStrict）——**无一命中弃用清单**。这是 Next.js 生成的 tsconfig 本来就比传统配置更现代的好处。
+
+## 一个有用的对照实验
+
+排查时做了个对照实验确认方向——故意注释掉 `scrollMargin` 那行，看 TS6 报什么：
+
+```bash
+# 注释前（完整 mock）→ tsc exit 0
+# 注释后（缺 scrollMargin）→ tsc exit 2，报 TS2420 + TS2322
+```
+
+`TS2420`（`implements` 不完整）是接口变更的直接信号；`TS2322`（类型赋值不兼容）是它的派生错误。两个一起出现时，**先修 TS2420**——补上缺的成员，TS2322 会自动消失。
+
+## TS 7.0 是什么
+
+TS 6.0 的发布说明开篇就说了：**TS 7.0 是 TypeScript 编译器的原生重写**（用 Go 而非 TypeScript），编译速度数量级提升。6.0 的定位是「让你在 7.0 之前把弃用项清干净」。
+
+这意味着：**现在不处理弃用警告，7.0 会直接报错**。如果你升级到 6.0 后看到 `This flag will be removed in TypeScript 7.0` 的警告，不要 `"ignoreDeprecations": "6.0"` 糊过去——趁现在改。
+
+## 本仓升级清单
+
+| 步骤 | 动作 | 结果 |
+| --- | --- | --- |
+| 1 | `typescript ^5 → ^6.0.3`（`package.json`） | 安装成功 |
+| 2 | `pnpm exec tsc --noEmit` | **TS2420 + TS2322**（两处 mock） |
+| 3 | `vitest.setup.ts` / `TableOfContents.test.tsx` 各补 `scrollMargin` | 报错消除 |
+| 4 | 再跑 `tsc --noEmit` | exit 0 |
+| 5 | `pnpm test` | 80 files / 648 tests exit 0 |
+| 6 | 扫弃用清单 | 本仓无一命中 |
+
+## 检查清单
+
+- [ ] 所有 `implements DomInterface` 的手写 mock 逐一核对（接口成员只增不减）
+- [ ] `tsconfig.json` 显式写 `strict` / `module` / `target`（不依赖默认）
+- [ ] `types` 未显式设置时确认是否依赖自动加载 `@types/*`
+- [ ] 扫弃用清单（12 项），有命中就改，别 `ignoreDeprecations` 糊
+- [ ] `pnpm exec tsc --noEmit` 与 `pnpm test` 双跑
+- [ ] 看到 `TS2420` 先补缺的成员，派生的 `TS2322` 会自动消失
+
+## 延伸阅读
+
+- [[typescript-advanced-types|TypeScript 高级类型实战]]
+- [[cicd-pipeline-design|CI/CD 流水线设计：从单脚本到多阶段流水线]]
+- [[react-compiler-in-practice|React Compiler 生产笔记]]
+- [[nextjs-app-router|Next.js App Router 实战]]
+]]></content:encoded>
+            <category>TypeScript</category>
+            <category>类型系统</category>
+            <category>工程化</category>
+            <_reading_time>
+                <readingTime>7 min read</readingTime>
+            </_reading_time>
+        </item>
         <item>
             <title><![CDATA[Biome 2.x 迁移评估：快 5 倍的代价是规则集不对齐]]></title>
             <link>https://incca.ccwu.cc/blog/biome-migration-evaluation</link>
@@ -4793,279 +4911,6 @@ dist
             <category>Docker</category>
             <category>Node.js</category>
             <category>部署</category>
-            <_reading_time>
-                <readingTime>8 min read</readingTime>
-            </_reading_time>
-        </item>
-        <item>
-            <title><![CDATA[Cloudflare Workers 实战：构建无服务器应用]]></title>
-            <link>https://incca.ccwu.cc/blog/cloudflare-workers-guide</link>
-            <guid isPermaLink="false">https://incca.ccwu.cc/blog/cloudflare-workers-guide</guid>
-            <pubDate>Mon, 22 Jun 2026 00:00:00 GMT</pubDate>
-            <description><![CDATA[Cloudflare Workers 从路由到 KV、Cron 与部署：边缘无服务器应用的可运行骨架与适用边界。]]></description>
-            <content:encoded><![CDATA[
-> 结论先说：适合放在边缘的短逻辑（网关、定时探针、Webhook）优先 Workers；需要长连接或重 CPU 时再回传统容器。
-
-## 什么是 Cloudflare Workers
-
-Cloudflare Workers 是一个在 Cloudflare 全球边缘网络上运行的无服务器计算平台。简单理解：你写一段 JavaScript/TypeScript 代码，提交到 Cloudflare，由平台负责在其边缘网络上运行。用户请求会由 Cloudflare 的边缘基础设施接收，再按平台的路由和调度规则执行；具体覆盖范围、延迟和计费取决于当前产品计划与官方限制。
-
-相比传统的 VPS + [[nginx-reverse-proxy|Nginx 反向代理]] 部署方式，Workers 的优势很明显：
-
-- **无需管理服务器**——只管写代码，Cloudflare 负责运行
-- **边缘部署**——一个指令即可发布到 Cloudflare 的边缘基础设施，覆盖范围以当前官方文档为准
-- **冷启动极快**——基于 V8 Isolate，比传统 Serverless 运行时（如 AWS Lambda）启动快得多
-- **有免费计划**——请求数、CPU 时间、KV 等资源的额度和计费规则会随产品计划调整，发布前应以官方定价页为准
-
-需要长连接、重 CPU 或完整容器编排时，仍应回到 [[docker-deploy-guide|容器部署]] 与源站运维，而不是硬把一切塞进边缘。
-
-## 第一个 Worker
-
-用 `wrangler` CLI 创建一个新项目：
-
-```bash
-# 安装 wrangler
-npm install -g wrangler
-
-# 登录（需要 Cloudflare 账号）
-npx wrangler login
-
-# 创建项目
-npx wrangler init my-worker
-cd my-worker
-```
-
-框架生成的 `src/index.ts`：
-
-```typescript
-export default {
-  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    return new Response('Hello from Cloudflare Workers!');
-  },
-};
-```
-
-部署：
-
-```bash
-npx wrangler deploy
-```
-
-就是这么简单——一个运行在全球边缘网络的 HTTP 服务就上线了。
-
-## 路由分发
-
-实际项目不会只有一个端点。用 `itty-router` 这类轻量路由库可以让代码结构清晰：
-
-```bash
-npm install itty-router
-```
-
-```typescript
-import { Router } from 'itty-router';
-
-const router = Router();
-
-router.get('/', () => new Response('Home Page'));
-router.get('/api/status', () => {
-  return Response.json({ status: 'ok', timestamp: Date.now() });
-});
-router.get('/api/hello/:name', ({ params }) => {
-  return new Response(`Hello, ${params.name}!`);
-});
-
-export default {
-  async fetch(request: Request, env: Env, ctx: ExecutionContext) {
-    return router.handle(request);
-  },
-};
-```
-
-## 接入 KV 存储
-
-KV（Key-Value）存储是 Workers 生态中最常用的持久化方案。它是个全球复制的键值数据库，适合存储配置信息、缓存数据、用户状态等。
-
-在 `wrangler.toml` 中绑定 KV 命名空间：
-
-```toml
-[[kv_namespaces]]
-binding = "MY_KV"
-id = "your-kv-namespace-id"
-```
-
-然后就可以在代码中使用：
-
-```typescript
-export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    // 读取
-    const value = await env.MY_KV.get('config');
-
-    // 写入
-    await env.MY_KV.put('config', JSON.stringify({ theme: 'dark' }));
-
-    // 列出所有键
-    const list = await env.MY_KV.list({ prefix: 'user:' });
-
-    // 删除
-    await env.MY_KV.delete('temp_key');
-
-    return Response.json({ value, keys: list.keys.length });
-  },
-};
-```
-
-KV 的特点：
-
-- 最终一致性（写入后全球传播需要几秒）
-- 适合读多写少的场景
-- 单个值大小、读写额度和计费规则受当前 KV 产品限制约束，使用前应核对官方文档
-
-## 定时任务（Cron Triggers）
-
-Workers 支持 Cron Triggers，可以在固定时间间隔执行任务——非常适合做域名到期检查、定时数据同步这类功能。
-
-`wrangler.toml` 中配置：
-
-```toml
-[triggers]
-crons = ["0 */6 * * *"]  # 每 6 小时执行一次
-```
-
-对应的代码：
-
-```typescript
-export default {
-  // HTTP 请求处理
-  async fetch(request: Request, env: Env): Promise<Response> {
-    return new Response('OK');
-  },
-
-  // 定时任务处理
-  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
-    // 检查所有域名到期情况
-    const domains = await checkAllDomains(env);
-    for (const domain of domains) {
-      if (domain.daysUntilExpiry < 30) {
-        await sendAlert(domain, env);
-      }
-    }
-    console.log(`检查完成: ${domains.length} 个域名`);
-  },
-};
-```
-
-在 domain-check 项目中就是这样实现的——每 6 小时自动扫描一次域名到期情况，发现快到期了发邮件提醒。
-
-## 环境变量与 Secret
-
-敏感信息不应该硬编码。Workers 支持两种配置：
-
-**环境变量（明文）**——在 `wrangler.toml` 中定义：
-
-```toml
-[vars]
-SITE_NAME = "西江月"
-ADMIN_EMAIL = "admin@example.com"
-```
-
-** Secrets（加密）**——通过 CLI 设置：
-
-```bash
-npx wrangler secret put API_KEY
-```
-
-在代码中统一通过 `env` 对象访问：
-
-```typescript
-export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    const siteName = env.SITE_NAME; // 明文变量
-    const apiKey = env.API_KEY; // 加密变量
-    return new Response(`${siteName}: ${apiKey ? 'has key' : 'no key'}`);
-  },
-};
-```
-
-## 部署策略
-
-### 快速迭代用 `wrangler deploy`
-
-```bash
-npx wrangler deploy
-```
-
-### 灰度发布用 `wrangler deploy --route`
-
-```bash
-# 先部署到 staging 路由验证
-npx wrangler deploy --route 'staging.example.com/*'
-
-# 确认没问题后再推到生产
-npx wrangler deploy --route 'example.com/*'
-```
-
-### 回滚
-
-Workers 控制台保留最近的部署历史，一键回滚。也可以通过 CLI：
-
-```bash
-npx wrangler rollback
-```
-
-## 实战示例：一个简单的短链接服务
-
-把以上内容综合起来，下面是一个用 Workers + KV 实现的短链接服务核心代码：
-
-```typescript
-import { Router } from 'itty-router';
-
-const router = Router();
-
-// 创建短链接
-router.post('/api/shorten', async (request, env) => {
-  const { url } = await request.json();
-  const id = crypto.randomUUID().slice(0, 8);
-  await env.LINKS.put(id, url);
-  return Response.json({ short: `https://s.example.com/${id}` });
-});
-
-// 跳转
-router.get('/:id', async ({ params }, env) => {
-  const target = await env.LINKS.get(params.id);
-  if (!target) return new Response('Not Found', { status: 404 });
-  return Response.redirect(target, 301);
-});
-
-export default {
-  async fetch(request: Request, env: Env, ctx: ExecutionContext) {
-    return router.handle(request, env);
-  },
-};
-```
-
-## 总结
-
-Cloudflare Workers 是我最推荐的无服务器平台。门槛低（一个文件就能上线）、速度快（全球边缘网络）、运维省心（不用管服务器）。适合的场景：
-
-- API 网关 / 反向代理
-- 短链接服务
-- 域名 / SSL 监控
-- 定时数据同步
-- 表单处理 / Webhook 接收
-- A/B 测试分发
-
-下一步可以探索 Workers AI、D1（边缘 SQLite）、R2 对象存储等更深度的服务，Cloudflare 正在把整个边缘平台做成一站式的应用开发环境。
-
-## 延伸阅读
-
-- [[nginx-reverse-proxy|Nginx 反向代理与负载均衡]]
-- [[go-cli-tool|Go 语言 CLI 工具入门]]
-- [[nextjs-app-router|Next.js App Router 实战]]
-]]></content:encoded>
-            <category>Cloudflare</category>
-            <category>Workers</category>
-            <category>Serverless</category>
             <_reading_time>
                 <readingTime>8 min read</readingTime>
             </_reading_time>

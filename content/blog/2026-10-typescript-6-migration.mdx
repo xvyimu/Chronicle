@@ -1,0 +1,116 @@
+---
+title: 'TypeScript 6.0 迁移笔记：一个 mock 暴露的接口变更与默认值地震'
+description: '真实 Next.js 16 仓库升级 TS 5.9 → 6.0.3 的踩坑记录：IntersectionObserver 新增 scrollMargin 成员让测试 mock 报 TS2420、默认值三连变（strict/module/target）、为 TS 7.0 做的弃用清单。'
+date: '2026-10-14'
+tags: ['TypeScript', '类型系统', '工程化']
+published: true
+featured: false
+license: 'CC-BY-4.0'
+---
+
+> 结论先说：TS 6.0 不是「加了几个类型工具」的小版本——它是**通往 TS 7.0（原生编译器重写）的过渡版**，改了一堆默认值，还弃用了 12 个旧选项。本仓升级时只踩了一个坑（测试 mock 缺 `scrollMargin`），但排查过程中把 6.0 的破坏性变更清单过了一遍，记在这里。类型系统的既有纪律见 [[typescript-advanced-types|TypeScript 高级类型实战]]。
+
+## 那个坑：`TS2420`
+
+升级 `typescript ^5 → ^6.0.3` 后，`pnpm exec tsc --noEmit` 报了两个错：
+
+```
+vitest.setup.ts(25,9): error TS2420: Class 'MockIntersectionObserver' incorrectly
+  implements interface 'IntersectionObserver'.
+  Property 'scrollMargin' is missing in type 'MockIntersectionObserver'
+  but required in type 'IntersectionObserver'.
+
+vitest.setup.ts(35,3): error TS2322: Type 'typeof MockIntersectionObserver'
+  is not assignable to type '{ new (...): IntersectionObserver; ... }'.
+  Property 'scrollMargin' is missing ...
+```
+
+**根因**：TS 6.0 的 DOM lib 给 `IntersectionObserver` 接口**新增了 `scrollMargin` 成员**。本仓的 `vitest.setup.ts` 手写了一个 `MockIntersectionObserver` 类（jsdom 不实现 IntersectionObserver），TS 5 下接口只有 `root` / `rootMargin` / `thresholds`，mock 类全实现了；TS 6 下缺一个 `scrollMargin`，`implements` 就过不了。
+
+同样的坑出现在 `TableOfContents.test.tsx` 的第二处 mock。**修法简单**——两处各补一行：
+
+```ts
+// vitest.setup.ts — MockIntersectionObserver 类内
+readonly scrollMargin: IntersectionObserver['scrollMargin'] = '0px';
+
+// TableOfContents.test.tsx — 手写 mock 类内
+readonly scrollMargin: string = '0px';
+```
+
+**这个坑的教训**：凡是你 `implements` 了某个 DOM 接口的手写 mock，TS 升大版本时都要扫一遍——接口成员只会增不会减，而 `implements` 是强制的。
+
+## 默认值三连变
+
+TS 6.0 改了三个核心默认值。本仓的 `tsconfig.json` 恰好都显式设置了，所以没踩到——但**没显式设置的项目会被静默改变**。
+
+| 配置       | TS 5 默认 | TS 6 默 | 本仓实际值   | 风险                                 |
+| ---------- | --------- | -------- | ------------ | ------------------------------------ |
+| `strict`   | `false`   | `true`   | `true`（显式）| 原来没开 strict 的项目突然多一堆报错 |
+| `module`   | `commonjs`| `esnext` | `esnext`（显式）| CJS 项目输出格式变了                |
+| `target`   | `es3`/`es5`| `es2025` | `ES2017`（显式）| 降级编译范围变了                    |
+
+本仓 `target: "ES2017"` 是 Next.js 生成的默认值——**低于 TS6 新默认 `es2025`**，但因为显式写了，不受新默认影响。这正好说明一个纪律：**显式写比依赖默认安全**。
+
+还有一个容易被忽略的：`types` 默认值从「自动包含 `node_modules/@types/* 下所有包」变成了 `[]`（空数组）。本仓没显式设 `types`，走新默认后理论上不再自动加载 `@types/node`——但 Next.js 的 plugin 配置间接拉入了需要的类型，所以没报错。如果你的项目依赖自动加载 `@types/*` 但没用 Next plugin，升级后可能突然报「找不到 Node 类型」。修法：显式写 `"types": ["node"]` 或 `"types": ["*"]`（后者恢复 5.9 行为）。
+
+## 弃用清单（通往 7.0 的预告）
+
+TS 6.0 **弃用**（不报错，但有警告，设 `"ignoreDeprecations": "6.0"` 可静默）了 12 个选项——这些在 **TS 7.0 会被移除**：
+
+| 弃用项                              | 替代                      |
+| ----------------------------------- | ------------------------- |
+| `target: "es5"`                     | 用更高 target             |
+| `--downlevelIteration`              | 升 target                 |
+| `--moduleResolution: "node"` (node10) | `"bundler"` 或 `"nodenext"` |
+| `module: "amd" / "umd" / "systemjs"` | `"esnext"` 等            |
+| `--baseUrl`                         | 用 `paths` 相对解析       |
+| `--esModuleInterop: false`          | 默认已是 `true`           |
+| `--alwaysStrict: false`             | `strict` 已含             |
+| `outFile`                           | 用打包工具                |
+| namespace 的 legacy module 语法     | 用 ESM                    |
+
+本仓的 `tsconfig.json`：`moduleResolution: "bundler"`（已正确）、`esModuleInterop: true`（已正确）、`strict: true`（已含 alwaysStrict）——**无一命中弃用清单**。这是 Next.js 生成的 tsconfig 本来就比传统配置更现代的好处。
+
+## 一个有用的对照实验
+
+排查时做了个对照实验确认方向——故意注释掉 `scrollMargin` 那行，看 TS6 报什么：
+
+```bash
+# 注释前（完整 mock）→ tsc exit 0
+# 注释后（缺 scrollMargin）→ tsc exit 2，报 TS2420 + TS2322
+```
+
+`TS2420`（`implements` 不完整）是接口变更的直接信号；`TS2322`（类型赋值不兼容）是它的派生错误。两个一起出现时，**先修 TS2420**——补上缺的成员，TS2322 会自动消失。
+
+## TS 7.0 是什么
+
+TS 6.0 的发布说明开篇就说了：**TS 7.0 是 TypeScript 编译器的原生重写**（用 Go 而非 TypeScript），编译速度数量级提升。6.0 的定位是「让你在 7.0 之前把弃用项清干净」。
+
+这意味着：**现在不处理弃用警告，7.0 会直接报错**。如果你升级到 6.0 后看到 `This flag will be removed in TypeScript 7.0` 的警告，不要 `"ignoreDeprecations": "6.0"` 糊过去——趁现在改。
+
+## 本仓升级清单
+
+| 步骤 | 动作 | 结果 |
+| --- | --- | --- |
+| 1 | `typescript ^5 → ^6.0.3`（`package.json`） | 安装成功 |
+| 2 | `pnpm exec tsc --noEmit` | **TS2420 + TS2322**（两处 mock） |
+| 3 | `vitest.setup.ts` / `TableOfContents.test.tsx` 各补 `scrollMargin` | 报错消除 |
+| 4 | 再跑 `tsc --noEmit` | exit 0 |
+| 5 | `pnpm test` | 80 files / 648 tests exit 0 |
+| 6 | 扫弃用清单 | 本仓无一命中 |
+
+## 检查清单
+
+- [ ] 所有 `implements DomInterface` 的手写 mock 逐一核对（接口成员只增不减）
+- [ ] `tsconfig.json` 显式写 `strict` / `module` / `target`（不依赖默认）
+- [ ] `types` 未显式设置时确认是否依赖自动加载 `@types/*`
+- [ ] 扫弃用清单（12 项），有命中就改，别 `ignoreDeprecations` 糊
+- [ ] `pnpm exec tsc --noEmit` 与 `pnpm test` 双跑
+- [ ] 看到 `TS2420` 先补缺的成员，派生的 `TS2322` 会自动消失
+
+## 延伸阅读
+
+- [[typescript-advanced-types|TypeScript 高级类型实战]]
+- [[cicd-pipeline-design|CI/CD 流水线设计：从单脚本到多阶段流水线]]
+- [[react-compiler-in-practice|React Compiler 生产笔记]]
+- [[nextjs-app-router|Next.js App Router 实战]]
