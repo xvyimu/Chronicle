@@ -2,7 +2,7 @@
 
 # Chronicle · 文档索引
 
-> 状态：当前维护版（2026-07-22）。本页是文档导航的唯一入口。
+> 状态：当前维护版（2026-10-13）。本页是文档导航的唯一入口。
 > **GitHub：** [xvyimu/Chronicle](https://github.com/xvyimu/Chronicle) · 产品名「西江月」· package `chronicle` · 本地 `D:\projects\Chronicle`
 
 项目文档分为四类：当前维护文档、架构决策、已实施设计、历史报告与运行记录。只有「当前维护文档」描述现行操作；日期型报告、spec 和 run 中的测试数、提交和待办都是当时快照，不应作为当前基线。
@@ -14,6 +14,7 @@
 3. [架构说明](./ARCHITECTURE.md)：数据流、模块职责、渲染、安全、CSS 和缓存边界。
 4. 按任务选择 API、内容、CSS、性能或缓存文档。
 5. 需要理解「为什么这样设计」时再读 ADR 和 specs。
+6. 需要理解「这个项目怎么长起来的」时读 [项目历史](./iterations/PROJECT-HISTORY.md)（从创建到完成的时间线）。
 
 ## 按目录
 
@@ -29,26 +30,27 @@
 
 ## 当前维护文档
 
-| 文档                                                                | 负责内容                                                                     | 更新触发条件                      |
-| ------------------------------------------------------------------- | ---------------------------------------------------------------------------- | --------------------------------- |
-| [README](../README.md)                                              | 项目入口、安装、功能、路由、命令                                             | 依赖、路由、脚本或功能变化        |
-| [AGENTS](../AGENTS.md)                                              | AI 协作规则和项目约定                                                        | 工具链、目录、测试或工作流变化    |
-| [GITHUB_IDENTITY](../GITHUB_IDENTITY.md)                            | 仓库/产品/包名/生产域/许可身份卡                                             | 身份字段变化                      |
-| [TODO](../TODO.md)                                                  | 仅保留当前未完成或条件触发事项                                               | 待办完成、取消或条件变化          |
-| [架构说明](./ARCHITECTURE.md)                                       | 当前模块和运行时边界                                                         | 模块、数据流、渲染或部署变化      |
-| [架构 As-Is（2026-07 测绘）](./ops/ch-architecture-asis-2026-07.md) | L2 测绘事实（语言/API/偏离清单）· **历史快照**                               | —                                 |
-| [架构 Target](./ARCHITECTURE_TARGET.md)                             | L2 目标态与允许/禁止维护边界                                                 | 策略标签或禁止项变化              |
-| [第三方依赖摘要](./THIRD_PARTY.md)                                  | 直接依赖 SPDX 摘要；全树以 lockfile 为准                                     | 直接依赖或合规口径变化            |
-| [公开 API](./API.md)                                                | `/api/csp-report` 契约（`/api/search`、`/api/preview` 已于 2026-10-07 删除） | route、DTO、限流或缓存变化        |
-| [内容工作流](./content-workflow.md)                                 | 文章、项目、收藏、RSS、content snapshot                                      | schema、内容目录或检查脚本变化    |
-| [CSS 规范](./css-conventions.md)                                    | token、BEM、shadcn、文件归属                                                 | token、CSS 文件或导入归属变化     |
-| [Cache Components 指南](./cache-components-migration.md)            | 当前缓存和未来迁移门槛                                                       | 缓存实现或外部数据源变化          |
-| [上线基线](./launch-baseline.md)                                    | 最新生产证据和发布门禁                                                       | 新生产基线或 smoke 变化           |
-| [延后运营计划](./ops-deferred-work-plan.md)                         | GSC/Bing/RUM 与条件触发执行手册                                              | 授权剧本或门槛变化                |
-| [性能基线](./performance-baseline.md)                               | CI 预算、实验室数据、RUM 目标                                                | Lighthouse、bundle 或 p75 更新    |
-| [Agent 接手指南](./HANDOFF.md)                                      | 当前状态、优先级和交接边界                                                   | 生产状态或主要待办变化            |
-| [SRI 本地 smoke / checker](./ops/sri-smoke.md)                      | `check:sri-smoke` · `check:sri` · `test:sri`；本地 ENABLE_SRI on/off         | SRI 脚本或本地验证步骤变化        |
-| [Security / Deps 证据索引](./ops/ch-security-deps-index.md)         | deps/security/day 证据导航 · audit 0 · major-later 债入口                    | 新 hardening/scan 证据或 tip 变化 |
+| 文档                                                                | 负责内容                                                                                                                 | 更新触发条件                      |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | --------------------------------- |
+| [README](../README.md)                                              | 项目入口、安装、功能、路由、命令                                                                                         | 依赖、路由、脚本或功能变化        |
+| [AGENTS](../AGENTS.md)                                              | AI 协作规则和项目约定                                                                                                    | 工具链、目录、测试或工作流变化    |
+| [GITHUB_IDENTITY](../GITHUB_IDENTITY.md)                            | 仓库/产品/包名/生产域/许可身份卡                                                                                         | 身份字段变化                      |
+| [TODO](../TODO.md)                                                  | 仅保留当前未完成或条件触发事项                                                                                           | 待办完成、取消或条件变化          |
+| [架构说明](./ARCHITECTURE.md)                                       | 当前模块和运行时边界                                                                                                     | 模块、数据流、渲染或部署变化      |
+| [架构 As-Is（2026-07 测绘）](./ops/ch-architecture-asis-2026-07.md) | L2 测绘事实（语言/API/偏离清单）· **历史快照**                                                                           | —                                 |
+| [架构 Target](./ARCHITECTURE_TARGET.md)                             | L2 目标态与允许/禁止维护边界                                                                                             | 策略标签或禁止项变化              |
+| [第三方依赖摘要](./THIRD_PARTY.md)                                  | 直接依赖 SPDX 摘要；全树以 lockfile 为准                                                                                 | 直接依赖或合规口径变化            |
+| [公开 API](./API.md)                                                | `POST /api/csp-report` + `POST /api/client-error`（均 collect-only；`/api/search`、`/api/preview` 已于 2026-10-07 删除） | route、DTO、限流或缓存变化        |
+| [内容工作流](./content-workflow.md)                                 | 文章、项目、收藏、RSS、content snapshot                                                                                  | schema、内容目录或检查脚本变化    |
+| [CSS 规范](./css-conventions.md)                                    | token、BEM、shadcn、文件归属                                                                                             | token、CSS 文件或导入归属变化     |
+| [Cache Components 指南](./cache-components-migration.md)            | 当前缓存和未来迁移门槛                                                                                                   | 缓存实现或外部数据源变化          |
+| [上线基线](./launch-baseline.md)                                    | 最新生产证据和发布门禁                                                                                                   | 新生产基线或 smoke 变化           |
+| [延后运营计划](./ops-deferred-work-plan.md)                         | GSC/Bing/RUM 与条件触发执行手册                                                                                          | 授权剧本或门槛变化                |
+| [性能基线](./performance-baseline.md)                               | CI 预算、实验室数据、RUM 目标                                                                                            | Lighthouse、bundle 或 p75 更新    |
+| [Agent 接手指南](./HANDOFF.md)                                      | 当前状态、优先级和交接边界                                                                                               | 生产状态或主要待办变化            |
+| [项目历史总览](./iterations/PROJECT-HISTORY.md)                     | 从创建到完成的时间线（里程碑 + 技术栈演进 + 被删功能 + 已知漂移）                                                        | 新增里程碑或形态级变化            |
+| [SRI 本地 smoke / checker](./ops/sri-smoke.md)                      | `check:sri-smoke` · `check:sri` · `test:sri`；本地 ENABLE_SRI on/off                                                     | SRI 脚本或本地验证步骤变化        |
+| [Security / Deps 证据索引](./ops/ch-security-deps-index.md)         | deps/security/day 证据导航 · audit 0 · major-later 债入口                                                                | 新 hardening/scan 证据或 tip 变化 |
 
 ### SRI 本地验证命令（不改生产 env）
 
@@ -89,7 +91,7 @@ ADR 和 spec 保留决策当时的事实、测试数和方案对比。状态行�
 | [14 决策日志](./14-decision-log.md)             | D-001… 决策记录            |
 | [15 验收清单](./15-acceptance-checklist.md)     | 逐迭代验收勾选             |
 
-迭代执行记录见 [`docs/iterations/`](./iterations/)（`iteration-00` … `iteration-07`）；本轮新增 ADR 见 [`adr/0007-workspace-rebuild-baseline.md`](./adr/0007-workspace-rebuild-baseline.md)。
+迭代执行记录见 [`docs/iterations/`](./iterations/)：**里程碑系列** `milestone-A/B/C/D-*`（2026-06 → 2026-10 全生命周期，总览见 [`PROJECT-HISTORY.md`](./iterations/PROJECT-HISTORY.md)）+ **工作台重构迭代** `iteration-00` … `iteration-08`；本轮新增 ADR 见 [`adr/0007-workspace-rebuild-baseline.md`](./adr/0007-workspace-rebuild-baseline.md)。
 
 ## 历史报告与运行记录
 

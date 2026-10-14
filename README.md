@@ -104,7 +104,7 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ├─ public/                      # 静态资源、feed.*
 ├─ scripts/                     # content:build / RSS / SEO / smoke
 ├─ src/
-│  ├─ app/                      # App Router（含 /api/csp-report）
+│  ├─ app/                      # App Router（含 /api/csp-report、/api/client-error）
 │  ├─ components/               # layout / home / blog / search / projects / ui
 │  ├─ lib/                      # posts / content-snapshot / search / reading-state / site
 │  ├─ server/                   # content facade + rate-limit
@@ -122,17 +122,17 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
 ## 路由
 
-| 路由                                                        | 说明                                              |
-| ----------------------------------------------------------- | ------------------------------------------------- |
-| `/`                                                         | 工作台首页（欢迎区 + 热门主题 + 最近更新 + 搜索） |
-| `/about`                                                    | 关于                                              |
-| `/blog` · `/blog/[slug]`                                    | 列表与文章                                        |
-| `/archive`                                                  | 归档（按年份时间线）                              |
-| `/favorites`                                                | 我的阅读（收藏 / 最近阅读，localStorage）         |
-| `/projects` · `/projects/[id]`                              | 作品集（id 例：`chronicle`）                      |
-| `/series` · `/tags` · `/categories`                         | 专题 / 标签 / 分类                                |
-| `/api/csp-report`                                           | CSP 违规上报（唯一公开 API）                      |
-| `/feed.xml` · `/feed.json` · `/sitemap.xml` · `/robots.txt` | 订阅与爬虫                                        |
+| 路由                                                        | 说明                                                             |
+| ----------------------------------------------------------- | ---------------------------------------------------------------- |
+| `/`                                                         | 工作台首页（欢迎区 + 热门主题 + 最近更新 + 搜索）                |
+| `/about`                                                    | 关于                                                             |
+| `/blog` · `/blog/[slug]`                                    | 列表与文章                                                       |
+| `/archive`                                                  | 归档（按年份时间线）                                             |
+| `/favorites`                                                | 我的阅读（收藏 / 最近阅读，localStorage）                        |
+| `/projects` · `/projects/[id]`                              | 作品集（id 例：`chronicle`）                                     |
+| `/series` · `/tags` · `/categories`                         | 专题 / 标签 / 分类                                               |
+| `/api/csp-report` · `/api/client-error`                     | 公开 Route Handler（均 collect-only：CSP 违规 / 客户端错误上报） |
+| `/feed.xml` · `/feed.json` · `/sitemap.xml` · `/robots.txt` | 订阅与爬虫                                                       |
 
 ## 功能摘要
 
@@ -159,6 +159,7 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ## 文档索引
 
 - [docs/README.md](./docs/README.md) — 文档导航
+- [docs/iterations/PROJECT-HISTORY.md](./docs/iterations/PROJECT-HISTORY.md) — 项目历史（从创建到完成）
 - [docs/01-project-audit.md](./docs/01-project-audit.md) — 重构审计
 - [docs/04-design-system.md](./docs/04-design-system.md) — 设计系统
 - [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) — 架构
