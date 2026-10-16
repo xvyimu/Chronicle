@@ -14,7 +14,7 @@ pnpm test:e2e     # E2E（Playwright，自动在 3001 起服务）
 pnpm content:build   # 改了 MDX 后重建内容快照并提交
 ```
 
-改动后至少跑：`pnpm lint` + `tsc --noEmit` + `pnpm test`。碰内容（`content/`）要跟 `pnpm content:build`。完整命令与环境说明见文末 [Commands](#commands) 节。
+改动后至少跑：`pnpm format:check` + `pnpm lint` + `pnpm check:docs` + `tsc --noEmit` + `pnpm test`（顺序与 CI `quality` job 一致）。碰内容（`content/`）要跟 `pnpm content:build`。完整命令与环境说明见文末 [Commands](#commands) 节。
 
 ## Identity
 
@@ -176,7 +176,7 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on push/PR to master:
 
 ## 边界（三级）
 
-- ✅ **Always**：改完跑 `pnpm lint` + `tsc --noEmit` + `pnpm test`；碰 MDX 后跑 `pnpm content:build`；新增 CSS 模块时在 `layout.tsx`/`page.tsx` 显式 import（见 Conventions）。
+- ✅ **Always**：改完跑 `pnpm format:check` + `pnpm lint` + `pnpm check:docs` + `tsc --noEmit` + `pnpm test`；碰 MDX 后跑 `pnpm content:build`；新增 CSS 模块时在 `layout.tsx`/`page.tsx` 显式 import（见 Conventions）。
 - ⚠️ **Ask first**：改 `src/proxy.ts` 的 CSP / 安全头；换依赖；改 `next.config.ts`；动 `docs/PROJECT.md` 的技术栈。
 - 🚫 **Never**：手编 `generated/content-snapshot/`（生成物；改了 MDX 就跑 `pnpm content:build` 重生成**再提交**——这份快照**是刻意入库的**，别当垃圾删）；编辑 `node_modules/`；提交密钥/`.env`；直接删失败的测试。
 
